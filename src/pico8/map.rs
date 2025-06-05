@@ -41,7 +41,12 @@ impl P8Map {
         let mut clearable = Clearable::new(2);
         clearable.hash = hash;
         let mut tile_storage = TileStorage::empty(map_size);
-        let tilemap_entity = commands.spawn(Name::new("map")).id();
+        let tilemap_entity = commands.spawn_empty().id();
+
+        let map_entity = commands.spawn((Name::new("map"),
+                                         Transform::from_translation(screen_start.extend(clearable.suggest_z())),
+                                         Visibility::Inherited,
+                                         clearable)).id();
         commands.entity(tilemap_entity).with_children(|builder| {
             for x in 0..map_size.x {
                 for y in 0..map_size.y {
@@ -75,22 +80,21 @@ impl P8Map {
                                     texture_index: TileTextureIndex(texture_index as u32),
                                     ..Default::default()
                                 },
-                                // clearable.clone(),
                             ))
                             .id();
                         tile_storage.set(&tile_pos, tile_entity);
                     }
                 }
             }
-        });
+        }).set_parent(map_entity);
 
         let sprites = &sprite_sheets[self.sheet_index];
         let tile_size: TilemapTileSize = sprites.sprite_size.as_vec2().into();
         let grid_size = tile_size.into();
         let map_type = TilemapType::default();
         let mut transform =
-            get_tilemap_top_left_transform(&map_size, &grid_size, &map_type, clearable.suggest_z());
-        transform.translation += screen_start.extend(0.0);
+            get_tilemap_top_left_transform(&map_size, &grid_size, &map_type, 0.0);
+
 
         commands.entity(tilemap_entity).insert((
             TilemapBundle {
@@ -101,16 +105,13 @@ impl P8Map {
                 texture: TilemapTexture::Single(match &sprites.handle {
                     SprHandle::Image(handle) => handle.clone(),
                     SprHandle::Gfx(ref handle) => gfx_to_image(handle)?,
-                    // self.gfx_handles.get_or_create(&self.state.pal, handle, &self.gfxs, &mut self.images)
                 }),
                 tile_size,
-                // transform: Transform::from_xyz(screen_start.x, -screen_start.y, 0.0),//get_tilemap_center_transform(&map_size, &grid_size, &map_type, 0.0),
                 transform,
                 ..Default::default()
             },
-            clearable,
         ));
-        Ok(tilemap_entity)
+        Ok(map_entity)
     }
 }
 

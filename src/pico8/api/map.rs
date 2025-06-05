@@ -39,6 +39,7 @@ impl super::Pico8<'_, '_> {
             screen_start.y = -screen_start.y;
         }
         let hash = { let mut hasher = DefaultHashBuilder::default().build_hasher();
+                     "map".hash(&mut hasher);
                      map_pos.hash(&mut hasher);
                      size.hash(&mut hasher);
                      mask.inspect(|m| m.hash(&mut hasher));
@@ -49,15 +50,17 @@ impl super::Pico8<'_, '_> {
         if let Some(id) = self.clear_cache.get(&hash) {
             let id = *id;
             self.commands.queue(move |world: &mut World| {
-                if let Some(mut clearable) = world.get_mut::<Clearable>(id) {
+                let maybe_z = world.get_mut::<Clearable>(id).map(|mut clearable| {
                     clearable.time_to_live = 2;
-                }
+                    clearable.update();
+                    clearable.suggest_z()
+                });
                 if let Some(mut visibility) = world.get_mut::<Visibility>(id) {
                     *visibility = Visibility::Inherited;
                 }
-                if let Some(_transform) = world.get_mut::<Transform>(id) {
-                    // TODO: Need to update the transform.
-                    // transform.
+                if let Some(mut transform) = world.get_mut::<Transform>(id) {
+                    let z = maybe_z.unwrap_or(transform.translation.z);
+                    transform.translation = screen_start.extend(z);
                 }
             });
             return Ok(id);
