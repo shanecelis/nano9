@@ -51,8 +51,7 @@ impl super::Pico8<'_, '_> {
             let id = *id;
             self.commands.queue(move |world: &mut World| {
                 let maybe_z = world.get_mut::<Clearable>(id).map(|mut clearable| {
-                    clearable.time_to_live = 2;
-                    clearable.update();
+                    clearable.resurrect(2);
                     clearable.suggest_z()
                 });
                 if let Some(mut visibility) = world.get_mut::<Visibility>(id) {

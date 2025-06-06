@@ -4173,6 +4173,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "mashmap"
+version = "0.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "391f1f7aa504f224235fd82862b06d5d82c81f2394b568b31a77fb1a62f1cf28"
+dependencies = [
+ "ahash",
+ "hashbrown 0.14.5",
+]
+
+[[package]]
 name = "matchers"
 version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4351,6 +4361,7 @@ dependencies = [
  "fixed",
  "futures-lite 2.6.0",
  "keyseq",
+ "mashmap",
  "pico8-to-lua",
  "pico8_decompress",
  "png",

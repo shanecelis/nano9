@@ -8,7 +8,12 @@ use std::{
     fmt,
     sync::atomic::{AtomicBool, AtomicUsize, Ordering},
 };
-use bevy::utils::HashMap;
+// use bevy::utils::HashMap;
+use mashmap::MashMap;
+
+mod counter;
+use counter::DrawCounter;
+
 
 static DRAW_COUNTER: DrawCounter = DrawCounter::new(1);
 ///
@@ -22,60 +27,6 @@ pub(crate) fn plugin(app: &mut App) {
 }
 
 
-// Define a newtype around AtomicUsize
-struct DrawCounter {
-    counter: AtomicUsize,
-    overflowed: AtomicBool,
-}
-
-impl DrawCounter {
-    // Create a new DrawCounter with an initial value
-    pub const fn new(initial: usize) -> Self {
-        Self {
-            counter: AtomicUsize::new(initial),
-            overflowed: AtomicBool::new(false),
-        }
-    }
-
-    // Increment the counter and return the previous value
-    pub fn increment(&self) -> usize {
-        let r = self.counter.fetch_add(1, Ordering::Relaxed);
-        if r == 0 {
-            warn!("draw counter over flowed.");
-            self.overflowed.store(true, Ordering::Relaxed);
-        }
-        r
-    }
-
-    fn overflowed(&self) -> bool {
-        self.overflowed.load(Ordering::Relaxed)
-    }
-
-    fn reset_overflowed(&self) {
-        self.overflowed.store(false, Ordering::Relaxed)
-    }
-
-    // Get the current value of the counter
-    pub fn get(&self) -> usize {
-        self.counter.load(Ordering::Relaxed)
-    }
-
-    pub fn set(&self, value: usize) {
-        self.counter.store(value, Ordering::Relaxed);
-    }
-}
-
-impl Default for DrawCounter {
-    fn default() -> Self {
-        DrawCounter::new(1)
-    }
-}
-
-impl fmt::Debug for DrawCounter {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "DrawCounter({})", self.get())
-    }
-}
 
 #[derive(Debug, Event, Clone, Copy)]
 pub struct ClearEvent {
@@ -90,8 +41,17 @@ impl Default for ClearEvent {
     }
 }
 
+// pub enum ClearKey {
+//     Map { map_pos: UVec2,
+//           size: UVec2,
+//           mask: Option<u8>,
+//           map_index: Option<usize>,
+//     }
+// }
+
+
 #[derive(Debug, Resource, Deref, DerefMut, Default)]
-pub(crate) struct ClearCache(HashMap<u64, Entity>);
+pub(crate) struct ClearCache(MashMap<u64, Entity>);
 
 #[derive(Debug, Component, Clone, Copy)]
 #[component(on_add = on_insert_hook)]
@@ -102,6 +62,12 @@ pub struct Clearable {
     pub time_to_live: u8,
     pub hash: Option<u64>,
 }
+
+// We could add this, but maybe we'll just rely on visible.
+// enum ClearState {
+//     Hidden,
+//     Visible
+// }
 
 fn on_insert_hook(mut world: DeferredWorld, id: Entity, _comp_id: ComponentId) {
     let Some(hash) = world.get::<Clearable>(id).and_then(|clearable| clearable.hash) else { return; };
@@ -146,8 +112,9 @@ impl Clearable {
         1.0 + self.draw_count as f32 / MAX_EXPECTED_CLEARABLES
     }
 
-    /// Update the draw count, changes the suggest_z() to be current.
-    pub fn update(&mut self) {
+    /// Update the draw count and time-to-live.
+    pub fn resurrect(&mut self, new_time_to_live: u8) {
+        self.time_to_live = new_time_to_live;
         self.draw_count = DRAW_COUNTER.increment();
     }
 }
@@ -174,8 +141,10 @@ fn handle_clear_event(
             .partition(|(_, clearable, _, _)| clearable.draw_count < ceiling);
         for (id, mut clearable, _, mut visibility) in less_than {
             if clearable.time_to_live <= 0 {
+                // These should be removed from the cache.
                 commands.entity(id).despawn_recursive();
             } else {
+                // These should go into the cache.
                 clearable.time_to_live -= 1;
                 *visibility = Visibility::Hidden;
             }

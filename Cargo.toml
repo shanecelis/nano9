@@ -46,6 +46,7 @@ png = "0.17.16"
 pico8-to-lua = { version = "0.1.0", optional = true }
 fixed = { version = "1.29.0", optional = true }
 bevy_web_asset = { version = "0.10.0", optional = true, default-features = false }
+mashmap = "0.2.1"
 
 [features]
 default = [ "negate-y", "pico8-to-lua", "fixed", "scripting", "pixel-snap" ]
