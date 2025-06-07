@@ -113,6 +113,16 @@ pub fn negate_y(y: f32) -> f32 {
     }
 }
 
+#[inline]
+pub fn negate_vy(mut v: Vec2) -> Vec2 {
+    if cfg!(feature = "negate-y") {
+        v.y = -v.y;
+        v
+    } else {
+        v
+    }
+}
+
 /// Snap to pixel IF the feature "pixel-snap" is enabled.
 #[inline]
 pub fn pixel_snap(v: Vec2) -> Vec2 {

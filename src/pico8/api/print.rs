@@ -1,4 +1,7 @@
 use super::*;
+use crate::{hash::hash_f32};
+use bevy::utils::hashbrown::hash_map::DefaultHashBuilder;
+use std::hash::{BuildHasher, Hash, Hasher};
 
 pub(crate) fn plugin(app: &mut App) {
     #[cfg(feature = "scripting")]
@@ -17,6 +20,7 @@ impl super::Pico8<'_, '_> {
         }
         (last_pos, last_color)
     }
+
     /// print(text, [x,] [y,] [color,] [font_size])
     ///
     /// Print the given text. The Lua `print()` function will return the new x
@@ -31,10 +35,28 @@ impl super::Pico8<'_, '_> {
         font_index: Option<usize>,
     ) -> Result<Entity, Error> {
         let text = text.into();
+
+        let hash = { let mut hasher = DefaultHashBuilder::default().build_hasher();
+                     "print".hash(&mut hasher);
+                     text.hash(&mut hasher);
+                     // TODO: Color could be amended.
+                     // Need to hash the palette choice and
+                     self.state.palette.hash(&mut hasher);
+                     self.state.pal_map.hash(&mut hasher);
+                     color.inspect(|c| c.hash(&mut hasher));
+                     font_size.inspect(|s| hash_f32(*s, 2, &mut hasher));
+                     font_index.inspect(|f| f.hash(&mut hasher));
+                     hasher.finish()
+        };
+        // See if there's already an entity available.
+        if let Some(id) = self.resurrect(hash, pos.unwrap_or(Vec2::ZERO)) {
+            return Ok(id);
+        }
+        let clearable = Clearable::new(2).with_hash(hash);
         let id = self.commands.spawn_empty().id();
         self.commands.queue(move |world: &mut World| {
             if let Err(e) =
-                Self::print_world(world, Some(id), text, pos, color, font_size, font_index)
+                Self::print_world(world, Some(id), text, pos, color, font_size, font_index, Some(clearable))
             {
                 warn!("print error {e}");
             }
@@ -50,9 +72,10 @@ impl super::Pico8<'_, '_> {
         color: Option<N9Color>,
         font_size: Option<f32>,
         font_index: Option<usize>,
+        clearable: Option<Clearable>,
     ) -> Result<f32, Error> {
         let (id, add_newline) =
-            Self::pre_print_world(world, dest, text, pos, color, font_size, font_index)?;
+            Self::pre_print_world(world, dest, text, pos, color, font_size, font_index, clearable)?;
         world
             .run_system_cached(bevy::text::update_text2d_layout)
             .expect("update_text2d_layout");
@@ -88,6 +111,7 @@ impl super::Pico8<'_, '_> {
         color: Option<N9Color>,
         font_size: Option<f32>,
         font_index: Option<usize>,
+        clearable: Option<Clearable>,
     ) -> Result<(Entity, bool), Error> {
         let assets = world
             .get_resource::<Assets<Pico8Asset>>()
@@ -119,7 +143,7 @@ impl super::Pico8<'_, '_> {
                     state.draw_state.print_cursor.y,
                 ))
             });
-        let clearable = Clearable::default();
+        let clearable = clearable.unwrap_or_default();
         let add_newline = if text.ends_with('\0') {
             text.pop();
             false
@@ -203,11 +227,6 @@ mod lua {
                  c: Option<N9Color>,
                  font_size: Option<f32>,
                  font_index: Option<usize>| {
-                    let pos = with_pico8(&ctx, move |pico8| {
-                        Ok(x.map(|x| {
-                            Vec2::new(x, y.unwrap_or(pico8.state.draw_state.print_cursor.y))
-                        }))
-                    })?;
 
                     let text: Cow<'_, str> = match text.unwrap_or(ScriptValue::Unit) {
                         ScriptValue::String(s) => s,
@@ -217,27 +236,54 @@ mod lua {
                         // This ensures there will be a newline.
                         _ => " ".into(),
                     };
+                    let (pos, hash, cached_id) = with_pico8(&ctx, |pico8| {
+                        let pos_p8 = x.map(|x| {
+                            Vec2::new(x, y.unwrap_or(pico8.state.draw_state.print_cursor.y))
+                        });
 
-                    let world_guard = ctx.world()?;
-                    let raid = ReflectAccessId::for_global();
-                    if world_guard.claim_global_access() {
-                        let world = world_guard.as_unsafe_world_cell()?;
-                        let world = unsafe { world.world_mut() };
-                        let r = Pico8::print_world(
-                            world,
-                            None,
-                            text.to_string(),
-                            pos,
-                            c,
-                            font_size,
-                            font_index,
-                        );
-                        unsafe { world_guard.release_global_access() };
-                        r.map_err(|e| InteropError::external_error(Box::new(e)))
-                    } else {
-                        Err(InteropError::cannot_claim_access(
-                            raid,
-                            world_guard.get_access_location(raid),
+                        let hash = { let mut hasher = DefaultHashBuilder::default().build_hasher();
+                                    "print".hash(&mut hasher);
+                                    text.hash(&mut hasher);
+                                    // TODO: Color could be amended.
+                                    // Need to hash the palette choice and
+                                    pico8.state.palette.hash(&mut hasher);
+                                    pico8.state.pal_map.hash(&mut hasher);
+                                    c.inspect(|c| c.hash(&mut hasher));
+                                    font_size.inspect(|s| hash_f32(*s, 2, &mut hasher));
+                                    font_index.inspect(|f| f.hash(&mut hasher));
+                                    hasher.finish()
+                        };
+                        // See if there's already an entity available.
+                        let cached_id = pico8.resurrect(hash, negate_vy(pos_p8.unwrap_or(Vec2::ZERO)));
+                        Ok((pos_p8, hash, cached_id))
+                    })?;
+                     if let Some(id) = cached_id {
+                         // TODO: It expects the width to be returned.
+                         return Ok(0.0);
+                     }
+                     let clearable = Clearable::new(2).with_hash(hash);
+
+                     let world_guard = ctx.world()?;
+                     let raid = ReflectAccessId::for_global();
+                     if world_guard.claim_global_access() {
+                         let world = world_guard.as_unsafe_world_cell()?;
+                         let world = unsafe { world.world_mut() };
+                         let r = Pico8::print_world(
+                             world,
+                             None,
+                             text.to_string(),
+                             pos,
+                             c,
+                             font_size,
+                             font_index,
+                             Some(clearable),
+                         );
+                         unsafe { world_guard.release_global_access() };
+                         r.map_err(|e| InteropError::external_error(Box::new(e)))
+                     } else {
+                         Err(InteropError::cannot_claim_access(
+                             raid,
+                             world_guard.get_access_location(raid),
                             "print",
                         ))
                     }

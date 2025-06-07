@@ -51,6 +51,19 @@ impl PColor {
     }
 }
 
+impl std::hash::Hash for PColor {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        match self {
+            PColor::Palette(n) => n.hash(state),
+            PColor::Color(c) => {
+                for x in c.to_u8_array() {
+                    x.hash(state);
+                }
+            }
+        }
+    }
+}
+
 #[cfg(feature = "scripting")]
 impl TypedThrough for PColor {
     fn through_type_info() -> ThroughTypeInfo {

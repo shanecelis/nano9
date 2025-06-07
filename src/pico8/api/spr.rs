@@ -1,5 +1,4 @@
 use super::*;
-use bevy::utils::hashbrown::hash_map::DefaultHashBuilder;
 
 #[cfg(feature = "scripting")]
 use bevy_mod_scripting::core::{
@@ -8,7 +7,7 @@ use bevy_mod_scripting::core::{
 };
 
 use crate::{hash::hash_f32, pico8::Gfx};
-
+use bevy::utils::hashbrown::hash_map::DefaultHashBuilder;
 use std::{hash::{BuildHasher, Hash, Hasher}, any::TypeId};
 
 pub(crate) fn plugin(app: &mut App) {

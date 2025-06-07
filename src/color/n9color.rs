@@ -12,7 +12,7 @@ use bevy_mod_scripting::{
     GetTypeDependencies,
 };
 
-#[derive(Debug, Clone, Copy, Reflect)]
+#[derive(Debug, Clone, Copy, Reflect, Hash)]
 #[cfg_attr(feature = "scripting", derive(GetTypeDependencies))]
 #[derive(Default)]
 pub enum N9Color {
