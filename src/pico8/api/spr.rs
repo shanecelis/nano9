@@ -110,11 +110,26 @@ impl super::Pico8<'_, '_> {
         flip: Option<BVec2>,
         sheet_index: Option<usize>,
     ) -> Result<Entity, Error> {
-        let screen_pos = pixel_snap(self.state.draw_state.apply_camera_delta(screen_pos));
-        let x = screen_pos.x;
-        let y = screen_pos.y;
-        let flip = flip.unwrap_or_default();
+        let mut screen_pos = pixel_snap(self.state.draw_state.apply_camera_delta(screen_pos));
+        screen_pos.y = negate_y(screen_pos.y);
         let sheet_index = sheet_index.unwrap_or(0);
+
+        let hash = { let mut hasher = DefaultHashBuilder::default().build_hasher();
+                     "sspr".hash(&mut hasher);
+                     sprite_rect.as_irect().hash(&mut hasher);
+                     // Need to hash the palette choice and
+                     self.state.palette.hash(&mut hasher);
+                     self.state.pal_map.hash(&mut hasher);
+                     screen_size.inspect(|s| s.as_uvec2().hash(&mut hasher));
+                     flip.inspect(|f| f.hash(&mut hasher));
+                     sheet_index.hash(&mut hasher);
+                     hasher.finish()
+        };
+        let flip = flip.unwrap_or_default();
+        // See if there's already an entity available.
+        if let Some(id) = self.resurrect(hash, screen_pos) {
+            return Ok(id);
+        }
         let sheet = self
             .pico8_asset()?
             .sprite_sheets
@@ -144,13 +159,13 @@ impl super::Pico8<'_, '_> {
             flip_y: flip.y,
             ..default()
         };
-        let clearable = Clearable::default();
+        let clearable = Clearable::new(2).with_hash(hash);
         Ok(self
             .commands
             .spawn((
-                Name::new("spr"),
+                Name::new("sspr"),
                 sprite,
-                Transform::from_xyz(x, negate_y(y), clearable.suggest_z()),
+                Transform::from_xyz(screen_pos.x, screen_pos.y, clearable.suggest_z()),
                 clearable,
             ))
             .id())
