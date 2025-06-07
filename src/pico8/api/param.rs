@@ -38,14 +38,14 @@ pub struct Pico8<'w, 's> {
 impl Pico8<'_, '_> {
 
     /// Resurrects a hidden entity with the same essential attributes.
-    fn resurrect(&mut self, hash: u64, position: Vec2) -> Option<Entity> {
+    pub fn resurrect(&mut self, hash: u64, position: Vec2) -> Option<Entity> {
         // See if there's already an entity available.
         if let Some(id) = self.clear_cache.take(&hash) {
             self.commands.queue(move |world: &mut World| {
                 let maybe_z = world.get_mut::<Clearable>(id).map(|mut clearable| {
                     // We've extracted it from the cache, so it's no longer cached.
                     clearable.cached = false;
-                    clearable.resurrect(2);
+                    clearable.resurrect(2); // Make this a parameter.
                     clearable.suggest_z()
                 });
                 if let Some(mut visibility) = world.get_mut::<Visibility>(id) {

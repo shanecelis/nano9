@@ -47,22 +47,7 @@ impl super::Pico8<'_, '_> {
                      hasher.finish()
         };
         // See if there's already an entity available.
-        if let Some(id) = self.clear_cache.take(&hash) {
-            self.commands.queue(move |world: &mut World| {
-                let maybe_z = world.get_mut::<Clearable>(id).map(|mut clearable| {
-                    // We've extracted it from the cache, so it's no longer cached.
-                    clearable.cached = false;
-                    clearable.resurrect(2);
-                    clearable.suggest_z()
-                });
-                if let Some(mut visibility) = world.get_mut::<Visibility>(id) {
-                    *visibility = Visibility::Inherited;
-                }
-                if let Some(mut transform) = world.get_mut::<Transform>(id) {
-                    let z = maybe_z.unwrap_or(transform.translation.z);
-                    transform.translation = screen_start.extend(z);
-                }
-            });
+        if let Some(id) = self.resurrect(hash, screen_start) {
             return Ok(id);
         }
 

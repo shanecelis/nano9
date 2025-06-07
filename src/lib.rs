@@ -17,6 +17,7 @@ mod plugins;
 pub mod prelude;
 #[cfg(feature = "scripting")]
 mod var;
+pub(crate) mod hash;
 
 pub use color::*;
 #[cfg(feature = "scripting")]

@@ -1,4 +1,5 @@
 use super::*;
+use bevy::utils::hashbrown::hash_map::DefaultHashBuilder;
 
 #[cfg(feature = "scripting")]
 use bevy_mod_scripting::core::{
@@ -6,16 +7,16 @@ use bevy_mod_scripting::core::{
     error::InteropError,
 };
 
-use crate::pico8::Gfx;
+use crate::{hash::hash_f32, pico8::Gfx};
 
-use std::any::TypeId;
+use std::{hash::{BuildHasher, Hash, Hasher}, any::TypeId};
 
 pub(crate) fn plugin(app: &mut App) {
     #[cfg(feature = "scripting")]
     lua::plugin(app);
 }
 
-#[derive(Reflect, Clone, Debug, Copy)]
+#[derive(Reflect, Clone, Debug, Copy, Hash)]
 pub enum Spr {
     /// Sprite at current spritesheet.
     Cur { sprite: usize },
@@ -193,11 +194,26 @@ impl super::Pico8<'_, '_> {
         flip: Option<BVec2>,
         turns: Option<f32>,
     ) -> Result<Entity, Error> {
-        let pos = pixel_snap(self.state.draw_state.apply_camera_delta(pos));
-        let x = pos.x;
-        let y = pos.y;
+        let mut pos = pixel_snap(self.state.draw_state.apply_camera_delta(pos));
+        pos.y = negate_y(pos.y);
+        let spr = spr.into();
+        let hash = { let mut hasher = DefaultHashBuilder::default().build_hasher();
+                     "spr".hash(&mut hasher);
+                     spr.hash(&mut hasher);
+                     // Need to hash the palette choice and
+                     self.state.palette.hash(&mut hasher);
+                     self.state.pal_map.hash(&mut hasher);
+                     size.inspect(|s| s.as_uvec2().hash(&mut hasher));
+                     flip.inspect(|f| f.hash(&mut hasher));
+                     turns.inspect(|t| hash_f32(*t, 2, &mut hasher));
+                     hasher.finish()
+        };
+        // See if there's already an entity available.
+        if let Some(id) = self.resurrect(hash, pos) {
+            return Ok(id);
+        }
         let flip = flip.unwrap_or_default();
-        let (sprites, index): (&SpriteSheet, usize) = match spr.into() {
+        let (sprites, index): (&SpriteSheet, usize) = match spr {
             Spr::Cur { sprite } => (self.sprite_sheet(None)?, sprite),
             Spr::From { sheet, sprite } => (self.sprite_sheet(Some(sheet))?, sprite),
             Spr::Set { sheet: _ } => {
@@ -206,6 +222,7 @@ impl super::Pico8<'_, '_> {
                 // return Ok(Entity::PLACEHOLDER);
             }
         };
+
         let atlas = TextureAtlas {
             layout: sprites.layout.clone(),
             index,
@@ -241,8 +258,8 @@ impl super::Pico8<'_, '_> {
                 ..default()
             }
         };
-        let clearable = Clearable::default();
-        let mut transform = Transform::from_xyz(x, negate_y(y), clearable.suggest_z());
+        let clearable = Clearable::new(2).with_hash(hash);
+        let mut transform = Transform::from_xyz(pos.x, pos.y, clearable.suggest_z());
         if let Some(turns) = turns {
             transform.translation.x += pixel_size.x;
             transform.translation.y += negate_y(pixel_size.y);
