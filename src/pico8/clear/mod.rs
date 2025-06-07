@@ -50,36 +50,66 @@ impl Default for ClearEvent {
 // }
 
 
-#[derive(Debug, Resource, Deref, DerefMut, Default)]
+#[derive(Resource, Default)]
 pub(crate) struct ClearCache(MashMap<u64, Entity>);
 
+impl ClearCache {
+    pub fn insert(&mut self, clearable: &mut Clearable, id: Entity) -> bool {
+        assert!(!clearable.cached);
+        match clearable.hash {
+            Some(hash) => {
+                self.0.insert(hash, id);
+                clearable.cached = true;
+                true
+            }
+            None => {
+                false
+            }
+        }
+    }
+
+    /// Must mark clearable.cached = false on returned entity.
+    pub fn take(&mut self, hash: &u64) -> Option<Entity> {
+        self.0.remove_one(hash)
+    }
+
+    pub fn remove(&mut self, clearable: &Clearable, id: Entity) -> bool {
+        if clearable.cached {
+            self.0.drain_key_if(&clearable.hash.unwrap(), |v| *v == id).next().is_some()
+        } else {
+            false
+        }
+    }
+}
+
 #[derive(Debug, Component, Clone, Copy)]
-#[component(on_add = on_insert_hook)]
-#[component(on_insert = on_insert_hook)]
-#[component(on_remove = on_remove_hook)]
+// #[component(on_add = on_insert_hook)]
+// #[component(on_insert = on_insert_hook)]
+// #[component(on_remove = on_remove_hook)]
 pub struct Clearable {
     draw_count: usize,
     pub time_to_live: u8,
     pub hash: Option<u64>,
+    pub cached: bool,
 }
 
 // We could add this, but maybe we'll just rely on visible.
-// enum ClearState {
-//     Hidden,
-//     Visible
+enum CacheState {
+    Uncached,
+    Cached
+}
+
+// fn on_insert_hook(mut world: DeferredWorld, id: Entity, _comp_id: ComponentId) {
+//     let Some(hash) = world.get::<Clearable>(id).and_then(|clearable| clearable.hash) else { return; };
+//     let Some(mut cache) = world.get_resource_mut::<ClearCache>() else { return; };
+//     cache.insert(hash, id);
 // }
 
-fn on_insert_hook(mut world: DeferredWorld, id: Entity, _comp_id: ComponentId) {
-    let Some(hash) = world.get::<Clearable>(id).and_then(|clearable| clearable.hash) else { return; };
-    let Some(mut cache) = world.get_resource_mut::<ClearCache>() else { return; };
-    cache.insert(hash, id);
-}
-
-fn on_remove_hook(mut world: DeferredWorld, id: Entity, _comp_id: ComponentId) {
-    let Some(hash) = world.get::<Clearable>(id).and_then(|clearable| clearable.hash) else { return; };
-    let Some(mut cache) = world.get_resource_mut::<ClearCache>() else { return; };
-    cache.remove(&hash);
-}
+// fn on_remove_hook(mut world: DeferredWorld, id: Entity, _comp_id: ComponentId) {
+//     let Some(hash) = world.get::<Clearable>(id).and_then(|clearable| clearable.hash) else { return; };
+//     let Some(mut cache) = world.get_resource_mut::<ClearCache>() else { return; };
+//     cache.remove(&hash);
+// }
 
 impl Default for Clearable {
     fn default() -> Self {
@@ -87,6 +117,7 @@ impl Default for Clearable {
             draw_count: DRAW_COUNTER.increment(),
             time_to_live: 0,
             hash: None,
+            cached: false,
         }
     }
 }
@@ -97,7 +128,8 @@ impl Clearable {
         Clearable {
             draw_count: DRAW_COUNTER.increment(),
             time_to_live,
-            hash: None
+            hash: None,
+            cached: false,
         }
     }
 
@@ -134,6 +166,7 @@ fn handle_clear_event(
     mut query: Query<(Entity, &mut Clearable, &mut Transform, &mut Visibility)>,
     mut commands: Commands,
     mut state: ResMut<Pico8State>,
+    mut cache: ResMut<ClearCache>,
 ) {
     if let Some(ceiling) = events.read().map(|e| e.draw_ceiling).max() {
         let (less_than, mut greater_than): (Vec<_>, Vec<_>) = query
@@ -143,10 +176,15 @@ fn handle_clear_event(
             if clearable.time_to_live <= 0 {
                 // These should be removed from the cache.
                 commands.entity(id).despawn_recursive();
+                // Remove from cache if necessary.
+                let _removed = cache.remove(&clearable, id);
             } else {
                 // These should go into the cache.
                 clearable.time_to_live -= 1;
                 *visibility = Visibility::Hidden;
+                if !clearable.cached && clearable.hash.is_some() {
+                    cache.insert(&mut clearable, id);
+                }
             }
         }
 

@@ -32,5 +32,33 @@ pub struct Pico8<'w, 's> {
     pub(crate) pico8_assets: ResMut<'w, Assets<Pico8Asset>>,
     pub(crate) pico8_handle: Res<'w, Pico8Handle>,
     pub(crate) defaults: Res<'w, pico8::Defaults>,
-    pub(crate) clear_cache: Res<'w, ClearCache>,
+    pub(crate) clear_cache: ResMut<'w, ClearCache>,
+}
+
+impl Pico8<'_, '_> {
+
+    /// Resurrects a hidden entity with the same essential attributes.
+    fn resurrect(&mut self, hash: u64, position: Vec2) -> Option<Entity> {
+        // See if there's already an entity available.
+        if let Some(id) = self.clear_cache.take(&hash) {
+            self.commands.queue(move |world: &mut World| {
+                let maybe_z = world.get_mut::<Clearable>(id).map(|mut clearable| {
+                    // We've extracted it from the cache, so it's no longer cached.
+                    clearable.cached = false;
+                    clearable.resurrect(2);
+                    clearable.suggest_z()
+                });
+                if let Some(mut visibility) = world.get_mut::<Visibility>(id) {
+                    *visibility = Visibility::Inherited;
+                }
+                if let Some(mut transform) = world.get_mut::<Transform>(id) {
+                    let z = maybe_z.unwrap_or(transform.translation.z);
+                    transform.translation = position.extend(z);
+                }
+            });
+            return Some(id);
+        } else {
+            None
+        }
+    }
 }

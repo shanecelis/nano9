@@ -28,11 +28,11 @@ impl DrawCounter {
         r
     }
 
-    fn overflowed(&self) -> bool {
+    pub(crate) fn overflowed(&self) -> bool {
         self.overflowed.load(Ordering::Relaxed)
     }
 
-    fn reset_overflowed(&self) {
+    pub(crate) fn reset_overflowed(&self) {
         self.overflowed.store(false, Ordering::Relaxed)
     }
 

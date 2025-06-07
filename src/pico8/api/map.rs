@@ -46,11 +46,12 @@ impl super::Pico8<'_, '_> {
                      map_index.inspect(|i| i.hash(&mut hasher));
                      hasher.finish()
         };
-        // See if there's already an entity here.
-        if let Some(id) = self.clear_cache.get(&hash) {
-            let id = *id;
+        // See if there's already an entity available.
+        if let Some(id) = self.clear_cache.take(&hash) {
             self.commands.queue(move |world: &mut World| {
                 let maybe_z = world.get_mut::<Clearable>(id).map(|mut clearable| {
+                    // We've extracted it from the cache, so it's no longer cached.
+                    clearable.cached = false;
                     clearable.resurrect(2);
                     clearable.suggest_z()
                 });

@@ -36,49 +36,77 @@ pub(crate) fn plugin(app: &mut App) {
 //     Content(String),
 // }
 
-#[derive(Default, Debug, Clone, Deserialize, Serialize)]
+/// Nano-9 config
+#[derive(Debug, Clone, Deserialize, Serialize, Default)]
 pub struct Config {
+    /// Name of the game
     pub name: Option<String>,
+    /// Target frames per second rate
     pub frames_per_second: Option<u8>,
+    /// Description of game
     pub description: Option<String>,
+    /// Nano-9 template, e.g., "pico8" or "gameboy"
+    // #[toml_example(default = "pico8")]
     pub template: Option<String>,
+    /// Author of game
     pub author: Option<String>,
+    /// License of game
     pub license: Option<String>,
+    /// Screen config
     pub screen: Option<Screen>,
+    /// Defaults
     pub defaults: Option<Defaults>,
+    /// Palettes
     #[serde(default, rename = "palette")]
     pub palettes: Vec<Palette>,
     // pub nearest_sampling: Option<bool>,
+    /// Fonts
     #[serde(default, rename = "font")]
     pub fonts: Vec<Font>,
+    /// Images
     #[serde(default, rename = "image")]
     pub sprite_sheets: Vec<SpriteSheet>,
+    /// Code
     #[cfg(feature = "scripting")]
+    // #[toml_example(default = "main.lua")]
     pub code: Option<String>,
+    /// Audio banks
     #[serde(default, rename = "audio_bank")]
     pub audio_banks: Vec<AudioBank>,
+    /// Maps
     #[serde(default, rename = "map")]
     pub maps: Vec<Map>,
 }
 
 #[derive(Default, Debug, Clone, Deserialize, Serialize)]
 pub struct Defaults {
+    /// Initial pen color
     pub pen_color: Option<usize>,
+    /// Font size when unspecified
     pub font_size: Option<f32>,
 }
 
+/// Audio bank
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(untagged)]
 pub enum AudioBank {
     // #[serde(rename = "p8")]
-    P8 { p8: PathBuf, count: usize },
+    P8 {
+        /// Path to Pico-8 file
+        p8: PathBuf,
+        /// Count of Sfx to read
+        count: usize },
     // #[serde(rename = "paths")]
-    Paths { paths: Vec<PathBuf> },
+    Paths {
+        /// Paths to audio files
+        paths: Vec<PathBuf> },
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct Screen {
+    /// Canvas size, logical pixels, e.g., [128, 128] for pico8
     pub canvas_size: UVec2,
+    /// Screen size, physical pixels, e.g., [512, 512] for pico8
     pub screen_size: Option<UVec2>,
 }
 
@@ -91,33 +119,52 @@ pub struct Screen {
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
 pub struct SpriteSheet {
+    /// Path to image
     pub path: String,
+    /// Sprite size, .e.g, [16, 16] for 16x16 sprites
     pub sprite_size: Option<UVec2>,
+    /// Sprite count, e.g., [8, 2] for 8 columns and 2 rows of sprites
     pub sprite_counts: Option<UVec2>,
+    /// Padding between sprites
     pub padding: Option<UVec2>,
+    /// Offset of initial sprite at top left
     pub offset: Option<UVec2>,
+    /// Indexed sprite, if true it reads in the palette colors from the image
+    /// and uses the palette when the image is drawn
     #[serde(default)]
     pub indexed: bool,
 }
 
+/// Sprite map
 #[derive(Debug, Clone, Serialize, Deserialize)]
 // #[serde(untagged)]
 pub struct Map {
+    /// Path to map, can have extensions .p8 or .tmx
     path: PathBuf,
 }
 
+/// Font
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(untagged)]
 pub enum Font {
+    /// Default font
     Default { default: bool },
-    Path { path: String, height: Option<f32> },
+    /// Font Path
+    Path {
+        /// Path to font
+        path: String,
+        /// Height of font
+        height: Option<f32>
+    },
     // pub path: String,
     // pub height: Option<f32>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct Palette {
+    /// Path to palette
     pub path: String,
+    /// Specify the row of the palette to use
     pub row: Option<u32>,
 }
 
@@ -415,4 +462,5 @@ path = "blah.p8"
         assert_eq!(config.maps.len(), 2);
         assert_eq!(config.maps[0].path, PathBuf::from("blah.ldtk"));
     }
+
 }
