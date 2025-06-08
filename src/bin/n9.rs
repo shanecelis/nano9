@@ -15,6 +15,81 @@ use nano9::{
     *,
 };
 use std::{env, fs, io, path::PathBuf, process::ExitCode};
+use clap::{Parser, Subcommand};
+
+#[derive(Parser)]
+#[command(version, about, long_about, disable_help_subcommand = true,
+          // subcommand_required = true,
+          // arg_required_else_help = true,
+)]
+// #[command(next_line_help = true)]
+struct Cli {
+    // /// Optional name to operate on
+    // name: Option<String>,
+
+    // Sets a custom config file
+    // #[arg(short, long, value_name = "FILE")]
+    // config: Option<PathBuf>,
+
+    // /// Turn debugging information on
+    // #[arg(short, long, action = clap::ArgAction::Count)]
+    // debug: u8,
+
+    #[command(subcommand)]
+    command: Command,
+}
+
+#[derive(Subcommand)]
+enum Command {
+    /// Run a Pico-8 cart or Nano-9 project
+    Run {
+        /// Run path.
+        path: PathBuf,
+    },
+    /// Create a new Nano-9 project
+    ///
+    /// Depending on the extension, it will create the following kinds:
+    ///   - FILE.p8lua, a one file Pico-8 Lua game with embedded config
+    ///   - FILE.lua, a one file Lua game with embedded config
+    ///   - FILE, a directory with config and code
+    ///   - --crate FILE, a Rust crate with config and code in assets directory
+    #[command(verbatim_doc_comment)]
+    New {
+        // n9 new --crate game
+        // n9 new game
+        /// Create a Rust crate
+        #[arg(long = "crate")]
+        as_crate: bool,
+        #[cfg(feature = "cargo-generate")]
+        /// Generate from template git repository
+        #[arg(long)]
+        git: Option<String>,
+        /// Choose a starter template
+        #[arg(long)]
+        starter: Option<StarterKit>,
+        /// Destination path
+        path: PathBuf,
+        #[arg(long)]
+        force: bool,
+    },
+    /// Detail what features are enabled
+    Info {
+    }
+}
+
+#[derive(Debug, Clone, clap::ValueEnum)]
+enum StarterKit {
+    Platformer,
+    TopDown,
+}
+// Secondary command line interface used as fallback.
+//
+// [source](https://stackoverflow.com/a/79564853/6454690)
+#[derive(Parser)]
+#[command(long_about = None)]
+struct CliDefault {
+    path: PathBuf,
+}
 
 fn usage(mut output: impl io::Write) -> io::Result<()> {
     writeln!(output, "usage: n9 <FILE>")?;
@@ -26,6 +101,22 @@ fn usage(mut output: impl io::Write) -> io::Result<()> {
 }
 
 fn main() -> io::Result<ExitCode> {
+    let mut cli = match Cli::try_parse().or_else(|err| match err.kind() {
+        clap::error::ErrorKind::InvalidSubcommand => {
+            CliDefault::try_parse().map(|cli_default| Cli {
+                command: Command::Run { path: cli_default.path },
+            }).map_err(|_| err)
+        }
+        _ => Err(err),
+    }) {
+        Ok(cli) => cli,
+        Err(err) => {
+            err.print().expect("error writing usage");
+            // this will print any errors the same way as Cli::parse() would
+            return Ok(ExitCode::from(err.exit_code() as u8))
+        }
+    };
+    // let cli = Cli::parse();
     // let example_files = [
     //     "cart.p8",
     //     "cart.p8.png",
@@ -44,7 +135,126 @@ fn main() -> io::Result<ExitCode> {
         usage(std::io::stdout())?;
         return Ok(ExitCode::from(0));
     }
-    let script = arg;
+    match cli.command {
+        Command::Run { .. } => run(cli),
+        Command::New { .. } => new(cli),
+        Command::Info { .. } => info(cli),
+    }
+}
+
+
+fn info(cli: Cli) -> io::Result<ExitCode> {
+
+    macro_rules! feature_info {
+        ($feature:literal, $description:literal, $enabled_by_default:expr) => {
+            {
+                let mark: char = match (cfg!(feature = $feature), $enabled_by_default) {
+                    (true, true) => 'x',
+                    (false, true) => '_',
+                    (true, false) => 'X',
+                    (false, false) => ' ',
+                };
+                println!("  - [{}] {:?} {}", mark, $feature, $description);
+            }
+        };
+    }
+    println!(r#"The following features are available. Use this key:
+                                    - [x] enabled and enabled by default
+                                    - [X] enabled and disabled by default
+                                    - [_] disabled and enabled by default
+                                    - [ ] disabled and disabled by default"#);
+    feature_info!("scripting", "for Lua scripting", true);
+    feature_info!("negate-y", "uses Pico-8's positive-y is downward", true);
+    feature_info!("pixel-snap", "applies floor to pixel locations", true);
+    feature_info!("pico8-to-lua", "converts Pico-8's dialect to Lua", true);
+    feature_info!("fixed", "uses fixed-point numbers for bit operations", true);
+    feature_info!("web-asset", "allows URLs for asset locations", false);
+    feature_info!("minibuffer", "embeds a gamedev console", false);
+    feature_info!("inspector", "adds inspector commands to console", false);
+    feature_info!("cargo-generate", "enables new from template", false);
+    Ok(ExitCode::from(0))
+}
+
+fn new(cli: Cli) -> io::Result<ExitCode> {
+    match cli.command {
+        Command::New { as_crate,
+                       #[cfg(feature = "cargo-generate")]
+                       git,
+                       starter, path, force } => {
+
+            #[cfg(feature = "cargo-generate")]
+            if git.is_some() && starter.is_some() {
+                eprintln!("error: Cannot specify a git template and starter kit.");
+                return Ok(ExitCode::from(3));
+            }
+            if let Some(starter) = starter {
+                todo!();
+            } else {
+                if let Some(extension) = path.extension().and_then(|s| s.to_str()) {
+                    if as_crate {
+                        eprintln!("error: Cannot create a crate when provided an extension {:?}.", extension);
+                        return Ok(ExitCode::from(4));
+                    }
+                    match extension {
+                        "lua" => {
+                            // Copy the lua template.
+                            let content = include_str!("../../examples/line.lua");
+                            fs::write(path, content)?;
+                            Ok(ExitCode::from(0))
+                        }
+                        "p8lua" => {
+                            // Copy the p8lua template.
+                            let content = include_str!("../../examples/line.p8lua");
+                            fs::write(path, content)?;
+                            Ok(ExitCode::from(0))
+                        }
+                        ext => {
+                            eprintln!("error: No template for extension {ext:?}.");
+                            Ok(ExitCode::from(5))
+                        }
+                    }
+                } else {
+                    // It's a directory.
+                    if as_crate {
+                        todo!();
+                    } else {
+                        if path.exists() {
+                            if path.is_file() {
+                                eprintln!("error: {path:?} is a file; a directory was expected.");
+                                return Ok(ExitCode::from(6));
+                            }
+                            if path.is_dir() {
+                                if ! force {
+                                    eprintln!("error: {path:?} already exists, canceling; use --force to override.");
+                                    return Ok(ExitCode::from(7));
+                                }
+                            }
+                        } else {
+                            fs::create_dir_all(&path)?;
+                        }
+                        let config = include_str!("../../examples/sprite/Nano9.toml");
+                        let mut config_path = path.to_path_buf();
+                        config_path.push("Nano9.toml");
+                        fs::write(&config_path, config)?;
+
+                        let code = include_str!("../../examples/sprite/main.p8lua");
+                        let mut code_path = path.to_path_buf();
+                        code_path.push("main.lua");
+                        fs::write(&code_path, code)?;
+                        Ok(ExitCode::from(0))
+                    }
+                }
+            }
+        }
+        _ => unreachable!()
+    }
+}
+
+fn run(cli: Cli) -> io::Result<ExitCode> {
+    let script = match cli.command {
+        Command::Run { path } => path,
+        _ => unreachable!(),
+    };
     let script_path = {
         let mut path = PathBuf::from(&script);
         if path.is_dir() {

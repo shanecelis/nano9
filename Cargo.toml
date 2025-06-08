@@ -47,6 +47,8 @@ pico8-to-lua = { version = "0.1.0", optional = true }
 fixed = { version = "1.29.0", optional = true }
 bevy_web_asset = { version = "0.10.0", optional = true, default-features = false }
 mashmap = "0.2.1"
+clap = { version = "4.5.39", features = ["derive"], optional = true }
+cargo-generate = { version = "0.23.3", optional = true }
 
 [features]
 default = [ "negate-y", "pico8-to-lua", "fixed", "scripting", "pixel-snap" ]
@@ -65,6 +67,8 @@ pixel-snap = []
 user_properties = [ "bevy_ecs_tiled/user_properties" ]
 # level = [ "dep:bevy_ecs_tiled", "dep:serde_json" ]
 level = [ "dep:bevy_ecs_tiled", "dep:serde_json", "dep:futures-lite" ]
+clap = ["dep:clap"]
+cargo-generate = ["dep:cargo-generate"]
 
 [dev-dependencies]
 bevy = "0.15"
@@ -74,7 +78,7 @@ version-sync = "0.9.5"
 name = "n9"
 test = false
 bench = false
-required-features = [ "scripting" ]
+required-features = [ "scripting", "clap" ]
 
 [patch.crates-io]
 mashmap = { git = "https://github.com/shanecelis/mashmap.git", branch = "drain_key_if" }
