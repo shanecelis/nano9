@@ -69,10 +69,11 @@ enum Command {
         starter: Option<StarterKit>,
         /// Destination path
         path: PathBuf,
+        /// Overwrite files if present
         #[arg(long)]
         force: bool,
     },
-    /// Detail what features are enabled
+    /// Report on available features
     Info {
     }
 }
@@ -89,15 +90,6 @@ enum StarterKit {
 #[command(long_about = None)]
 struct CliDefault {
     path: PathBuf,
-}
-
-fn usage(mut output: impl io::Write) -> io::Result<()> {
-    writeln!(output, "usage: n9 <FILE>")?;
-    // XXX: Rewrite this to show what it accepts based on its feature flags.
-    writeln!(
-        output,
-        "Nano-9 accepts cart.p8, cart.p8.png, code.lua, or game[/Nano9.toml] files."
-    )
 }
 
 fn main() -> io::Result<ExitCode> {
@@ -126,15 +118,6 @@ fn main() -> io::Result<ExitCode> {
     //     "game-dir/Nano9.toml",
     //     "code.n9",
     // ];
-    let mut args = env::args();
-    let Some(arg) = args.nth(1) else {
-        usage(std::io::stderr())?;
-        return Ok(ExitCode::from(2));
-    };
-    if arg == "--help" || arg == "-h" {
-        usage(std::io::stdout())?;
-        return Ok(ExitCode::from(0));
-    }
     match cli.command {
         Command::Run { .. } => run(cli),
         Command::New { .. } => new(cli),
@@ -179,13 +162,43 @@ fn new(cli: Cli) -> io::Result<ExitCode> {
     match cli.command {
         Command::New { as_crate,
                        #[cfg(feature = "cargo-generate")]
-                       git,
+                       mut git,
                        starter, path, force } => {
 
             #[cfg(feature = "cargo-generate")]
             if git.is_some() && starter.is_some() {
                 eprintln!("error: Cannot specify a git template and starter kit.");
                 return Ok(ExitCode::from(3));
+            } else if let Some(mut git) = git {
+                // Handle cargo-generate.
+                use cargo_generate::{generate, GenerateArgs, TemplatePath, Vcs};
+                // We use wasm-pack as in the README example,
+                // So this is equivalent to run cargo-generate like:
+                // ```sh
+                // cargo generate --git https://github.com/rustwasm/wasm-pack-template.git --name my-project
+                // ```
+                if !git.ends_with(".git") {
+                    git.push_str(".git");
+                }
+                let args = GenerateArgs {
+                    destination: Some(path.to_path_buf()),
+                    vcs: Some(Vcs::Git),
+                    template_path: TemplatePath {
+                        git: Some(git),
+                        ..TemplatePath::default()
+                    },
+                    ..GenerateArgs::default()
+                };
+                return Ok(match generate(args) {
+                    Ok(dest) => {
+                        println!("Wrote project in {dest:?}.");
+                        ExitCode::from(0)
+                    }
+                    Err(e) => {
+                        eprintln!("error: cargo-generate {e}");
+                        ExitCode::from(8)
+                    }
+                });
             }
             if let Some(starter) = starter {
                 todo!();
@@ -225,7 +238,7 @@ fn new(cli: Cli) -> io::Result<ExitCode> {
                             }
                             if path.is_dir() {
                                 if ! force {
-                                    eprintln!("error: {path:?} already exists, canceling; use --force to override.");
+                                    eprintln!("error: {path:?} already exists, canceling; cautiously use --force to overwrite.");
                                     return Ok(ExitCode::from(7));
                                 }
                             }
