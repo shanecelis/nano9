@@ -24,7 +24,7 @@ impl Defaults {
     pub fn from_config(config_defaults: &config::Defaults) -> Self {
         Self {
             initial_pen_color: config_defaults.initial_pen_color.unwrap_or(1),
-            initial_transparent_color: config_defaults.initial_transparent_color.clone(),
+            initial_transparent_color: config_defaults.initial_transparent_color,
             font_size: config_defaults.font_size.unwrap_or(5.0),
             clear_color: config_defaults.clear_color.unwrap_or(0),
         }

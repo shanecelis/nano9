@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use nano9::prelude::*;
 
-fn main() -> Result<(), ConfigLoaderError> {
+fn main() -> Result<(), ConfigError> {
     let content = include_str!("../assets/Nano9.toml");
     let mut config = Config::from_str(content)?;
     config.inject_template(None)?;

@@ -257,7 +257,7 @@ mod lua {
                         let cached_id = pico8.resurrect(hash, negate_vy(pos_p8.unwrap_or(Vec2::ZERO)));
                         Ok((pos_p8, hash, cached_id))
                     })?;
-                     if let Some(id) = cached_id {
+                     if let Some(_id) = cached_id {
                          // TODO: It expects the width to be returned.
                          return Ok(0.0);
                      }

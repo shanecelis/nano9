@@ -56,7 +56,7 @@ impl Pico8<'_, '_> {
                     transform.translation = position.extend(z);
                 }
             });
-            return Some(id);
+            Some(id)
         } else {
             None
         }

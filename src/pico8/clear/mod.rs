@@ -1,13 +1,5 @@
 use crate::pico8::Pico8State;
-use bevy::{
-    ecs::world::DeferredWorld,
-    ecs::component::ComponentId,
-    prelude::*,
-};
-use std::{
-    fmt,
-    sync::atomic::{AtomicBool, AtomicUsize, Ordering},
-};
+use bevy::prelude::*;
 // use bevy::utils::HashMap;
 use mashmap::MashMap;
 
@@ -91,12 +83,6 @@ pub struct Clearable {
     pub time_to_live: u8,
     pub hash: Option<u64>,
     pub cached: bool,
-}
-
-// We could add this, but maybe we'll just rely on visible.
-enum CacheState {
-    Uncached,
-    Cached
 }
 
 // fn on_insert_hook(mut world: DeferredWorld, id: Entity, _comp_id: ComponentId) {

@@ -1,5 +1,5 @@
 pub use super::{
-    config::{run_pico8_when_loaded, Config, SpriteSheet, ConfigLoaderError},
+    config::{run_pico8_when_loaded, Config, SpriteSheet, ConfigError},
     error::RunState,
     pico8::Pico8,
     Nano9Plugin, Nano9Plugins,

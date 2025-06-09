@@ -92,7 +92,7 @@ impl P8Map {
         let tile_size: TilemapTileSize = sprites.sprite_size.as_vec2().into();
         let grid_size = tile_size.into();
         let map_type = TilemapType::default();
-        let mut transform =
+        let transform =
             get_tilemap_top_left_transform(&map_size, &grid_size, &map_type, 0.0);
 
 

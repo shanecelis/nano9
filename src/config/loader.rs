@@ -24,7 +24,7 @@ pub(crate) fn plugin(app: &mut App) {
 }
 
 #[derive(Debug, thiserror::Error)]
-pub enum ConfigLoaderError {
+pub enum ConfigError {
     #[error("Could not read str: {0}")]
     Utf8(#[from] std::str::Utf8Error),
     #[error("Could not read string: {0}")]
@@ -66,7 +66,7 @@ pub struct ConfigLoader;
 impl AssetLoader for ConfigLoader {
     type Asset = pico8::Pico8Asset;
     type Settings = ();
-    type Error = ConfigLoaderError;
+    type Error = ConfigError;
 
     async fn load(
         &self,
@@ -108,7 +108,7 @@ pub struct LuaLoaderSettings {
 // impl AssetLoader for LuaLoader {
 //     type Asset = pico8::Pico8Asset;
 //     type Settings = ();
-//     type Error = ConfigLoaderError;
+//     type Error = ConfigError;
 
 //     async fn load(
 //         &self,
@@ -165,7 +165,7 @@ pub struct LuaLoaderSettings {
 impl AssetLoader for LuaLoader {
     type Asset = ScriptAsset;
     type Settings = LuaLoaderSettings;
-    type Error = ConfigLoaderError;
+    type Error = ConfigError;
 
     async fn load(
         &self,
@@ -230,7 +230,7 @@ impl AssetLoader for LuaLoader {
 async fn into_asset(
     config: Config,
     load_context: &mut LoadContext<'_>,
-) -> Result<Pico8Asset, ConfigLoaderError> {
+) -> Result<Pico8Asset, ConfigError> {
     let mut sprite_sheets = vec![];
     for (i, mut sheet) in config.sprite_sheets.into_iter().enumerate() {
         // let flags: Vec<u8>;
@@ -259,7 +259,7 @@ async fn into_asset(
         //                         &*tileset
         //                             .image
         //                             .as_ref()
-        //                             .ok_or(ConfigLoaderError::Message(format!(
+        //                             .ok_or(ConfigError::Message(format!(
         //                                 "could not load .tsx image {i}"
         //                             )))?
         //                             .source,
@@ -366,7 +366,7 @@ async fn into_asset(
                                         handle: load_context.load(&*map.path),
                                     }.into());
                                     #[cfg(not(feature = "level"))]
-                                    Err(ConfigLoaderError::Message(format!("The map {:?} is a Tiled map; consider using the '--features=level' flag.", &map.path)))
+                                    Err(ConfigError::Message(format!("The map {:?} is a Tiled map; consider using the '--features=level' flag.", &map.path)))
                             }
                             "world" => {
                                     #[cfg(feature = "level")]
@@ -374,12 +374,12 @@ async fn into_asset(
                                         handle: load_context.load(&*map.path),
                                     }.into());
                                     #[cfg(not(feature = "level"))]
-                                    Err(ConfigLoaderError::Message(format!("The map {:?} is a Tiled world; consider using the '--features=level' flag.", &map.path)))
+                                    Err(ConfigError::Message(format!("The map {:?} is a Tiled world; consider using the '--features=level' flag.", &map.path)))
                             }
-                            _ => Err(ConfigLoaderError::Message(format!("Unknown map format {:?}", &map.path)))
+                            _ => Err(ConfigError::Message(format!("Unknown map format {:?}", &map.path)))
                         }
                     } else {
-                        Err(ConfigLoaderError::Message(format!("The map path {:?} did not have an extension.", &map.path)))
+                        Err(ConfigError::Message(format!("The map path {:?} did not have an extension.", &map.path)))
                     }
                 }).collect::<Result<Vec<_>, _>>()?,
                 audio_banks: config.audio_banks.into_iter().map(|bank| pico8::audio::AudioBank(match bank {
@@ -419,7 +419,7 @@ fn get_layout(
     sprite_counts: Option<UVec2>,
     padding: Option<UVec2>,
     offset: Option<UVec2>,
-) -> Result<Option<TextureAtlasLayout>, ConfigLoaderError> {
+) -> Result<Option<TextureAtlasLayout>, ConfigError> {
     if let Some((size, counts)) = sprite_size.zip(sprite_counts) {
         Ok(Some(TextureAtlasLayout::from_grid(
             size, counts.x, counts.y, padding, offset,
@@ -436,7 +436,7 @@ fn get_layout(
                 offset,
             )))
         } else {
-            Err(ConfigLoaderError::InvalidSpriteSize {
+            Err(ConfigError::InvalidSpriteSize {
                 image_index,
                 image_size,
                 sprite_size,
@@ -455,7 +455,7 @@ fn get_layout(
                 offset,
             )))
         } else {
-            Err(ConfigLoaderError::InvalidSpriteCounts {
+            Err(ConfigError::InvalidSpriteCounts {
                 image_index,
                 image_size,
                 sprite_counts,

@@ -231,7 +231,7 @@ pub fn run_pico8_when_loaded(
 }
 
 impl std::str::FromStr for Config {
-    type Err = ConfigLoaderError;
+    type Err = ConfigError;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         Ok(toml::from_str::<Config>(s)?)
     }
@@ -247,13 +247,13 @@ impl Config {
     pub fn inject_template(
         &mut self,
         template_name: Option<&str>,
-    ) -> Result<(), ConfigLoaderError> {
+    ) -> Result<(), ConfigError> {
         if let Some(template_name) = template_name.or(self.template.as_deref()) {
             match template_name {
                 "gameboy" => self.inject_gameboy(),
                 "pico8" => self.inject_pico8(),
                 x => {
-                    return Err(ConfigLoaderError::InvalidTemplate(x.to_string()));
+                    return Err(ConfigError::InvalidTemplate(x.to_string()));
                 }
             }
         }
