@@ -78,6 +78,12 @@ enum Command {
     }
 }
 
+enum Language {
+    Rust,
+    Lua,
+    LuaRust,
+}
+
 #[derive(Debug, Clone, clap::ValueEnum)]
 enum StarterKit {
     Platformer,
@@ -166,7 +172,16 @@ fn new(cli: Cli) -> io::Result<ExitCode> {
                        #[cfg(feature = "cmd_lib")]
                        git,
                        path, force } => {
+            use log::{debug, error, log_enabled, info, Level};
+            // env_logger::init();
+            // env_logger::builder()
 
+            //     .format(|buf, record| {
+            //         writeln!(buf, "{}: {}", record.level(), record.args())
+            //     })
+            //     .filter(Some("n9"),
+            //     .init();
+            env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("warn,n9=info")).init();
             #[cfg(feature = "cmd_lib")]
             if git.is_some() && starter.is_some() {
                 eprintln!("error: Cannot specify a git template and starter kit.");
@@ -214,11 +229,13 @@ fn new(cli: Cli) -> io::Result<ExitCode> {
                         #[cfg(feature = "cmd_lib")]
                         {
                             use cmd_lib::run_cmd;
-                            // let options = if force { "--force" } else { "" };
+                            info!("Creating new cargo project at {:?}.", &path);
                             Ok(match run_cmd!(cargo new $path;
                                               cd $path;
+                                              cargo add bevy@0.15;
                                               // cargo add nano9 --features lib --no-default-features
-                                              cargo add nano9
+                                              // cargo add nano9;
+                                              cargo add --path ..;
                             ) {
                                 Ok(_) => {
                                     // Copy files
@@ -227,18 +244,21 @@ fn new(cli: Cli) -> io::Result<ExitCode> {
                                     p.push("assets");
                                     fs::create_dir_all(&p)?;
                                     p.push("Nano9.toml");
+                                    info!("Creating Nano-9 config at {:?}.", &p);
                                     fs::write(&p, content)?;
 
                                     let content = include_str!("templates/main.lua");
                                     let _ = p.pop();
                                     p.push("main.lua");
+                                    info!("Creating main Lua code at {:?}.", &p);
                                     fs::write(&p, content)?;
 
                                     let content = include_str!("templates/main.rs.txt");
                                     let _ = p.pop();
+                                    let _ = p.pop();
                                     p.push("src/main.rs");
+                                    info!("Creating main Rust code at {:?}.", &p);
                                     fs::write(&p, content)?;
-
                                     ExitCode::from(0)
                                 }
                                 Err(e) => {

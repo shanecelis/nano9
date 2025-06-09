@@ -56,6 +56,8 @@ pub enum ConfigLoaderError {
     InvalidTemplate(String),
     #[error("include error: {0}")]
     Cart(#[from] pico8::CartLoaderError),
+    #[error("toml error: {0}")]
+    Toml(#[from] toml::de::Error),
 }
 
 #[derive(Default)]

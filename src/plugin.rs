@@ -427,6 +427,29 @@ impl Plugin for Nano9Plugin {
                     },
                 );
 
+            // TODO: Add this another day.
+            //
+            // https://rhai.rs/book/rust/modules/ast.html
+            // let mut rhai_scripting_plugin = bevy_mod_scripting::rhai::RhaiScriptingPlugin::default().enable_context_sharing();
+            // rhai_scripting_plugin
+            //     .scripting_plugin
+            //     .add_context_initializer(
+            //         |_script_id: &str, context: &mut bevy_mod_scripting::rhai::RhaiScriptContext| {
+            //             // context.globals().set(
+            //             //     "_eval_string",
+            //             //     context.create_function(|ctx, arg: String| {
+            //             //         ctx.load(format!("tostring({arg})")).eval::<String>()
+            //             //     })?,
+            //             // )?;
+
+            //             // context
+            //             //     .load(include_str!("builtin.lua"))
+            //             //     .exec()
+            //             //     .expect("Problem in builtin.lua");
+            //             Ok(())
+            //         },
+            //     );
+
             app.add_plugins(BMSPlugin.set(lua_scripting_plugin))
                 .insert_resource({
                     let mut settings = ScriptAssetSettings::default();

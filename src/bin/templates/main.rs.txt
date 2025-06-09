@@ -1,22 +1,13 @@
-use bevy::{
-    audio::AudioPlugin,
-    prelude::*,
-};
-
+use bevy::prelude::*;
 use nano9::prelude::*;
-use std::io;
 
-fn main() -> io::Result<()> {
+fn main() -> Result<(), ConfigLoaderError> {
     let content = include_str!("../assets/Nano9.toml");
-    let mut config: Config = toml::from_str::<Config>(content)
-        .map_err(|e| io::Error::new(io::ErrorKind::Other, format!("{e}")))?;
-    config
-        .inject_template(None)
-        .map_err(|e| io::Error::new(io::ErrorKind::Other, format!("{e}")))?;
-    let mut app = App::new();
-    app
-        .add_systems(PreUpdate, run_pico8_when_loaded)
+    let mut config = Config::from_str(content)?;
+    config.inject_template(None)?;
+    App::new()
         .add_plugins(Nano9Plugins { config })
+        .add_systems(PreUpdate, run_pico8_when_loaded)
         .run();
     Ok(())
 }

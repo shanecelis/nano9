@@ -230,6 +230,13 @@ pub fn run_pico8_when_loaded(
     }
 }
 
+impl std::str::FromStr for Config {
+    type Err = ConfigLoaderError;
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Ok(toml::from_str::<Config>(s)?)
+    }
+}
+
 impl Config {
     pub fn pico8() -> Self {
         let mut config = Config::default();
