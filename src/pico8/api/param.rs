@@ -36,7 +36,6 @@ pub struct Pico8<'w, 's> {
 }
 
 impl Pico8<'_, '_> {
-
     /// Resurrects a hidden entity with the same essential attributes.
     pub fn resurrect(&mut self, hash: u64, position: Vec2) -> Option<Entity> {
         // See if there's already an entity available.

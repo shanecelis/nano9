@@ -1,12 +1,7 @@
-use bevy::{
-    ecs::system::{SystemParam, SystemState},
-};
+use bevy::ecs::system::{SystemParam, SystemState};
 
 use bevy_mod_scripting::core::{
-    bindings::{
-        access_map::ReflectAccessId,
-        function::script_function::FunctionCallContext,
-    },
+    bindings::{access_map::ReflectAccessId, function::script_function::FunctionCallContext},
     error::InteropError,
 };
 
@@ -48,4 +43,3 @@ pub(crate) fn with_pico8<X>(
 ) -> Result<X, InteropError> {
     with_system_param::<Pico8, X, Error>(ctx, f)
 }
-

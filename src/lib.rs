@@ -7,6 +7,7 @@ mod color;
 mod entity;
 pub mod error;
 mod ext;
+pub(crate) mod hash;
 #[cfg(feature = "level")]
 pub mod level;
 #[cfg(feature = "minibuffer")]
@@ -17,7 +18,6 @@ mod plugins;
 pub mod prelude;
 #[cfg(feature = "scripting")]
 mod var;
-pub(crate) mod hash;
 
 pub use color::*;
 #[cfg(feature = "scripting")]

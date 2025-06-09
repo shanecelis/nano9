@@ -6,19 +6,15 @@ use mashmap::MashMap;
 mod counter;
 use counter::DrawCounter;
 
-
 static DRAW_COUNTER: DrawCounter = DrawCounter::new(1);
 ///
 const MAX_EXPECTED_CLEARABLES: f32 = 1000.0;
 
 pub(crate) fn plugin(app: &mut App) {
-    app
-        .add_event::<ClearEvent>()
+    app.add_event::<ClearEvent>()
         .init_resource::<ClearCache>()
         .add_systems(Last, (handle_overflow, handle_clear_event).chain());
 }
-
-
 
 #[derive(Debug, Event, Clone, Copy)]
 pub struct ClearEvent {
@@ -41,7 +37,6 @@ impl Default for ClearEvent {
 //     }
 // }
 
-
 #[derive(Resource, Default)]
 pub(crate) struct ClearCache(MashMap<u64, Entity>);
 
@@ -54,9 +49,7 @@ impl ClearCache {
                 clearable.cached = true;
                 true
             }
-            None => {
-                false
-            }
+            None => false,
         }
     }
 
@@ -67,7 +60,10 @@ impl ClearCache {
 
     pub fn remove(&mut self, clearable: &Clearable, id: Entity) -> bool {
         if clearable.cached {
-            self.0.drain_key_if(&clearable.hash.unwrap(), |v| *v == id).next().is_some()
+            self.0
+                .drain_key_if(&clearable.hash.unwrap(), |v| *v == id)
+                .next()
+                .is_some()
         } else {
             false
         }
@@ -109,7 +105,6 @@ impl Default for Clearable {
 }
 
 impl Clearable {
-
     pub fn new(time_to_live: u8) -> Self {
         Clearable {
             draw_count: DRAW_COUNTER.increment(),

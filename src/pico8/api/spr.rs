@@ -8,7 +8,10 @@ use bevy_mod_scripting::core::{
 
 use crate::{hash::hash_f32, pico8::Gfx};
 use bevy::utils::hashbrown::hash_map::DefaultHashBuilder;
-use std::{hash::{BuildHasher, Hash, Hasher}, any::TypeId};
+use std::{
+    any::TypeId,
+    hash::{BuildHasher, Hash, Hasher},
+};
 
 pub(crate) fn plugin(app: &mut App) {
     #[cfg(feature = "scripting")]
@@ -114,16 +117,17 @@ impl super::Pico8<'_, '_> {
         screen_pos.y = negate_y(screen_pos.y);
         let sheet_index = sheet_index.unwrap_or(0);
 
-        let hash = { let mut hasher = DefaultHashBuilder::default().build_hasher();
-                     "sspr".hash(&mut hasher);
-                     sprite_rect.as_irect().hash(&mut hasher);
-                     // Need to hash the palette choice and
-                     self.state.palette.hash(&mut hasher);
-                     self.state.pal_map.hash(&mut hasher);
-                     screen_size.inspect(|s| s.as_uvec2().hash(&mut hasher));
-                     flip.inspect(|f| f.hash(&mut hasher));
-                     sheet_index.hash(&mut hasher);
-                     hasher.finish()
+        let hash = {
+            let mut hasher = DefaultHashBuilder::default().build_hasher();
+            "sspr".hash(&mut hasher);
+            sprite_rect.as_irect().hash(&mut hasher);
+            // Need to hash the palette choice and
+            self.state.palette.hash(&mut hasher);
+            self.state.pal_map.hash(&mut hasher);
+            screen_size.inspect(|s| s.as_uvec2().hash(&mut hasher));
+            flip.inspect(|f| f.hash(&mut hasher));
+            sheet_index.hash(&mut hasher);
+            hasher.finish()
         };
         let flip = flip.unwrap_or_default();
         // See if there's already an entity available.
@@ -211,16 +215,17 @@ impl super::Pico8<'_, '_> {
         let mut pos = pixel_snap(self.state.draw_state.apply_camera_delta(pos));
         pos.y = negate_y(pos.y);
         let spr = spr.into();
-        let hash = { let mut hasher = DefaultHashBuilder::default().build_hasher();
-                     "spr".hash(&mut hasher);
-                     spr.hash(&mut hasher);
-                     // Need to hash the palette choice and
-                     self.state.palette.hash(&mut hasher);
-                     self.state.pal_map.hash(&mut hasher);
-                     size.inspect(|s| s.as_uvec2().hash(&mut hasher));
-                     flip.inspect(|f| f.hash(&mut hasher));
-                     turns.inspect(|t| hash_f32(*t, 2, &mut hasher));
-                     hasher.finish()
+        let hash = {
+            let mut hasher = DefaultHashBuilder::default().build_hasher();
+            "spr".hash(&mut hasher);
+            spr.hash(&mut hasher);
+            // Need to hash the palette choice and
+            self.state.palette.hash(&mut hasher);
+            self.state.pal_map.hash(&mut hasher);
+            size.inspect(|s| s.as_uvec2().hash(&mut hasher));
+            flip.inspect(|f| f.hash(&mut hasher));
+            turns.inspect(|t| hash_f32(*t, 2, &mut hasher));
+            hasher.finish()
         };
         // See if there's already an entity available.
         if let Some(id) = self.resurrect(hash, pos) {

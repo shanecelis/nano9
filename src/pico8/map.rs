@@ -43,74 +43,75 @@ impl P8Map {
         let mut tile_storage = TileStorage::empty(map_size);
         let tilemap_entity = commands.spawn_empty().id();
 
-        let map_entity = commands.spawn((Name::new("map"),
-                                         Transform::from_translation(screen_start.extend(clearable.suggest_z())),
-                                         Visibility::Inherited,
-                                         clearable)).id();
-        commands.entity(tilemap_entity).with_children(|builder| {
-            for x in 0..map_size.x {
-                for y in 0..map_size.y {
-                    let texture_index = self
-                        .entries
-                        .get((map_pos.x + x + (map_pos.y + y) * pico8::MAP_COLUMNS) as usize)
-                        .and_then(|index| {
-                            if let Some(mask) = mask {
-                                sprite_sheets
-                                    .get(self.sheet_index)
-                                    .and_then(|sprite_sheet| {
-                                        (sprite_sheet.flags[*index as usize] & mask == mask)
-                                            .then_some(index)
-                                    })
-                            } else {
-                                Some(index)
-                            }
-                        })
-                        .copied()
-                        .unwrap_or(0);
-                    if texture_index != 0 {
-                        let tile_pos = TilePos {
-                            x,
-                            y: map_size.y - y - 1,
-                        };
-                        let tile_entity = builder
-                            .spawn((
-                                TileBundle {
+        let map_entity = commands
+            .spawn((
+                Name::new("map"),
+                Transform::from_translation(screen_start.extend(clearable.suggest_z())),
+                Visibility::Inherited,
+                clearable,
+            ))
+            .id();
+        commands
+            .entity(tilemap_entity)
+            .with_children(|builder| {
+                for x in 0..map_size.x {
+                    for y in 0..map_size.y {
+                        let texture_index = self
+                            .entries
+                            .get((map_pos.x + x + (map_pos.y + y) * pico8::MAP_COLUMNS) as usize)
+                            .and_then(|index| {
+                                if let Some(mask) = mask {
+                                    sprite_sheets
+                                        .get(self.sheet_index)
+                                        .and_then(|sprite_sheet| {
+                                            (sprite_sheet.flags[*index as usize] & mask == mask)
+                                                .then_some(index)
+                                        })
+                                } else {
+                                    Some(index)
+                                }
+                            })
+                            .copied()
+                            .unwrap_or(0);
+                        if texture_index != 0 {
+                            let tile_pos = TilePos {
+                                x,
+                                y: map_size.y - y - 1,
+                            };
+                            let tile_entity = builder
+                                .spawn((TileBundle {
                                     position: tile_pos,
                                     tilemap_id: TilemapId(tilemap_entity),
                                     texture_index: TileTextureIndex(texture_index as u32),
                                     ..Default::default()
-                                },
-                            ))
-                            .id();
-                        tile_storage.set(&tile_pos, tile_entity);
+                                },))
+                                .id();
+                            tile_storage.set(&tile_pos, tile_entity);
+                        }
                     }
                 }
-            }
-        }).set_parent(map_entity);
+            })
+            .set_parent(map_entity);
 
         let sprites = &sprite_sheets[self.sheet_index];
         let tile_size: TilemapTileSize = sprites.sprite_size.as_vec2().into();
         let grid_size = tile_size.into();
         let map_type = TilemapType::default();
-        let transform =
-            get_tilemap_top_left_transform(&map_size, &grid_size, &map_type, 0.0);
+        let transform = get_tilemap_top_left_transform(&map_size, &grid_size, &map_type, 0.0);
 
-
-        commands.entity(tilemap_entity).insert((
-            TilemapBundle {
-                grid_size,
-                map_type,
-                size: map_size,
-                storage: tile_storage,
-                texture: TilemapTexture::Single(match &sprites.handle {
-                    SprHandle::Image(handle) => handle.clone(),
-                    SprHandle::Gfx(ref handle) => gfx_to_image(handle)?,
-                }),
-                tile_size,
-                transform,
-                ..Default::default()
-            },
-        ));
+        commands.entity(tilemap_entity).insert((TilemapBundle {
+            grid_size,
+            map_type,
+            size: map_size,
+            storage: tile_storage,
+            texture: TilemapTexture::Single(match &sprites.handle {
+                SprHandle::Image(handle) => handle.clone(),
+                SprHandle::Gfx(ref handle) => gfx_to_image(handle)?,
+            }),
+            tile_size,
+            transform,
+            ..Default::default()
+        },));
         Ok(map_entity)
     }
 }

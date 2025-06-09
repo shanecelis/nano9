@@ -99,11 +99,13 @@ pub enum AudioBank {
         /// Path to Pico-8 file
         p8: PathBuf,
         /// Count of Sfx to read
-        count: usize },
+        count: usize,
+    },
     // #[serde(rename = "paths")]
     Paths {
         /// Paths to audio files
-        paths: Vec<PathBuf> },
+        paths: Vec<PathBuf>,
+    },
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -158,7 +160,7 @@ pub enum Font {
         /// Path to font
         path: String,
         /// Height of font
-        height: Option<f32>
+        height: Option<f32>,
     },
     // pub path: String,
     // pub height: Option<f32>,
@@ -244,10 +246,7 @@ impl Config {
         config
     }
 
-    pub fn inject_template(
-        &mut self,
-        template_name: Option<&str>,
-    ) -> Result<(), ConfigError> {
+    pub fn inject_template(&mut self, template_name: Option<&str>) -> Result<(), ConfigError> {
         if let Some(template_name) = template_name.or(self.template.as_deref()) {
             match template_name {
                 "gameboy" => self.inject_gameboy(),
@@ -526,5 +525,4 @@ clear_color = 8
         assert_eq!(defaults.initial_transparent_color.unwrap(), 7);
         assert_eq!(defaults.clear_color.unwrap(), 8);
     }
-
 }

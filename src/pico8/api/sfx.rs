@@ -161,7 +161,7 @@ mod lua {
                  offset: Option<u8>,
                  length: Option<u8>,
                  bank: Option<u8>| {
-                     let n = n.unwrap_or(0);
+                    let n = n.unwrap_or(0);
                     with_pico8(&ctx, move |pico8| {
                         pico8.sfx(
                             match n {
@@ -189,7 +189,7 @@ mod lua {
                  fade_ms: Option<u32>,
                  channel_mask: Option<u8>,
                  bank: Option<u8>| {
-                     let n = n.unwrap_or(0);
+                    let n = n.unwrap_or(0);
                     with_pico8(&ctx, move |pico8| {
                         pico8.music(
                             match n {

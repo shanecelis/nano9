@@ -63,11 +63,7 @@ impl super::Pico8<'_, '_> {
                     custom_size: Some(Vec2::new(size.x as f32, size.y as f32)),
                     ..default()
                 },
-                Transform::from_xyz(
-                    upper_left.x,
-                    negate_y(upper_left.y),
-                    clearable.suggest_z(),
-                ),
+                Transform::from_xyz(upper_left.x, negate_y(upper_left.y), clearable.suggest_z()),
                 clearable,
             ))
             .id();
@@ -130,11 +126,7 @@ impl super::Pico8<'_, '_> {
                     custom_size: Some(Vec2::new(size.x as f32, size.y as f32)),
                     ..default()
                 },
-                Transform::from_xyz(
-                    upper_left.x,
-                    negate_y(upper_left.y),
-                    clearable.suggest_z(),
-                ),
+                Transform::from_xyz(upper_left.x, negate_y(upper_left.y), clearable.suggest_z()),
                 clearable,
             ))
             .id();

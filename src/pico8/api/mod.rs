@@ -30,8 +30,8 @@ mod canvas;
 mod level;
 mod line;
 mod poke;
-mod sys;
 mod rand;
+mod sys;
 #[cfg(feature = "level")]
 pub use level::*;
 

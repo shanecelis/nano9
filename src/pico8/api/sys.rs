@@ -48,7 +48,6 @@ mod lua {
             })
             .register("delta_time", |ctx: FunctionCallContext| {
                 with_pico8(&ctx, move |pico8| Ok(pico8.delta_time()))
-            })
-            ;
+            });
     }
 }

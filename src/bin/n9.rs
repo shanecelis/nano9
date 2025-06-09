@@ -9,13 +9,13 @@ use bevy::{
 };
 #[cfg(feature = "minibuffer")]
 use bevy_minibuffer::prelude::*;
+use clap::{Parser, Subcommand};
 use nano9::{
     config::{front_matter, run_pico8_when_loaded, Config},
     pico8::{Pico8Asset, Pico8Handle, PICO8_FONT},
     *,
 };
 use std::{env, fs, io, path::PathBuf, process::ExitCode};
-use clap::{Parser, Subcommand};
 
 #[derive(Parser)]
 #[command(version, about, long_about, disable_help_subcommand = true,
@@ -34,7 +34,6 @@ struct Cli {
     // /// Turn debugging information on
     // #[arg(short, long, action = clap::ArgAction::Count)]
     // debug: u8,
-
     #[command(subcommand)]
     command: Command,
 }
@@ -81,8 +80,7 @@ enum Command {
         path: PathBuf,
     },
     /// Report on available features
-    Info {
-    }
+    Info {},
 }
 
 #[derive(Debug, Clone, clap::ValueEnum)]
@@ -108,18 +106,20 @@ struct CliDefault {
 
 fn main() -> io::Result<ExitCode> {
     let cli = match Cli::try_parse().or_else(|err| match err.kind() {
-        clap::error::ErrorKind::InvalidSubcommand => {
-            CliDefault::try_parse().map(|cli_default| Cli {
-                command: Command::Run { path: cli_default.path },
-            }).map_err(|_| err)
-        }
+        clap::error::ErrorKind::InvalidSubcommand => CliDefault::try_parse()
+            .map(|cli_default| Cli {
+                command: Command::Run {
+                    path: cli_default.path,
+                },
+            })
+            .map_err(|_| err),
         _ => Err(err),
     }) {
         Ok(cli) => cli,
         Err(err) => {
             err.print().expect("error writing usage");
             // this will print any errors the same way as Cli::parse() would
-            return Ok(ExitCode::from(err.exit_code() as u8))
+            return Ok(ExitCode::from(err.exit_code() as u8));
         }
     };
     // let cli = Cli::parse();
@@ -139,27 +139,25 @@ fn main() -> io::Result<ExitCode> {
     }
 }
 
-
 fn info(_cli: Cli) -> io::Result<ExitCode> {
-
     macro_rules! feature_info {
-        ($feature:literal, $description:literal, $enabled_by_default:expr) => {
-            {
-                let mark: char = match (cfg!(feature = $feature), $enabled_by_default) {
-                    (true, true) => 'x',
-                    (false, true) => '_',
-                    (true, false) => 'X',
-                    (false, false) => ' ',
-                };
-                println!("  - [{}] {:?} {}", mark, $feature, $description);
-            }
-        };
+        ($feature:literal, $description:literal, $enabled_by_default:expr) => {{
+            let mark: char = match (cfg!(feature = $feature), $enabled_by_default) {
+                (true, true) => 'x',
+                (false, true) => '_',
+                (true, false) => 'X',
+                (false, false) => ' ',
+            };
+            println!("  - [{}] {:?} {}", mark, $feature, $description);
+        }};
     }
-    println!(r#"The following features are available. Use this key:
+    println!(
+        r#"The following features are available. Use this key:
                                     - [x] enabled and enabled by default
                                     - [X] enabled and disabled by default
                                     - [_] disabled and enabled by default
-                                    - [ ] disabled and disabled by default"#);
+                                    - [ ] disabled and disabled by default"#
+    );
     feature_info!("scripting", "for Lua scripting", true);
     feature_info!("negate-y", "uses Pico-8's positive-y is downward", true);
     feature_info!("pixel-snap", "applies floor to pixel locations", true);
@@ -175,12 +173,15 @@ fn info(_cli: Cli) -> io::Result<ExitCode> {
 
 fn new(cli: Cli) -> io::Result<ExitCode> {
     match cli.command {
-        Command::New { as_crate,
-                       language: _,
-                       starter,
-                       #[cfg(feature = "cmd_lib")]
-                       git,
-                       path, force } => {
+        Command::New {
+            as_crate,
+            language: _,
+            starter,
+            #[cfg(feature = "cmd_lib")]
+            git,
+            path,
+            force,
+        } => {
             use log::info;
             // env_logger::init();
             // env_logger::builder()
@@ -190,7 +191,10 @@ fn new(cli: Cli) -> io::Result<ExitCode> {
             //     })
             //     .filter(Some("n9"),
             //     .init();
-            env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("warn,n9=info")).init();
+            env_logger::Builder::from_env(
+                env_logger::Env::default().default_filter_or("warn,n9=info"),
+            )
+            .init();
             #[cfg(feature = "cmd_lib")]
             if git.is_some() && starter.is_some() {
                 eprintln!("error: Cannot specify a git template and starter kit.");
@@ -204,13 +208,15 @@ fn new(cli: Cli) -> io::Result<ExitCode> {
                 // if !git.ends_with(".git") {
                 //     git.push_str(".git");
                 // }
-
             }
             if let Some(_starter) = starter {
                 todo!();
             } else if let Some(extension) = path.extension().and_then(|s| s.to_str()) {
                 if as_crate {
-                    eprintln!("error: Cannot create a crate when provided an extension {:?}.", extension);
+                    eprintln!(
+                        "error: Cannot create a crate when provided an extension {:?}.",
+                        extension
+                    );
                     return Ok(ExitCode::from(4));
                 }
                 match extension {
@@ -238,46 +244,51 @@ fn new(cli: Cli) -> io::Result<ExitCode> {
                     {
                         use cmd_lib::run_cmd;
                         info!("Creating new cargo project at {:?}.", &path);
-                        Ok(match run_cmd!(cargo new $path;
-                                          cd $path;
-                                          cargo add bevy@0.15;
-                                          // cargo add nano9 --features lib --no-default-features
-                                          // cargo add nano9;
-                                          cargo add --path ..;
-                        ) {
-                            Ok(_) => {
-                                // Copy files
-                                let content = include_str!("templates/Nano9.toml");
-                                let mut p = path.to_path_buf();
-                                p.push("assets");
-                                fs::create_dir_all(&p)?;
-                                p.push("Nano9.toml");
-                                info!("Creating Nano-9 config at {:?}.", &p);
-                                fs::write(&p, content)?;
+                        Ok(
+                            match run_cmd!(cargo new $path;
+                                              cd $path;
+                                              cargo add bevy@0.15;
+                                              // cargo add nano9 --features lib --no-default-features
+                                              // cargo add nano9;
+                                              cargo add --path ..;
+                            ) {
+                                Ok(_) => {
+                                    // Copy files
+                                    let content = include_str!("templates/Nano9.toml");
+                                    let mut p = path.to_path_buf();
+                                    p.push("assets");
+                                    fs::create_dir_all(&p)?;
+                                    p.push("Nano9.toml");
+                                    info!("Creating Nano-9 config at {:?}.", &p);
+                                    fs::write(&p, content)?;
 
-                                let content = include_str!("templates/main.lua");
-                                let _ = p.pop();
-                                p.push("main.lua");
-                                info!("Creating main Lua code at {:?}.", &p);
-                                fs::write(&p, content)?;
+                                    let content = include_str!("templates/main.lua");
+                                    let _ = p.pop();
+                                    p.push("main.lua");
+                                    info!("Creating main Lua code at {:?}.", &p);
+                                    fs::write(&p, content)?;
 
-                                let content = include_str!("templates/main.rs.txt");
-                                let _ = p.pop();
-                                let _ = p.pop();
-                                p.push("src/main.rs");
-                                info!("Creating main Rust code at {:?}.", &p);
-                                fs::write(&p, content)?;
-                                ExitCode::from(0)
-                            }
-                            Err(e) => {
-                                eprintln!("error: Problem running cargo {e}");
-                                ExitCode::from(8)
-                            }
-                        })
+                                    let content = include_str!("templates/main.rs.txt");
+                                    let _ = p.pop();
+                                    let _ = p.pop();
+                                    p.push("src/main.rs");
+                                    info!("Creating main Rust code at {:?}.", &p);
+                                    fs::write(&p, content)?;
+                                    ExitCode::from(0)
+                                }
+                                Err(e) => {
+                                    eprintln!("error: Problem running cargo {e}");
+                                    ExitCode::from(8)
+                                }
+                            },
+                        )
                     }
                     #[cfg(not(feature = "cmd_lib"))]
                     {
-                        eprintln!("error: Cannot create new crate when {:?} feature is disabled.", "cmd_lib");
+                        eprintln!(
+                            "error: Cannot create new crate when {:?} feature is disabled.",
+                            "cmd_lib"
+                        );
                         Ok(ExitCode::from(9))
                     }
                 } else {
@@ -286,7 +297,7 @@ fn new(cli: Cli) -> io::Result<ExitCode> {
                             eprintln!("error: {path:?} is a file; a directory was expected.");
                             return Ok(ExitCode::from(6));
                         }
-                        if path.is_dir() && ! force {
+                        if path.is_dir() && !force {
                             eprintln!("error: {path:?} already exists, canceling; cautiously use --force to overwrite.");
                             return Ok(ExitCode::from(7));
                         }
@@ -306,7 +317,7 @@ fn new(cli: Cli) -> io::Result<ExitCode> {
                 }
             }
         }
-        _ => unreachable!()
+        _ => unreachable!(),
     }
 }
 
@@ -432,11 +443,9 @@ fn run(cli: Cli) -> io::Result<ExitCode> {
         }
     }
 
-
-    app
-        .add_plugins(Nano9Plugins {
-            config: nano9_plugin.config,
-        });
+    app.add_plugins(Nano9Plugins {
+        config: nano9_plugin.config,
+    });
 
     let font: Handle<Font> = {
         if let Some(asset_server) = app.world().get_resource::<AssetServer>() {
@@ -445,8 +454,7 @@ fn run(cli: Cli) -> io::Result<ExitCode> {
             default()
         }
     };
-    app
-    .add_plugins(FpsOverlayPlugin {
+    app.add_plugins(FpsOverlayPlugin {
         config: FpsOverlayConfig {
             text_config: TextFont {
                 // Here we define size of our overlay
