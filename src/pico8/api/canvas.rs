@@ -9,7 +9,7 @@ impl super::Pico8<'_, '_> {
     // cls([n])
     pub fn cls(&mut self, color: Option<PColor>) -> Result<(), Error> {
         trace!("cls");
-        let c = self.get_color(color.unwrap_or(PColor::Palette(0)))?;
+        let c = self.get_color(color.unwrap_or(PColor::Palette(self.defaults.clear_color)))?;
         self.state.draw_state.clear_screen();
         let image = self
             .images

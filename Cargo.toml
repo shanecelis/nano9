@@ -48,10 +48,11 @@ fixed = { version = "1.29.0", optional = true }
 bevy_web_asset = { version = "0.10.0", optional = true, default-features = false }
 mashmap = "0.2.1"
 clap = { version = "4.5.39", features = ["derive"], optional = true }
-cargo-generate = { version = "0.23.3", optional = true }
+cmd_lib = { version = "1.9.5", optional = true }
 
 [features]
-default = [ "negate-y", "pico8-to-lua", "fixed", "scripting", "pixel-snap" ]
+default = [ "lib", "clap", "cmd_lib"]
+lib = [ "negate-y", "pico8-to-lua", "fixed", "scripting", "pixel-snap" ]
 negate-y = []
 inspector = [ "minibuffer", "dep:bevy_minibuffer_inspector" ]
 minibuffer = [ "dep:bevy_minibuffer" ]
@@ -68,7 +69,7 @@ user_properties = [ "bevy_ecs_tiled/user_properties" ]
 # level = [ "dep:bevy_ecs_tiled", "dep:serde_json" ]
 level = [ "dep:bevy_ecs_tiled", "dep:serde_json", "dep:futures-lite" ]
 clap = ["dep:clap"]
-cargo-generate = ["dep:cargo-generate"]
+cmd_lib = ["dep:cmd_lib"]
 
 [dev-dependencies]
 bevy = "0.15"

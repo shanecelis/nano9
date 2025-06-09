@@ -1,0 +1,62 @@
+### Nano-9 Config
+
+## Info
+# name = "My Nano-9 Game"
+# description = "A first-person pixeler"
+# author = "Jane Doe <jane.doe@blah.com>"
+# license = "MIT"
+# frames_per_second = 30
+template = "pico8"
+code = "main.lua"
+
+## Screen
+# [screen]
+# canvas_size = [128, 128]
+# screen_size = [512, 512]
+
+## Defaults
+# [defaults]
+# font_size = 5
+# initial_pen_color = 6
+# initial_transparent_color = 7
+# clear_color = 8
+
+## Fonts
+# [[font]] # 0
+# path = "embedded://nano9/pico8/pico-8.ttf"
+# [[font]] # 1
+# path = "font.tff"
+# [[font]] # 2
+# default = true # The default Bevy font
+
+## Palettes
+# [[palette]] # 0
+# path = "1bit-palette.png"
+# [[palette]] # 1
+# path = "dawn-palette.png"
+
+## Images and sprite sheets
+# [[image]] # 0
+# path = "sprite-sheet.png"
+# sprite_size = [8, 8]
+# indexed = true # An indexed image
+# [[image]] # 1
+# path = "main-character.png"
+# sprite_counts = [13, 1]
+
+## Audio banks
+# [[audio_bank]] #0
+# paths = ["boop.ogg", #0
+# "beep.ogg",          #1
+# "bonk.ogg",          #2
+# ]
+# Use the first 10 sfx from sounds.p8.
+# [[audio_bank]]
+# p8 = "sounds.p8"
+# count = 10
+
+## Maps
+# [[map]] # 0
+# path = "map0.p8"
+# [[map]] # 1
+# path = "map1.p8"

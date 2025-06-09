@@ -60,7 +60,7 @@ enum Command {
         /// Create a Rust crate
         #[arg(long = "crate")]
         as_crate: bool,
-        #[cfg(feature = "cargo-generate")]
+        #[cfg(feature = "cmd_lib")]
         /// Generate from template git repository
         #[arg(long)]
         git: Option<String>,
@@ -154,51 +154,32 @@ fn info(cli: Cli) -> io::Result<ExitCode> {
     feature_info!("web-asset", "allows URLs for asset locations", false);
     feature_info!("minibuffer", "embeds a gamedev console", false);
     feature_info!("inspector", "adds inspector commands to console", false);
-    feature_info!("cargo-generate", "enables new from template", false);
+    feature_info!("cmd_lib", "run commands for 'n9 new'", true);
     Ok(ExitCode::from(0))
 }
 
 fn new(cli: Cli) -> io::Result<ExitCode> {
     match cli.command {
         Command::New { as_crate,
-                       #[cfg(feature = "cargo-generate")]
-                       mut git,
-                       starter, path, force } => {
+                       starter,
+                       #[cfg(feature = "cmd_lib")]
+                       git,
+                       path, force } => {
 
-            #[cfg(feature = "cargo-generate")]
+            #[cfg(feature = "cmd_lib")]
             if git.is_some() && starter.is_some() {
                 eprintln!("error: Cannot specify a git template and starter kit.");
                 return Ok(ExitCode::from(3));
             } else if let Some(mut git) = git {
-                // Handle cargo-generate.
-                use cargo_generate::{generate, GenerateArgs, TemplatePath, Vcs};
                 // We use wasm-pack as in the README example,
                 // So this is equivalent to run cargo-generate like:
                 // ```sh
                 // cargo generate --git https://github.com/rustwasm/wasm-pack-template.git --name my-project
                 // ```
-                if !git.ends_with(".git") {
-                    git.push_str(".git");
-                }
-                let args = GenerateArgs {
-                    destination: Some(path.to_path_buf()),
-                    vcs: Some(Vcs::Git),
-                    template_path: TemplatePath {
-                        git: Some(git),
-                        ..TemplatePath::default()
-                    },
-                    ..GenerateArgs::default()
-                };
-                return Ok(match generate(args) {
-                    Ok(dest) => {
-                        println!("Wrote project in {dest:?}.");
-                        ExitCode::from(0)
-                    }
-                    Err(e) => {
-                        eprintln!("error: cargo-generate {e}");
-                        ExitCode::from(8)
-                    }
-                });
+                // if !git.ends_with(".git") {
+                //     git.push_str(".git");
+                // }
+
             }
             if let Some(starter) = starter {
                 todo!();
@@ -229,7 +210,44 @@ fn new(cli: Cli) -> io::Result<ExitCode> {
                 } else {
                     // It's a directory.
                     if as_crate {
-                        todo!();
+                        #[cfg(feature = "cmd_lib")]
+                        {
+                            use cmd_lib::run_cmd;
+                            // let options = if force { "--force" } else { "" };
+                            Ok(match run_cmd!(cargo new $path;
+                                              cd $path;
+                                              // cargo add nano9 --features lib --no-default-features
+                                              cargo add nano9
+                            ) {
+                                Ok(_) => {
+                                    // Copy files
+                                    let content = include_str!("templates/Nano9.toml");
+                                    let mut config_path = path.to_path_buf();
+                                    config_path.push("assets");
+                                    fs::create_dir_all(&config_path)?;
+                                    config_path.push("Nano9.toml");
+                                    fs::write(&config_path, content)?;
+
+                                    let content = include_str!("templates/main.lua");
+                                    let _ = config_path.pop();
+                                    let mut code_path = config_path;
+                                    code_path.push("main.lua");
+                                    fs::write(&code_path, content)?;
+                                    todo!("add main.rs");
+
+                                    ExitCode::from(0)
+                                }
+                                Err(e) => {
+                                    eprintln!("error: Problem running cargo {e}");
+                                    ExitCode::from(8)
+                                }
+                            })
+                        }
+                        #[cfg(not(feature = "cmd_lib"))]
+                        {
+                            eprintln!("error: Cannot create new crate when {:?} feature is disabled.", "cmd_lib");
+                            Ok(ExitCode::from(9))
+                        }
                     } else {
                         if path.exists() {
                             if path.is_file() {

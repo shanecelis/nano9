@@ -15,12 +15,16 @@ pub struct Pico8State {
 impl FromWorld for Pico8State {
     fn from_world(world: &mut World) -> Self {
         let defaults = world.resource::<pico8::Defaults>();
+        let mut pal_map = PalMap::default();
+        if let Some(trans) = defaults.initial_transparent_color {
+            pal_map.transparency.set(trans, true);
+        }
         Pico8State {
             palette: 0,
-            pal_map: PalMap::default(),
+            pal_map,
             draw_state: {
                 let mut draw_state = DrawState::default();
-                draw_state.pen = PColor::Palette(defaults.pen_color);
+                draw_state.pen = PColor::Palette(defaults.initial_pen_color);
                 draw_state
             },
         }

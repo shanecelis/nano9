@@ -81,7 +81,11 @@ pub struct Config {
 #[derive(Default, Debug, Clone, Deserialize, Serialize)]
 pub struct Defaults {
     /// Initial pen color
-    pub pen_color: Option<usize>,
+    pub initial_pen_color: Option<usize>,
+    /// Initial transparent color
+    pub initial_transparent_color: Option<usize>,
+    /// Clear color
+    pub clear_color: Option<usize>,
     /// Font size when unspecified
     pub font_size: Option<f32>,
 }
@@ -282,7 +286,9 @@ impl Config {
         if self.defaults.is_none() {
             self.defaults = Some(Defaults {
                 font_size: Some(5.0),
-                pen_color: Some(6),
+                initial_pen_color: Some(6),
+                clear_color: Some(0),
+                initial_transparent_color: Some(0),
             });
         }
     }
@@ -461,6 +467,57 @@ path = "blah.p8"
         .unwrap();
         assert_eq!(config.maps.len(), 2);
         assert_eq!(config.maps[0].path, PathBuf::from("blah.ldtk"));
+    }
+
+    #[test]
+    fn test_config_7() {
+        // I didn't know it would let other values through like this. Boo.
+        let config: Config = toml::from_str(
+            r#"
+frames_per_second = 70
+blah = 7
+"#,
+        )
+        .unwrap();
+        assert_eq!(config.frames_per_second, Some(70));
+    }
+
+    #[test]
+    fn test_config_8() {
+        // I didn't know it would let other values through like this. Boo.
+        let config: Config = toml::from_str(
+            r#"
+[screen]
+canvas_size = [128, 128]
+screen_size = [512, 512]
+"#,
+        )
+        .unwrap();
+        assert!(config.screen.is_some());
+        let screen = config.screen.unwrap();
+        assert_eq!(screen.canvas_size, UVec2::splat(128));
+        assert_eq!(screen.screen_size, Some(UVec2::splat(512)));
+    }
+
+    #[test]
+    fn test_config_9() {
+        // I didn't know it would let other values through like this. Boo.
+        let config: Config = toml::from_str(
+            r#"
+[defaults]
+font_size = 5
+initial_pen_color = 6
+initial_transparent_color = 7
+clear_color = 8
+"#,
+        )
+        .unwrap();
+        assert!(config.defaults.is_some());
+        let defaults = config.defaults.unwrap();
+        assert_eq!(defaults.font_size.unwrap(), 5.0);
+        assert_eq!(defaults.initial_pen_color.unwrap(), 6);
+        assert_eq!(defaults.initial_transparent_color.unwrap(), 7);
+        assert_eq!(defaults.clear_color.unwrap(), 8);
     }
 
 }
