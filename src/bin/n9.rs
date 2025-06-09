@@ -48,11 +48,12 @@ enum Command {
     },
     /// Create a new Nano-9 project
     ///
-    /// Depending on the extension, it will create the following kinds:
+    /// Depending on the extension and arguments, it will create the following kind of project:
     ///   - FILE.p8lua, a one file Pico-8 Lua game with embedded config
     ///   - FILE.lua, a one file Lua game with embedded config
-    ///   - FILE, a directory with config and code
-    ///   - --crate FILE, a Rust crate with config and code in assets directory
+    ///   - [--language lua] FILE, a directory with config and Lua code (no Rust)
+    ///   - --language rust FILE, a Rust-only crate with config in assets directory
+    ///   - --language lua-rust FILE, a Rust crate with config and Lua code in assets directory
     #[command(verbatim_doc_comment)]
     New {
         // n9 new --crate game
@@ -64,20 +65,27 @@ enum Command {
         /// Generate from template git repository
         #[arg(long)]
         git: Option<String>,
+        /// Language
+        #[arg(long, default_value = "lua")]
+        language: Option<Language>,
         /// Choose a starter template
         #[arg(long)]
         starter: Option<StarterKit>,
-        /// Destination path
-        path: PathBuf,
         /// Overwrite files if present
         #[arg(long)]
         force: bool,
+        /// Destination path
+        ///
+        /// A one-file project is created if the path ends with the following
+        /// extensions: .p8lua and .lua.
+        path: PathBuf,
     },
     /// Report on available features
     Info {
     }
 }
 
+#[derive(Debug, Clone, clap::ValueEnum)]
 enum Language {
     Rust,
     Lua,
@@ -99,7 +107,7 @@ struct CliDefault {
 }
 
 fn main() -> io::Result<ExitCode> {
-    let mut cli = match Cli::try_parse().or_else(|err| match err.kind() {
+    let cli = match Cli::try_parse().or_else(|err| match err.kind() {
         clap::error::ErrorKind::InvalidSubcommand => {
             CliDefault::try_parse().map(|cli_default| Cli {
                 command: Command::Run { path: cli_default.path },
@@ -132,7 +140,7 @@ fn main() -> io::Result<ExitCode> {
 }
 
 
-fn info(cli: Cli) -> io::Result<ExitCode> {
+fn info(_cli: Cli) -> io::Result<ExitCode> {
 
     macro_rules! feature_info {
         ($feature:literal, $description:literal, $enabled_by_default:expr) => {
@@ -168,11 +176,12 @@ fn info(cli: Cli) -> io::Result<ExitCode> {
 fn new(cli: Cli) -> io::Result<ExitCode> {
     match cli.command {
         Command::New { as_crate,
+                       language: _,
                        starter,
                        #[cfg(feature = "cmd_lib")]
                        git,
                        path, force } => {
-            use log::{debug, error, log_enabled, info, Level};
+            use log::info;
             // env_logger::init();
             // env_logger::builder()
 
@@ -186,7 +195,7 @@ fn new(cli: Cli) -> io::Result<ExitCode> {
             if git.is_some() && starter.is_some() {
                 eprintln!("error: Cannot specify a git template and starter kit.");
                 return Ok(ExitCode::from(3));
-            } else if let Some(mut git) = git {
+            } else if let Some(_git) = git {
                 // We use wasm-pack as in the README example,
                 // So this is equivalent to run cargo-generate like:
                 // ```sh
@@ -197,107 +206,103 @@ fn new(cli: Cli) -> io::Result<ExitCode> {
                 // }
 
             }
-            if let Some(starter) = starter {
+            if let Some(_starter) = starter {
                 todo!();
-            } else {
-                if let Some(extension) = path.extension().and_then(|s| s.to_str()) {
-                    if as_crate {
-                        eprintln!("error: Cannot create a crate when provided an extension {:?}.", extension);
-                        return Ok(ExitCode::from(4));
-                    }
-                    match extension {
-                        "lua" => {
-                            // Copy the lua template.
-                            let content = include_str!("../../examples/line.lua");
-                            fs::write(path, content)?;
-                            Ok(ExitCode::from(0))
-                        }
-                        "p8lua" => {
-                            // Copy the p8lua template.
-                            let content = include_str!("../../examples/line.p8lua");
-                            fs::write(path, content)?;
-                            Ok(ExitCode::from(0))
-                        }
-                        ext => {
-                            eprintln!("error: No template for extension {ext:?}.");
-                            Ok(ExitCode::from(5))
-                        }
-                    }
-                } else {
-                    // It's a directory.
-                    if as_crate {
-                        #[cfg(feature = "cmd_lib")]
-                        {
-                            use cmd_lib::run_cmd;
-                            info!("Creating new cargo project at {:?}.", &path);
-                            Ok(match run_cmd!(cargo new $path;
-                                              cd $path;
-                                              cargo add bevy@0.15;
-                                              // cargo add nano9 --features lib --no-default-features
-                                              // cargo add nano9;
-                                              cargo add --path ..;
-                            ) {
-                                Ok(_) => {
-                                    // Copy files
-                                    let content = include_str!("templates/Nano9.toml");
-                                    let mut p = path.to_path_buf();
-                                    p.push("assets");
-                                    fs::create_dir_all(&p)?;
-                                    p.push("Nano9.toml");
-                                    info!("Creating Nano-9 config at {:?}.", &p);
-                                    fs::write(&p, content)?;
-
-                                    let content = include_str!("templates/main.lua");
-                                    let _ = p.pop();
-                                    p.push("main.lua");
-                                    info!("Creating main Lua code at {:?}.", &p);
-                                    fs::write(&p, content)?;
-
-                                    let content = include_str!("templates/main.rs.txt");
-                                    let _ = p.pop();
-                                    let _ = p.pop();
-                                    p.push("src/main.rs");
-                                    info!("Creating main Rust code at {:?}.", &p);
-                                    fs::write(&p, content)?;
-                                    ExitCode::from(0)
-                                }
-                                Err(e) => {
-                                    eprintln!("error: Problem running cargo {e}");
-                                    ExitCode::from(8)
-                                }
-                            })
-                        }
-                        #[cfg(not(feature = "cmd_lib"))]
-                        {
-                            eprintln!("error: Cannot create new crate when {:?} feature is disabled.", "cmd_lib");
-                            Ok(ExitCode::from(9))
-                        }
-                    } else {
-                        if path.exists() {
-                            if path.is_file() {
-                                eprintln!("error: {path:?} is a file; a directory was expected.");
-                                return Ok(ExitCode::from(6));
-                            }
-                            if path.is_dir() {
-                                if ! force {
-                                    eprintln!("error: {path:?} already exists, canceling; cautiously use --force to overwrite.");
-                                    return Ok(ExitCode::from(7));
-                                }
-                            }
-                        } else {
-                            fs::create_dir_all(&path)?;
-                        }
-                        let config = include_str!("../../examples/sprite/Nano9.toml");
-                        let mut p = path.to_path_buf();
-                        p.push("Nano9.toml");
-                        fs::write(&p, config)?;
-
-                        let code = include_str!("../../examples/sprite/main.p8lua");
-                        let mut code_path = path.to_path_buf();
-                        code_path.push("main.lua");
-                        fs::write(&code_path, code)?;
+            } else if let Some(extension) = path.extension().and_then(|s| s.to_str()) {
+                if as_crate {
+                    eprintln!("error: Cannot create a crate when provided an extension {:?}.", extension);
+                    return Ok(ExitCode::from(4));
+                }
+                match extension {
+                    "lua" => {
+                        // Copy the lua template.
+                        let content = include_str!("../../examples/line.lua");
+                        fs::write(path, content)?;
                         Ok(ExitCode::from(0))
                     }
+                    "p8lua" => {
+                        // Copy the p8lua template.
+                        let content = include_str!("../../examples/line.p8lua");
+                        fs::write(path, content)?;
+                        Ok(ExitCode::from(0))
+                    }
+                    ext => {
+                        eprintln!("error: No template for extension {ext:?}.");
+                        Ok(ExitCode::from(5))
+                    }
+                }
+            } else {
+                // It's a directory.
+                if as_crate {
+                    #[cfg(feature = "cmd_lib")]
+                    {
+                        use cmd_lib::run_cmd;
+                        info!("Creating new cargo project at {:?}.", &path);
+                        Ok(match run_cmd!(cargo new $path;
+                                          cd $path;
+                                          cargo add bevy@0.15;
+                                          // cargo add nano9 --features lib --no-default-features
+                                          // cargo add nano9;
+                                          cargo add --path ..;
+                        ) {
+                            Ok(_) => {
+                                // Copy files
+                                let content = include_str!("templates/Nano9.toml");
+                                let mut p = path.to_path_buf();
+                                p.push("assets");
+                                fs::create_dir_all(&p)?;
+                                p.push("Nano9.toml");
+                                info!("Creating Nano-9 config at {:?}.", &p);
+                                fs::write(&p, content)?;
+
+                                let content = include_str!("templates/main.lua");
+                                let _ = p.pop();
+                                p.push("main.lua");
+                                info!("Creating main Lua code at {:?}.", &p);
+                                fs::write(&p, content)?;
+
+                                let content = include_str!("templates/main.rs.txt");
+                                let _ = p.pop();
+                                let _ = p.pop();
+                                p.push("src/main.rs");
+                                info!("Creating main Rust code at {:?}.", &p);
+                                fs::write(&p, content)?;
+                                ExitCode::from(0)
+                            }
+                            Err(e) => {
+                                eprintln!("error: Problem running cargo {e}");
+                                ExitCode::from(8)
+                            }
+                        })
+                    }
+                    #[cfg(not(feature = "cmd_lib"))]
+                    {
+                        eprintln!("error: Cannot create new crate when {:?} feature is disabled.", "cmd_lib");
+                        Ok(ExitCode::from(9))
+                    }
+                } else {
+                    if path.exists() {
+                        if path.is_file() {
+                            eprintln!("error: {path:?} is a file; a directory was expected.");
+                            return Ok(ExitCode::from(6));
+                        }
+                        if path.is_dir() && ! force {
+                            eprintln!("error: {path:?} already exists, canceling; cautiously use --force to overwrite.");
+                            return Ok(ExitCode::from(7));
+                        }
+                    } else {
+                        fs::create_dir_all(&path)?;
+                    }
+                    let config = include_str!("../../examples/sprite/Nano9.toml");
+                    let mut p = path.to_path_buf();
+                    p.push("Nano9.toml");
+                    fs::write(&p, config)?;
+
+                    let code = include_str!("../../examples/sprite/main.p8lua");
+                    let mut code_path = path.to_path_buf();
+                    code_path.push("main.lua");
+                    fs::write(&code_path, code)?;
+                    Ok(ExitCode::from(0))
                 }
             }
         }
