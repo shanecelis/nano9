@@ -155,6 +155,7 @@ fn info(cli: Cli) -> io::Result<ExitCode> {
     feature_info!("minibuffer", "embeds a gamedev console", false);
     feature_info!("inspector", "adds inspector commands to console", false);
     feature_info!("cmd_lib", "run commands for 'n9 new'", true);
+    feature_info!("clap", "argument parsing for 'n9'", true);
     Ok(ExitCode::from(0))
 }
 
@@ -222,18 +223,21 @@ fn new(cli: Cli) -> io::Result<ExitCode> {
                                 Ok(_) => {
                                     // Copy files
                                     let content = include_str!("templates/Nano9.toml");
-                                    let mut config_path = path.to_path_buf();
-                                    config_path.push("assets");
-                                    fs::create_dir_all(&config_path)?;
-                                    config_path.push("Nano9.toml");
-                                    fs::write(&config_path, content)?;
+                                    let mut p = path.to_path_buf();
+                                    p.push("assets");
+                                    fs::create_dir_all(&p)?;
+                                    p.push("Nano9.toml");
+                                    fs::write(&p, content)?;
 
                                     let content = include_str!("templates/main.lua");
-                                    let _ = config_path.pop();
-                                    let mut code_path = config_path;
-                                    code_path.push("main.lua");
-                                    fs::write(&code_path, content)?;
-                                    todo!("add main.rs");
+                                    let _ = p.pop();
+                                    p.push("main.lua");
+                                    fs::write(&p, content)?;
+
+                                    let content = include_str!("templates/main.rs.txt");
+                                    let _ = p.pop();
+                                    p.push("src/main.rs");
+                                    fs::write(&p, content)?;
 
                                     ExitCode::from(0)
                                 }
@@ -264,9 +268,9 @@ fn new(cli: Cli) -> io::Result<ExitCode> {
                             fs::create_dir_all(&path)?;
                         }
                         let config = include_str!("../../examples/sprite/Nano9.toml");
-                        let mut config_path = path.to_path_buf();
-                        config_path.push("Nano9.toml");
-                        fs::write(&config_path, config)?;
+                        let mut p = path.to_path_buf();
+                        p.push("Nano9.toml");
+                        fs::write(&p, config)?;
 
                         let code = include_str!("../../examples/sprite/main.p8lua");
                         let mut code_path = path.to_path_buf();
