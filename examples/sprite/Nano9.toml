@@ -1,5 +1,5 @@
 template = "pico8"
-code = [ "main.p8lua", "other.lua" ]
+scripts = [ "main.p8lua", "other.lua" ]
 # code = [ "main.p8lua"]
 [[image]]
 path = "BirdSprite.png"

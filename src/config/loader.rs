@@ -190,7 +190,7 @@ impl AssetLoader for LuaLoader {
         //     Config::pico8()
         // };
         // let mut asset = into_asset(config, load_context).await?;
-        // assert!(asset.code.is_none());
+        // assert!(asset.scripts.is_none());
 
         let code_path: PathBuf = load_context.path().into();
         let mut code = content;
@@ -350,7 +350,7 @@ async fn into_asset(
     let state = pico8::Pico8Asset {
 #[cfg(feature = "scripting")]
                 // code: config.code.map(|p| load_context.loader().with_settings(LuaLoaderSettings::default()).load(&*p)),
-                code: config.code.into_iter().map(|p| load_context.load(&*p)).collect(),
+                scripts: config.scripts.into_iter().map(|p| load_context.load(&*p)).collect(),
                 palettes,
                 border: load_context.loader()
                                     .with_settings(pixel_art_settings)

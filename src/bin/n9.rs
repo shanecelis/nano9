@@ -10,7 +10,7 @@ use bevy_minibuffer::prelude::*;
 use clap::{Parser, Subcommand};
 use nano9::{
     config::{front_matter, run_pico8_when_loaded, Config},
-    pico8::{Pico8Asset, Pico8Handle, PICO8_FONT},
+    pico8::{Pico8Asset, Pico8Handle},
     *,
 };
 use std::{env, fs, io, path::PathBuf, process::ExitCode};
@@ -48,9 +48,9 @@ enum Command {
     /// Depending on the extension and arguments, it will create the following kind of project:
     ///   - FILE.p8lua, a one file Pico-8 Lua game with embedded config
     ///   - FILE.lua, a one file Lua game with embedded config
-    ///   - [--language lua] FILE, a directory with config and Lua code (no Rust)
+    ///   - [--language lua] FILE, a directory with config and Lua scripts (no Rust)
     ///   - --language rust FILE, a Rust-only crate with config in assets directory
-    ///   - --language lua-rust FILE, a Rust crate with config and Lua code in assets directory
+    ///   - --language lua-rust FILE, a Rust crate with config and Lua scripts in assets directory
     #[command(verbatim_doc_comment)]
     New {
         /// Language
@@ -391,7 +391,7 @@ fn run(cli: Cli) -> io::Result<ExitCode> {
                 } else {
                     Config::pico8()
                 };
-            config.code = vec![AssetPath::from_path(&script_path)
+            config.scripts = vec![AssetPath::from_path(&script_path)
                 .with_source(&cwd)
                 .to_string()];
             nano9_plugin = Nano9Plugin { config };

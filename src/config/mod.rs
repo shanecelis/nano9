@@ -69,11 +69,11 @@ pub struct Config {
     /// Images
     #[serde(default, rename = "image")]
     pub sprite_sheets: Vec<SpriteSheet>,
-    /// Code
+    /// Scripts
     #[serde(default)]
     #[cfg(feature = "scripting")]
     // #[toml_example(default = "main.lua")]
-    pub code: Vec<String>,
+    pub scripts: Vec<String>,
     /// Audio banks
     #[serde(default, rename = "audio_bank")]
     pub audio_banks: Vec<AudioBank>,
@@ -200,10 +200,10 @@ pub fn update_asset(
                     // XXX: It happens here too!
                     #[cfg(feature = "scripting")]
                     {
-                        if !pico8_asset.code.is_empty() && pico8_handle.main_script.is_none() {
-                            let mut paths: Vec<_> = pico8_asset.code.iter()
-                                .map(|code| {
-                                    let path: &AssetPath<'static> = code.path().unwrap();
+                        if !pico8_asset.scripts.is_empty() && pico8_handle.main_script.is_none() {
+                            let mut paths: Vec<_> = pico8_asset.scripts.iter()
+                                .map(|scripts| {
+                                    let path: &AssetPath<'static> = scripts.path().unwrap();
                                     let script_path = (script_settings.script_id_mapper.map)(path);
                                     info!("Add script component path {}", &script_path);
                                     script_path

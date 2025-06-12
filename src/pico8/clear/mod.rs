@@ -156,7 +156,7 @@ fn handle_clear_event(
             .iter_mut()
             .partition(|(_, clearable, _, _)| clearable.draw_count < ceiling);
         for (id, mut clearable, _, mut visibility) in less_than {
-            if clearable.time_to_live <= 0 {
+            if clearable.time_to_live == 0 {
                 // These should be removed from the cache.
                 commands.entity(id).despawn_recursive();
                 // Remove from cache if necessary.

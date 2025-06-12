@@ -72,6 +72,7 @@ impl super::Pico8<'_, '_> {
         Ok(id)
     }
 
+    #[allow(clippy::too_many_arguments)]
     pub(crate) fn print_world(
         world: &mut World,
         dest: Option<Entity>,
@@ -112,6 +113,7 @@ impl super::Pico8<'_, '_> {
         Ok(pos.x + text_layout.size.x)
     }
 
+    #[allow(clippy::too_many_arguments)]
     fn pre_print_world(
         world: &mut World,
         entity: Option<Entity>,

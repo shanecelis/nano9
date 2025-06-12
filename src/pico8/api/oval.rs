@@ -27,8 +27,10 @@ impl super::Pico8<'_, '_> {
         let oval =
             tiny_skia::Rect::from_ltrb(0.0, 0.0, size.x as f32, size.y as f32).expect("oval rect");
         let path = PathBuilder::from_oval(oval).expect("oval path");
-        let mut paint = Paint::default();
-        paint.anti_alias = false;
+        let mut paint = Paint {
+            anti_alias: false,
+            ..default()
+        };
         paint.set_color_rgba8(255, 255, 255, 255);
         pixmap.fill_path(
             &path,
@@ -87,11 +89,15 @@ impl super::Pico8<'_, '_> {
         let oval =
             tiny_skia::Rect::from_ltrb(0.0, 0.0, size.x as f32, size.y as f32).expect("oval rect");
         let path = PathBuilder::from_oval(oval).expect("oval path");
-        let mut paint = Paint::default();
-        paint.anti_alias = false;
+        let mut paint = Paint {
+            anti_alias: false,
+            ..default()
+        };
         paint.set_color_rgba8(255, 255, 255, 255);
-        let mut stroke = Stroke::default();
-        stroke.width = 0.0;
+        let stroke = Stroke {
+            width: 0.0,
+            ..default()
+        };
         pixmap.stroke_path(
             &path,
             &paint,

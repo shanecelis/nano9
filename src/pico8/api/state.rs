@@ -22,10 +22,9 @@ impl FromWorld for Pico8State {
         Pico8State {
             palette: 0,
             pal_map,
-            draw_state: {
-                let mut draw_state = DrawState::default();
-                draw_state.pen = PColor::Palette(defaults.initial_pen_color);
-                draw_state
+            draw_state: DrawState {
+                pen: PColor::Palette(defaults.initial_pen_color),
+                ..default()
             },
         }
     }

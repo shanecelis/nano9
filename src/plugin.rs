@@ -16,7 +16,7 @@ use bevy::{
 use bevy_mod_scripting::{
     core::{
         asset::{Language, ScriptAsset, ScriptAssetSettings},
-        bindings::{function::namespace::NamespaceBuilder, script_value::ScriptValue},
+        bindings::{function::namespace::NamespaceBuilder},
         callback_labels,
         event::{Recipients, ScriptCallbackEvent, CallbackLabel},
         handler::event_handler,
