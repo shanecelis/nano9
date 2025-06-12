@@ -266,11 +266,11 @@ up by convention. This feature ensures that conversion happens. If it's
 disabled, there will be no conversion, so it would be like using Pico-8 but with
 y = 0 being the top of the screen and y = -127 being the bottom of the screen.
 
-### "fixed" (enabled by default)
+### "fixed-point" (enabled by default)
 Pico-8's numbers are all 32-bit fixed-point numbers. Nano-9 uses `f32`
 generally. Bit-twiddling functions like `shl()`, `shr()`, `lshr()`, `rotr()`,
 and `rotl()`on a fixed-point is significantly different than its floating-point
-counterpart. The "fixed" feature converts `f32` to a fixed-point, does the
+counterpart. The "fixed-point" feature converts `f32` to a fixed-point, does the
 operation, then converts it back to `f32`. If it's disabled, those bit
 operations are simply not available (but perhaps they should be in the future).
 

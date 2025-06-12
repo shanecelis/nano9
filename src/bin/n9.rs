@@ -154,7 +154,7 @@ fn info(_cli: Cli) -> io::Result<ExitCode> {
     feature_info!("negate-y", "uses Pico-8's positive-y is downward", true);
     feature_info!("pixel-snap", "applies floor to pixel locations", true);
     feature_info!("pico8-to-lua", "converts Pico-8's dialect to Lua", true);
-    feature_info!("fixed", "uses fixed-point numbers for bit operations", true);
+    feature_info!("fixed-point", "uses fixed-point numbers for bit operations", true);
     feature_info!("web-asset", "allows URLs for asset locations", false);
     feature_info!("minibuffer", "embeds a gamedev console", false);
     feature_info!("inspector", "adds inspector commands to console", false);

@@ -5,7 +5,7 @@ pub(crate) fn plugin(app: &mut App) {
     lua::plugin(app);
 }
 
-#[cfg(feature = "fixed")]
+#[cfg(feature = "fixed-point")]
 mod fixed_point {
     use fixed::types::extra::U16;
     use fixed::FixedI32;
@@ -76,7 +76,7 @@ mod lua {
 mod test {
     use super::*;
 
-    #[cfg(feature = "fixed")]
+    #[cfg(feature = "fixed-point")]
     mod fixed {
         use super::*;
         #[test]
