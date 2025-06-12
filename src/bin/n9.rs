@@ -3,9 +3,7 @@ use bevy::{
         io::{AssetSourceBuilder, AssetSourceId},
         AssetPath,
     },
-    dev_tools::fps_overlay::{FpsOverlayConfig, FpsOverlayPlugin},
     prelude::*,
-    text::FontSmoothing,
 };
 #[cfg(feature = "minibuffer")]
 use bevy_minibuffer::prelude::*;
@@ -393,9 +391,9 @@ fn run(cli: Cli) -> io::Result<ExitCode> {
                 } else {
                     Config::pico8()
                 };
-            config.code = Some(dbg!(AssetPath::from_path(&script_path)
+            config.code = vec![AssetPath::from_path(&script_path)
                 .with_source(&cwd)
-                .to_string()));
+                .to_string()];
             nano9_plugin = Nano9Plugin { config };
         }
         _ext => {
@@ -404,54 +402,15 @@ fn run(cli: Cli) -> io::Result<ExitCode> {
         }
     }
 
-    app.add_plugins(Nano9Plugins {
-        config: nano9_plugin.config,
-    });
-
-    let font: Handle<Font> = {
-        if let Some(asset_server) = app.world().get_resource::<AssetServer>() {
-            asset_server.load(PICO8_FONT)
-        } else {
-            default()
-        }
-    };
-    app.add_plugins(FpsOverlayPlugin {
-        config: FpsOverlayConfig {
-            text_config: TextFont {
-                // Here we define size of our overlay
-                font_size: 24.0,
-                // If we want, we can use a custom font
-                font,
-                // We could also disable font smoothing,
-                font_smoothing: FontSmoothing::None,
-            },
-            // We can also change color of the overlay
-            text_color: Color::WHITE,
-            enabled: false,
-        },
-    })
-    .add_systems(PreUpdate, run_pico8_when_loaded);
-
+    app
+        .add_plugins(Nano9Plugins {
+            config: nano9_plugin.config,
+        })
+        .add_systems(PreUpdate, run_pico8_when_loaded);
     #[cfg(feature = "minibuffer")]
-    app.add_plugins(MinibufferPlugins).add_acts((
-        BasicActs::default(),
-        // acts::universal::UniversalArgActs::default(),
-        // acts::tape::TapeActs::default(),
-        crate::minibuffer::Nano9Acts::default(),
-        // CountComponentsActs::default()
-        //     .add::<Text>("text")
-        //     .add::<TilemapType>("map")
-        //     .add::<TilePos>("tile")
-        //     .add::<Sprite>("sprite")
-        //     .add::<Clearable>("clearables"),
-        Act::new(toggle_fps).bind(keyseq! { Space N F }), // inspector::AssetActs::default().add::<Image>(),
-    ));
+    app
+        .add_plugins(nano9::minibuffer::quick_plugin);
 
-    #[cfg(all(feature = "minibuffer", feature = "inspector"))]
-    app.add_acts((
-        bevy_minibuffer_inspector::WorldActs::default(),
-        bevy_minibuffer_inspector::StateActs::default().add::<crate::error::RunState>(),
-    ));
     #[cfg(all(feature = "level", feature = "user_properties"))]
     app.add_systems(Startup, |reg: Res<AppTypeRegistry>| {
         bevy_ecs_tiled::map::export_types(&reg, "all-export-types.json", |name| true);
@@ -464,7 +423,3 @@ fn run(cli: Cli) -> io::Result<ExitCode> {
     Ok(ExitCode::from(0))
 }
 
-#[cfg(feature = "minibuffer")]
-fn toggle_fps(mut config: ResMut<FpsOverlayConfig>) {
-    config.enabled = !config.enabled;
-}

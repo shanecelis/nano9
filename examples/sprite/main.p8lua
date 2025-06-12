@@ -1,5 +1,4 @@
 function _init()
-    print("hello")
     spr(0)
 end
 
@@ -11,4 +10,5 @@ function _draw()
     local x, y = t % 128, t / 128
     spr(n, x, y, 1, 1, true --[[flip horizontal]])
     t = t + 1
+    print("hello "..(some_string or ""))
 end

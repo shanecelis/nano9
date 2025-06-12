@@ -7,7 +7,7 @@
 # license = "MIT"
 # frames_per_second = 30
 template = "pico8"
-code = "main.lua"
+code = [ "main.lua" ]
 
 ## Screen
 # [screen]

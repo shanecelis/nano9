@@ -4,14 +4,14 @@ use super::*;
 pub struct Pico8Handle {
     #[deref]
     pub handle: Handle<Pico8Asset>,
-    pub script_component: Option<Entity>,
+    pub main_script: Option<Entity>,
 }
 
 impl From<Handle<Pico8Asset>> for Pico8Handle {
     fn from(handle: Handle<Pico8Asset>) -> Self {
         Self {
             handle,
-            script_component: None,
+            main_script: None,
         }
     }
 }

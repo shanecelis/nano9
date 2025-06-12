@@ -83,14 +83,14 @@ fn to_asset(cart: Cart, load_context: &mut LoadContext) -> Result<Pico8Asset, Ca
     let asset = Pico8Asset {
         #[cfg(feature = "scripting")]
         code: if cfg!(feature = "scripting") {
-            Some(
+            vec![
                 load_context.labeled_asset_scope("lua".into(), move |_load_context| ScriptAsset {
                     content: code.into_bytes().into_boxed_slice(),
                     asset_path: code_path.into(),
                 }),
-            )
+            ]
         } else {
-            None
+            vec![]
         },
         palettes: vec![Palette::from_slice(&PALETTE)],
         border: load_context

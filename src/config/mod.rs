@@ -70,9 +70,10 @@ pub struct Config {
     #[serde(default, rename = "image")]
     pub sprite_sheets: Vec<SpriteSheet>,
     /// Code
+    #[serde(default)]
     #[cfg(feature = "scripting")]
     // #[toml_example(default = "main.lua")]
-    pub code: Option<String>,
+    pub code: Vec<String>,
     /// Audio banks
     #[serde(default, rename = "audio_bank")]
     pub audio_banks: Vec<AudioBank>,
@@ -199,13 +200,19 @@ pub fn update_asset(
                     // XXX: It happens here too!
                     #[cfg(feature = "scripting")]
                     {
-                        if let Some(code) = &pico8_asset.code {
-                            if pico8_handle.script_component.is_none() {
-                                let path: &AssetPath<'static> = code.path().unwrap();
-                                let script_path = (script_settings.script_id_mapper.map)(path);
-                                info!("Add script component path {}", &script_path);
-                                pico8_handle.script_component =
-                                    Some(commands.spawn(ScriptComponent(vec![script_path])).id());
+                        if !pico8_asset.code.is_empty() && pico8_handle.main_script.is_none() {
+                            let mut paths: Vec<_> = pico8_asset.code.iter()
+                                .map(|code| {
+                                    let path: &AssetPath<'static> = code.path().unwrap();
+                                    let script_path = (script_settings.script_id_mapper.map)(path);
+                                    info!("Add script component path {}", &script_path);
+                                    script_path
+                                }).collect();
+                            pico8_handle.main_script =
+                                Some(commands.spawn(ScriptComponent(vec![paths.pop().unwrap()])).id());
+                            if ! paths.is_empty() {
+                                // Spawn another script component for the libraries.
+                                commands.spawn(ScriptComponent(paths));
                             }
                         }
                     }
@@ -299,13 +306,14 @@ impl Config {
 
     pub fn inject_template(&mut self, template_name: Option<&str>) -> Result<(), ConfigError> {
         if let Some(template_name) = template_name.or(self.template.as_deref()) {
-            match template_name {
-                "gameboy" => self.inject_gameboy(),
-                "pico8" => self.inject_pico8(),
+            let mut template = match template_name {
+                "gameboy" => Config::gameboy(),
+                "pico8" => Config::pico8(),
                 x => {
                     return Err(ConfigError::InvalidTemplate(x.to_string()));
                 }
-            }
+            };
+            self.merge(&mut template)
         }
         Ok(())
     }
@@ -315,64 +323,6 @@ impl Config {
             self.fonts.push(Font::Default { default: true });
         }
         self
-    }
-
-    pub fn inject_pico8(&mut self) {
-        if self.frames_per_second.is_none() {
-            self.frames_per_second = Some(30);
-        }
-        if self.screen.is_none() {
-            self.screen = Some(Screen {
-                canvas_size: UVec2::splat(128),
-                screen_size: Some(UVec2::splat(512)),
-            });
-        }
-        if self.palettes.is_empty() {
-            self.palettes.push(Palette {
-                path: pico8::PICO8_PALETTE.into(),
-                row: None,
-            });
-        }
-        if self.fonts.is_empty() {
-            self.fonts.push(Font::Path {
-                path: pico8::PICO8_FONT.into(),
-                height: None,
-            });
-        }
-
-        if self.defaults.is_none() {
-            self.defaults = Some(Defaults {
-                font_size: Some(5.0),
-                initial_pen_color: Some(6),
-                clear_color: Some(0),
-                initial_transparent_color: Some(0),
-            });
-        }
-    }
-
-    pub fn inject_gameboy(&mut self) {
-        if self.frames_per_second.is_none() {
-            self.frames_per_second = Some(60);
-        }
-        if self.screen.is_none() {
-            self.screen = Some(Screen {
-                canvas_size: UVec2::new(240, 160),
-                screen_size: Some(UVec2::new(480, 320)),
-            });
-        }
-        if self.palettes.is_empty() {
-            self.palettes.push(Palette {
-                path: "embedded://nano9/config/gameboy-palettes.png".into(),
-                row: Some(15),
-            });
-        }
-
-        if self.fonts.is_empty() {
-            self.fonts.push(Font::Path {
-                path: "embedded://nano9/config/gameboy.ttf".into(),
-                height: None,
-            });
-        }
     }
 }
 

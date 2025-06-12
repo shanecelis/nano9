@@ -18,7 +18,7 @@ use bevy_mod_scripting::{
         asset::{Language, ScriptAsset, ScriptAssetSettings},
         bindings::{function::namespace::NamespaceBuilder, script_value::ScriptValue},
         callback_labels,
-        event::ScriptCallbackEvent,
+        event::{Recipients, ScriptCallbackEvent, CallbackLabel},
         handler::event_handler,
         ConfigureScriptPlugin,
     },
@@ -291,31 +291,29 @@ pub fn sync_window_size(
 }
 
 #[cfg(feature = "scripting")]
-/// Sends events allowing scripts to drive update logic
-pub fn send_update(mut writer: EventWriter<ScriptCallbackEvent>) {
-    writer.send(ScriptCallbackEvent::new_for_all(
-        call::Update,
-        vec![ScriptValue::Unit],
-    ));
-}
+pub fn send(label: impl Into<CallbackLabel>) -> impl Fn(EventWriter<ScriptCallbackEvent>,
+                                             Option<Res<Pico8Handle>>) {
+    let label = label.into();
+    move |mut writer: EventWriter<ScriptCallbackEvent>,
+    maybe_pico8_handle: Option<Res<Pico8Handle>>| {
+        let maybe_id = maybe_pico8_handle.and_then(|pico8_handle| pico8_handle.main_script);
 
-#[cfg(feature = "scripting")]
-/// Sends initialization event
-pub fn send_init(mut writer: EventWriter<ScriptCallbackEvent>) {
-    info!("calling init");
-    writer.send(ScriptCallbackEvent::new_for_all(
-        call::Init,
-        vec![ScriptValue::Unit],
-    ));
-}
-
-#[cfg(feature = "scripting")]
-/// Sends draw event
-pub fn send_draw(mut writer: EventWriter<ScriptCallbackEvent>) {
-    writer.send(ScriptCallbackEvent::new_for_all(
-        call::Draw,
-        vec![ScriptValue::Unit],
-    ));
+        match maybe_id {
+            Some(id) => {
+                writer.send(ScriptCallbackEvent::new(
+                    label.clone(),
+                    vec![],
+                    Recipients::Entity(id)
+                ));
+            }
+            None => {
+                writer.send(ScriptCallbackEvent::new_for_all(
+                    label.clone(),
+                    vec![],
+                ));
+            }
+        }
+    }
 }
 const DEFAULT_FRAMES_PER_SECOND: u8 = 60;
 
@@ -367,6 +365,9 @@ fn add_lua_logging(app: &mut App) {
         })
         .register("debug", |s: String| {
             bevy::log::debug!(s);
+        })
+        .register("trace", |s: String| {
+            bevy::log::trace!(s);
         });
 }
 
@@ -515,12 +516,12 @@ impl Plugin for Nano9Plugin {
             Update,
             (
                 fill_input,
-                send_init.run_if(init_when::<ScriptAsset>()),
+                send(call::Init).run_if(init_when::<ScriptAsset>()),
                 event_handler::<call::Init, LuaScriptingPlugin>,
-                send_update.run_if(in_state(RunState::Run)),
+                send(call::Update).run_if(in_state(RunState::Run)),
                 event_handler::<call::Update, LuaScriptingPlugin>,
                 event_handler::<call::Eval, LuaScriptingPlugin>,
-                send_draw.run_if(in_state(RunState::Run)),
+                send(call::Draw).run_if(in_state(RunState::Run)),
                 event_handler::<call::Draw, LuaScriptingPlugin>,
             )
                 .chain(),

@@ -1,7 +1,12 @@
 use crate::error::RunState;
 #[cfg(feature = "scripting")]
 use crate::{call, pico8::lua::with_system_param};
-use bevy::{core::FrameCount, prelude::*};
+use bevy::{
+    core::FrameCount,
+    dev_tools::fps_overlay::{FpsOverlayConfig, FpsOverlayPlugin},
+    prelude::*,
+    text::FontSmoothing,
+};
 use bevy_minibuffer::prelude::*;
 
 #[cfg(feature = "scripting")]
@@ -26,12 +31,60 @@ impl Default for Nano9Acts {
     fn default() -> Self {
         Self {
             acts: Acts::new([
-                Act::new(toggle_pause).bind(keyseq! { Space N P }),
+                Act::new(crate::action::toggle_pause).bind(keyseq! { Space N P }),
                 #[cfg(feature = "scripting")]
                 Act::new(lua_eval).bind(keyseq! { Space N E }),
             ]),
         }
     }
+}
+
+fn toggle_fps(mut config: ResMut<FpsOverlayConfig>) {
+    config.enabled = !config.enabled;
+}
+
+/// Quick use plugin for Minibuffer, configured similarly to n9.
+pub fn quick_plugin(app: &mut App) {
+    let font: Handle<Font> = {
+        if let Some(asset_server) = app.world().get_resource::<AssetServer>() {
+            asset_server.load(crate::pico8::PICO8_FONT)
+        } else {
+            default()
+        }
+    };
+    app.add_plugins(FpsOverlayPlugin {
+        config: FpsOverlayConfig {
+            text_config: TextFont {
+                // Here we define size of our overlay
+                font_size: 24.0,
+                // If we want, we can use a custom font
+                font,
+                // We could also disable font smoothing,
+                font_smoothing: FontSmoothing::None,
+            },
+            // We can also change color of the overlay
+            text_color: Color::WHITE,
+            enabled: false,
+        },
+    });
+    app.add_plugins(MinibufferPlugins).add_acts((
+        BasicActs::default(),
+        // acts::universal::UniversalArgActs::default(),
+        // acts::tape::TapeActs::default(),
+        crate::minibuffer::Nano9Acts::default(),
+        // CountComponentsActs::default()
+        //     .add::<Text>("text")
+        //     .add::<TilemapType>("map")
+        //     .add::<TilePos>("tile")
+        //     .add::<Sprite>("sprite")
+        //     .add::<Clearable>("clearables"),
+    ));
+
+    #[cfg(feature = "inspector")]
+    app.add_acts((
+        bevy_minibuffer_inspector::WorldActs::default(),
+        bevy_minibuffer_inspector::StateActs::default().add::<crate::error::RunState>(),
+    ));
 }
 
 impl ActsPlugin for Nano9Acts {
@@ -66,18 +119,6 @@ fn with_minibuffer<T>(
     f: impl FnOnce(&mut Minibuffer) -> Result<T, Error>,
 ) -> Result<T, InteropError> {
     with_system_param::<Minibuffer, T, Error>(ctx, f)
-}
-
-pub fn toggle_pause(
-    state: Res<State<RunState>>,
-    mut next_state: ResMut<NextState<RunState>>,
-    frame_count: Res<FrameCount>,
-) {
-    next_state.set(match **state {
-        RunState::Run => RunState::Pause,
-        RunState::Pause => RunState::Run,
-        _ => RunState::Pause,
-    });
 }
 
 #[cfg(feature = "scripting")]

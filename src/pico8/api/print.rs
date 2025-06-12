@@ -50,7 +50,7 @@ impl super::Pico8<'_, '_> {
             hasher.finish()
         };
         // See if there's already an entity available.
-        if let Some(id) = self.resurrect(hash, pos.unwrap_or(Vec2::ZERO)) {
+        if let Some(id) = self.resurrect(hash, negate_vy(pos.unwrap_or(Vec2::ZERO))) {
             return Ok(id);
         }
         let clearable = Clearable::new(2).with_hash(hash);

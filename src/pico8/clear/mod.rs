@@ -11,7 +11,9 @@ static DRAW_COUNTER: DrawCounter = DrawCounter::new(1);
 const MAX_EXPECTED_CLEARABLES: f32 = 1000.0;
 
 pub(crate) fn plugin(app: &mut App) {
-    app.add_event::<ClearEvent>()
+    app
+        .register_type::<Clearable>()
+        .add_event::<ClearEvent>()
         .init_resource::<ClearCache>()
         .add_systems(Last, (handle_overflow, handle_clear_event).chain());
 }
@@ -70,7 +72,7 @@ impl ClearCache {
     }
 }
 
-#[derive(Debug, Component, Clone, Copy)]
+#[derive(Debug, Component, Clone, Copy, Reflect)]
 // #[component(on_add = on_insert_hook)]
 // #[component(on_insert = on_insert_hook)]
 // #[component(on_remove = on_remove_hook)]

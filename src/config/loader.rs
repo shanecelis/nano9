@@ -350,7 +350,7 @@ async fn into_asset(
     let state = pico8::Pico8Asset {
 #[cfg(feature = "scripting")]
                 // code: config.code.map(|p| load_context.loader().with_settings(LuaLoaderSettings::default()).load(&*p)),
-                code: config.code.map(|p| load_context.load(&*p)),
+                code: config.code.into_iter().map(|p| load_context.load(&*p)).collect(),
                 palettes,
                 border: load_context.loader()
                                     .with_settings(pixel_art_settings)

@@ -3,7 +3,7 @@ use super::*;
 #[derive(Clone, Asset, Debug, Reflect)]
 pub struct Pico8Asset {
     #[cfg(feature = "scripting")]
-    pub code: Option<Handle<bevy_mod_scripting::core::asset::ScriptAsset>>,
+    pub code: Vec<Handle<bevy_mod_scripting::core::asset::ScriptAsset>>,
     pub(crate) palettes: Vec<Palette>,
     pub(crate) border: Handle<Image>,
     pub(crate) sprite_sheets: Vec<SpriteSheet>,
@@ -31,7 +31,7 @@ impl FromWorld for Pico8Asset {
 
         Pico8Asset {
             #[cfg(feature = "scripting")]
-            code: None,
+            code: vec![],
             palettes: vec![Palette::from_slice(&crate::pico8::PALETTE)],
             border: asset_server.load_with_settings(PICO8_BORDER, pixel_art_settings),
             font: vec![N9Font {

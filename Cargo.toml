@@ -75,6 +75,7 @@ user_properties = [ "bevy_ecs_tiled/user_properties" ]
 # level = [ "dep:bevy_ecs_tiled", "dep:serde_json" ]
 level = [ "dep:bevy_ecs_tiled", "dep:serde_json", "dep:futures-lite" ]
 
+
 [dev-dependencies]
 bevy = "0.15"
 version-sync = "0.9.5"
@@ -83,7 +84,7 @@ version-sync = "0.9.5"
 name = "n9"
 test = false
 bench = false
-required-features = [ "scripting", "clap" ]
+required-features = [ "cli" ]
 
 [patch.crates-io]
 mashmap = { git = "https://github.com/shanecelis/mashmap.git", branch = "drain_key_if" }

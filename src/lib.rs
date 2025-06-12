@@ -32,6 +32,9 @@ pub mod conversions;
 pub mod cursor;
 pub mod raycast;
 pub use plugins::*;
+pub mod pvec;
+pub mod action;
+pub mod condition;
 
 pub(crate) fn plugin(app: &mut App) {
     // Add other plugins.
@@ -43,3 +46,4 @@ pub(crate) fn plugin(app: &mut App) {
         app.add_plugins(level::plugin);
     }
 }
+
