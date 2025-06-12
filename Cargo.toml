@@ -51,9 +51,10 @@ clap = { version = "4.5.39", features = ["derive"], optional = true }
 cmd_lib = { version = "1.9.5", optional = true }
 log = "0.4.27"
 env_logger = "0.11.8"
+merge2 = "0.3.2"
 
 [features]
-default = [ "lib", "clap", "cmd_lib"]
+default = [ "lib", "clap", "cmd_lib", "gameboy" ]
 lib = [ "negate-y", "pico8-to-lua", "fixed", "scripting", "pixel-snap" ]
 negate-y = []
 inspector = [ "minibuffer", "dep:bevy_minibuffer_inspector" ]
@@ -63,6 +64,7 @@ fixed = [ "dep:fixed" ]
 scripting = [ "dep:bevy_mod_scripting" ]
 web-asset = [ "dep:bevy_web_asset" ]
 pixel-snap = []
+gameboy = []
 # Features after this line are not supported yet.
 # -----------------------------------------------
 # level = [ "dep:bevy_ecs_ldtk", "dep:ldtk_rust", "dep:serde_json"]

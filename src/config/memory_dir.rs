@@ -16,7 +16,7 @@ use bevy::{
 /// use std::path::Path;
 ///
 /// fn plugin(app: &mut App) {
-///     let config = Config::gameboy();
+///     let config = Config::pico8();
 ///     // Make our config readable by the Bevy AssetServer.
 ///     let mut memory_dir = MemoryDir::default();
 ///     let config_string = toml::to_string(&config).unwrap();

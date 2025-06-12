@@ -9,25 +9,28 @@ use crate::{
     pico8::{self, Pico8Handle},
 };
 use bevy::{
-    asset::{embedded_asset, AssetPath},
+    asset::AssetPath,
     prelude::*,
 };
 #[cfg(feature = "scripting")]
 use bevy_mod_scripting::core::{asset::ScriptAssetSettings, script::ScriptComponent};
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
+use merge2::Merge;
+
+#[cfg(feature = "gameboy")]
+pub mod gameboy;
 
 pub const DEFAULT_CANVAS_SIZE: UVec2 = UVec2::splat(128);
 pub const DEFAULT_SCREEN_SIZE: UVec2 = UVec2::splat(512);
 
 pub(crate) fn plugin(app: &mut App) {
-    embedded_asset!(app, "gameboy-palettes.png");
-    embedded_asset!(app, "gameboy.ttf");
     app
-        // .register_type::<AudioBank>()
-        // .register_type::<SpriteSheet>()
         .add_systems(Update, update_asset)
         .add_plugins(loader::plugin);
+    #[cfg(feature = "gameboy")]
+    app
+        .add_plugins(gameboy::plugin);
 }
 
 // #[derive(Default, Debug, Clone, Deserialize, Serialize)]
@@ -37,7 +40,7 @@ pub(crate) fn plugin(app: &mut App) {
 // }
 
 /// Nano-9 config
-#[derive(Debug, Clone, Deserialize, Serialize, Default)]
+#[derive(Debug, Clone, Deserialize, Serialize, Default, Merge, PartialEq)]
 pub struct Config {
     /// Name of the game
     pub name: Option<String>,
@@ -78,7 +81,7 @@ pub struct Config {
     pub maps: Vec<Map>,
 }
 
-#[derive(Default, Debug, Clone, Deserialize, Serialize)]
+#[derive(Default, Debug, Clone, Deserialize, Serialize, Merge, PartialEq)]
 pub struct Defaults {
     /// Initial pen color
     pub initial_pen_color: Option<usize>,
@@ -108,8 +111,9 @@ pub enum AudioBank {
     },
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Merge)]
 pub struct Screen {
+    #[merge(skip)]
     /// Canvas size, logical pixels, e.g., [128, 128] for pico8
     pub canvas_size: UVec2,
     /// Screen size, physical pixels, e.g., [512, 512] for pico8
@@ -123,7 +127,7 @@ pub struct Screen {
 //     Tiled { path: PathBuf },
 // }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default, Merge)]
 pub struct SpriteSheet {
     /// Path to image
     pub path: String,
@@ -142,7 +146,7 @@ pub struct SpriteSheet {
 }
 
 /// Sprite map
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 // #[serde(untagged)]
 pub struct Map {
     /// Path to map, can have extensions .p8 or .tmx
@@ -166,7 +170,7 @@ pub enum Font {
     // pub height: Option<f32>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Merge)]
 pub struct Palette {
     /// Path to palette
     pub path: String,
@@ -240,10 +244,57 @@ impl std::str::FromStr for Config {
 }
 
 impl Config {
+    /// The pico8 configuration
     pub fn pico8() -> Self {
-        let mut config = Config::default();
-        config.inject_pico8();
-        config
+        Config {
+            frames_per_second: Some(30),
+            screen: Some(Screen {
+                canvas_size: UVec2::splat(128),
+                screen_size: Some(UVec2::splat(512)),
+            }),
+            palettes: vec![Palette {
+                path: pico8::PICO8_PALETTE.into(),
+                row: None,
+            }],
+            fonts: vec![Font::Path {
+                path: pico8::PICO8_FONT.into(),
+                height: None,
+            }],
+            defaults: Some(Defaults {
+                font_size: Some(5.0),
+                initial_pen_color: Some(6),
+                clear_color: Some(0),
+                initial_transparent_color: Some(0),
+            }),
+            ..default()
+        }
+    }
+
+    /// The gameboy configuration
+    #[cfg(feature = "gameboy")]
+    pub fn gameboy() -> Self {
+        Config {
+            frames_per_second: Some(60),
+            screen: Some(Screen {
+                canvas_size: UVec2::new(240, 160),
+                screen_size: Some(UVec2::new(480, 320)),
+            }),
+            palettes: vec![Palette {
+                path: gameboy::PALETTES.into(),
+                row: Some(15),
+            }],
+            fonts: vec![Font::Path {
+                path: gameboy::FONT.into(),
+                height: None,
+            }],
+            defaults: Some(Defaults {
+                font_size: Some(5.0),
+                initial_pen_color: Some(1),
+                clear_color: Some(3),
+                initial_transparent_color: None,
+            }),
+            ..default()
+        }
     }
 
     pub fn inject_template(&mut self, template_name: Option<&str>) -> Result<(), ConfigError> {
@@ -322,12 +373,6 @@ impl Config {
                 height: None,
             });
         }
-    }
-
-    pub fn gameboy() -> Self {
-        let mut config = Config::default();
-        config.inject_gameboy();
-        config
     }
 }
 
@@ -524,5 +569,25 @@ clear_color = 8
         assert_eq!(defaults.initial_pen_color.unwrap(), 6);
         assert_eq!(defaults.initial_transparent_color.unwrap(), 7);
         assert_eq!(defaults.clear_color.unwrap(), 8);
+    }
+
+    #[test]
+    fn test_inject0() {
+        let mut a = Config::default();
+        a.inject_template(Some("pico8")).unwrap();
+        let mut b = Config::default();
+        b.merge(&mut Config::pico8());
+        assert_eq!(a, b);
+    }
+
+    #[test]
+    fn test_inject1() {
+        let mut a = Config::default();
+        a.frames_per_second = Some(60);
+        a.inject_template(Some("pico8")).unwrap();
+        let mut b = Config::default();
+        b.frames_per_second = Some(60);
+        b.merge(&mut Config::pico8());
+        assert_eq!(a, b);
     }
 }
