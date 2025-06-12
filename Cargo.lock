@@ -4626,7 +4626,6 @@ dependencies = [
 name = "nano9"
 version = "0.1.0-alpha.2"
 dependencies = [
- "atomicow",
  "bevy",
  "bevy_ecs_tiled",
  "bevy_ecs_tilemap",

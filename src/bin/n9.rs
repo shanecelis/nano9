@@ -158,8 +158,7 @@ fn info(_cli: Cli) -> io::Result<ExitCode> {
     feature_info!("web-asset", "allows URLs for asset locations", false);
     feature_info!("minibuffer", "embeds a gamedev console", false);
     feature_info!("inspector", "adds inspector commands to console", false);
-    feature_info!("cmd_lib", "run commands for 'n9 new'", true);
-    feature_info!("clap", "argument parsing for 'n9'", true);
+    feature_info!("cli", "command line interface for n9", true);
     Ok(ExitCode::from(0))
 }
 
@@ -201,68 +200,56 @@ fn new(cli: Cli) -> io::Result<ExitCode> {
                 // It's a directory path.
                 match language {
                     lang @ Some(Language::Rust | Language::LuaRust) => {
-                        #[cfg(feature = "cmd_lib")]
-                        {
-                            use cmd_lib::run_cmd;
-                            info!("Creating new cargo project at {:?}.", &path);
-                            Ok(
-                                match run_cmd!(cargo new $path;
-                                               cd $path;
-                                               cargo add bevy@0.15;
-                                               // cargo add nano9 --features lib --no-default-features
-                                               // cargo add nano9;
-                                               cargo add --path ..;
-                                ) {
-                                    Ok(_) => {
-                                        // Copy files
-                                        let content = include_str!("templates/Nano9.toml");
-                                        let mut p = path.to_path_buf();
-                                        p.push("assets");
-                                        fs::create_dir_all(&p)?;
-                                        p.push("Nano9.toml");
-                                        info!("Creating Nano-9 config at {:?}.", &p);
+                        use cmd_lib::run_cmd;
+                        info!("Creating new cargo project at {:?}.", &path);
+                        Ok(
+                            match run_cmd!(cargo new $path;
+                                            cd $path;
+                                            cargo add bevy@0.15;
+                                            // cargo add nano9 --features lib --no-default-features
+                                            // cargo add nano9;
+                                            cargo add --path ..;
+                            ) {
+                                Ok(_) => {
+                                    // Copy files
+                                    let content = include_str!("templates/Nano9.toml");
+                                    let mut p = path.to_path_buf();
+                                    p.push("assets");
+                                    fs::create_dir_all(&p)?;
+                                    p.push("Nano9.toml");
+                                    info!("Creating Nano-9 config at {:?}.", &p);
+                                    fs::write(&p, content)?;
+
+                                    if lang == Some(Language::LuaRust) {
+                                        let content = include_str!("templates/main.lua");
+                                        let _ = p.pop();
+                                        p.push("main.lua");
+                                        info!("Creating main Lua code at {:?}.", &p);
                                         fs::write(&p, content)?;
 
-                                        if lang == Some(Language::LuaRust) {
-                                            let content = include_str!("templates/main.lua");
-                                            let _ = p.pop();
-                                            p.push("main.lua");
-                                            info!("Creating main Lua code at {:?}.", &p);
-                                            fs::write(&p, content)?;
-
-                                            let content = include_str!("templates/main-lua-rust.rs.txt");
-                                            let _ = p.pop();
-                                            let _ = p.pop();
-                                            p.push("src/main.rs");
-                                            info!("Creating main Rust code at {:?}.", &p);
-                                            fs::write(&p, content)?;
-                                        } else {
-                                            let content = include_str!("templates/main-rust.rs.txt");
-                                            let _ = p.pop();
-                                            let _ = p.pop();
-                                            p.push("src/main.rs");
-                                            info!("Creating main Rust code at {:?}.", &p);
-                                            fs::write(&p, content)?;
-                                        }
-
-                                        ExitCode::from(0)
+                                        let content = include_str!("templates/main-lua-rust.rs.txt");
+                                        let _ = p.pop();
+                                        let _ = p.pop();
+                                        p.push("src/main.rs");
+                                        info!("Creating main Rust code at {:?}.", &p);
+                                        fs::write(&p, content)?;
+                                    } else {
+                                        let content = include_str!("templates/main-rust.rs.txt");
+                                        let _ = p.pop();
+                                        let _ = p.pop();
+                                        p.push("src/main.rs");
+                                        info!("Creating main Rust code at {:?}.", &p);
+                                        fs::write(&p, content)?;
                                     }
-                                    Err(e) => {
-                                        eprintln!("error: Problem running cargo {e}");
-                                        ExitCode::from(8)
-                                    }
-                                },
-                            )
-                        }
-                        #[cfg(not(feature = "cmd_lib"))]
-                        {
-                            eprintln!(
-                                "error: Cannot create new crate when {:?} feature is disabled.",
-                                "cmd_lib"
-                            );
-                            Ok(ExitCode::from(9))
-                        }
 
+                                    ExitCode::from(0)
+                                }
+                                Err(e) => {
+                                    eprintln!("error: Problem running cargo {e}");
+                                    ExitCode::from(8)
+                                }
+                            },
+                        )
                     }
                     Some(Language::Lua) | None => {
                         if path.exists() {

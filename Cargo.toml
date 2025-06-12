@@ -25,18 +25,17 @@ bevy_minibuffer = { version = "0.3.0", optional = true }
 bevy_minibuffer_inspector = { version = "0.1.0", optional = true }
 serde = { version = "1.0.217", features = ["derive"] }
 bevy_ecs_tilemap = "0.15.0"
-keyseq = { version = "0.5.0", features = ["bevy"] }
+keyseq = { version = "0.5.0", features = ["bevy"], optional = true }
 dasp = { version = "0.11.0", features = ["all"] }
 bresenham = "0.1.1"
 rand = "0.8.5"
 tiny-skia = "0.11.4"
 toml = "0.8.19"
-atomicow = "1.0.0"
 # ldtk_rust = { version = "0.6.1", optional = true }
 serde_json = { version = "1.0", optional = true }
 bevy_ecs_tiled = { version = "0.6", optional = true }
+tiled = { version = "0.14.0", optional = true }
 bitflags = "2.8.0"
-tiled = "0.14.0"
 bitvec = "1.0.1"
 futures-lite = { version = "2.6.0", optional = true }
 bevy_rand = { version = "0.9.0", features = ["wyrand"] }
@@ -49,22 +48,25 @@ bevy_web_asset = { version = "0.10.0", optional = true, default-features = false
 mashmap = "0.2.1"
 clap = { version = "4.5.39", features = ["derive"], optional = true }
 cmd_lib = { version = "1.9.5", optional = true }
-log = "0.4.27"
-env_logger = "0.11.8"
+log = { version = "0.4.27", optional = true }
+env_logger = { version = "0.11.8", optional = true }
 merge2 = "0.3.2"
 
 [features]
-default = [ "lib", "clap", "cmd_lib", "gameboy" ]
-lib = [ "negate-y", "pico8-to-lua", "fixed-point", "scripting", "pixel-snap" ]
+default = [ "cli" ]
+cli = [ "lua-lib", "dep:clap", "dep:cmd_lib", "gameboy", "dep:log", "dep:env_logger", "dep:cmd_lib" ]
+lua-lib = [ "rust-lib", "pico8-to-lua", "scripting" ]
+rust-lib = [ "negate-y", "fixed-point", "pixel-snap" ]
 negate-y = []
 inspector = [ "minibuffer", "dep:bevy_minibuffer_inspector" ]
-minibuffer = [ "dep:bevy_minibuffer" ]
+minibuffer = [ "dep:bevy_minibuffer", "dep:keyseq" ]
 pico8-to-lua = [ "dep:pico8-to-lua" ]
 fixed-point = [ "dep:fixed" ]
 scripting = [ "dep:bevy_mod_scripting" ]
 web-asset = [ "dep:bevy_web_asset" ]
 pixel-snap = []
 gameboy = []
+tiled = [ "dep:tiled" ]
 # Features after this line are not supported yet.
 # -----------------------------------------------
 # level = [ "dep:bevy_ecs_ldtk", "dep:ldtk_rust", "dep:serde_json"]
@@ -72,8 +74,6 @@ gameboy = []
 user_properties = [ "bevy_ecs_tiled/user_properties" ]
 # level = [ "dep:bevy_ecs_tiled", "dep:serde_json" ]
 level = [ "dep:bevy_ecs_tiled", "dep:serde_json", "dep:futures-lite" ]
-clap = ["dep:clap"]
-cmd_lib = ["dep:cmd_lib"]
 
 [dev-dependencies]
 bevy = "0.15"
