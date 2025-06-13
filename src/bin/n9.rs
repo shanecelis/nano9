@@ -13,7 +13,7 @@ use nano9::{
     pico8::{Pico8Asset, Pico8Handle},
     *,
 };
-use std::{env, fs, io, path::PathBuf, process::ExitCode};
+use std::{env, fs, io, path::{Path, PathBuf}, process::ExitCode};
 
 #[derive(Parser)]
 #[command(version, about, long_about, disable_help_subcommand = true,
@@ -295,7 +295,7 @@ fn run(cli: Cli) -> io::Result<ExitCode> {
     let mut app = App::new();
     let cwd = AssetSourceId::Name("cwd".into());
     let mut builder = AssetSourceBuilder::platform_default(
-        dbg!(env::current_dir()?.to_str().expect("current dir")),
+        env::current_dir()?.to_str().expect("current dir"),
         None,
     );
     builder.watcher = None;
@@ -327,9 +327,10 @@ fn run(cli: Cli) -> io::Result<ExitCode> {
     match extension {
         "toml" => {
             eprintln!("loading config");
-            let path = &script_path;
-            if set_default_source {
+            let path: &Path = &script_path;
+            let config_path = if set_default_source {
                 eprintln!("warn: NANO9_ASSETS_DIR environment variable overriding Nano-9.toml's directory.");
+                Some(AssetPath::from_path(path).with_source(&cwd).into_owned())
             } else if let Some(parent) = path.parent() {
                 app.register_asset_source(
                     &AssetSourceId::Default,
@@ -338,7 +339,11 @@ fn run(cli: Cli) -> io::Result<ExitCode> {
                         None,
                     ),
                 );
-            }
+                Some(AssetPath::from_path(path).into_owned())
+            } else {
+                warn!("No parent directory to set asset root to.");
+                None
+            };
             // OLD SHANE: Get rid of this.
             //
             // NEW SHANE: No. We use part of Config to configure the App and can't
@@ -351,7 +356,7 @@ fn run(cli: Cli) -> io::Result<ExitCode> {
                 eprintln!("error: {e}");
                 return Ok(ExitCode::from(2));
             }
-            nano9_plugin = Nano9Plugin { config };
+            nano9_plugin = Nano9Plugin { config, config_path };
         }
         "p8" | "png" => {
             eprintln!("loading cart");
@@ -368,7 +373,7 @@ fn run(cli: Cli) -> io::Result<ExitCode> {
                     commands.insert_resource(Pico8Handle::from(pico8_asset));
                 },
             );
-            nano9_plugin = Nano9Plugin { config };
+            nano9_plugin = Nano9Plugin { config, ..default() };
         }
         "lua" | "p8lua" => {
             if cfg!(not(feature = "pico8-to-lua")) && extension == "p8lua" {
@@ -394,7 +399,7 @@ fn run(cli: Cli) -> io::Result<ExitCode> {
             config.scripts = vec![AssetPath::from_path(&script_path)
                 .with_source(&cwd)
                 .to_string()];
-            nano9_plugin = Nano9Plugin { config };
+            nano9_plugin = Nano9Plugin { config, ..default() };
         }
         _ext => {
             eprintln!("Only accepts .p8, .png, .lua, .p8lua, and .toml files.");
@@ -405,6 +410,7 @@ fn run(cli: Cli) -> io::Result<ExitCode> {
     app
         .add_plugins(Nano9Plugins {
             config: nano9_plugin.config,
+            ..default()
         })
         .add_systems(PreUpdate, run_pico8_when_loaded);
     #[cfg(feature = "minibuffer")]

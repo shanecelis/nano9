@@ -4,10 +4,11 @@
 - [x] fix sub char splitting
 - [x] Add pause or other state to stop Lua evaluation
       Can't use inspector while it's churning.
-- [ ] Add front matter to .n9 file which is .toml followed by .lua
+- [x] Add front matter to .lua and .p8lua files 
 - [ ] Fix tiled import for lilly's house inside
 
 ## Nano-9
+- [ ] cls() should be a trigger
 - [ ] Make pico-8 dialect work in .lua files.
 - [ ] try not to clone palettes (introduced during Pico8Asset refactor)
       Extract palettes to GfxHandler?

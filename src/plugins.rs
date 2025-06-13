@@ -3,13 +3,17 @@ use crate::{
     Nano9Plugin,
 };
 use bevy::{
+    asset::AssetPath,
     app::{PluginGroup, PluginGroupBuilder},
     audio::AudioPlugin,
     prelude::*,
 };
+
 /// Nano-9 plugins
+#[derive(Debug, Default)]
 pub struct Nano9Plugins {
     pub config: Config,
+    pub config_path: Option<AssetPath<'static>>,
 }
 
 impl PluginGroup for Nano9Plugins {
@@ -20,6 +24,7 @@ impl PluginGroup for Nano9Plugins {
         let group = group.add(MemoryDir::new("n9mem"));
         let nano9_plugin = Nano9Plugin {
             config: self.config,
+            config_path: self.config_path,
         };
         let group = group.add_group(
             DefaultPlugins

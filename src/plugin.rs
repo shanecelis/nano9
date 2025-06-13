@@ -1,5 +1,6 @@
 #![allow(deprecated)]
 use bevy::{
+    asset::AssetPath,
     image::ImageSampler,
     prelude::*,
     reflect::Reflect,
@@ -320,9 +321,18 @@ const DEFAULT_FRAMES_PER_SECOND: u8 = 60;
 #[derive(Default)]
 pub struct Nano9Plugin {
     pub config: Config,
+    pub config_path: Option<AssetPath<'static>>,
 }
 
 impl Nano9Plugin {
+
+    pub fn new(config: Config) -> Self {
+        Nano9Plugin {
+            config,
+            config_path: None
+        }
+    }
+
     pub fn window_plugin(&self) -> WindowPlugin {
         let screen_size = self
             .config
@@ -382,30 +392,31 @@ impl Plugin for Nano9Plugin {
             .map(|s| s.canvas_size)
             .unwrap_or(DEFAULT_CANVAS_SIZE);
 
-        {
+        let asset_path: AssetPath<'static> = self.config_path.clone().unwrap_or_else(|| {
             // Make our config readable by the Bevy AssetServer.
             //
             // I kind of hate this because we have to serialize just to
-            // deserialize.
+            // deserialize. It also breaks the ability to use bevy/file_watcher.
             let config_string = toml::to_string(&self.config).unwrap();
             if let Some(memory_dir) = app.world_mut().get_resource_mut::<MemoryDir>() {
                 memory_dir.insert_asset(
                     std::path::Path::new("Nano9.toml"),
                     config_string.into_bytes(),
                 );
-                app.add_systems(
-                    Startup,
-                    |asset_server: Res<AssetServer>, mut commands: Commands| {
-                        let pico8_asset: Handle<Pico8Asset> =
-                            asset_server.load("n9mem://Nano9.toml");
-                        commands.insert_resource(Pico8Handle::from(pico8_asset));
-                    },
-                );
+                AssetPath::<'static>::from("n9mem://Nano9.toml")
             } else {
-                warn!("No 'n9mem://' asset source configured.");
+                panic!("No 'n9mem://' asset source configured.");
             }
-        }
+        });
 
+        app.add_systems(
+            Startup,
+            move |asset_server: Res<AssetServer>, mut commands: Commands| {
+                let pico8_asset: Handle<Pico8Asset> =
+                    asset_server.load(&asset_path);
+                commands.insert_resource(Pico8Handle::from(pico8_asset));
+            },
+        );
         #[cfg(feature = "scripting")]
         {
             let mut lua_scripting_plugin = LuaScriptingPlugin::default().enable_context_sharing();
