@@ -67,6 +67,7 @@ web-asset = [ "dep:bevy_web_asset" ]
 pixel-snap = []
 gameboy = []
 tiled = [ "dep:tiled" ]
+mute = []
 # Features after this line are not supported yet.
 # -----------------------------------------------
 # level = [ "dep:bevy_ecs_ldtk", "dep:ldtk_rust", "dep:serde_json"]

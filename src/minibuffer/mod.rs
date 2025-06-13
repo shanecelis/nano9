@@ -78,6 +78,7 @@ pub fn quick_plugin(app: &mut App) {
         //     .add::<TilePos>("tile")
         //     .add::<Sprite>("sprite")
         //     .add::<Clearable>("clearables"),
+        Act::new(toggle_fps).bind(keyseq! { Space N F }),
     ));
 
     #[cfg(feature = "inspector")]

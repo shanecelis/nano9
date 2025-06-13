@@ -347,7 +347,7 @@ pub(crate) async fn translate_pico8_to_lua<'a>(
             let mut cart_path: PathBuf = load_context.path().to_owned();
             cart_path.pop();
             cart_path.push(&path);
-            dbg!(&cart_path);
+            // dbg!(&cart_path);
             let source: AssetSourceId<'static> = load_context.asset_path().source().clone_owned();
             let extension = cart_path.extension().and_then(|s| s.to_str()).unwrap_or("");
             match extension {

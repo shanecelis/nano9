@@ -20,7 +20,7 @@ impl super::Pico8<'_, '_> {
                 image.set_color_at(i, j, c)?;
             }
         }
-        self.commands.send_event(ClearEvent::default());
+        self.commands.trigger(ClearEvent::default());
         Ok(())
     }
 

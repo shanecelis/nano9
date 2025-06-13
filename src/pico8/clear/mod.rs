@@ -14,7 +14,8 @@ pub(crate) fn plugin(app: &mut App) {
         .register_type::<Clearable>()
         .add_event::<ClearEvent>()
         .init_resource::<ClearCache>()
-        .add_systems(Last, (handle_overflow, handle_clear_event).chain());
+        .add_systems(Last, (handle_overflow).chain())
+        .add_observer(handle_clear_event);
 }
 
 #[derive(Debug, Event, Clone, Copy)]
@@ -42,12 +43,11 @@ impl Default for ClearEvent {
 pub(crate) struct ClearCache(MashMap<u64, Entity>);
 
 impl ClearCache {
-    pub fn insert(&mut self, clearable: &mut Clearable, id: Entity) -> bool {
+    pub fn insert(&mut self, clearable: &Clearable, id: Entity) -> bool {
         assert!(!clearable.cached);
         match clearable.hash {
             Some(hash) => {
                 self.0.insert(hash, id);
-                clearable.cached = true;
                 true
             }
             None => false,
@@ -144,52 +144,30 @@ fn handle_overflow(mut query: Query<&mut Clearable>) {
 }
 
 fn handle_clear_event(
-    mut events: EventReader<ClearEvent>,
-    mut query: Query<(Entity, &mut Clearable, &mut Transform, &mut Visibility)>,
+    trigger: Trigger<ClearEvent>,
+    mut query: Query<(Entity, &mut Clearable, &mut Visibility)>,
     mut commands: Commands,
     mut state: ResMut<Pico8State>,
     mut cache: ResMut<ClearCache>,
 ) {
-    if let Some(ceiling) = events.read().map(|e| e.draw_ceiling).max() {
-        let (less_than, mut greater_than): (Vec<_>, Vec<_>) = query
-            .iter_mut()
-            .partition(|(_, clearable, _, _)| clearable.draw_count < ceiling);
-        for (id, mut clearable, _, mut visibility) in less_than {
-            if clearable.time_to_live == 0 {
-                // These should be removed from the cache.
-                commands.entity(id).despawn_recursive();
-                // Remove from cache if necessary.
-                let _removed = cache.remove(&clearable, id);
-            } else {
-                // These should go into the cache.
-                clearable.time_to_live -= 1;
-                *visibility = Visibility::Hidden;
-                if !clearable.cached && clearable.hash.is_some() {
-                    cache.insert(&mut clearable, id);
-                }
+    for (id, mut clearable, mut visibility) in &mut query {
+        if clearable.time_to_live == 0 {
+            // These should be removed from the cache.
+            commands.entity(id).despawn_recursive();
+            // Remove from cache if necessary.
+            let _removed = cache.remove(&clearable, id);
+        } else {
+            // These should go into the cache.
+            clearable.time_to_live -= 1;
+            *visibility = Visibility::Hidden;
+            if !clearable.cached && clearable.hash.is_some() {
+                clearable.cached = cache.insert(&clearable, id);
             }
         }
-
-        let mut i = 1;
-        greater_than.sort_by(|(_, _, a, _), (_, _, b, _)| {
-            a.translation
-                .z
-                .partial_cmp(&b.translation.z)
-                .unwrap_or(std::cmp::Ordering::Equal)
-        });
-        for (_id, mut clearable, mut transform, _) in greater_than {
-            clearable.draw_count = 0;
-            transform.translation.z = i as f32 / MAX_EXPECTED_CLEARABLES;
-            i += 1;
-        }
-
-        if i == 1 {
-            // If there aren't any more clearables, we can let the camera
-            // move.
-            state.draw_state.camera_position_delta = None;
-        }
-        DRAW_COUNTER.set(1);
     }
+
+    state.draw_state.camera_position_delta = None;
+    DRAW_COUNTER.set(1);
 }
 
 #[cfg(test)]

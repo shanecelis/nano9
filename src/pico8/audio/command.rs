@@ -43,6 +43,12 @@ fn mode_eq(a: PlaybackMode, b: PlaybackMode) -> bool {
     std::mem::discriminant(&a) == std::mem::discriminant(&b)
 }
 
+#[cfg(feature = "mute")]
+impl Command for AudioCommand {
+    fn apply(self, world: &mut World) { }
+}
+
+#[cfg(not(feature = "mute"))]
 impl Command for AudioCommand {
     fn apply(self, world: &mut World) {
         match self {
@@ -171,7 +177,7 @@ impl Command for AudioCommand {
                             // noisy in the log despite it not having much of an
                             // effect to the game, so we're not going to log it.
 
-                            warn!("Channels busy.");
+                            warn_once!("Channels busy.");
                         }
                     }
 
@@ -216,7 +222,7 @@ impl Command for AudioCommand {
                             // noisy in the log despite it not having much of an
                             // effect to the game, so we're not going to log it.
 
-                            warn!("Channels busy for mask {mask}.");
+                            warn_once!("Channels busy for mask {mask}.");
                         }
                     }
                     SfxDest::Channel(chan) => {

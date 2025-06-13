@@ -16,6 +16,15 @@ pub struct Nano9Plugins {
     pub config_path: Option<AssetPath<'static>>,
 }
 
+impl Nano9Plugins {
+    pub fn new(config: Config) -> Self {
+        Nano9Plugins {
+            config,
+            config_path: None
+        }
+    }
+}
+
 impl PluginGroup for Nano9Plugins {
     fn build(self) -> PluginGroupBuilder {
         let group = PluginGroupBuilder::start::<Self>();
