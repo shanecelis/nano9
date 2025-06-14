@@ -11,13 +11,18 @@
 - [x] cls() should be a trigger
 - [ ] Make Pico8Asset read-only
       Don't modify it just to implement mset or sset. Make copies when necessary.
+      
+- [ ] Use Gfx for background pset() colors.
+      Don't overwrite all colors unless it's marked dirty.
+- [ ] Use a 1x1 image for total background.
 - [ ] Make pico-8 dialect work in .lua files.
 - [ ] try not to clone palettes (introduced during Pico8Asset refactor)
       Extract palettes to GfxHandler?
 - [x] Add the ScriptComponent once
 - [x] Load .p8 and .p8.png as a Pico8Asset in addition to Cart.
 - [x] Remove error after reload
-- [ ] Make generic wrt palette bit-depth
+- [x] Make generic wrt palette bit-depth (at compile-time)
+- [ ] Make generic wrt palette bit-depth at runtime
 - [x] Allow multiple palettes
 - [ ] Check collisions example
 - [ ] make sprite flags generic
