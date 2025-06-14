@@ -5,7 +5,7 @@ mod loader;
 pub use loader::*;
 pub mod front_matter;
 use crate::{
-    error::RunState,
+    run::RunState,
     pico8::{self, Pico8Handle},
 };
 use bevy::{
@@ -181,7 +181,7 @@ pub struct Palette {
 
 pub fn update_asset(
     mut reader: EventReader<AssetEvent<pico8::Pico8Asset>>,
-    assets: ResMut<Assets<pico8::Pico8Asset>>,
+    assets: Res<Assets<pico8::Pico8Asset>>,
 
     mut next_state: ResMut<NextState<RunState>>,
     mut pico8_handle: Option<ResMut<Pico8Handle>>,

@@ -54,7 +54,7 @@ use crate::{
     },
     DrawState, FillColor, N9Color, Nano9Camera, PColor,
 };
-
+pub(crate) use camera::UpdateCameraPos;
 use std::{borrow::Cow, f32::consts::PI};
 
 pub const MAP_COLUMNS: u32 = 128;
@@ -72,15 +72,6 @@ pub(crate) fn plugin(app: &mut App) {
         .init_asset::<Pico8Asset>()
         .init_resource::<Pico8State>()
         .init_resource::<PlayerInputs>()
-        .add_observer(
-            |trigger: Trigger<UpdateCameraPos>,
-             camera: Single<&mut Transform, With<Nano9Camera>>| {
-                let pos = trigger.event();
-                let mut camera = camera.into_inner();
-                camera.translation.x = pos.0.x;
-                camera.translation.y = negate_y(pos.0.y);
-            },
-        )
         .add_plugins(rand::plugin)
         .add_plugins((
             sfx::plugin,

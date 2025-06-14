@@ -31,6 +31,7 @@ impl super::Pico8<'_, '_> {
         mask: Option<u8>,
         map_index: Option<usize>,
     ) -> Result<Entity, Error> {
+        trace!("map");
         screen_start = self.state.draw_state.apply_camera_delta(screen_start);
         if cfg!(feature = "negate-y") {
             screen_start.y = -screen_start.y;
@@ -44,11 +45,11 @@ impl super::Pico8<'_, '_> {
             map_index.inspect(|i| i.hash(&mut hasher));
             hasher.finish()
         };
+        self.state.draw_state.mark_drawn();
         // See if there's already an entity available.
         if let Some(id) = self.resurrect(hash, screen_start) {
             return Ok(id);
         }
-
         match self.sprite_map(map_index)?.clone() {
             Map::P8(map) => {
                 let palette = self.palette(None)?.clone();
@@ -177,7 +178,7 @@ mod lua {
                         pico8.map(
                             UVec2::new(celx.unwrap_or(0), cely.unwrap_or(0)),
                             Vec2::new(sx.unwrap_or(0.0), sy.unwrap_or(0.0)),
-                            UVec2::new(celw.unwrap_or(16), celh.unwrap_or(16)),
+                            UVec2::new(celw.unwrap_or(128), celh.unwrap_or(128)),
                             layer,
                             map_index,
                         )

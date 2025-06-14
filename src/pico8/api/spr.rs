@@ -130,6 +130,7 @@ impl super::Pico8<'_, '_> {
             hasher.finish()
         };
         let flip = flip.unwrap_or_default();
+        self.state.draw_state.mark_drawn();
         // See if there's already an entity available.
         if let Some(id) = self.resurrect(hash, screen_pos) {
             return Ok(id);
@@ -181,6 +182,7 @@ impl super::Pico8<'_, '_> {
             .ok_or(Error::NoSuch("Pico8Asset".into()))
     }
 
+    /// TODO: Seriously reconsider this. Causes a bug of asset event modified.
     pub(crate) fn pico8_asset_mut(&mut self) -> Result<&mut Pico8Asset, Error> {
         self.pico8_assets
             .get_mut(&self.pico8_handle.handle)
@@ -227,6 +229,7 @@ impl super::Pico8<'_, '_> {
             turns.inspect(|t| hash_f32(*t, 2, &mut hasher));
             hasher.finish()
         };
+        self.state.draw_state.mark_drawn();
         // See if there's already an entity available.
         if let Some(id) = self.resurrect(hash, pos) {
             return Ok(id);

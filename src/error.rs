@@ -1,9 +1,10 @@
 use bevy::{color::palettes::css, core::FrameCount, prelude::*, window::RequestRedraw};
 #[cfg(feature = "scripting")]
 use bevy_mod_scripting::core::{asset::ScriptAsset, event::ScriptErrorEvent};
+use crate::run::RunState;
 
 pub(crate) fn plugin(app: &mut App) {
-    app.init_state::<RunState>()
+    app
         .add_systems(Startup, spawn_error_message_layout);
     #[cfg(feature = "scripting")]
     app.add_systems(Update, add_messages);
@@ -22,20 +23,6 @@ pub(crate) fn plugin(app: &mut App) {
 const FONT_SIZE: f32 = 24.0;
 const PADDING: Val = Val::Px(5.);
 const LEFT_PADDING: Val = Val::Px(10.);
-
-#[derive(Clone, Copy, PartialEq, Eq, Hash, Debug, Default, States, Reflect)]
-pub enum RunState {
-    #[default]
-    Uninit,
-    Loaded,
-    Init,
-    Run,
-    Pause,
-    /// Error messages
-    ///
-    /// XXX: Change name to suit.
-    Messages,
-}
 
 #[derive(Component)]
 pub struct ErrorMessages;

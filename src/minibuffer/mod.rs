@@ -1,4 +1,4 @@
-use crate::error::RunState;
+use crate::run::RunState;
 #[cfg(feature = "scripting")]
 use crate::{call, pico8::lua::with_system_param};
 use bevy::{
@@ -32,6 +32,7 @@ impl Default for Nano9Acts {
         Self {
             acts: Acts::new([
                 Act::new(crate::action::toggle_pause).bind(keyseq! { Space N P }),
+                Act::new(crate::action::one_step).bind(keyseq! { Space N S }),
                 #[cfg(feature = "scripting")]
                 Act::new(lua_eval).bind(keyseq! { Space N E }),
             ]),
@@ -84,7 +85,7 @@ pub fn quick_plugin(app: &mut App) {
     #[cfg(feature = "inspector")]
     app.add_acts((
         bevy_minibuffer_inspector::WorldActs::default(),
-        bevy_minibuffer_inspector::StateActs::default().add::<crate::error::RunState>(),
+        bevy_minibuffer_inspector::StateActs::default().add::<crate::run::RunState>(),
     ));
 }
 

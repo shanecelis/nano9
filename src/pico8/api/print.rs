@@ -49,6 +49,7 @@ impl super::Pico8<'_, '_> {
             font_index.inspect(|f| f.hash(&mut hasher));
             hasher.finish()
         };
+        self.state.draw_state.mark_drawn();
         // See if there's already an entity available.
         if let Some(id) = self.resurrect(hash, negate_vy(pos.unwrap_or(Vec2::ZERO))) {
             return Ok(id);
@@ -109,7 +110,6 @@ impl super::Pico8<'_, '_> {
         } else {
             state.draw_state.print_cursor.x = pos.x + text_layout.size.x;
         }
-        state.draw_state.mark_drawn();
         Ok(pos.x + text_layout.size.x)
     }
 
@@ -267,6 +267,7 @@ mod lua {
                         // See if there's already an entity available.
                         let cached_id =
                             pico8.resurrect(hash, negate_vy(pos_p8.unwrap_or(Vec2::ZERO)));
+                        pico8.state.draw_state.mark_drawn();
                         Ok((pos_p8, hash, cached_id))
                     })?;
                     if let Some(_id) = cached_id {

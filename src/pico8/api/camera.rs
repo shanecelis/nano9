@@ -1,6 +1,20 @@
 use super::*;
 
 pub(crate) fn plugin(app: &mut App) {
+    app
+        .add_observer(
+            |trigger: Trigger<UpdateCameraPos>,
+             camera: Single<&mut Transform, With<Nano9Camera>>,
+             mut state: ResMut<Pico8State>| {
+                 let mut pos = trigger.event().0;
+                 let mut camera = camera.into_inner();
+                 pos.y = negate_y(pos.y);
+                 trace!("UpdateCameraPos({:.2}, {:.2})", pos.x, pos.y);
+                 camera.translation.x = pos.x;
+                 camera.translation.y = pos.y;
+                 state.draw_state.camera_position_delta = None;
+            },
+        );
     #[cfg(feature = "scripting")]
     lua::plugin(app);
 }
@@ -16,8 +30,9 @@ impl super::Pico8<'_, '_> {
                 // Do not move the camera. Something has already been drawn.
                 // Accumulate the delta.
                 *delta += last - pos;
-            } else {
-                // info!("Update actual camera position");
+            }
+            if self.state.draw_state.is_clear {
+                trace!("camera(): trigger update camera position");
                 // We haven't drawn anything yet. Move the actual camera.
                 self.commands.trigger(UpdateCameraPos(pos));
             }

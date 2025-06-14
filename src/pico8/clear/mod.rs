@@ -1,4 +1,4 @@
-use crate::pico8::Pico8State;
+use crate::pico8::{UpdateCameraPos, Pico8State};
 use bevy::prelude::*;
 // use bevy::utils::HashMap;
 use mashmap::MashMap;
@@ -152,7 +152,7 @@ fn handle_clear_event(
 ) {
     for (id, mut clearable, mut visibility) in &mut query {
         if clearable.time_to_live == 0 {
-            // These should be removed from the cache.
+            // These should be removed from the cache if they were cached.
             commands.entity(id).despawn_recursive();
             // Remove from cache if necessary.
             let _removed = cache.remove(&clearable, id);
@@ -166,7 +166,10 @@ fn handle_clear_event(
         }
     }
 
-    state.draw_state.camera_position_delta = None;
+    // Shouldn't we move the camera?
+    // if let Some(delta) = state.draw_state.camera_position_delta.take() {
+    //     commands.trigger(UpdateCameraPos(state.draw_state.camera_position));
+    // }
     DRAW_COUNTER.set(1);
 }
 

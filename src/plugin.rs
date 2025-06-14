@@ -29,7 +29,7 @@ use bevy_mod_scripting::{
 
 use crate::{
     config::*,
-    error::RunState,
+    run::RunState,
     pico8::{self, input::fill_input, FillPat, Pico8Asset, Pico8Handle},
     PColor,
 };
@@ -47,11 +47,13 @@ pub struct DrawState {
     pub camera_position_delta: Option<Vec2>,
     pub print_cursor: Vec2,
     pub fill_pat: Option<FillPat>,
+    pub is_clear: bool,
 }
 
 impl DrawState {
     /// Mark ourselves as having drawn something this frame.
     pub fn mark_drawn(&mut self) {
+        self.is_clear = false;
         if self.camera_position_delta.is_none() {
             self.camera_position_delta = Some(Vec2::ZERO);
         }
@@ -71,6 +73,7 @@ impl DrawState {
 
     pub fn clear_screen(&mut self) {
         self.print_cursor = Vec2::ZERO;
+        self.is_clear = true;
     }
 }
 
@@ -83,12 +86,12 @@ pub struct N9Canvas {
 impl Default for DrawState {
     fn default() -> Self {
         DrawState {
-            // XXX: Pico-8 should be 6 here, but that's not true in general.
             pen: PColor::Palette(1),
             camera_position: Vec2::ZERO,
             print_cursor: Vec2::ZERO,
             camera_position_delta: None,
             fill_pat: None,
+            is_clear: true,
         }
     }
 }
