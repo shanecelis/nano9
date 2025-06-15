@@ -7,7 +7,7 @@ pub struct Pico8Asset {
     pub(crate) palettes: Vec<Palette>,
     pub(crate) border: Handle<Image>,
     pub(crate) sprite_sheets: Vec<SpriteSheet>,
-    pub(crate) maps: Vec<Map>,
+    pub(crate) maps: Vec<SpriteMap>,
     pub(crate) font: Vec<N9Font>,
     pub(crate) audio_banks: Vec<AudioBank>,
 }

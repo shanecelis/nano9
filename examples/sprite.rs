@@ -44,7 +44,7 @@ fn main() {
         config
     };
     app.add_systems(PreUpdate, run_pico8_when_loaded);
-    app.add_plugins(Nano9Plugins { config })
+    app.add_plugins(Nano9Plugins::new(config))
         .add_systems(PreUpdate, run_pico8_when_loaded)
         .run();
 }

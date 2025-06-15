@@ -11,7 +11,7 @@ fn main() {
 
     let config = Config::pico8();
     // let config = Config::gameboy();
-    app.add_plugins(Nano9Plugins { config })
+    app.add_plugins(Nano9Plugins::new(config))
         .add_systems(PreUpdate, run_pico8_when_loaded)
         .run();
 }

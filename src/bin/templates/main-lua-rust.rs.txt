@@ -6,7 +6,7 @@ fn main() -> Result<(), ConfigError> {
     let mut config = Config::from_str(content)?;
     config.inject_template(None)?;
     App::new()
-        .add_plugins(Nano9Plugins { config })
+        .add_plugins(Nano9Plugins::new(config))
         .add_systems(PreUpdate, run_pico8_when_loaded)
         .run();
     Ok(())

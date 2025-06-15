@@ -7,7 +7,7 @@ pub(crate) fn plugin(app: &mut App) {
     lua::plugin(app);
 }
 impl super::Pico8<'_, '_> {
-    fn sprite_map(&self, map_index: Option<usize>) -> Result<&Map, Error> {
+    fn sprite_map(&self, map_index: Option<usize>) -> Result<&SpriteMap, Error> {
         let index = map_index.unwrap_or(0);
         self.pico8_asset()?
             .maps
@@ -15,7 +15,7 @@ impl super::Pico8<'_, '_> {
             .ok_or(Error::NoSuch(format!("map index {index}").into()))
     }
 
-    fn sprite_map_mut(&mut self, map_index: Option<usize>) -> Result<&mut Map, Error> {
+    fn sprite_map_mut(&mut self, map_index: Option<usize>) -> Result<&mut SpriteMap, Error> {
         let index = map_index.unwrap_or(0);
         self.pico8_asset_mut()?
             .maps
@@ -51,7 +51,7 @@ impl super::Pico8<'_, '_> {
             return Ok(id);
         }
         match self.sprite_map(map_index)?.clone() {
-            Map::P8(map) => {
+            SpriteMap::P8(map) => {
                 let palette = self.palette(None)?.clone();
 
                 let sprite_sheets = &self.pico8_asset()?.sprite_sheets.clone();
@@ -76,7 +76,7 @@ impl super::Pico8<'_, '_> {
                 )
             }
             #[cfg(feature = "level")]
-            Map::Level(map) => Ok(map.map(screen_start, 0, &mut self.commands)),
+            SpriteMap::Level(map) => Ok(map.map(screen_start, 0, &mut self.commands)),
         }
     }
 
@@ -86,14 +86,14 @@ impl super::Pico8<'_, '_> {
         map_index: Option<usize>,
         _layer_index: Option<usize>,
     ) -> Option<usize> {
-        let map: &Map = self.sprite_map(map_index).ok()?;
+        let map: &SpriteMap = self.sprite_map(map_index).ok()?;
         match *map {
-            Map::P8(ref map) => {
+            SpriteMap::P8(ref map) => {
                 Some(map[(pos.x as u32 + pos.y as u32 * MAP_COLUMNS) as usize] as usize)
             }
 
             #[cfg(feature = "level")]
-            Map::Level(ref map) => self.tiled.mget(map, pos, map_index, layer_index),
+            SpriteMap::Level(ref map) => self.tiled.mget(map, pos, map_index, layer_index),
         }
     }
 
@@ -106,12 +106,12 @@ impl super::Pico8<'_, '_> {
     ) -> Result<(), Error> {
         let map = self.sprite_map_mut(map_index)?;
         match map {
-            Map::P8(ref mut map) => map
+            SpriteMap::P8(ref mut map) => map
                 .get_mut((pos.x as u32 + pos.y as u32 * MAP_COLUMNS) as usize)
                 .map(|value| *value = sprite_index as u8)
                 .ok_or(Error::NoSuch("map entry".into())),
             #[cfg(feature = "level")]
-            Map::Level(ref mut map) => {
+            SpriteMap::Level(ref mut map) => {
                 todo!()
                 // self.tiled
                 //     .mset(map, pos, sprite_index, map_index, layer_index)

@@ -10,7 +10,7 @@ pub mod tiled;
 
 #[derive(Debug, Clone, Reflect)]
 pub enum Tiled {
-    Map { handle: Handle<TiledMap> },
+    SpriteMap { handle: Handle<TiledMap> },
     World { handle: Handle<TiledWorld> },
 }
 
@@ -23,7 +23,7 @@ impl Tiled {
         //     get_tilemap_top_left_transform(&map_size, &grid_size, &map_type, clearable.suggest_z());
         // transform.translation += screen_start.extend(0.0);
         match self {
-            Tiled::Map { handle } => {
+            Tiled::SpriteMap { handle } => {
                 commands
                     .spawn((
                         TiledMapHandle(handle.clone()),

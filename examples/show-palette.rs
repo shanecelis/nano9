@@ -35,7 +35,7 @@ fn main() -> io::Result<ExitCode> {
         let mut app = App::new();
         app.add_systems(OnEnter(RunState::Init), init);
 
-        app.add_plugins(Nano9Plugins { config })
+        app.add_plugins(Nano9Plugins::new(config))
             .add_systems(PreUpdate, run_pico8_when_loaded)
             .run();
         Ok(ExitCode::from(0))

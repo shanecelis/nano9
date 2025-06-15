@@ -39,7 +39,7 @@ impl Level<'_, '_> {
         layer_index: Option<usize>,
     ) -> Option<usize> {
         match map {
-            level::Tiled::Map { handle } => self.tiled_maps.get(handle).and_then(|tiled_map| {
+            level::Tiled::SpriteMap { handle } => self.tiled_maps.get(handle).and_then(|tiled_map| {
                 tiled_map
                     .map
                     .get_layer(layer_index.unwrap_or(0))
@@ -85,7 +85,7 @@ impl Level<'_, '_> {
         layer_index: Option<usize>,
     ) -> Option<tiled::Properties> {
         match map {
-            level::Tiled::Map { handle } => self.tiled_maps.get(handle).and_then(|tiled_map| {
+            level::Tiled::SpriteMap { handle } => self.tiled_maps.get(handle).and_then(|tiled_map| {
                 let tile_size = UVec2::new(tiled_map.map.tile_width, tiled_map.map.tile_width);
                 tiled_map
                     .map
@@ -160,7 +160,7 @@ impl Level<'_, '_> {
         layer_index: Option<usize>,
     ) -> Result<(), pico8::Error> {
         match map {
-            level::Tiled::Map { handle: map_handle } => {
+            level::Tiled::SpriteMap { handle: map_handle } => {
                 self.tiled_maps
                     .get(map_handle)
                     .ok_or(pico8::Error::NoSuch("map".into()))

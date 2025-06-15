@@ -93,12 +93,12 @@ impl super::Pico8<'_, '_> {
         map_index: Option<usize>,
         layer_index: Option<usize>,
     ) -> Option<tiled::Properties> {
-        let map: &Map = self.sprite_map(map_index).ok()?;
+        let map: &SpriteMap = self.sprite_map(map_index).ok()?;
         match *map {
-            Map::P8(ref _map) => None,
+            SpriteMap::P8(ref _map) => None,
 
             #[cfg(feature = "level")]
-            Map::Level(ref map) => self.tiled.mgetp(map, prop_by, map_index, layer_index),
+            SpriteMap::Level(ref map) => self.tiled.mgetp(map, prop_by, map_index, layer_index),
         }
     }
 }

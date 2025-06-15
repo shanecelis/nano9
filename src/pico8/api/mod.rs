@@ -49,7 +49,7 @@ use tiny_skia::{self, FillRule, Paint, PathBuilder, Pixmap, Stroke};
 
 use crate::{
     pico8::{
-        self, audio::AudioBank, image::pixel_art_settings, ClearEvent, Clearable, Map, PalMap,
+        self, audio::AudioBank, image::pixel_art_settings, ClearEvent, Clearable, SpriteMap, PalMap,
         Palette,
     },
     DrawState, FillColor, N9Color, Nano9Camera, PColor,

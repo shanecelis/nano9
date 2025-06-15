@@ -6,7 +6,7 @@ use crate::level;
 use bevy_ecs_tilemap::prelude::*;
 
 #[derive(Clone, Debug, Reflect)]
-pub enum Map {
+pub enum SpriteMap {
     P8(P8Map),
     #[cfg(feature = "level")]
     Level(level::Tiled),
@@ -19,9 +19,9 @@ pub struct P8Map {
     pub sheet_index: usize,
 }
 
-impl From<P8Map> for Map {
+impl From<P8Map> for SpriteMap {
     fn from(map: P8Map) -> Self {
-        Map::P8(map)
+        SpriteMap::P8(map)
     }
 }
 
@@ -130,8 +130,8 @@ pub(crate) fn get_tilemap_top_left_transform(
 }
 
 #[cfg(feature = "level")]
-impl From<level::Tiled> for Map {
+impl From<level::Tiled> for SpriteMap {
     fn from(map: level::Tiled) -> Self {
-        Map::Level(map)
+        SpriteMap::Level(map)
     }
 }

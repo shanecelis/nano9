@@ -362,7 +362,7 @@ async fn into_asset(
                             "p8" => todo!(),
                             "tmx" => {
                                     #[cfg(feature = "level")]
-                                    return Ok(level::Tiled::Map {
+                                    return Ok(level::Tiled::SpriteMap {
                                         handle: load_context.load(&*map.path),
                                     }.into());
                                     #[cfg(not(feature = "level"))]

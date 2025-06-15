@@ -79,7 +79,7 @@ pub struct Config {
     pub audio_banks: Vec<AudioBank>,
     /// Maps
     #[serde(default, rename = "map")]
-    pub maps: Vec<Map>,
+    pub maps: Vec<SpriteMap>,
 }
 
 #[derive(Default, Debug, Clone, Deserialize, Serialize, Merge, PartialEq)]
@@ -149,7 +149,7 @@ pub struct SpriteSheet {
 /// Sprite map
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 // #[serde(untagged)]
-pub struct Map {
+pub struct SpriteMap {
     /// Path to map, can have extensions .p8 or .tmx
     path: PathBuf,
 }
