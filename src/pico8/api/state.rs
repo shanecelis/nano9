@@ -9,6 +9,7 @@ pub struct Pico8State {
     /// Current palette
     pub(crate) palette: usize,
     pub(crate) draw_state: DrawState,
+    pub(crate) sprite_sheets: Vec<Option<SpriteSheet>>,
 }
 
 // XXX: Dump this after refactor.
@@ -26,6 +27,7 @@ impl FromWorld for Pico8State {
                 pen: PColor::Palette(defaults.initial_pen_color),
                 ..default()
             },
+            sprite_sheets: vec![],
         }
     }
 }

@@ -6,7 +6,7 @@ pub use loader::*;
 pub mod front_matter;
 use crate::{
     run::RunState,
-    pico8::{self, Pico8Handle},
+    pico8::{self, Pico8Handle, Pico8State},
 };
 use bevy::{
     asset::AssetPath,
@@ -184,6 +184,7 @@ pub fn update_asset(
     assets: Res<Assets<pico8::Pico8Asset>>,
 
     mut next_state: ResMut<NextState<RunState>>,
+    mut pico8_state: ResMut<Pico8State>,
     mut pico8_handle: Option<ResMut<Pico8Handle>>,
     #[cfg(feature = "scripting")] mut commands: Commands,
     #[cfg(feature = "scripting")] script_settings: Res<ScriptAssetSettings>,
@@ -197,6 +198,8 @@ pub fn update_asset(
                         warn!("Script loaded but does not match Pico8Handle.");
                         continue;
                     }
+                    // Reset the pico8_state.
+                    pico8_state.sprite_sheets = vec![None; pico8_asset.sprite_sheets.len()];
                     // XXX: It happens here too!
                     #[cfg(feature = "scripting")]
                     {
