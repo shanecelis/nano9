@@ -413,6 +413,10 @@ fn run(cli: Cli) -> io::Result<ExitCode> {
             ..default()
         })
         .add_systems(PreUpdate, run_pico8_when_loaded);
+
+    if app.is_plugin_added::<WindowPlugin>() {
+        app.add_systems(Update, action::toggle_fullscreen.run_if(condition::on_just_pressed_with(KeyCode::Enter, vec![KeyCode::AltLeft, KeyCode::AltRight])));
+    }
     #[cfg(feature = "minibuffer")]
     app
         .add_plugins(nano9::minibuffer::quick_plugin);

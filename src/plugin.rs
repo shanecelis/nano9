@@ -30,15 +30,12 @@ use bevy_mod_scripting::{
 use crate::{
     config::*,
     run::RunState,
-    pico8::{self, input::fill_input, FillPat, Pico8Asset, Pico8Handle},
+    pico8::{self, input::fill_input, FillPat, Pico8Asset, Pico8Handle, canvas::N9Canvas},
     PColor,
 };
 
 #[cfg(feature = "scripting")]
 use crate::N9Var;
-
-#[derive(Component)]
-pub struct Nano9Sprite;
 
 #[derive(Clone, Debug, Reflect)]
 pub struct DrawState {
@@ -77,12 +74,6 @@ impl DrawState {
     }
 }
 
-#[derive(Debug, Clone, Resource, Default)]
-pub struct N9Canvas {
-    pub size: UVec2,
-    pub handle: Handle<Image>,
-}
-
 impl Default for DrawState {
     fn default() -> Self {
         DrawState {
@@ -96,109 +87,16 @@ impl Default for DrawState {
     }
 }
 
-// fn reset_camera_delta(mut events: EventReader<ClearEvent>, mut state: ResMut<Pico8State>) {
-//     for _ in events.read() {
-//         // info!("reset camera delta");
-//         state.draw_state.camera_position_delta = None;
-//     }
-// }
-
-pub fn setup_canvas(mut canvas: Option<ResMut<N9Canvas>>, mut assets: ResMut<Assets<Image>>) {
-    trace!("setup_canvas");
-    if let Some(ref mut canvas) = canvas {
-        let mut image = Image::new_fill(
-            Extent3d {
-                width: canvas.size.x,
-                height: canvas.size.y,
-                depth_or_array_layers: 1,
-            },
-            TextureDimension::D2,
-            &[0u8, 0u8, 0u8, 0u8],
-            TextureFormat::Rgba8UnormSrgb,
-            RenderAssetUsages::RENDER_WORLD | RenderAssetUsages::MAIN_WORLD,
-        );
-        image.sampler = ImageSampler::nearest();
-        canvas.handle = assets.add(image);
-    }
-}
-
 #[cfg(feature = "scripting")]
 pub mod call {
     use super::*;
     callback_labels!(
     SetGlobal => "_set_global",
     Update => "_update",
-    // Update60 => "_update60",
+    Update60 => "_update60",
     Init => "_init",
     Eval => "_eval",
-    Draw => "_draw"); // TODO: Should permit trailing comma
-}
-
-// pub fn set_camera(
-//     camera: Query<Entity, With<Camera>>,
-//     mut events: PriorityEventWriter<LuaEvent<N9Args>>,
-// ) {
-//     if let Ok(id) = camera.get_single() {
-//         events.send(
-//             LuaEvent {
-//                 hook_name: "_set_global".to_owned(),
-//                 args: {
-//                     let mut args = Variadic::new();
-//                     args.push(N9Arg::String("camera".into()));
-//                     // args.push(N9Arg::Entity(id));
-//                     args.push(N9Arg::Camera(N9Camera(id)));
-//                     args
-//                 },
-//                 recipients: Recipients::All,
-//             },
-//             0,
-//         )
-//     }
-// }
-
-#[derive(Component, Debug, Reflect)]
-pub struct Nano9Camera;
-
-fn spawn_camera(mut commands: Commands, canvas: Option<Res<N9Canvas>>) {
-    let mut projection = OrthographicProjection::default_2d();
-    projection.scaling_mode = ScalingMode::WindowSize;
-    let handle = canvas.as_ref().map(|c| c.handle.clone());
-    let canvas_size: UVec2 = canvas.map(|c| c.size).unwrap_or_default();
-    commands
-        .spawn((
-            Name::new("dolly"),
-            Transform::from_xyz(
-                canvas_size.x as f32 / 2.0,
-                -(canvas_size.y as f32) / 2.0,
-                0.0,
-            ),
-            InheritedVisibility::default(),
-        ))
-        .with_children(|parent| {
-            let mut camera_commands = parent.spawn((
-                Name::new("camera"),
-                Camera2d,
-                Msaa::Off,
-                projection,
-                IsDefaultUiCamera,
-                InheritedVisibility::default(),
-                Nano9Camera,
-                #[cfg(feature = "scripting")]
-                N9Var::new("camera"),
-            ));
-            if let Some(handle) = handle {
-                camera_commands.with_children(|parent| {
-                    parent.spawn((
-                        Name::new("canvas"),
-                        Sprite::from_image(handle),
-                        Transform::from_xyz(0.0, 0.0, -100.0),
-                        Nano9Sprite,
-                        #[cfg(feature = "scripting")]
-                        N9Var::new("canvas"),
-                    ));
-                });
-            }
-        });
+    Draw => "_draw");
 }
 
 pub fn fullscreen_key(
@@ -217,82 +115,6 @@ pub fn fullscreen_key(
     }
 }
 
-pub fn sync_window_size(
-    mut resize_event: EventReader<WindowResized>,
-    canvas: Res<N9Canvas>,
-    // mut query: Query<&mut Sprite, With<Nano9Sprite>>,
-    primary_windows: Query<&Window, With<PrimaryWindow>>,
-    orthographic_camera: Single<(&mut OrthographicProjection, &mut Camera), With<Nano9Camera>>,
-) {
-    if let Some(e) = resize_event
-        .read()
-        .filter(|e| primary_windows.get(e.window).is_ok())
-        .last()
-    {
-        let primary_window = primary_windows.get(e.window).unwrap();
-
-        //let window_size = primary_window.physical_size().as_vec2();
-        let window_scale = primary_window.scale_factor();
-        let window_size = Vec2::new(
-            primary_window.physical_width() as f32,
-            primary_window.physical_height() as f32,
-        ) / window_scale;
-        // let mut orthographic = orthographic.single_mut();
-
-        let canvas_size = canvas.size.as_vec2();
-        // let canvas_aspect = canvas_size.x / canvas_size.y;
-        // let window_aspect = window_size.x / window_size.y;
-
-        // `new_scale` is the number of physical pixels per logical pixels.
-        let new_scale =
-                // Canvas is longer than it is tall. Fit the width first.
-                (window_size.y / canvas_size.y).min(window_size.x / canvas_size.x);
-        // info!("window_size {window_size}");
-
-        let (mut orthographic, mut camera) = orthographic_camera.into_inner();
-        // match *orthographic.into_inner() {
-        //     Projection::Orthographic(ref mut orthographic) => {
-
-        info!(
-            "oldscale {} new_scale {new_scale} window_scale {window_scale}",
-            &orthographic.scale
-        );
-        orthographic.scale = 1.0 / new_scale;
-        let viewport_size = canvas_size * new_scale * window_scale;
-        let start = (window_size * window_scale - viewport_size) / 2.0;
-        info!("viewport size {} start {}", &viewport_size, &start);
-        camera.viewport = Some(Viewport {
-            physical_position: UVec2::new(start.x as u32, start.y as u32),
-            physical_size: UVec2::new(viewport_size.x as u32, viewport_size.y as u32),
-            ..default()
-        });
-
-        // }
-        //     _ => { panic!("Not expecting a perspective"); }
-
-        // }
-        // settings.pixel_scale = new_scale;
-        // orthographic.scaling_mode = ScalingMode::WindowSize;
-        // }
-        // transform.scale = Vec3::splat(new_scale);
-
-        // let scale = if settings.canvas_size.x > settings.canvas_size.y
-        // {
-        //     // horizontal is longer
-        //     settings.resolution.1 as f32
-        //         / settings.canvas_size.y as f32
-        // } else {
-        //     // vertical is longer
-        //     settings.resolution.0 as f32
-        //         / settings.canvas_size.x as f32
-        // };
-
-        //     sprite.custom_size = Some(Vec2::new(
-        //         (settings.canvas_size.x as f32) * scale,
-        //         (settings.canvas_size.y as f32) * scale,
-        //     ));
-    }
-}
 
 #[cfg(feature = "scripting")]
 pub fn send(label: impl Into<CallbackLabel>) -> impl Fn(EventWriter<ScriptCallbackEvent>,
@@ -520,8 +342,7 @@ impl Plugin for Nano9Plugin {
             size: canvas_size,
             ..default()
         })
-        .add_plugins(crate::plugin)
-        .add_systems(PreStartup, (setup_canvas, spawn_camera).chain());
+        .add_plugins(crate::plugin);
 
         #[cfg(feature = "scripting")]
         app.add_plugins(add_lua_logging);
@@ -548,10 +369,6 @@ impl Plugin for Nano9Plugin {
         #[cfg(not(feature = "level"))]
         app.add_plugins(bevy_ecs_tilemap::TilemapPlugin);
 
-        if app.is_plugin_added::<WindowPlugin>() {
-            app.add_systems(Update, sync_window_size)
-                .add_systems(Update, fullscreen_key);
-        }
     }
 }
 

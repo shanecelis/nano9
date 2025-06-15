@@ -1,6 +1,9 @@
-use crate::pico8::Pico8State;
+use crate::{
+    PColor,
+    pico8::{Pico8State, GfxHandles},
+};
+use super::canvas;
 use bevy::prelude::*;
-// use bevy::utils::HashMap;
 use mashmap::MashMap;
 
 mod counter;
@@ -20,13 +23,13 @@ pub(crate) fn plugin(app: &mut App) {
 
 #[derive(Debug, Event, Clone, Copy)]
 pub struct ClearEvent {
-    draw_ceiling: usize,
+    color: PColor
 }
 
-impl Default for ClearEvent {
-    fn default() -> Self {
-        ClearEvent {
-            draw_ceiling: DRAW_COUNTER.get(),
+impl ClearEvent {
+    pub fn new(color: PColor) -> Self {
+        Self {
+            color
         }
     }
 }
@@ -148,12 +151,28 @@ fn handle_overflow(mut query: Query<&mut Clearable>) {
 }
 
 fn handle_clear_event(
-    _trigger: Trigger<ClearEvent>,
+    trigger: Trigger<ClearEvent>,
     mut query: Query<(Entity, &mut Clearable, &mut Visibility)>,
     mut commands: Commands,
     mut state: ResMut<Pico8State>,
     mut cache: ResMut<ClearCache>,
+    mut one_color: Single<&mut Sprite, With<canvas::OneColorBackground>>,
+    mut gfx_handles: Res<GfxHandles>,
 ) {
+    state.draw_state.clear_screen();
+    // Clear the 1x1 background.
+    let mut sprite = one_color.into_inner();
+    match gfx_handles.get_color(trigger.color, state.palette) {
+        Ok(color) => {
+            sprite.color = color;
+        }
+        Err(e) => {
+            error!("Could not clear to color: {e}");
+            sprite.color = Srgba::rgb(1.0, 0.0, 1.0).into(); // Ugly pink
+        }
+    }
+    // Clear the background if needed.
+
     for (id, mut clearable, mut visibility) in &mut query {
         if clearable.time_to_live == 0 {
             // These should be removed from the cache if they were cached.

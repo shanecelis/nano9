@@ -1,5 +1,8 @@
 use super::*;
 
+#[derive(Component, Debug, Reflect)]
+pub struct Nano9Camera;
+
 pub(crate) fn plugin(app: &mut App) {
     app
         .add_observer(

@@ -1,4 +1,7 @@
-use bevy::prelude::*;
+use bevy::{
+    prelude::*,
+    window::{PrimaryWindow, WindowMode},
+};
 use crate::run::{RunState, Steps};
 
 pub fn toggle_pause(
@@ -26,5 +29,16 @@ pub fn one_step(
         s => {
             warn!("Cannot do one_step in state {:?}.", s);
         }
+    }
+}
+
+
+pub fn toggle_fullscreen(
+    mut primary_windows: Query<&mut Window, With<PrimaryWindow>>,
+) {
+    let mut primary_window = primary_windows.single_mut();
+    primary_window.mode = match primary_window.mode {
+        WindowMode::Windowed => WindowMode::Fullscreen(MonitorSelection::Current),
+        _ => WindowMode::Windowed,
     }
 }

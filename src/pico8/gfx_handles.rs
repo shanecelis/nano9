@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use crate::pico8::{Error, FillPat, Gfx, PalMap, Palette};
+use crate::{PColor, pico8::{Error, FillPat, Gfx, PalMap, Palette}};
 
 use std::{
     collections::{hash_map::Entry, HashMap},
@@ -80,6 +80,14 @@ impl GfxHandles {
             }
         };
         Ok(handle)
+    }
+
+    // Copied from Pico8Asset.
+    pub(crate) fn get_color(&self, c: PColor, palette_index: usize) -> Result<Color, Error> {
+        match c {
+            PColor::Palette(n) => self.palettes[palette_index].get_color(n).map(|c| c.into()),
+            PColor::Color(c) => Ok(c.into()),
+        }
     }
 
     pub fn tick(&mut self) {

@@ -1,4 +1,4 @@
-use crate::Nano9Camera;
+use crate::pico8::api::Nano9Camera;
 use bevy::prelude::*;
 
 #[derive(Clone, Debug, Reflect, Default, Resource)]

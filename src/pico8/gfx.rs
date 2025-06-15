@@ -5,11 +5,86 @@ use bevy::{
         render_asset::RenderAssetUsages,
         render_resource::{Extent3d, TextureDimension, TextureFormat},
     },
+    prelude::*,
 };
 use bitvec::{prelude::*, view::BitView};
 
 pub(crate) fn plugin(app: &mut App) {
-    app.init_asset::<Gfx>();
+    app
+        .register_type::<Gfx>()
+        .register_type::<GfxSprite>()
+        .register_type::<GfxDirty>()
+        .init_asset::<Gfx>()
+        .add_systems(PreUpdate, (create_sprite, update_sprite));
+}
+
+#[derive(Component, Default, Reflect)]
+pub struct GfxSprite {
+    pub image: Handle<Gfx>,
+}
+
+#[derive(Component, Default, Reflect)]
+pub struct GfxDirty;
+
+fn update_sprite(mut query: Query<(Entity, &mut Sprite, &GfxSprite), With<GfxDirty>>,
+                 gfxs: Res<Assets<Gfx>>,
+                 state: Res<Pico8State>,
+                 mut images: ResMut<Assets<Image>>,
+                 mut commands: Commands,
+                 gfx_handles: Res<GfxHandles>,  // for palettes, ugh. TODO: Move palettes elsewhere.
+) {
+    let palette = state.palette;
+    if palette >= gfx_handles.palettes.len() {
+        return;
+    }
+    for (id, mut sprite, mut gfx_sprite) in &mut query {
+
+        let Some(gfx) = gfxs.get(&gfx_sprite.image) else { continue; };
+        // TODO: Update existing image if it's the right size instead of recreating it.
+        match gfx.try_to_image(|i, _, bytes| {
+            state.pal_map.write_color(&gfx_handles.palettes[palette].data, i, bytes)
+        }) {
+            Ok(image) => {
+                sprite.image = images.add(image);
+                commands.entity(id).remove::<GfxDirty>();
+            }
+            Err(e) => {
+                error!("Could not write gfx to image: {e}");
+            }
+        }
+    }
+}
+
+fn create_sprite(mut query: Query<(Entity, &GfxSprite), Without<Sprite>>,
+                 gfxs: Res<Assets<Gfx>>,
+                 state: Res<Pico8State>,
+                 mut images: ResMut<Assets<Image>>,
+                 gfx_handles: Res<GfxHandles>,  // for palettes, ugh. TODO: Move palettes elsewhere.
+                 mut commands: Commands,
+) {
+    let palette = state.palette;
+    if palette >= gfx_handles.palettes.len() {
+        return;
+    }
+    for (id, gfx_sprite) in &mut query {
+
+        let Some(gfx) = gfxs.get(&gfx_sprite.image) else { continue; };
+        // TODO: Update existing image if it's the right size instead of recreating it.
+        match gfx.try_to_image(|i, _, bytes| {
+            state.pal_map.write_color(&gfx_handles.palettes[palette].data, i, bytes)
+        }) {
+            Ok(image) => {
+                commands.entity(id)
+                    .insert(Sprite {
+                        image: images.add(image),
+                        ..default()
+                    });
+            }
+            Err(e) => {
+                error!("Could not write gfx to image: {e}");
+            }
+        }
+    }
 }
 
 /// An indexed image using `N`-bit palette with color index `T`.
@@ -143,6 +218,23 @@ impl<
                 true
             })
             .unwrap_or(false)
+    }
+
+    /// Write pixel data.
+    ///
+    /// The `write_color` function accepts a color_index and the pixel_index and
+    /// writes a Srgba set of u8 pixels.
+    pub fn write_bytes(
+        &self,
+        pixel_bytes: &mut [u8],
+        mut write_color: impl FnMut(T, usize, &mut [u8]),
+    ) {
+        // let mut pixel_bytes = vec![0x00; self.width * self.height * 4];
+        let mut color_index = T::default();
+        for (i, pixel) in self.data.chunks_exact(N).enumerate() {
+            color_index.view_bits_mut::<Lsb0>()[0..N].copy_from_bitslice(pixel);
+            write_color(color_index, i, &mut pixel_bytes[i * 4..(i + 1) * 4]);
+        }
     }
 
     /// Create an image.

@@ -12,6 +12,7 @@ pub use handle::*;
 pub mod input;
 use input::*;
 mod camera;
+pub use camera::{Nano9Camera};
 mod param;
 pub use param::*;
 mod sfx;
@@ -24,7 +25,7 @@ mod print;
 mod rect;
 pub use pal::*;
 mod bit_ops;
-mod canvas;
+pub mod canvas;
 #[cfg(feature = "level")]
 mod level;
 mod line;
@@ -51,7 +52,7 @@ use crate::{
         self, audio::AudioBank, image::pixel_art_settings, ClearEvent, Clearable, SpriteMap, PalMap,
         Palette,
     },
-    DrawState, FillColor, N9Color, Nano9Camera, PColor,
+    DrawState, FillColor, N9Color, PColor,
 };
 use std::{borrow::Cow, f32::consts::PI};
 
