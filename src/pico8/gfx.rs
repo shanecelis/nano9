@@ -26,7 +26,7 @@ pub struct GfxSprite {
 #[derive(Component, Default, Reflect)]
 pub struct GfxDirty;
 
-fn update_sprite(mut query: Query<(Entity, &mut Sprite, &GfxSprite), With<GfxDirty>>,
+fn update_sprite(mut query: Query<(Entity, &Sprite, &GfxSprite), With<GfxDirty>>,
                  gfxs: Res<Assets<Gfx>>,
                  state: Res<Pico8State>,
                  mut images: ResMut<Assets<Image>>,
@@ -37,21 +37,15 @@ fn update_sprite(mut query: Query<(Entity, &mut Sprite, &GfxSprite), With<GfxDir
     if palette >= gfx_handles.palettes.len() {
         return;
     }
-    for (id, mut sprite, mut gfx_sprite) in &mut query {
+    for (id, sprite, gfx_sprite) in &query {
+        info!("update_sprite {}", &id);
 
         let Some(gfx) = gfxs.get(&gfx_sprite.image) else { continue; };
-        // TODO: Update existing image if it's the right size instead of recreating it.
-        match gfx.try_to_image(|i, _, bytes| {
-            state.pal_map.write_color(&gfx_handles.palettes[palette].data, i, bytes)
-        }) {
-            Ok(image) => {
-                sprite.image = images.add(image);
-                commands.entity(id).remove::<GfxDirty>();
-            }
-            Err(e) => {
-                error!("Could not write gfx to image: {e}");
-            }
-        }
+        let Some(mut image) = images.get_mut(&sprite.image) else { continue; };
+        gfx.write_bytes(&mut image.data, |i, _, bytes| {
+            state.pal_map.write_color(&gfx_handles.palettes[palette].data, i, bytes);
+        });
+        commands.entity(id).remove::<GfxDirty>();
     }
 }
 
@@ -67,6 +61,7 @@ fn create_sprite(mut query: Query<(Entity, &GfxSprite), Without<Sprite>>,
         return;
     }
     for (id, gfx_sprite) in &mut query {
+        info!("create_sprite {id}");
 
         let Some(gfx) = gfxs.get(&gfx_sprite.image) else { continue; };
         // TODO: Update existing image if it's the right size instead of recreating it.

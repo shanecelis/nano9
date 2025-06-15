@@ -157,6 +157,7 @@ fn handle_clear_event(
     mut state: ResMut<Pico8State>,
     mut cache: ResMut<ClearCache>,
     mut one_color: Single<&mut Sprite, With<canvas::OneColorBackground>>,
+    // mut background: Single<&mut GfxSprite, With<canvas::Background>>,
     mut gfx_handles: Res<GfxHandles>,
 ) {
     state.draw_state.clear_screen();
