@@ -163,8 +163,10 @@ function tonum(data)
     return tonumber(data, 10)
 end
 
+
 tostr = tostring
 t = time
+unpack = table.unpack
 
 function split(inputstr, sep, convert_numbers)
     if sep == nil then
