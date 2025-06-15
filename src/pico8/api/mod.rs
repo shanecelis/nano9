@@ -12,7 +12,6 @@ pub use handle::*;
 pub mod input;
 use input::*;
 mod camera;
-use camera::*;
 mod param;
 pub use param::*;
 mod sfx;
@@ -54,7 +53,6 @@ use crate::{
     },
     DrawState, FillColor, N9Color, Nano9Camera, PColor,
 };
-pub(crate) use camera::UpdateCameraPos;
 use std::{borrow::Cow, f32::consts::PI};
 
 pub const MAP_COLUMNS: u32 = 128;

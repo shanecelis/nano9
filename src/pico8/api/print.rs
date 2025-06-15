@@ -54,7 +54,7 @@ impl super::Pico8<'_, '_> {
         if let Some(id) = self.resurrect(hash, negate_vy(pos.unwrap_or(Vec2::ZERO))) {
             return Ok(id);
         }
-        let clearable = Clearable::new(2).with_hash(hash);
+        let clearable = Clearable::new(self.defaults.time_to_live).with_hash(hash);
         let id = self.commands.spawn_empty().id();
         self.commands.queue(move |world: &mut World| {
             if let Err(e) = Self::print_world(
@@ -246,10 +246,10 @@ mod lua {
                         // This ensures there will be a newline.
                         _ => " ".into(),
                     };
-                    let (pos, hash, cached_id) = with_pico8(&ctx, |pico8| {
-                        let pos_p8 = x.map(|x| {
-                            Vec2::new(x, y.unwrap_or(pico8.state.draw_state.print_cursor.y))
-                        });
+                    let (pos, hash, cached_id, ttl) = with_pico8(&ctx, |pico8| {
+                        let pos_p8 = Vec2::new(x.unwrap_or(pico8.state.draw_state.print_cursor.x),
+                                               y.unwrap_or(pico8.state.draw_state.print_cursor.y));
+                        let pos_p8 = pixel_snap(pico8.state.draw_state.apply_camera_delta(pos_p8));
 
                         let hash = {
                             let mut hasher = DefaultHashBuilder::default().build_hasher();
@@ -266,15 +266,15 @@ mod lua {
                         };
                         // See if there's already an entity available.
                         let cached_id =
-                            pico8.resurrect(hash, negate_vy(pos_p8.unwrap_or(Vec2::ZERO)));
+                            pico8.resurrect(hash, negate_vy(pos_p8));
                         pico8.state.draw_state.mark_drawn();
-                        Ok((pos_p8, hash, cached_id))
+                        Ok((pos_p8, hash, cached_id, pico8.defaults.time_to_live))
                     })?;
                     if let Some(_id) = cached_id {
                         // TODO: It expects the width to be returned.
                         return Ok(0.0);
                     }
-                    let clearable = Clearable::new(2).with_hash(hash);
+                    let clearable = Clearable::new(ttl).with_hash(hash);
 
                     let world_guard = ctx.world()?;
                     let raid = ReflectAccessId::for_global();
@@ -285,7 +285,7 @@ mod lua {
                             world,
                             None,
                             text.to_string(),
-                            pos,
+                            Some(pos),
                             c,
                             font_size,
                             font_index,

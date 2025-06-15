@@ -1,4 +1,4 @@
-use crate::pico8::{UpdateCameraPos, Pico8State};
+use crate::pico8::Pico8State;
 use bevy::prelude::*;
 // use bevy::utils::HashMap;
 use mashmap::MashMap;
@@ -31,6 +31,9 @@ impl Default for ClearEvent {
     }
 }
 
+// We're relying on the hash to do all our dirty work without any Eq protection
+// from collisions.
+
 // pub enum ClearKey {
 //     Map { map_pos: UVec2,
 //           size: UVec2,
@@ -60,6 +63,7 @@ impl ClearCache {
     }
 
     pub fn remove(&mut self, clearable: &Clearable, id: Entity) -> bool {
+        // We're trusting clearable.cached here. Should we?
         if clearable.cached {
             self.0
                 .drain_key_if(&clearable.hash.unwrap(), |v| *v == id)
@@ -144,7 +148,7 @@ fn handle_overflow(mut query: Query<&mut Clearable>) {
 }
 
 fn handle_clear_event(
-    trigger: Trigger<ClearEvent>,
+    _trigger: Trigger<ClearEvent>,
     mut query: Query<(Entity, &mut Clearable, &mut Visibility)>,
     mut commands: Commands,
     mut state: ResMut<Pico8State>,

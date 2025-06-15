@@ -7,6 +7,7 @@ pub struct Defaults {
     pub font_size: f32,
     pub clear_color: usize,
     pub initial_transparent_color: Option<usize>,
+    pub time_to_live: u8,
 }
 
 impl Default for Defaults {
@@ -16,6 +17,7 @@ impl Default for Defaults {
             font_size: 5.0,
             clear_color: 0,
             initial_transparent_color: Some(0),
+            time_to_live: 1,
         }
     }
 }
@@ -27,6 +29,7 @@ impl Defaults {
             initial_transparent_color: config_defaults.initial_transparent_color,
             font_size: config_defaults.font_size.unwrap_or(5.0),
             clear_color: config_defaults.clear_color.unwrap_or(0),
+            time_to_live: config_defaults.time_to_live.unwrap_or(1),
         }
     }
 }

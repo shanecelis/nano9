@@ -35,7 +35,6 @@ mod lua {
     };
     pub(crate) fn plugin(app: &mut App) {
         let world = app.world_mut();
-
         NamespaceBuilder::<GlobalNamespace>::new_unregistered(world)
             .register("exit", |ctx: FunctionCallContext, error: Option<u8>| {
                 with_pico8(&ctx, move |pico8| {

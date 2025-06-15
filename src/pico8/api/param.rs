@@ -40,11 +40,12 @@ impl Pico8<'_, '_> {
     pub fn resurrect(&mut self, hash: u64, position: Vec2) -> Option<Entity> {
         // See if there's already an entity available.
         if let Some(id) = self.clear_cache.take(&hash) {
+            let ttl = self.defaults.time_to_live;
             self.commands.queue(move |world: &mut World| {
                 let maybe_z = world.get_mut::<Clearable>(id).map(|mut clearable| {
                     // We've extracted it from the cache, so it's no longer cached.
                     clearable.cached = false;
-                    clearable.resurrect(2); // Make this a parameter.
+                    clearable.resurrect(ttl); // Make this a parameter.
                     clearable.suggest_z()
                 });
                 assert!(maybe_z.is_some());

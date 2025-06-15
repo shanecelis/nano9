@@ -92,6 +92,8 @@ pub struct Defaults {
     pub clear_color: Option<usize>,
     /// Font size when unspecified
     pub font_size: Option<f32>,
+    /// Time to live, an entity caching system
+    pub time_to_live: Option<u8>,
 }
 
 /// Audio bank
@@ -190,7 +192,11 @@ pub fn update_asset(
     #[cfg(feature = "scripting")] script_settings: Res<ScriptAssetSettings>,
 ) {
     for e in reader.read() {
-        info!("update asset event {e:?}");
+        // TODO: This next line is a bit noisy but reveals a lot of asset
+        // modifications due to Pico-8 APIs changing assets rather than changing
+        // state, which might be my preference.
+
+        // info!("update asset event {e:?}");
         if let AssetEvent::LoadedWithDependencies { id } = e {
             if let Some(ref mut pico8_handle) = pico8_handle {
                 if let Some(pico8_asset) = assets.get(*id) {
@@ -275,6 +281,7 @@ impl Config {
                 initial_pen_color: Some(6),
                 clear_color: Some(0),
                 initial_transparent_color: Some(0),
+                time_to_live: Some(1),
             }),
             ..default()
         }
@@ -302,6 +309,7 @@ impl Config {
                 initial_pen_color: Some(1),
                 clear_color: Some(3),
                 initial_transparent_color: None,
+                time_to_live: Some(1),
             }),
             ..default()
         }

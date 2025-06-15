@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use nano9::prelude::*;
 
-fn init(mut pico8: Pico8) {
+fn init(mut _pico8: Pico8) {
     // pico8.print("hello world", None, None, Some(10.0), Some(1)).unwrap();
 }
 

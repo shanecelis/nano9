@@ -164,7 +164,7 @@ impl super::Pico8<'_, '_> {
             flip_y: flip.y,
             ..default()
         };
-        let clearable = Clearable::new(2).with_hash(hash);
+        let clearable = Clearable::new(self.defaults.time_to_live).with_hash(hash);
         Ok(self
             .commands
             .spawn((
@@ -300,7 +300,7 @@ impl super::Pico8<'_, '_> {
                 ..default()
             }
         };
-        let clearable = Clearable::new(2).with_hash(hash);
+        let clearable = Clearable::new(self.defaults.time_to_live).with_hash(hash);
         let mut transform = Transform::from_xyz(pos.x, pos.y, clearable.suggest_z());
         if let Some(turns) = turns {
             transform.translation.x += pixel_size.x;
