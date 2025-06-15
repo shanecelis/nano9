@@ -52,8 +52,6 @@ impl super::Pico8<'_, '_> {
         }
         match self.sprite_map(map_index)?.clone() {
             SpriteMap::P8(map) => {
-                let palette = self.palette(None)?.clone();
-
                 let sprite_sheets = &self.pico8_asset()?.sprite_sheets.clone();
                 map.map(
                     map_pos,
@@ -65,7 +63,7 @@ impl super::Pico8<'_, '_> {
                     &mut self.commands,
                     |handle| {
                         self.gfx_handles.get_or_create(
-                            &palette,
+                            self.state.palette,
                             &self.state.pal_map,
                             None,
                             handle,

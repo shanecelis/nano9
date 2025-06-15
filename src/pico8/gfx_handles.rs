@@ -35,6 +35,7 @@ pub(crate) fn plugin(app: &mut App) {
 #[derive(Debug, Resource, Default)]
 pub struct GfxHandles {
     buffers: [HashMap<u64, Handle<Image>>; 2],
+    pub(crate) palettes: Vec<Palette>,
     tick: usize,
 }
 
@@ -43,7 +44,7 @@ impl GfxHandles {
     /// Otherwise it returns an extant weak_handle.
     pub fn get_or_create(
         &mut self,
-        palette: &Palette,
+        palette: usize,
         pal_map: &PalMap,
         fill_pat: Option<&FillPat>,
         gfx: &Handle<Gfx>,
@@ -71,7 +72,7 @@ impl GfxHandles {
                         todo!();
                     } else {
                         gfx.try_to_image(|i, _, bytes| {
-                            pal_map.write_color(&palette.data, i, bytes)
+                            pal_map.write_color(&self.palettes[palette].data, i, bytes)
                         })?
                     };
                     entry.insert(images.add(image)).clone()

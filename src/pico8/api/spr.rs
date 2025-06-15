@@ -146,9 +146,8 @@ impl super::Pico8<'_, '_> {
                 SprHandle::Image(handle) => handle,
                 SprHandle::Gfx(handle) => {
                     // XXX: Consider copying palettes to state to avoid cloning.
-                    let palette = &self.palette(None)?.clone();
                     self.gfx_handles.get_or_create(
-                        palette,
+                        self.state.palette,
                         &self.state.pal_map,
                         None,
                         &handle,
@@ -278,9 +277,8 @@ impl super::Pico8<'_, '_> {
         let image = match sprites.handle.clone() {
             SprHandle::Image(handle) => handle,
             SprHandle::Gfx(handle) => {
-                let palette = &self.palette(None)?.clone();
                 self.gfx_handles.get_or_create(
-                    palette,
+                    self.state.palette,
                     &self.state.pal_map,
                     None,
                     &handle,
