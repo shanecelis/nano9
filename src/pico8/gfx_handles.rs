@@ -1,10 +1,13 @@
-use bevy::prelude::*;
+use bevy::{
+    prelude::*,
+    // platform::hash::DefaultHasher,
+};
 
 use crate::{PColor, pico8::{Error, FillPat, Gfx, PalMap, Palette}};
 
 use std::{
     collections::{hash_map::Entry, HashMap},
-    hash::{DefaultHasher, Hash, Hasher},
+    hash::{Hash, Hasher, DefaultHasher},
 };
 
 pub(crate) fn plugin(app: &mut App) {

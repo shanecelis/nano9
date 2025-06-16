@@ -5,8 +5,11 @@ use bevy::{
         render_asset::RenderAssetUsages,
         render_resource::{Extent3d, TextureDimension, TextureFormat},
     },
+    utils::{HashMap, hashbrown::hash_map::DefaultHashBuilder},
+    // platform::hash::DefaultHasher,
     prelude::*,
 };
+use std::hash::{Hasher, DefaultHasher, Hash};
 use bitvec::{prelude::*, view::BitView};
 
 pub(crate) fn plugin(app: &mut App) {
@@ -15,7 +18,9 @@ pub(crate) fn plugin(app: &mut App) {
         .register_type::<GfxSprite>()
         .register_type::<GfxDirty>()
         .init_asset::<Gfx>()
-        .add_systems(PreUpdate, (create_sprite, update_sprite));
+        .add_systems(PostUpdate, compute_image_on_asset_event);
+        // .add_systems(PreUpdate, (create_sprite, update_sprite));
+
 }
 
 #[derive(Component, Default, Reflect)]
@@ -49,36 +54,134 @@ fn update_sprite(mut query: Query<(Entity, &Sprite, &GfxSprite), With<GfxDirty>>
     }
 }
 
+enum GfxImage {
+    Single { hash: u64, image: Handle<Image> },
+    Multiple { map: HashMap<u64, Handle<Image>> },
+}
+
+impl GfxImage {
+    fn new(hash: u64, image: Handle<Image>) -> Self {
+        GfxImage::Single { hash, image }
+    }
+
+    fn get(&self, hash: &u64) -> Option<&Handle<Image>> {
+        match self {
+            GfxImage::Single { image, hash: single_hash } => {
+                if *hash == *single_hash {
+                    Some(image)
+                } else {
+                    // Create an image an ugrade to a Multiple.
+                    None
+                }
+            }
+            GfxImage::Multiple { map } => {
+                map.get(hash)
+            }
+        }
+    }
+
+    fn insert(&mut self, hash: u64, image: Handle<Image>) {
+
+        match self {
+            GfxImage::Single { image: single_image, hash: single_hash } => {
+                if hash == *single_hash {
+                    return;
+                } else {
+                    let map = [(*single_hash, std::mem::take(single_image)),
+                               (hash, image)].into_iter().collect();
+
+                    *self = GfxImage::Multiple { map };
+                }
+            }
+            GfxImage::Multiple { map } => {
+                map.insert(hash, image);
+            }
+        }
+    }
+}
+
 // Informed from Bevy's Sprite::compute_slices_on_asset_event.
-pub(crate) fn compute_image_on_asset_event(
+fn compute_image_on_asset_event(
     mut commands: Commands,
     mut events: EventReader<AssetEvent<Gfx>>,
-    mut images: Res<Assets<Image>>,
+    mut images: ResMut<Assets<Image>>,
     gfxs: Res<Assets<Gfx>>,
+    state: Res<Pico8State>,
+    gfx_handles: Res<GfxHandles>,
     mut sprites: Query<(Entity, &GfxSprite, Option<&mut Sprite>)>,
+    mut pairs: Local<HashMap<AssetId<Gfx>, GfxImage>>,
 ) {
     // We store the asset ids of added/modified image assets.
     let added_handles: bevy::utils::HashSet<_> = events
         .read()
         .filter_map(|e| match e {
             AssetEvent::Added { id } | AssetEvent::Modified { id } => Some(*id),
+            AssetEvent::Removed { id } => {
+                pairs.remove(id);
+                None
+            }
             _ => None,
         })
         .collect();
     if added_handles.is_empty() {
         return;
     }
-    for (entity, gfx_sprite, sprite) in &sprites {
+    for (id, gfx_sprite, mut sprite) in &mut sprites {
         if !added_handles.contains(&gfx_sprite.image.id()) {
             continue;
         }
-        match sprite {
-            Some(mut sprite) => {
-            }
-            None => {
 
-            }
+        let mut hasher = DefaultHasher::new();
+        let drawing = &state.draw_state;
+        state.pal_map.hash(&mut hasher);
+        drawing.fill_pat.inspect(|fill_pat| {
+            fill_pat.hash(&mut hasher);
+        });
+        let hash = hasher.finish();
+        let gfx_id = gfx_sprite.image.id();
+        let image_handle: Option<Handle<Image>> = pairs.get(&gfx_id).and_then(|gfx_image| {
+            gfx_image.get(&hash).inspect(|handle| {
+                let gfx = gfxs.get(gfx_id);
+                // Update existing image.
+                trace!("updating image for gfx {}", gfx_id);
+                if let Some((gfx, mut image)) = gfx.zip(images.get_mut(*handle)) {
+                    gfx.write_bytes(
+                        &mut image.data,
+                        |i, _, bytes| {
+                        state.pal_map.write_color(&gfx_handles.palettes[state.palette].data, i, bytes);
+                    });
+                }
+            }).cloned()
+        });
+        let image_handle: Result<Handle<Image>, Error> = image_handle.map(Ok).unwrap_or_else(|| {
+            let gfx = gfxs.get(&gfx_sprite.image)
+                .ok_or(Error::NoSuch("gfx image".into()))?;
+            trace!("creating image for gfx {}", gfx_id);
+            let image = images.add(gfx.try_to_image(|i, _, bytes| {
+                state.pal_map.write_color(&gfx_handles.palettes[state.palette].data, i, bytes)
+            })?);
+            // Add image to the map.
+            pairs.entry(gfx_id)
+                .and_modify(|gfx_image| gfx_image.insert(hash, image.clone()))
+                .or_insert_with(|| GfxImage::new(hash, image.clone()));
+            Ok(image)
+        });
 
+        match image_handle {
+            Ok(image) => {
+                match sprite {
+                    Some(mut sprite) => {
+                        sprite.image = image;
+                    }
+                    None => {
+                        commands.entity(id)
+                            .insert(Sprite::from_image(image));
+                    }
+                }
+            }
+            Err(e) => {
+                warn!("Unable to update gfx {gfx_id}: {e}");
+            }
         }
     }
 }
