@@ -49,6 +49,41 @@ fn update_sprite(mut query: Query<(Entity, &Sprite, &GfxSprite), With<GfxDirty>>
     }
 }
 
+// Informed from Bevy's Sprite::compute_slices_on_asset_event.
+pub(crate) fn compute_image_on_asset_event(
+    mut commands: Commands,
+    mut events: EventReader<AssetEvent<Gfx>>,
+    mut images: Res<Assets<Image>>,
+    gfxs: Res<Assets<Gfx>>,
+    mut sprites: Query<(Entity, &GfxSprite, Option<&mut Sprite>)>,
+) {
+    // We store the asset ids of added/modified image assets.
+    let added_handles: bevy::utils::HashSet<_> = events
+        .read()
+        .filter_map(|e| match e {
+            AssetEvent::Added { id } | AssetEvent::Modified { id } => Some(*id),
+            _ => None,
+        })
+        .collect();
+    if added_handles.is_empty() {
+        return;
+    }
+    for (entity, gfx_sprite, sprite) in &sprites {
+        if !added_handles.contains(&gfx_sprite.image.id()) {
+            continue;
+        }
+        match sprite {
+            Some(mut sprite) => {
+            }
+            None => {
+
+            }
+
+        }
+    }
+}
+
+
 fn create_sprite(mut query: Query<(Entity, &GfxSprite), Without<Sprite>>,
                  gfxs: Res<Assets<Gfx>>,
                  state: Res<Pico8State>,

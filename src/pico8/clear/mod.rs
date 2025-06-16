@@ -1,6 +1,6 @@
 use crate::{
     PColor,
-    pico8::{Pico8State, GfxHandles},
+    pico8::{Pico8State, GfxHandles, GfxSprite, Gfx},
 };
 use super::canvas;
 use bevy::prelude::*;
@@ -156,8 +156,9 @@ fn handle_clear_event(
     mut commands: Commands,
     mut state: ResMut<Pico8State>,
     mut cache: ResMut<ClearCache>,
+    mut gfxs: ResMut<Assets<Gfx>>,
     mut one_color: Single<&mut Sprite, With<canvas::OneColorBackground>>,
-    // mut background: Single<&mut GfxSprite, With<canvas::Background>>,
+    background: Single<(Entity, &GfxSprite), With<canvas::Background>>,
     mut gfx_handles: Res<GfxHandles>,
 ) {
     state.draw_state.clear_screen();
@@ -173,6 +174,10 @@ fn handle_clear_event(
         }
     }
     // Clear the background if needed.
+    let (background_id, gfx_sprite) = background.into_inner();
+    if let Some(mut gfx) = gfxs.get_mut(&gfx_sprite.image) {
+        gfx.data.set_elements(0x00);
+    }
 
     for (id, mut clearable, mut visibility) in &mut query {
         if clearable.time_to_live == 0 {

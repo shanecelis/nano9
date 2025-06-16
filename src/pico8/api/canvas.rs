@@ -195,9 +195,9 @@ impl super::Pico8<'_, '_> {
                 let mut gfx = self.gfxs.get_mut(&self.canvas.gfx_handle).ok_or(Error::NoAsset("gfx".into()))?;
                 if gfx.set(pos.x as usize, pos.y as usize, p as u8) {
                     if let Some(background) = self.canvas.background {
-                        self.commands
-                            .entity(background)
-                            .insert(GfxDirty);
+                        // self.commands
+                        //     .entity(background)
+                        //     .insert(GfxDirty);
                     }
                     Ok(())
                 } else {
