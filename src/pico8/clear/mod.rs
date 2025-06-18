@@ -158,7 +158,7 @@ fn handle_clear_event(
     mut cache: ResMut<ClearCache>,
     mut gfxs: ResMut<Assets<Gfx>>,
     mut one_color: Single<&mut Sprite, With<canvas::OneColorBackground>>,
-    background: Single<(Entity, &GfxSprite), With<canvas::Background>>,
+    mut background: Single<(Entity, &GfxSprite, &mut canvas::Background), With<canvas::Background>>,
     mut gfx_handles: Res<GfxHandles>,
 ) {
     state.draw_state.clear_screen();
@@ -174,9 +174,12 @@ fn handle_clear_event(
         }
     }
     // Clear the background if needed.
-    let (background_id, gfx_sprite) = background.into_inner();
-    if let Some(mut gfx) = gfxs.get_mut(&gfx_sprite.image) {
-        gfx.data.set_elements(0x00);
+    let (background_id, gfx_sprite, mut background) = background.into_inner();
+    if background.marks > 0 {
+        if let Some(mut gfx) = gfxs.get_mut(&gfx_sprite.image) {
+            gfx.data.set_elements(0x00);
+        }
+        background.marks = 0;
     }
 
     for (id, mut clearable, mut visibility) in &mut query {

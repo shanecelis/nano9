@@ -15,6 +15,7 @@ use bitvec::{prelude::*, view::BitView};
 pub(crate) fn plugin(app: &mut App) {
     app
         .register_type::<Gfx>()
+        .register_asset_reflect::<Gfx>()
         .register_type::<GfxSprite>()
         .register_type::<GfxDirty>()
         .init_asset::<Gfx>()
@@ -126,8 +127,10 @@ fn compute_image_on_asset_event(
     if added_handles.is_empty() {
         return;
     }
+    let unassigned: Handle<Image> = Handle::default();
     for (id, gfx_sprite, mut sprite) in &mut sprites {
-        if !added_handles.contains(&gfx_sprite.image.id()) {
+        if !added_handles.contains(&gfx_sprite.image.id())
+            && sprite.as_ref().map(|sprite| dbg!(sprite.image != unassigned)).unwrap_or(false) {
             continue;
         }
 
@@ -143,8 +146,8 @@ fn compute_image_on_asset_event(
             gfx_image.get(&hash).inspect(|handle| {
                 let gfx = gfxs.get(gfx_id);
                 // Update existing image.
-                trace!("updating image for gfx {}", gfx_id);
                 if let Some((gfx, mut image)) = gfx.zip(images.get_mut(*handle)) {
+                    trace!("updating image for gfx {}", gfx_id);
                     gfx.write_bytes(
                         &mut image.data,
                         |i, _, bytes| {
@@ -157,7 +160,8 @@ fn compute_image_on_asset_event(
             let gfx = gfxs.get(&gfx_sprite.image)
                 .ok_or(Error::NoSuch("gfx image".into()))?;
             trace!("creating image for gfx {}", gfx_id);
-            let image = images.add(gfx.try_to_image(|i, _, bytes| {
+            let image = images.add(gfx.try_to_image(|i, n, bytes| {
+                // trace!("pixel {} writing color {}", n, i);
                 state.pal_map.write_color(&gfx_handles.palettes[state.palette].data, i, bytes)
             })?);
             // Add image to the map.
@@ -171,9 +175,11 @@ fn compute_image_on_asset_event(
             Ok(image) => {
                 match sprite {
                     Some(mut sprite) => {
+                        trace!("updating existant sprite on {}", id);
                         sprite.image = image;
                     }
                     None => {
+                        trace!("inserting new sprite into {}", id);
                         commands.entity(id)
                             .insert(Sprite::from_image(image));
                     }
@@ -249,11 +255,22 @@ pub enum PngError {
 }
 
 impl<const N: usize> Gfx<N, u8> {
-    pub fn from_png(bytes: &[u8]) -> Result<Self, png::DecodingError> {
+
+    pub fn from_png(bytes: &[u8], mut palette: Option<&mut Palette>) -> Result<Self, png::DecodingError> {
         let cursor = std::io::Cursor::new(bytes);
         let decoder = png::Decoder::new(cursor);
         let mut reader = decoder.read_info()?;
         let info = reader.info();
+        if let Some(ref mut palette) = &mut palette {
+            info.palette.as_ref().inspect(|png_palette| {
+                let mut colors = png_palette.chunks(3);
+                let mut data = vec![[0x00, 0x00, 0x00, 0xff]; colors.len()];
+                for (i, rgb) in colors.enumerate() {
+                    data[i][0..3].copy_from_slice(rgb);
+                }
+                palette.data = data;
+            });
+        }
         let dest_bit_depth = N;
         if info.color_type == png::ColorType::Indexed {
             let mut buf = vec![0; reader.output_buffer_size()];
@@ -364,7 +381,10 @@ impl<
     ) {
         // let mut pixel_bytes = vec![0x00; self.width * self.height * 4];
         let mut color_index = T::default();
-        for (i, pixel) in self.data.chunks_exact(N).enumerate() {
+        let mut chunks = self.data.chunks_exact(N);
+        assert!(chunks.len() >= self.width * self.height,
+                "cannot write full {}x{} gfx to image only has {} pixels", self.width, self.height, chunks.len());
+        for (i, pixel) in chunks.enumerate() {
             color_index.view_bits_mut::<Lsb0>()[0..N].copy_from_bitslice(pixel);
             write_color(color_index, i, &mut pixel_bytes[i * 4..(i + 1) * 4]);
         }

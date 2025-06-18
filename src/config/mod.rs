@@ -143,9 +143,32 @@ pub struct SpriteSheet {
     /// Offset of initial sprite at top left
     pub offset: Option<UVec2>,
     /// Indexed sprite, if true it reads in the palette colors from the image
-    /// and uses the palette when the image is drawn
+    /// and uses the current palette when the image is drawn
     #[serde(default)]
-    pub indexed: bool,
+    pub index_color: bool,
+    #[serde(default)]
+    pub extract_palette: bool,
+
+    // #[merge(skip)]
+    // #[serde(default)]
+    // pub palette: ImagePalette,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
+pub enum ImagePalette {
+
+    #[serde(rename = "no-index")]
+    #[default]
+    /// This image is not to use an indexed color palette.
+    NoIndex,
+    #[serde(rename = "index")]
+    /// This image uses an indexed color palette.
+    Index,
+    #[serde(rename = "extract")]
+    /// Extract the palette and add it to the end of the existing palettes.
+    Extract,
+    // /// This image uses a particular color palette already specified.
+    // Palette { index: usize },
 }
 
 /// Sprite map
@@ -553,5 +576,43 @@ clear_color = 8
         b.frames_per_second = Some(60);
         b.merge(&mut Config::pico8());
         assert_eq!(a, b);
+    }
+
+    #[test]
+    fn test_image_palette0() {
+        let config: Config = toml::from_str(
+            r#"
+[[image]]
+path = "sprites.png"
+index_color = true
+"#,
+        )
+        .unwrap();
+        assert_eq!(config.sprite_sheets[0].index_color, true);
+    }
+
+    #[test]
+    fn test_image_palette1() {
+        let config: Config = toml::from_str(
+            r#"
+[[image]]
+path = "sprites.png"
+"#,
+        )
+        .unwrap();
+        assert_eq!(config.sprite_sheets[0].index_color, false);
+    }
+
+    #[test]
+    fn test_image_palette2() {
+        let config: Config = toml::from_str(
+            r#"
+[[image]]
+path = "sprites.png"
+extract_palette = true
+"#,
+        )
+        .unwrap();
+        assert_eq!(config.sprite_sheets[0].extract_palette, true);
     }
 }

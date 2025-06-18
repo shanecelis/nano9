@@ -15,8 +15,10 @@ pub struct N9Canvas {
     pub gfx_handle: Handle<Gfx>,
 }
 
-#[derive(Component, Debug, Reflect)]
-pub struct Background;
+#[derive(Component, Debug, Reflect, Default)]
+pub struct Background {
+    pub marks: u32,
+}
 
 #[derive(Component, Debug, Reflect)]
 pub struct OneColorBackground;
@@ -93,7 +95,7 @@ pub fn setup_canvas(mut canvas: Option<ResMut<N9Canvas>>,
                 },
                 // Sprite::from_image(canvas.handle.clone()),
                 Transform::from_xyz(0.0, 0.0, -100.0),
-                Background,
+                Background::default(),
             ))
             .set_parent(camera_id)
             .id());
@@ -195,9 +197,9 @@ impl super::Pico8<'_, '_> {
                 let mut gfx = self.gfxs.get_mut(&self.canvas.gfx_handle).ok_or(Error::NoAsset("gfx".into()))?;
                 if gfx.set(pos.x as usize, pos.y as usize, p as u8) {
                     if let Some(background) = self.canvas.background {
-                        // self.commands
-                        //     .entity(background)
-                        //     .insert(GfxDirty);
+                        self.commands
+                            .entity(background)
+                            .insert(Background::default());
                     }
                     Ok(())
                 } else {

@@ -1,7 +1,7 @@
 use crate::pico8::Error;
 use bevy::prelude::*;
 
-#[derive(Debug, Clone, Reflect)]
+#[derive(Debug, Clone, Reflect, Default)]
 pub struct Palette {
     pub data: Vec<[u8; 4]>,
 }

@@ -231,6 +231,24 @@ async fn into_asset(
     config: Config,
     load_context: &mut LoadContext<'_>,
 ) -> Result<Pico8Asset, ConfigError> {
+
+    let mut palettes = Vec::new();
+    if config.palettes.is_empty() {
+        warn!("No palettes were provided.");
+        // XXX: Should we provide a default pico8 palette?
+        // config.palettes.push(Palette { path: pico8::PICO8_PALETTE.to_string(), row: None });
+    } else {
+        palettes = Vec::with_capacity(config.palettes.len());
+        for palette in config.palettes.iter() {
+            let image = load_context
+                .loader()
+                .immediate()
+                .with_settings(pixel_art_settings)
+                .load(&palette.path)
+                .await?;
+            palettes.push(pico8::Palette::from_image(image.get(), palette.row));
+        }
+    }
     let mut sprite_sheets = vec![];
     for (i, mut sheet) in config.sprite_sheets.into_iter().enumerate() {
         // let flags: Vec<u8>;
@@ -278,9 +296,15 @@ async fn into_asset(
         // } else if sheet.path.extension() == Some(OsStr::new("p8")) {
         //     todo!()
         // } else {
-        let (handle, layout_maybe) = if sheet.indexed {
+        let (handle, layout_maybe) = if sheet.index_color {
             let bytes = load_context.read_asset_bytes(&*sheet.path).await?;
-            let gfx = Gfx::from_png(&bytes)?;
+            let mut palette = pico8::Palette::default();
+            let is_extract = sheet.extract_palette;
+            let gfx = Gfx::from_png(&bytes, is_extract.then_some(&mut palette))?;
+            if is_extract {
+                trace!("Extract palette {} from image {:?}", palettes.len(), &palette);
+                palettes.push(palette);
+            }
             let image_size = UVec2::new(gfx.width as u32, gfx.height as u32);
             let layout = get_layout(
                 i,
@@ -302,7 +326,7 @@ async fn into_asset(
                 .loader()
                 .immediate()
                 .with_settings(pixel_art_settings)
-                .load::<Image>(dbg!(&*sheet.path))
+                .load::<Image>(&*sheet.path)
                 .await?;
             let image_size = loaded.get().size();
             let layout = get_layout(
@@ -329,23 +353,6 @@ async fn into_asset(
             layout: layout_maybe.unwrap_or(Handle::default()),
         })
         // }
-    }
-    let mut palettes = Vec::new();
-    if config.palettes.is_empty() {
-        warn!("No palettes were provided.");
-        // XXX: Should we provide a default pico8 palette?
-        // config.palettes.push(Palette { path: pico8::PICO8_PALETTE.to_string(), row: None });
-    } else {
-        palettes = Vec::with_capacity(config.palettes.len());
-        for palette in config.palettes.iter() {
-            let image = load_context
-                .loader()
-                .immediate()
-                .with_settings(pixel_art_settings)
-                .load(&palette.path)
-                .await?;
-            palettes.push(pico8::Palette::from_image(image.get(), palette.row));
-        }
     }
     let state = pico8::Pico8Asset {
 #[cfg(feature = "scripting")]

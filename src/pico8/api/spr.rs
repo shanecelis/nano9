@@ -239,18 +239,26 @@ impl super::Pico8<'_, '_> {
         let hash = {
             let mut hasher = DefaultHashBuilder::default().build_hasher();
             "spr".hash(&mut hasher);
-            spr.hash(&mut hasher);
+            let sheet = match spr {
+                Spr::Cur { .. } => 0,
+                Spr::From { sheet, .. } => sheet,
+                _ => todo!()
+            };
+            sheet.hash(&mut hasher);
+
+            // spr.hash(&mut hasher);
             // Need to hash the palette choice and
             self.state.palette.hash(&mut hasher);
             self.state.pal_map.hash(&mut hasher);
             size.inspect(|s| s.as_uvec2().hash(&mut hasher));
-            flip.inspect(|f| f.hash(&mut hasher));
+            // flip.inspect(|f| f.hash(&mut hasher));
             turns.inspect(|t| hash_f32(*t, 2, &mut hasher));
             hasher.finish()
         };
         self.state.draw_state.mark_drawn();
         // See if there's already an entity available.
         if let Some(id) = self.resurrect(hash, pos) {
+            // TODO: Set the sprite number and flip before handing off. It may have changed.
             return Ok(id);
         }
         let flip = flip.unwrap_or_default();
@@ -274,17 +282,21 @@ impl super::Pico8<'_, '_> {
         });
         let pixel_size = sprites.sprite_size.as_vec2() * size.unwrap_or(Vec2::ONE) / 2.0;
 
+
+        let mut gfx_handle = None;
         let image = match sprites.handle.clone() {
             SprHandle::Image(handle) => handle,
             SprHandle::Gfx(handle) => {
-                self.gfx_handles.get_or_create(
-                    self.state.palette,
-                    &self.state.pal_map,
-                    None,
-                    &handle,
-                    &self.gfxs,
-                    &mut self.images,
-                )?
+                gfx_handle = Some(handle);
+                Handle::default()
+                // self.gfx_handles.get_or_create(
+                //     self.state.palette,
+                //     &self.state.pal_map,
+                //     None,
+                //     &handle,
+                //     &self.gfxs,
+                //     &mut self.images,
+                // )?
             }
         };
         let mut sprite = {
@@ -306,9 +318,14 @@ impl super::Pico8<'_, '_> {
             sprite.anchor = Anchor::Center;
             transform.rotation = Quat::from_rotation_z(turns * 2.0 * PI);
         }
-        Ok(self
+        let mut ecommands = self
             .commands
-            .spawn((Name::new("spr"), sprite, transform, clearable))
+            .spawn((Name::new("spr"), sprite, transform, clearable));
+
+        if let Some(handle) = gfx_handle {
+            ecommands.insert(GfxSprite { image: handle });
+        }
+        Ok(ecommands
             .id())
     }
 

@@ -5,7 +5,7 @@ use std::fs;
 fn test_read_indexed_png_indices_from_file_8bit() {
     let data = fs::read("tests/gfx-test.png").expect("Failed to read test PNG file");
 
-    let gfx = Gfx::<8, u8>::from_png(&data).unwrap();
+    let gfx = Gfx::<8, u8>::from_png(&data, None).unwrap();
     assert_eq!(gfx.get(0, 0).unwrap(), 0);
     assert_eq!(gfx.get(1, 0).unwrap(), 1);
     assert_eq!(gfx.get(0, 1).unwrap(), 2);
@@ -22,7 +22,7 @@ fn test_read_indexed_png_indices_from_file_8bit() {
 fn test_read_indexed_png_indices_from_file_2bit() {
     let data = fs::read("tests/gfx-test.png").expect("Failed to read test PNG file");
 
-    let gfx = Gfx::<2, u8>::from_png(&data).unwrap();
+    let gfx = Gfx::<2, u8>::from_png(&data, None).unwrap();
     assert_eq!(gfx.get(0, 0).unwrap(), 0);
     assert_eq!(gfx.get(1, 0).unwrap(), 1);
     assert_eq!(gfx.get(0, 1).unwrap(), 2);
@@ -37,5 +37,5 @@ fn test_read_indexed_png_indices_from_file_2bit() {
 fn test_read_indexed_png_indices_from_file_big_pal() {
     let data = fs::read("tests/gfx-big-palette.png").expect("Failed to read test PNG file");
 
-    assert!(Gfx::<2, u8>::from_png(&data).is_err());
+    assert!(Gfx::<2, u8>::from_png(&data, None).is_err());
 }
