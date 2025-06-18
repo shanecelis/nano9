@@ -35,7 +35,6 @@ impl P8Map {
         sprite_sheets: &[pico8::SpriteSheet],
         hash: Option<u64>,
         commands: &mut Commands,
-        mut gfx_to_image: impl FnMut(&Handle<Gfx>) -> Result<Handle<Image>, Error>,
     ) -> Result<Entity, pico8::Error> {
         let map_size = TilemapSize::from(size);
         let mut clearable = Clearable::new(2);
@@ -98,20 +97,47 @@ impl P8Map {
         let grid_size = tile_size.into();
         let map_type = TilemapType::default();
         let transform = get_tilemap_top_left_transform(&map_size, &grid_size, &map_type, 0.0);
+        let mut gfx_handle = None;
 
-        commands.entity(tilemap_entity).insert((TilemapBundle {
+        commands.entity(tilemap_entity)
+                .insert(TilemapBundle {
             grid_size,
             map_type,
             size: map_size,
             storage: tile_storage,
             texture: TilemapTexture::Single(match &sprites.handle {
                 SprHandle::Image(handle) => handle.clone(),
-                SprHandle::Gfx(ref handle) => gfx_to_image(handle)?,
+                SprHandle::Gfx(ref handle) => {
+                    gfx_handle = Some(handle.clone());
+                    Handle::default()
+                    // gfx_to_image(handle)?,
+                }
             }),
             tile_size,
             transform,
             ..Default::default()
-        },));
+        });
+        if let Some(gfx_handle) = gfx_handle {
+            commands.queue(move |world: &mut World| {
+                match world.run_system_cached_with(pico8::gfx::compute_image_sys, gfx_handle) {
+                    Ok(result) => match result {
+                        Ok(image_handle) => {
+                            world.entity_mut(tilemap_entity)
+                                .insert(TilemapTexture::Single(image_handle));
+                        }
+                        Err(e) => {
+                            error!("Unable to create sprite from gfx for tilemap {}", tilemap_entity);
+
+                        }
+                    }
+                    Err(e) => {
+                        error!("Unable to run system to create sprite from gfx for tilemap {}", tilemap_entity);
+                    }
+                }
+
+            })
+
+        }
         Ok(map_entity)
     }
 }

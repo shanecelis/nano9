@@ -64,6 +64,20 @@ fn update_sprite(mut query: Query<(Entity, &Sprite, &GfxSprite), With<GfxDirty>>
     }
 }
 
+pub(crate) fn compute_image_sys(In(gfx_handle): In<Handle<Gfx>>,
+                                state: Res<Pico8State>,
+                                gfxs: Res<Assets<Gfx>>,
+                                mut images: ResMut<Assets<Image>>,
+                                gfx_handles: Res<GfxHandles>,
+                                mut pairs: ResMut<GfxImageMap>) -> Result<Handle<Image>, Error> {
+    compute_image(&gfx_handle,
+                  &state,
+                  &gfxs,
+                  &mut images,
+                  &gfx_handles,
+                  &mut pairs)
+}
+
 
 fn compute_image(gfx_handle: &Handle<Gfx>,
                  state: &Pico8State,

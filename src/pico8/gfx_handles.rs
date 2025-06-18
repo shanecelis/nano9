@@ -45,7 +45,7 @@ pub struct GfxHandles {
 impl GfxHandles {
     /// This returns a strong handle if it was created and caches a weak handle.
     /// Otherwise it returns an extant weak_handle.
-    pub fn get_or_create(
+    fn get_or_create(
         &mut self,
         palette: usize,
         pal_map: &PalMap,

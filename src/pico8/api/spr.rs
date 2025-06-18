@@ -141,19 +141,13 @@ impl super::Pico8<'_, '_> {
             .get(sheet_index)
             .ok_or(Error::NoSuch(format!("image {sheet_index}").into()))?
             .clone();
+        let mut gfx_handle = None;
         let sprite = Sprite {
             image: match sheet.handle {
                 SprHandle::Image(handle) => handle,
                 SprHandle::Gfx(handle) => {
-                    // XXX: Consider copying palettes to state to avoid cloning.
-                    self.gfx_handles.get_or_create(
-                        self.state.palette,
-                        &self.state.pal_map,
-                        None,
-                        &handle,
-                        &self.gfxs,
-                        &mut self.images,
-                    )?
+                    gfx_handle = Some(handle);
+                    Handle::default()
                 }
             },
             anchor: Anchor::TopLeft,
@@ -164,14 +158,18 @@ impl super::Pico8<'_, '_> {
             ..default()
         };
         let clearable = Clearable::new(self.defaults.time_to_live).with_hash(hash);
-        Ok(self
+        let mut ecommands = self
             .commands
             .spawn((
                 Name::new("sspr"),
                 sprite,
                 Transform::from_xyz(screen_pos.x, screen_pos.y, clearable.suggest_z()),
                 clearable,
-            ))
+            ));
+        if let Some(gfx_handle) = gfx_handle {
+            ecommands.insert(GfxSprite { image: gfx_handle });
+        }
+        Ok(ecommands
             .id())
     }
 
@@ -236,32 +234,47 @@ impl super::Pico8<'_, '_> {
         let mut pos = pixel_snap(self.state.draw_state.apply_camera_delta(pos));
         pos.y = negate_y(pos.y);
         let spr = spr.into();
+        let mut index = 0;
         let hash = {
             let mut hasher = DefaultHashBuilder::default().build_hasher();
             "spr".hash(&mut hasher);
             let sheet = match spr {
-                Spr::Cur { .. } => 0,
-                Spr::From { sheet, .. } => sheet,
+                Spr::Cur { sprite } => {
+                    index = sprite;
+                    0
+                }
+                Spr::From { sheet, sprite } => {
+                    index = sprite;
+                    sheet
+                },
                 _ => todo!()
             };
             sheet.hash(&mut hasher);
-
-            // spr.hash(&mut hasher);
             // Need to hash the palette choice and
             self.state.palette.hash(&mut hasher);
             self.state.pal_map.hash(&mut hasher);
             size.inspect(|s| s.as_uvec2().hash(&mut hasher));
-            // flip.inspect(|f| f.hash(&mut hasher));
             turns.inspect(|t| hash_f32(*t, 2, &mut hasher));
             hasher.finish()
         };
         self.state.draw_state.mark_drawn();
+        let flip = flip.unwrap_or_default();
         // See if there's already an entity available.
         if let Some(id) = self.resurrect(hash, pos) {
             // TODO: Set the sprite number and flip before handing off. It may have changed.
+            self.commands.queue(move |world: &mut World| {
+                if let Some(mut sprite) = world.get_mut::<Sprite>(id) {
+                    if let Some(ref mut atlas) = &mut sprite.texture_atlas {
+                        atlas.index = index;
+                    }
+                    sprite.flip_x = flip.x;
+                    sprite.flip_y = flip.y;
+
+                }
+            });
             return Ok(id);
         }
-        let flip = flip.unwrap_or_default();
+
         let (sprites, index): (&SpriteSheet, usize) = match spr {
             Spr::Cur { sprite } => (self.sprite_sheet(None)?, sprite),
             Spr::From { sheet, sprite } => (self.sprite_sheet(Some(sheet))?, sprite),
@@ -271,7 +284,6 @@ impl super::Pico8<'_, '_> {
                 // return Ok(Entity::PLACEHOLDER);
             }
         };
-
         let atlas = TextureAtlas {
             layout: sprites.layout.clone(),
             index,

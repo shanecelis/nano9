@@ -61,16 +61,6 @@ impl super::Pico8<'_, '_> {
                     sprite_sheets,
                     Some(hash),
                     &mut self.commands,
-                    |handle| {
-                        self.gfx_handles.get_or_create(
-                            self.state.palette,
-                            &self.state.pal_map,
-                            None,
-                            handle,
-                            &self.gfxs,
-                            &mut self.images,
-                        )
-                    },
                 )
             }
             #[cfg(feature = "level")]
