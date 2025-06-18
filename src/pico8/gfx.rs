@@ -23,10 +23,12 @@ pub(crate) fn plugin(app: &mut App) {
         .register_type::<GfxDirty>()
         .init_resource::<GfxImageMap>()
         .init_asset::<Gfx>()
-        .add_systems(PostUpdate, compute_image_on_asset_event);
+        .add_systems(PostUpdate, (compute_image_on_asset_event, compute_image_on_gfx_sprite_change));
         // .add_systems(PreUpdate, (create_sprite, update_sprite));
 
 }
+
+type GfxImage = OneOrMap<u64, Handle<Image>>;
 
 #[derive(Component, Default, Reflect)]
 pub struct GfxSprite {
@@ -62,9 +64,56 @@ fn update_sprite(mut query: Query<(Entity, &Sprite, &GfxSprite), With<GfxDirty>>
     }
 }
 
-type GfxImage = OneOrMap<u64, Handle<Image>>;
 
-fn compute_image() {}
+fn compute_image(gfx_handle: &Handle<Gfx>,
+                 state: &Pico8State,
+                 gfxs: &Assets<Gfx>,
+                 mut images: &mut Assets<Image>,
+                 gfx_handles: &GfxHandles,
+                 mut pairs: &mut GfxImageMap,
+) -> Result<Handle<Image>, Error> {
+    if state.palette >= gfx_handles.palettes.len() {
+        return Err(Error::NoSuch("palette".into()));
+    }
+    let mut hasher = DefaultHasher::new();
+    let drawing = &state.draw_state;
+    state.pal_map.hash(&mut hasher);
+    state.palette.hash(&mut hasher);
+    drawing.fill_pat.inspect(|fill_pat| {
+        fill_pat.hash(&mut hasher);
+    });
+    let hash = hasher.finish();
+    let gfx_id = gfx_handle.id();
+    let image_handle: Option<Handle<Image>> = pairs.get(&gfx_id).and_then(|gfx_image| {
+        gfx_image.get(&hash).inspect(|handle| {
+            let gfx = gfxs.get(gfx_id);
+            // Update existing image.
+            if let Some((gfx, mut image)) = gfx.zip(images.get_mut(*handle)) {
+                trace!("updating image for gfx {}", gfx_id);
+                gfx.write_bytes(
+                    &mut image.data,
+                    |i, _, bytes| {
+                    state.pal_map.write_color(&gfx_handles.palettes[state.palette].data, i, bytes);
+                });
+            }
+        }).cloned()
+    });
+    let image_handle: Result<Handle<Image>, Error> = image_handle.map(Ok).unwrap_or_else(|| {
+        let gfx = gfxs.get(gfx_handle)
+            .ok_or(Error::NoSuch("gfx image".into()))?;
+        trace!("creating image for gfx {}", gfx_id);
+        let image = images.add(gfx.try_to_image(|i, n, bytes| {
+            // trace!("pixel {} writing color {}", n, i);
+            state.pal_map.write_color(&gfx_handles.palettes[state.palette].data, i, bytes)
+        })?);
+        // Add image to the map.
+        pairs.entry(gfx_id)
+                .and_modify(|gfx_image| { gfx_image.insert(hash, image.clone()); } )
+            .or_insert_with(|| GfxImage::new(hash, image.clone()));
+        Ok(image)
+    });
+    image_handle
+}
 
 // Informed from Bevy's Sprite::compute_slices_on_asset_event.
 fn compute_image_on_asset_event(
@@ -92,50 +141,16 @@ fn compute_image_on_asset_event(
     if added_handles.is_empty() {
         return;
     }
-    let unassigned: Handle<Image> = Handle::default();
     for (id, gfx_sprite, mut sprite) in &mut sprites {
-        if !added_handles.contains(&gfx_sprite.image.id())
-            && sprite.as_ref().map(|sprite| dbg!(sprite.image != unassigned)).unwrap_or(false) {
+        if !added_handles.contains(&gfx_sprite.image.id()) {
             continue;
         }
-
-        let mut hasher = DefaultHasher::new();
-        let drawing = &state.draw_state;
-        state.pal_map.hash(&mut hasher);
-        drawing.fill_pat.inspect(|fill_pat| {
-            fill_pat.hash(&mut hasher);
-        });
-        let hash = hasher.finish();
-        let gfx_id = gfx_sprite.image.id();
-        let image_handle: Option<Handle<Image>> = pairs.get(&gfx_id).and_then(|gfx_image| {
-            gfx_image.get(&hash).inspect(|handle| {
-                let gfx = gfxs.get(gfx_id);
-                // Update existing image.
-                if let Some((gfx, mut image)) = gfx.zip(images.get_mut(*handle)) {
-                    trace!("updating image for gfx {}", gfx_id);
-                    gfx.write_bytes(
-                        &mut image.data,
-                        |i, _, bytes| {
-                        state.pal_map.write_color(&gfx_handles.palettes[state.palette].data, i, bytes);
-                    });
-                }
-            }).cloned()
-        });
-        let image_handle: Result<Handle<Image>, Error> = image_handle.map(Ok).unwrap_or_else(|| {
-            let gfx = gfxs.get(&gfx_sprite.image)
-                .ok_or(Error::NoSuch("gfx image".into()))?;
-            trace!("creating image for gfx {}", gfx_id);
-            let image = images.add(gfx.try_to_image(|i, n, bytes| {
-                // trace!("pixel {} writing color {}", n, i);
-                state.pal_map.write_color(&gfx_handles.palettes[state.palette].data, i, bytes)
-            })?);
-            // Add image to the map.
-            pairs.entry(gfx_id)
-                 .and_modify(|gfx_image| { gfx_image.insert(hash, image.clone()); } )
-                .or_insert_with(|| GfxImage::new(hash, image.clone()));
-            Ok(image)
-        });
-
+        let image_handle = compute_image(&gfx_sprite.image,
+                                         &state,
+                                         &gfxs,
+                                         &mut images,
+                                         &gfx_handles,
+                                         &mut pairs);
         match image_handle {
             Ok(image) => {
                 match sprite {
@@ -151,7 +166,44 @@ fn compute_image_on_asset_event(
                 }
             }
             Err(e) => {
-                warn!("Unable to update gfx {gfx_id}: {e}");
+                warn!("Unable to update gfx {}: {e}", gfx_sprite.image.id());
+            }
+        }
+    }
+}
+
+fn compute_image_on_gfx_sprite_change(
+    mut commands: Commands,
+    mut images: ResMut<Assets<Image>>,
+    gfxs: Res<Assets<Gfx>>,
+    state: Res<Pico8State>,
+    gfx_handles: Res<GfxHandles>,
+    mut sprites: Query<(Entity, &GfxSprite, Option<&mut Sprite>), Changed<GfxSprite>>,
+    mut pairs: ResMut<GfxImageMap>,
+) {
+    for (id, gfx_sprite, mut sprite) in &mut sprites {
+        let image_handle = compute_image(&gfx_sprite.image,
+                                         &state,
+                                         &gfxs,
+                                         &mut images,
+                                         &gfx_handles,
+                                         &mut pairs);
+        match image_handle {
+            Ok(image) => {
+                match sprite {
+                    Some(mut sprite) => {
+                        trace!("updating existant sprite on {}", id);
+                        sprite.image = image;
+                    }
+                    None => {
+                        trace!("inserting new sprite into {}", id);
+                        commands.entity(id)
+                            .insert(Sprite::from_image(image));
+                    }
+                }
+            }
+            Err(e) => {
+                warn!("Unable to update gfx {}: {e}", gfx_sprite.image.id());
             }
         }
     }
