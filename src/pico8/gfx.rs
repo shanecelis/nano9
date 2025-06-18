@@ -1,4 +1,7 @@
-use crate::pico8::*;
+use crate::{
+    pico8::*,
+    one_or_map::OneOrMap,
+};
 use bevy::{
     image::ImageSampler,
     render::{
@@ -18,6 +21,7 @@ pub(crate) fn plugin(app: &mut App) {
         .register_asset_reflect::<Gfx>()
         .register_type::<GfxSprite>()
         .register_type::<GfxDirty>()
+        .init_resource::<GfxImageMap>()
         .init_asset::<Gfx>()
         .add_systems(PostUpdate, compute_image_on_asset_event);
         // .add_systems(PreUpdate, (create_sprite, update_sprite));
@@ -31,6 +35,9 @@ pub struct GfxSprite {
 
 #[derive(Component, Default, Reflect)]
 pub struct GfxDirty;
+
+#[derive(Resource, Default, Reflect, Deref, DerefMut)]
+pub struct GfxImageMap(HashMap<AssetId<Gfx>, GfxImage>);
 
 fn update_sprite(mut query: Query<(Entity, &Sprite, &GfxSprite), With<GfxDirty>>,
                  gfxs: Res<Assets<Gfx>>,
@@ -55,51 +62,9 @@ fn update_sprite(mut query: Query<(Entity, &Sprite, &GfxSprite), With<GfxDirty>>
     }
 }
 
-enum GfxImage {
-    Single { hash: u64, image: Handle<Image> },
-    Multiple { map: HashMap<u64, Handle<Image>> },
-}
+type GfxImage = OneOrMap<u64, Handle<Image>>;
 
-impl GfxImage {
-    fn new(hash: u64, image: Handle<Image>) -> Self {
-        GfxImage::Single { hash, image }
-    }
-
-    fn get(&self, hash: &u64) -> Option<&Handle<Image>> {
-        match self {
-            GfxImage::Single { image, hash: single_hash } => {
-                if *hash == *single_hash {
-                    Some(image)
-                } else {
-                    // Create an image an ugrade to a Multiple.
-                    None
-                }
-            }
-            GfxImage::Multiple { map } => {
-                map.get(hash)
-            }
-        }
-    }
-
-    fn insert(&mut self, hash: u64, image: Handle<Image>) {
-
-        match self {
-            GfxImage::Single { image: single_image, hash: single_hash } => {
-                if hash == *single_hash {
-                    return;
-                } else {
-                    let map = [(*single_hash, std::mem::take(single_image)),
-                               (hash, image)].into_iter().collect();
-
-                    *self = GfxImage::Multiple { map };
-                }
-            }
-            GfxImage::Multiple { map } => {
-                map.insert(hash, image);
-            }
-        }
-    }
-}
+fn compute_image() {}
 
 // Informed from Bevy's Sprite::compute_slices_on_asset_event.
 fn compute_image_on_asset_event(
@@ -110,7 +75,7 @@ fn compute_image_on_asset_event(
     state: Res<Pico8State>,
     gfx_handles: Res<GfxHandles>,
     mut sprites: Query<(Entity, &GfxSprite, Option<&mut Sprite>)>,
-    mut pairs: Local<HashMap<AssetId<Gfx>, GfxImage>>,
+    mut pairs: ResMut<GfxImageMap>,
 ) {
     // We store the asset ids of added/modified image assets.
     let added_handles: bevy::utils::HashSet<_> = events
@@ -166,7 +131,7 @@ fn compute_image_on_asset_event(
             })?);
             // Add image to the map.
             pairs.entry(gfx_id)
-                .and_modify(|gfx_image| gfx_image.insert(hash, image.clone()))
+                 .and_modify(|gfx_image| { gfx_image.insert(hash, image.clone()); } )
                 .or_insert_with(|| GfxImage::new(hash, image.clone()));
             Ok(image)
         });

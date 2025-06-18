@@ -36,6 +36,7 @@ pub mod pvec;
 pub mod action;
 pub mod condition;
 pub mod run;
+pub mod one_or_map;
 
 /// TODO: This plugin is weird because the `crate::plugin` module calls it.
 pub(crate) fn plugin(app: &mut App) {
