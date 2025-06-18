@@ -20,10 +20,9 @@ pub(crate) fn plugin(app: &mut App) {
         .register_type::<Gfx>()
         .register_asset_reflect::<Gfx>()
         .register_type::<GfxSprite>()
-        .register_type::<GfxDirty>()
         .init_resource::<GfxImageMap>()
         .init_asset::<Gfx>()
-        .add_systems(PostUpdate, (compute_image_on_asset_event, compute_image_on_gfx_sprite_change));
+        .add_systems(PostUpdate, (compute_image_on_asset_event, compute_image_on_gfx_sprite_change, check_dirty));
         // .add_systems(PreUpdate, (create_sprite, update_sprite));
 
 }
@@ -35,32 +34,34 @@ pub struct GfxSprite {
     pub image: Handle<Gfx>,
 }
 
-#[derive(Component, Default, Reflect)]
-pub struct GfxDirty;
-
 #[derive(Resource, Default, Reflect, Deref, DerefMut)]
 pub struct GfxImageMap(HashMap<AssetId<Gfx>, GfxImage>);
 
-fn update_sprite(mut query: Query<(Entity, &Sprite, &GfxSprite), With<GfxDirty>>,
-                 gfxs: Res<Assets<Gfx>>,
-                 state: Res<Pico8State>,
-                 mut images: ResMut<Assets<Image>>,
-                 mut commands: Commands,
-                 gfx_handles: Res<GfxHandles>,  // for palettes, ugh. TODO: Move palettes elsewhere.
-) {
-    let palette = state.palette;
-    if palette >= gfx_handles.palettes.len() {
-        return;
-    }
-    for (id, sprite, gfx_sprite) in &query {
-        info!("update_sprite {}", &id);
+#[derive(Component, Debug, Default)]
+pub struct GfxDirty(pub bool);
 
-        let Some(gfx) = gfxs.get(&gfx_sprite.image) else { continue; };
-        let Some(mut image) = images.get_mut(&sprite.image) else { continue; };
-        gfx.write_bytes(&mut image.data, |i, _, bytes| {
-            state.pal_map.write_color(&gfx_handles.palettes[palette].data, i, bytes);
-        });
-        commands.entity(id).remove::<GfxDirty>();
+fn check_dirty(
+    mut events: EventReader<AssetEvent<Gfx>>,
+    mut query: Query<(&mut GfxDirty, &GfxSprite)>) {
+
+    let mut modified_handles: Option<bevy::utils::HashSet<_>> = None;
+    for (mut gfx_dirty, gfx_sprite) in &mut query {
+        if gfx_dirty.0 {
+            continue;
+        }
+        if modified_handles.is_none() {
+            modified_handles = Some(events
+                                    .read()
+                                    .filter_map(|e| match e {
+                                        AssetEvent::Modified { id } => Some(*id),
+                                        _ => None,
+                                    })
+                                    .collect());
+        }
+
+        if modified_handles.as_ref().map(|set| set.contains(&gfx_sprite.image.id())).unwrap_or(false) {
+            gfx_dirty.0 = true;
+        }
     }
 }
 

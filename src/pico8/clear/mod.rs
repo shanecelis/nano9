@@ -1,6 +1,6 @@
 use crate::{
     PColor,
-    pico8::{Pico8State, GfxHandles, GfxSprite, Gfx},
+    pico8::{Pico8State, GfxHandles, GfxSprite, Gfx, GfxDirty},
 };
 use super::canvas;
 use bevy::prelude::*;
@@ -158,8 +158,9 @@ fn handle_clear_event(
     mut cache: ResMut<ClearCache>,
     mut gfxs: ResMut<Assets<Gfx>>,
     mut one_color: Single<&mut Sprite, With<canvas::OneColorBackground>>,
-    mut background: Single<(Entity, &GfxSprite, &mut canvas::Background), With<canvas::Background>>,
+    mut background: Single<(Entity, &GfxSprite, &mut GfxDirty, &mut canvas::Background), With<canvas::Background>>,
     mut gfx_handles: Res<GfxHandles>,
+    mut background_dirty: Local<bool>,
 ) {
     state.draw_state.clear_screen();
     // Clear the 1x1 background.
@@ -173,14 +174,16 @@ fn handle_clear_event(
             sprite.color = Srgba::rgb(1.0, 0.0, 1.0).into(); // Ugly pink
         }
     }
+    let (background_id, gfx_sprite, mut gfx_dirty, mut background) = background.into_inner();
+
     // Clear the background if needed.
-    let (background_id, gfx_sprite, mut background) = background.into_inner();
-    if background.marks > 0 {
+    if gfx_dirty.0 {
         if let Some(mut gfx) = gfxs.get_mut(&gfx_sprite.image) {
+            trace!("Clearing Background pixels.");
             gfx.data.set_elements(0x00);
         }
-        background.marks = 0;
     }
+    gfx_dirty.0 = false;
 
     for (id, mut clearable, mut visibility) in &mut query {
         if clearable.time_to_live == 0 {
