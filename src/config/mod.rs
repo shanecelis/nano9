@@ -231,7 +231,7 @@ pub fn update_asset(
                     // Reset the pico8_state.
                     pico8_state.sprite_sheets = vec![None; pico8_asset.sprite_sheets.len()];
                     // Copy the palettes.
-                    palettes.palettes = pico8_asset.palettes.clone();
+                    palettes.0 = pico8_asset.palettes.clone();
                     // XXX: It happens here too!
                     #[cfg(feature = "scripting")]
                     {

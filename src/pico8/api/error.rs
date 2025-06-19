@@ -5,6 +5,8 @@ use std::borrow::Cow;
 pub enum Error {
     #[error("no such {0:?}")]
     NoSuch(Cow<'static, str>),
+    #[error("{0}")]
+    PalError(#[from] crate::pico8::PalError),
     #[error("no asset {0:?} loaded")]
     NoAsset(Cow<'static, str>),
     // #[error("invalid {0:?}")]

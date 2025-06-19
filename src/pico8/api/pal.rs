@@ -14,18 +14,14 @@ pub enum PalModify {
 }
 
 impl super::Pico8<'_, '_> {
-    pub(crate) fn palette(&self, index: Option<usize>) -> Result<&Palette, Error> {
-        self.pico8_asset()?
-            .palettes
-            .get(index.unwrap_or(self.state.palette))
-            .ok_or(Error::NoSuch("palette".into()))
+    pub(crate) fn palette(&self, index: Option<usize>) -> Result<&Palette, PalError> {
+        self.palettes
+            .get_pal(index.unwrap_or(self.state.palette))
     }
 
-    pub(crate) fn get_color(&self, c: impl Into<N9Color>) -> Result<Color, Error> {
-        match c.into().into_pcolor(&self.state.draw_state.pen) {
-            PColor::Palette(n) => self.palette(None)?.get_color(n).map(|c| c.into()),
-            PColor::Color(c) => Ok(c.into()),
-        }
+    pub(crate) fn get_color(&self, c: impl Into<N9Color>) -> Result<Color, PalError> {
+        let pcolor = c.into().into_pcolor(&self.state.draw_state.pen);
+        self.palettes.get_color(pcolor, self.state.palette)
     }
 
     pub fn color(&mut self, color: Option<PColor>) -> Result<PColor, Error> {
@@ -54,8 +50,8 @@ impl super::Pico8<'_, '_> {
     }
 
     /// Return the number of colors in the current palette.
-    pub fn paln(&self, palette_index: Option<usize>) -> Result<usize, Error> {
-        self.palette(palette_index).map(|pal| pal.data.len())
+    pub fn paln(&self, palette_index: Option<usize>) -> Result<usize, PalError> {
+        self.palettes.get_pal(palette_index.unwrap_or(self.state.palette)).map(|pal| pal.data.len())
     }
 
     pub fn palt(&mut self, color_index: Option<usize>, transparent: Option<bool>) {

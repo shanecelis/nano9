@@ -138,13 +138,14 @@ impl super::Pico8<'_, '_> {
             .ok_or(Error::NoSuch("font".into()))?
             .handle
             .clone();
-
-        let c = pico8_asset.get_color(
-            color
+        let pcolor = color
                 .unwrap_or(N9Color::Pen)
-                .into_pcolor(&state.draw_state.pen),
-            state.palette,
-        )?;
+                .into_pcolor(&state.draw_state.pen);
+        let c: Color = {
+            let palettes = world.resource::<Palettes>();
+            palettes.get_color(pcolor, state.palette)
+        }?;
+
         // XXX: Should the camera delta apply to the print cursor position?
         let pos = pos
             .map(|p| pixel_snap(state.draw_state.apply_camera_delta(p)))

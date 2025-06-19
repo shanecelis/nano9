@@ -87,7 +87,7 @@ fn compute_image(gfx_handle: &Handle<Gfx>,
                  palettes: &Palettes,
                  mut pairs: &mut GfxImageMap,
 ) -> Result<Handle<Image>, Error> {
-    if state.palette >= palettes.palettes.len() {
+    if state.palette >= palettes.len() {
         return Err(Error::NoSuch("palette".into()));
     }
     let mut hasher = DefaultHasher::new();
@@ -99,6 +99,7 @@ fn compute_image(gfx_handle: &Handle<Gfx>,
     });
     let hash = hasher.finish();
     let gfx_id = gfx_handle.id();
+    let palette = palettes.get_pal(state.palette)?;
     let image_handle: Option<Handle<Image>> = pairs.get(&gfx_id).and_then(|gfx_image| {
         gfx_image.get(&hash).inspect(|handle| {
             let gfx = gfxs.get(gfx_id);
@@ -108,7 +109,7 @@ fn compute_image(gfx_handle: &Handle<Gfx>,
                 gfx.write_bytes(
                     &mut image.data,
                     |i, _, bytes| {
-                    state.pal_map.write_color(&palettes.palettes[state.palette].data, i, bytes);
+                    state.pal_map.write_color(&palette.data, i, bytes);
                 });
             }
         }).cloned()
@@ -119,7 +120,7 @@ fn compute_image(gfx_handle: &Handle<Gfx>,
         trace!("creating image for gfx {}", gfx_id);
         let image = images.add(gfx.try_to_image(|i, n, bytes| {
             // trace!("pixel {} writing color {}", n, i);
-            state.pal_map.write_color(&palettes.palettes[state.palette].data, i, bytes)
+            state.pal_map.write_color(&palette.data, i, bytes)
         })?);
         // Add image to the map.
         pairs.entry(gfx_id)
@@ -233,16 +234,16 @@ fn create_sprite(mut query: Query<(Entity, &GfxSprite), Without<Sprite>>,
                  mut commands: Commands,
 ) {
     let palette = state.palette;
-    if palette >= palettes.palettes.len() {
+    let Ok(palette) = palettes.get_pal(state.palette) else {
         return;
-    }
+    };
     for (id, gfx_sprite) in &mut query {
         info!("create_sprite {id}");
 
         let Some(gfx) = gfxs.get(&gfx_sprite.image) else { continue; };
         // TODO: Update existing image if it's the right size instead of recreating it.
         match gfx.try_to_image(|i, _, bytes| {
-            state.pal_map.write_color(&palettes.palettes[palette].data, i, bytes)
+            state.pal_map.write_color(&palette.data, i, bytes)
         }) {
             Ok(image) => {
                 commands.entity(id)

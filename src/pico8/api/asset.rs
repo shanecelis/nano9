@@ -44,11 +44,11 @@ impl FromWorld for Pico8Asset {
     }
 }
 
-impl Pico8Asset {
-    pub(crate) fn get_color(&self, c: PColor, palette_index: usize) -> Result<Color, Error> {
-        match c {
-            PColor::Palette(n) => self.palettes[palette_index].get_color(n).map(|c| c.into()),
-            PColor::Color(c) => Ok(c.into()),
-        }
-    }
-}
+// impl Pico8Asset {
+//     pub(crate) fn get_color(&self, c: PColor, palette_index: usize) -> Result<Color, Error> {
+//         match c {
+//             PColor::Palette(n) => self.palettes[palette_index].get_color(n).map(|c| c.into()),
+//             PColor::Color(c) => Ok(c.into()),
+//         }
+//     }
+// }

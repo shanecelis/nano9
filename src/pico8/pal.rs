@@ -6,6 +6,16 @@ pub struct Palette {
     pub data: Vec<[u8; 4]>,
 }
 
+#[derive(thiserror::Error, Debug)]
+pub enum PalError {
+    #[error("no such palette {0}")]
+    NoSuchPalette(usize),
+    #[error("no such color {0}")]
+    NoSuchColor(usize),
+    #[error("no such color {color} in palette {palette}")]
+    NoSuchPaletteColor { color: usize, palette: usize },
+}
+
 impl Palette {
     pub fn from_image(image: &Image, row: Option<u32>) -> Self {
         let size = image.size();
@@ -32,19 +42,19 @@ impl Palette {
         }
     }
 
-    pub fn write_color(&self, index: usize, pixel_bytes: &mut [u8]) -> Result<(), Error> {
+    pub fn write_color(&self, index: usize, pixel_bytes: &mut [u8]) -> Result<(), PalError> {
         let data = self
             .data
             .get(index)
-            .ok_or(Error::NoSuch(format!("palette color {index}").into()))?;
+            .ok_or(PalError::NoSuchColor(index))?;
         pixel_bytes.copy_from_slice(&data[0..pixel_bytes.len()]);
         Ok(())
     }
 
-    pub fn get_color(&self, index: usize) -> Result<Srgba, Error> {
+    pub fn get_color(&self, index: usize) -> Result<Srgba, PalError> {
         self.data
             .get(index)
-            .ok_or(Error::NoSuch(format!("palette color {index}").into()))
+            .ok_or(PalError::NoSuchColor(index))
             .map(|a| Srgba::rgba_u8(a[0], a[1], a[2], a[3]))
     }
 }
