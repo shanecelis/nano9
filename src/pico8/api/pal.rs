@@ -43,9 +43,11 @@ impl super::Pico8<'_, '_> {
         assert!(matches!(mode, PalModify::Following));
         if let Some((old, new)) = original_to_new {
             self.state.pal_map.remap(old, new);
+            self.state.mark_palette_dirty();
         } else {
             // Reset the pal_map.
             self.state.pal_map.reset();
+            self.state.mark_palette_dirty();
         }
     }
 
@@ -60,9 +62,11 @@ impl super::Pico8<'_, '_> {
                 .pal_map
                 .transparency
                 .set(color_index, transparent.unwrap_or(false));
+            self.state.mark_palette_dirty();
         } else {
             // Reset the pal_map's transparency.
             self.state.pal_map.reset_transparency();
+            self.state.mark_palette_dirty();
         }
     }
 }

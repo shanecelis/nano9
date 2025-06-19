@@ -1,10 +1,12 @@
+use bevy::prelude::Reflect;
 use crate::pico8::Error;
 use bitvec::prelude::*;
 use std::hash::Hash;
 
-#[derive(Debug, Clone, Eq, Hash, PartialEq)]
+#[derive(Debug, Clone, Eq, Hash, PartialEq, Reflect)]
 pub struct PalMap {
     remap: Vec<u8>,
+    #[reflect(ignore)]
     pub transparency: BitVec<u8, Lsb0>,
 }
 

@@ -167,7 +167,8 @@ impl super::Pico8<'_, '_> {
                 clearable,
             ));
         if let Some(gfx_handle) = gfx_handle {
-            ecommands.insert(GfxSprite { image: gfx_handle });
+            ecommands.insert(GfxSprite { image: gfx_handle,
+              material: self.state.gfx_material(&mut self.gfx_materials) });
         }
         Ok(ecommands
             .id())
@@ -252,10 +253,10 @@ impl super::Pico8<'_, '_> {
             sheet.hash(&mut hasher);
             // Need to hash the palette choice and
             self.state.palette.hash(&mut hasher);
-            self.state.pal_map.hash(&mut hasher);
+            dbg!(&self.state.pal_map).hash(&mut hasher);
             size.inspect(|s| s.as_uvec2().hash(&mut hasher));
             turns.inspect(|t| hash_f32(*t, 2, &mut hasher));
-            hasher.finish()
+            dbg!(hasher.finish())
         };
         self.state.draw_state.mark_drawn();
         let flip = flip.unwrap_or_default();
@@ -335,7 +336,7 @@ impl super::Pico8<'_, '_> {
             .spawn((Name::new("spr"), sprite, transform, clearable));
 
         if let Some(handle) = gfx_handle {
-            ecommands.insert(GfxSprite { image: handle });
+            ecommands.insert(GfxSprite { image: handle, material: self.state.gfx_material(&mut self.gfx_materials) });
         }
         Ok(ecommands
             .id())
@@ -489,7 +490,6 @@ mod lua {
                         .is_some()
                         .then(|| Vec2::new(w.unwrap_or(1.0), h.unwrap_or(1.0)));
 
-                    // We get back an entity. Not doing anything with it here yet.
                     let n = Spr::from_script(n, ctx.world()?)?;
                     let id = with_pico8(&ctx, move |pico8| pico8.spr(n, pos, size, flip, turns))?;
 

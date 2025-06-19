@@ -21,6 +21,7 @@ pub struct Pico8<'w, 's> {
     pub(crate) canvas: Res<'w, N9Canvas>,
     pub(crate) player_inputs: Res<'w, PlayerInputs>,
     pub(crate) sfx_channels: Res<'w, SfxChannels>,
+    // TODO: read in what we need for time so we don't lock up standard resources.
     pub(crate) time: Res<'w, Time>,
     #[cfg(feature = "level")]
     pub(crate) tiled: crate::level::tiled::Level<'w, 's>,
@@ -34,6 +35,7 @@ pub struct Pico8<'w, 's> {
     pub(crate) defaults: Res<'w, pico8::Defaults>,
     pub(crate) clear_cache: ResMut<'w, ClearCache>,
     pub(crate) gfx_sprites: Query<'w, 's, &'static mut GfxSprite>,
+    pub(crate) gfx_materials: ResMut<'w, Assets<GfxMaterial>>,
 }
 
 impl Pico8<'_, '_> {

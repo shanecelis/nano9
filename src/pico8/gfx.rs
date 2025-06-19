@@ -22,6 +22,7 @@ pub(crate) fn plugin(app: &mut App) {
         .register_type::<GfxSprite>()
         .init_resource::<GfxImageMap>()
         .init_asset::<Gfx>()
+        .init_asset::<GfxMaterial>()
         .add_systems(PostUpdate, (compute_image_on_asset_event, compute_image_on_gfx_sprite_change, check_dirty));
         // .add_systems(PreUpdate, (create_sprite, update_sprite));
 
@@ -32,7 +33,20 @@ type GfxImage = OneOrMap<u64, Handle<Image>>;
 #[derive(Component, Default, Reflect)]
 pub struct GfxSprite {
     pub image: Handle<Gfx>,
+    pub material: Handle<GfxMaterial>,
 }
+
+#[derive(Asset, Debug, Reflect, Clone, Hash, PartialEq, Eq)]
+pub struct GfxMaterial {
+    pub palette: usize,
+    pub pal_map: PalMap,
+}
+
+// #[derive(Asset, Debug, Reflect, Clone, Hash, Eq)]
+// pub struct GfxMat<'a> {
+//     pub palette: usize,
+//     pub pal_map: &'a PalMap,
+// }
 
 #[derive(Resource, Default, Reflect, Deref, DerefMut)]
 pub struct GfxImageMap(HashMap<AssetId<Gfx>, GfxImage>);
@@ -65,14 +79,15 @@ fn check_dirty(
     }
 }
 
-pub(crate) fn compute_image_sys(In(gfx_handle): In<Handle<Gfx>>,
+pub(crate) fn compute_image_sys(In(gfx_sprite): In<GfxSprite>,
                                 state: Res<Pico8State>,
                                 gfxs: Res<Assets<Gfx>>,
+                                gfx_materials: Res<Assets<GfxMaterial>>,
                                 mut images: ResMut<Assets<Image>>,
                                 palettes: Res<Palettes>,
                                 mut pairs: ResMut<GfxImageMap>) -> Result<Handle<Image>, Error> {
-    compute_image(&gfx_handle,
-                  &state,
+    compute_image(&gfx_sprite.image,
+                  gfx_materials.get(&gfx_sprite.material).ok_or(Error::NoSuch("gfx material".into()))?,
                   &gfxs,
                   &mut images,
                   &palettes,
@@ -81,25 +96,26 @@ pub(crate) fn compute_image_sys(In(gfx_handle): In<Handle<Gfx>>,
 
 
 fn compute_image(gfx_handle: &Handle<Gfx>,
-                 state: &Pico8State,
+                 gfx_material: &GfxMaterial,
+                 // state: &Pico8State,
                  gfxs: &Assets<Gfx>,
                  mut images: &mut Assets<Image>,
                  palettes: &Palettes,
                  mut pairs: &mut GfxImageMap,
 ) -> Result<Handle<Image>, Error> {
-    if state.palette >= palettes.len() {
+    if gfx_material.palette >= palettes.len() {
         return Err(Error::NoSuch("palette".into()));
     }
     let mut hasher = DefaultHasher::new();
-    let drawing = &state.draw_state;
-    state.pal_map.hash(&mut hasher);
-    state.palette.hash(&mut hasher);
-    drawing.fill_pat.inspect(|fill_pat| {
-        fill_pat.hash(&mut hasher);
-    });
+    gfx_material.pal_map.hash(&mut hasher);
+    gfx_material.palette.hash(&mut hasher);
+    // let drawing = &state.draw_state;
+    // drawing.fill_pat.inspect(|fill_pat| {
+    //     fill_pat.hash(&mut hasher);
+    // });
     let hash = hasher.finish();
     let gfx_id = gfx_handle.id();
-    let palette = palettes.get_pal(state.palette)?;
+    let palette = palettes.get_pal(gfx_material.palette)?;
     let image_handle: Option<Handle<Image>> = pairs.get(&gfx_id).and_then(|gfx_image| {
         gfx_image.get(&hash).inspect(|handle| {
             let gfx = gfxs.get(gfx_id);
@@ -109,7 +125,7 @@ fn compute_image(gfx_handle: &Handle<Gfx>,
                 gfx.write_bytes(
                     &mut image.data,
                     |i, _, bytes| {
-                    state.pal_map.write_color(&palette.data, i, bytes);
+                    gfx_material.pal_map.write_color(&palette.data, i, bytes);
                 });
             }
         }).cloned()
@@ -120,7 +136,7 @@ fn compute_image(gfx_handle: &Handle<Gfx>,
         trace!("creating image for gfx {}", gfx_id);
         let image = images.add(gfx.try_to_image(|i, n, bytes| {
             // trace!("pixel {} writing color {}", n, i);
-            state.pal_map.write_color(&palette.data, i, bytes)
+            gfx_material.pal_map.write_color(&palette.data, i, bytes)
         })?);
         // Add image to the map.
         pairs.entry(gfx_id)
@@ -137,6 +153,7 @@ fn compute_image_on_asset_event(
     mut events: EventReader<AssetEvent<Gfx>>,
     mut images: ResMut<Assets<Image>>,
     gfxs: Res<Assets<Gfx>>,
+    gfx_materials: Res<Assets<GfxMaterial>>,
     state: Res<Pico8State>,
     palettes: Res<Palettes>,
     mut sprites: Query<(Entity, &GfxSprite, Option<&mut Sprite>)>,
@@ -161,8 +178,12 @@ fn compute_image_on_asset_event(
         if !added_handles.contains(&gfx_sprite.image.id()) {
             continue;
         }
+
+        let Some(gfx_material) = gfx_materials.get(&gfx_sprite.material) else {
+            continue;
+        };
         let image_handle = compute_image(&gfx_sprite.image,
-                                         &state,
+                                         &gfx_material,
                                          &gfxs,
                                          &mut images,
                                          &palettes,
@@ -192,14 +213,18 @@ fn compute_image_on_gfx_sprite_change(
     mut commands: Commands,
     mut images: ResMut<Assets<Image>>,
     gfxs: Res<Assets<Gfx>>,
+    gfx_materials: Res<Assets<GfxMaterial>>,
     state: Res<Pico8State>,
     palettes: Res<Palettes>,
     mut sprites: Query<(Entity, &GfxSprite, Option<&mut Sprite>), Changed<GfxSprite>>,
     mut pairs: ResMut<GfxImageMap>,
 ) {
     for (id, gfx_sprite, mut sprite) in &mut sprites {
+        let Some(gfx_material) = gfx_materials.get(&gfx_sprite.material) else {
+            continue;
+        };
         let image_handle = compute_image(&gfx_sprite.image,
-                                         &state,
+                                         &gfx_material,
                                          &gfxs,
                                          &mut images,
                                          &palettes,

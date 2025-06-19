@@ -34,6 +34,7 @@ impl P8Map {
         mask: Option<u8>,
         sprite_sheets: &[pico8::SpriteSheet],
         hash: Option<u64>,
+        gfx_material: Handle<pico8::GfxMaterial>,
         commands: &mut Commands,
     ) -> Result<Entity, pico8::Error> {
         let map_size = TilemapSize::from(size);
@@ -119,7 +120,10 @@ impl P8Map {
         });
         if let Some(gfx_handle) = gfx_handle {
             commands.queue(move |world: &mut World| {
-                match world.run_system_cached_with(pico8::gfx::compute_image_sys, gfx_handle) {
+                // let gfx_material = world.resource::<pico8::Pico8State>().gfx_material();
+                // match world.run_system_cached_with(pico8::gfx::compute_image_sys, gfx_handle) {
+                match world.run_system_cached_with(pico8::gfx::compute_image_sys, pico8::GfxSprite { image: gfx_handle,
+                                                                                                     material: gfx_material }) {
                     Ok(result) => match result {
                         Ok(image_handle) => {
                             world.entity_mut(tilemap_entity)

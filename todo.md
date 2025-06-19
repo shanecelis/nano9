@@ -9,12 +9,13 @@
 
 ## Nano-9
 - [x] cls() should be a trigger
-- [ ] Make Pico8Asset read-only
-      Don't modify it just to implement mset or sset. Make copies when necessary.
+- [ ] Revert change to readonly sprite sheets
+- [ ] place gfx_material() on impl Pico8 directly.
+- [ ] Remove dbg!s()
       
-- [ ] Use Gfx for background pset() colors.
+- [x] Use Gfx for background pset() colors.
       Don't overwrite all colors unless it's marked dirty.
-- [ ] Use a 1x1 image for total background.
+- [x] Use a 1x1 image for total background.
 - [ ] Make pico-8 dialect work in .lua files.
 - [x] try not to clone palettes (introduced during Pico8Asset refactor)
       Extract palettes to GfxHandler?
