@@ -22,7 +22,7 @@ use bevy_mod_scripting::{
 #[cfg_attr(feature = "scripting", derive(GetTypeDependencies))]
 pub enum PColor {
     Palette(usize),
-    Color(LinearRgba),
+    Color(Srgba),
 }
 
 impl PColor {
@@ -109,8 +109,8 @@ impl From<Color> for PColor {
     }
 }
 
-impl From<LinearRgba> for PColor {
-    fn from(c: LinearRgba) -> Self {
+impl From<Srgba> for PColor {
+    fn from(c: Srgba) -> Self {
         PColor::Color(c)
     }
 }
@@ -143,7 +143,7 @@ impl FromLua for PColor {
             Value::Table(t) => {
                 let l = t.len().unwrap_or(0);
                 if t.contains_key("r")? && t.contains_key("g")? && t.contains_key("b")? {
-                    Ok(PColor::Color(LinearRgba::new(
+                    Ok(PColor::Color(Srgba::new(
                         t.get("r")
                             .and_then(|x: Value| x.to_f32().ok_or(bad_arg("r")))?,
                         t.get("g")
@@ -153,7 +153,7 @@ impl FromLua for PColor {
                         t.get("a").map(|x: Value| x.as_f32().unwrap_or(1.0))?,
                     )))
                 } else if l >= 3 {
-                    Ok(PColor::Color(LinearRgba::new(
+                    Ok(PColor::Color(Srgba::new(
                         t.get(1)
                             .and_then(|x: Value| x.to_f32().ok_or(bad_arg("r")))?,
                         t.get(2)
