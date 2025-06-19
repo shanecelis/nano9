@@ -205,6 +205,37 @@ fn add_lua_logging(app: &mut App) {
             bevy::log::trace!(s);
         });
 }
+// use bevy_mod_scripting::core::error::InteropError;
+// use bevy_mod_scripting::core::bindings::ReflectAccessId;
+// use bevy_mod_scripting::core::bindings::FunctionCallContext;
+
+// #[derive(Event)]
+// pub struct MyTrigger(usize);
+
+// pub(crate) fn plugin(app: &mut App) {
+//     let world = app
+//         .world_mut();
+//     NamespaceBuilder::<World>::new_unregistered(world)
+//         .register("my_trigger", |
+//                   ctx: FunctionCallContext,
+//                  number: Option<usize>| {
+//                      let world_guard = ctx.world()?;
+//                      let raid = ReflectAccessId::for_global();
+//                      if world_guard.claim_global_access() {
+//                          let world = world_guard.as_unsafe_world_cell()?;
+//                          let world = unsafe { world.world_mut() };
+//                          world.trigger(MyTrigger(number.unwrap_or(0)));
+//                          unsafe { world_guard.release_global_access() };
+//                          Ok(())
+//                      } else {
+//                          Err(InteropError::cannot_claim_access(
+//                              raid,
+//                              world_guard.get_access_location(raid),
+//                              "my_trigger",
+//                          ))
+//                      }
+//                  });
+// }
 
 impl Plugin for Nano9Plugin {
     fn build(&self, app: &mut App) {

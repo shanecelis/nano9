@@ -61,7 +61,7 @@ impl super::Pico8<'_, '_> {
                 .transparency
                 .set(color_index, transparent.unwrap_or(false));
         } else {
-            // Reset the pal_map.
+            // Reset the pal_map's transparency.
             self.state.pal_map.reset_transparency();
         }
     }

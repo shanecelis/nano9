@@ -401,8 +401,8 @@ fn run(cli: Cli) -> io::Result<ExitCode> {
                 .to_string()];
             nano9_plugin = Nano9Plugin { config, ..default() };
         }
-        _ext => {
-            eprintln!("Only accepts .p8, .png, .lua, .p8lua, and .toml files.");
+        ext => {
+            eprintln!("error: File has {ext:?} extension but only accepts extensions: .p8, .png, .lua, .p8lua, and .toml.");
             return Ok(ExitCode::from(1));
         }
     }
