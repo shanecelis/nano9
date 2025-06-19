@@ -69,13 +69,13 @@ pub(crate) fn compute_image_sys(In(gfx_handle): In<Handle<Gfx>>,
                                 state: Res<Pico8State>,
                                 gfxs: Res<Assets<Gfx>>,
                                 mut images: ResMut<Assets<Image>>,
-                                gfx_handles: Res<GfxHandles>,
+                                palettes: Res<Palettes>,
                                 mut pairs: ResMut<GfxImageMap>) -> Result<Handle<Image>, Error> {
     compute_image(&gfx_handle,
                   &state,
                   &gfxs,
                   &mut images,
-                  &gfx_handles,
+                  &palettes,
                   &mut pairs)
 }
 
@@ -84,10 +84,10 @@ fn compute_image(gfx_handle: &Handle<Gfx>,
                  state: &Pico8State,
                  gfxs: &Assets<Gfx>,
                  mut images: &mut Assets<Image>,
-                 gfx_handles: &GfxHandles,
+                 palettes: &Palettes,
                  mut pairs: &mut GfxImageMap,
 ) -> Result<Handle<Image>, Error> {
-    if state.palette >= gfx_handles.palettes.len() {
+    if state.palette >= palettes.palettes.len() {
         return Err(Error::NoSuch("palette".into()));
     }
     let mut hasher = DefaultHasher::new();
@@ -108,7 +108,7 @@ fn compute_image(gfx_handle: &Handle<Gfx>,
                 gfx.write_bytes(
                     &mut image.data,
                     |i, _, bytes| {
-                    state.pal_map.write_color(&gfx_handles.palettes[state.palette].data, i, bytes);
+                    state.pal_map.write_color(&palettes.palettes[state.palette].data, i, bytes);
                 });
             }
         }).cloned()
@@ -119,7 +119,7 @@ fn compute_image(gfx_handle: &Handle<Gfx>,
         trace!("creating image for gfx {}", gfx_id);
         let image = images.add(gfx.try_to_image(|i, n, bytes| {
             // trace!("pixel {} writing color {}", n, i);
-            state.pal_map.write_color(&gfx_handles.palettes[state.palette].data, i, bytes)
+            state.pal_map.write_color(&palettes.palettes[state.palette].data, i, bytes)
         })?);
         // Add image to the map.
         pairs.entry(gfx_id)
@@ -137,7 +137,7 @@ fn compute_image_on_asset_event(
     mut images: ResMut<Assets<Image>>,
     gfxs: Res<Assets<Gfx>>,
     state: Res<Pico8State>,
-    gfx_handles: Res<GfxHandles>,
+    palettes: Res<Palettes>,
     mut sprites: Query<(Entity, &GfxSprite, Option<&mut Sprite>)>,
     mut pairs: ResMut<GfxImageMap>,
 ) {
@@ -164,7 +164,7 @@ fn compute_image_on_asset_event(
                                          &state,
                                          &gfxs,
                                          &mut images,
-                                         &gfx_handles,
+                                         &palettes,
                                          &mut pairs);
         match image_handle {
             Ok(image) => {
@@ -192,7 +192,7 @@ fn compute_image_on_gfx_sprite_change(
     mut images: ResMut<Assets<Image>>,
     gfxs: Res<Assets<Gfx>>,
     state: Res<Pico8State>,
-    gfx_handles: Res<GfxHandles>,
+    palettes: Res<Palettes>,
     mut sprites: Query<(Entity, &GfxSprite, Option<&mut Sprite>), Changed<GfxSprite>>,
     mut pairs: ResMut<GfxImageMap>,
 ) {
@@ -201,7 +201,7 @@ fn compute_image_on_gfx_sprite_change(
                                          &state,
                                          &gfxs,
                                          &mut images,
-                                         &gfx_handles,
+                                         &palettes,
                                          &mut pairs);
         match image_handle {
             Ok(image) => {
@@ -229,11 +229,11 @@ fn create_sprite(mut query: Query<(Entity, &GfxSprite), Without<Sprite>>,
                  gfxs: Res<Assets<Gfx>>,
                  state: Res<Pico8State>,
                  mut images: ResMut<Assets<Image>>,
-                 gfx_handles: Res<GfxHandles>,  // for palettes, ugh. TODO: Move palettes elsewhere.
+                 palettes: Res<Palettes>,  // for palettes, ugh. TODO: Move palettes elsewhere.
                  mut commands: Commands,
 ) {
     let palette = state.palette;
-    if palette >= gfx_handles.palettes.len() {
+    if palette >= palettes.palettes.len() {
         return;
     }
     for (id, gfx_sprite) in &mut query {
@@ -242,7 +242,7 @@ fn create_sprite(mut query: Query<(Entity, &GfxSprite), Without<Sprite>>,
         let Some(gfx) = gfxs.get(&gfx_sprite.image) else { continue; };
         // TODO: Update existing image if it's the right size instead of recreating it.
         match gfx.try_to_image(|i, _, bytes| {
-            state.pal_map.write_color(&gfx_handles.palettes[palette].data, i, bytes)
+            state.pal_map.write_color(&palettes.palettes[palette].data, i, bytes)
         }) {
             Ok(image) => {
                 commands.entity(id)

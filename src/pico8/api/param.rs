@@ -5,7 +5,7 @@ use crate::{
     pico8::{
         self, audio::SfxChannels, keyboard::KeyInput, mouse::MouseInput, rand::Rand8, Gfx,
     api::canvas::N9Canvas,
-        GfxHandles,
+        Palettes,
     },
 };
 
@@ -25,7 +25,7 @@ pub struct Pico8<'w, 's> {
     #[cfg(feature = "level")]
     pub(crate) tiled: crate::level::tiled::Level<'w, 's>,
     pub(crate) gfxs: ResMut<'w, Assets<Gfx>>,
-    pub(crate) gfx_handles: ResMut<'w, GfxHandles>,
+    pub(crate) palettes: ResMut<'w, Palettes>,
     pub(crate) rand8: Rand8<'w>,
     pub(crate) key_input: ResMut<'w, KeyInput>,
     pub(crate) mouse_input: ResMut<'w, MouseInput>,

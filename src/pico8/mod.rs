@@ -21,8 +21,8 @@ pub use gfx::*;
 mod fillp;
 pub mod p8scii;
 pub(crate) use fillp::*;
-mod gfx_handles;
-pub(crate) use gfx_handles::*;
+mod palettes;
+pub(crate) use palettes::*;
 mod defaults;
 pub(crate) mod image;
 pub(crate) mod keyboard;
@@ -42,7 +42,7 @@ pub(crate) fn plugin(app: &mut App) {
         .add_plugins(audio::plugin)
         .add_plugins(rand::plugin)
         .add_plugins(gfx::plugin)
-        .add_plugins(gfx_handles::plugin)
+        .add_plugins(palettes::plugin)
         .add_plugins(keyboard::plugin)
         .add_plugins(mouse::plugin)
         .add_plugins(cart::plugin);

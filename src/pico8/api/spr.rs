@@ -301,7 +301,7 @@ impl super::Pico8<'_, '_> {
             SprHandle::Gfx(handle) => {
                 gfx_handle = Some(handle);
                 Handle::default()
-                // self.gfx_handles.get_or_create(
+                // self.palettes.get_or_create(
                 //     self.state.palette,
                 //     &self.state.pal_map,
                 //     None,

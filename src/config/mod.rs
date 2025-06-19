@@ -6,7 +6,7 @@ pub use loader::*;
 pub mod front_matter;
 use crate::{
     run::RunState,
-    pico8::{self, Pico8Handle, Pico8State, GfxHandles},
+    pico8::{self, Pico8Handle, Pico8State, Palettes},
 };
 use bevy::{
     asset::AssetPath,
@@ -210,7 +210,7 @@ pub fn update_asset(
 
     mut next_state: ResMut<NextState<RunState>>,
     mut pico8_state: ResMut<Pico8State>,
-    mut gfx_handles: ResMut<GfxHandles>,
+    mut palettes: ResMut<Palettes>,
     mut pico8_handle: Option<ResMut<Pico8Handle>>,
     #[cfg(feature = "scripting")] mut commands: Commands,
     #[cfg(feature = "scripting")] script_settings: Res<ScriptAssetSettings>,
@@ -231,7 +231,7 @@ pub fn update_asset(
                     // Reset the pico8_state.
                     pico8_state.sprite_sheets = vec![None; pico8_asset.sprite_sheets.len()];
                     // Copy the palettes.
-                    gfx_handles.palettes = pico8_asset.palettes.clone();
+                    palettes.palettes = pico8_asset.palettes.clone();
                     // XXX: It happens here too!
                     #[cfg(feature = "scripting")]
                     {

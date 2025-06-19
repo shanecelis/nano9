@@ -1,6 +1,6 @@
 use crate::{
     PColor,
-    pico8::{Pico8State, GfxHandles, GfxSprite, Gfx, GfxDirty},
+    pico8::{Pico8State, Palettes, GfxSprite, Gfx, GfxDirty},
 };
 use super::canvas;
 use bevy::prelude::*;
@@ -159,13 +159,13 @@ fn handle_clear_event(
     mut gfxs: ResMut<Assets<Gfx>>,
     mut one_color: Single<&mut Sprite, With<canvas::OneColorBackground>>,
     mut background: Single<(Entity, &GfxSprite, &mut GfxDirty, &mut canvas::Background), With<canvas::Background>>,
-    mut gfx_handles: Res<GfxHandles>,
+    mut palettes: Res<Palettes>,
     mut background_dirty: Local<bool>,
 ) {
     state.draw_state.clear_screen();
     // Clear the 1x1 background.
     let mut sprite = one_color.into_inner();
-    match gfx_handles.get_color(trigger.color, state.palette) {
+    match palettes.get_color(trigger.color, state.palette) {
         Ok(color) => {
             sprite.color = color;
         }
