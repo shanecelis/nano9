@@ -40,7 +40,8 @@ pub struct Pico8<'w, 's> {
 
 impl Pico8<'_, '_> {
 
-    pub(crate) fn gfx_material(&mut self) ->Handle<GfxMaterial> {
+    /// Returns the current GfxMaterial. It is cached.
+    pub(crate) fn gfx_material(&mut self) -> Handle<GfxMaterial> {
         self.state.gfx_material(&mut self.gfx_materials)
     }
 

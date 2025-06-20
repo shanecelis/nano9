@@ -10,7 +10,7 @@ use bevy_minibuffer::prelude::*;
 use clap::{Parser, Subcommand};
 use nano9::{
     config::{front_matter, run_pico8_when_loaded, Config},
-    pico8::{Pico8Asset, Pico8Handle},
+    pico8::{Pico8Asset, Pico8Handle, SharedData, CartLoaderSettings},
     *,
 };
 use std::{env, fs, io, path::{Path, PathBuf}, process::ExitCode};
@@ -42,6 +42,9 @@ enum Command {
     Run {
         /// Run path.
         path: PathBuf,
+        #[arg(long)]
+        /// Shared data for Pico-8 carts
+        shared_data: Option<SharedData>,
     },
     /// Create a new Nano-9 project
     ///
@@ -91,6 +94,7 @@ enum StarterKit {
 #[derive(Parser)]
 #[command(long_about = None)]
 struct CliDefault {
+    shared_data: Option<SharedData>,
     path: PathBuf,
 }
 
@@ -100,6 +104,7 @@ fn main() -> io::Result<ExitCode> {
             .map(|cli_default| Cli {
                 command: Command::Run {
                     path: cli_default.path,
+                    shared_data: cli_default.shared_data,
                 },
             })
             .map_err(|_| err),
@@ -281,8 +286,8 @@ fn new(cli: Cli) -> io::Result<ExitCode> {
 }
 
 fn run(cli: Cli) -> io::Result<ExitCode> {
-    let script = match cli.command {
-        Command::Run { path } => path,
+    let (script, shared_data) = match cli.command {
+        Command::Run { path, shared_data } => (path, shared_data),
         _ => unreachable!(),
     };
     let script_path = {
@@ -369,7 +374,10 @@ fn run(cli: Cli) -> io::Result<ExitCode> {
                 Startup,
                 move |asset_server: Res<AssetServer>, mut commands: Commands| {
                     let asset_path = AssetPath::from_path(&path).with_source(&cwd);
-                    let pico8_asset: Handle<Pico8Asset> = asset_server.load(&asset_path);
+                    let shared_data = shared_data.clone().unwrap_or_default();
+                    let pico8_asset: Handle<Pico8Asset> = asset_server.load_with_settings(&asset_path, move |settings: &mut CartLoaderSettings| {
+                        settings.shared_data = shared_data;
+                    });
                     commands.insert_resource(Pico8Handle::from(pico8_asset));
                 },
             );

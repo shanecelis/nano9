@@ -96,6 +96,15 @@ pub struct Defaults {
     pub time_to_live: Option<u8>,
 }
 
+// pub enum SharedData {
+
+// }
+
+// pub struct Cart {
+//     pub shared_data:
+
+// }
+
 /// Audio bank
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(untagged)]
@@ -207,7 +216,6 @@ pub struct Palette {
 pub fn update_asset(
     mut reader: EventReader<AssetEvent<pico8::Pico8Asset>>,
     assets: Res<Assets<pico8::Pico8Asset>>,
-
     mut next_state: ResMut<NextState<RunState>>,
     mut palettes: ResMut<Palettes>,
     mut pico8_handle: Option<ResMut<Pico8Handle>>,

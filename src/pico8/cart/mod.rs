@@ -80,7 +80,7 @@ pub(crate) const PALETTE: [[u8; 4]; 16] = [
 ];
 
 impl Cart {
-    fn from_str(content: &str, _settings: &CartLoaderSettings) -> Result<Cart, CartLoaderError> {
+    fn from_str(content: &str, settings: &CartLoaderSettings) -> Result<Cart, CartLoaderError> {
         const LUA: usize = 0;
         const GFX: usize = 1;
         const GFF: usize = 3;
@@ -128,6 +128,7 @@ impl Cart {
 
         // lua
         let lua: String = get_segment(&sections[LUA]).unwrap_or("").into();
+        let mut shared_data = vec![];
         // gfx
         let mut gfx = None;
         if let Some(content) = get_segment(&sections[GFX]) {
@@ -157,6 +158,16 @@ impl Cart {
                         bytes[i] = (high << 4) | low;
                         i += 1;
                         j += 2;
+                    }
+                }
+                if settings.shared_data == SharedData::Map {
+                    // Convert the bottom portions of the sprite sheet to the map.
+                    // The first two pages of sprites are rows [0,63].
+                    if rows > 64 {
+                        rows = 64;
+                        shared_data = bytes.split_off(columns * 64 / 2);
+                    } else {
+                        warn!("cart settings specify shared data for map expected more than 64 rows but was {rows}.");
                     }
                 }
                 gfx = Some(Gfx {
@@ -222,6 +233,7 @@ impl Cart {
                 map = bytes;
             }
         }
+        map.extend(shared_data);
         // music
         let mut music = Vec::new();
         if let Some(content) = get_segment(&sections[MUSIC]) {
@@ -298,8 +310,21 @@ pub(crate) fn to_byte(a: u8, b: u8) -> Option<u8> {
     Some((a << 4) | b)
 }
 
+/// Pico-8 cart's have 128 8x8 sprites plus a shared region that overlaps with
+/// the bottom of the map.
+#[derive(Clone, Serialize, Deserialize, Default, PartialEq, Eq, Copy)]
+#[cfg_attr(feature = "cli", derive(clap::ValueEnum))]
+pub enum SharedData {
+    #[default]
+    Sprite,
+    Map,
+}
+
+
 #[derive(Clone, Serialize, Deserialize, Default)]
-struct CartLoaderSettings {}
+pub struct CartLoaderSettings {
+    pub shared_data: SharedData,
+}
 
 #[derive(Default)]
 struct P8CartLoader;

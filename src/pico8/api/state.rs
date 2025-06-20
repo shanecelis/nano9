@@ -14,6 +14,7 @@ pub struct Pico8State {
     pub(crate) pal_map: PalMap,
     /// Current palette
     pub(crate) palette: usize,
+    // TODO: Add image_index?
     pub(crate) draw_state: DrawState,
     pub(crate) gfx_material: Option<Handle<GfxMaterial>>,
     pub(crate) gfx_materials: HashMap<u64, Handle<GfxMaterial>>,
