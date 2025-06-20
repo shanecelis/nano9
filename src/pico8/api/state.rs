@@ -15,7 +15,6 @@ pub struct Pico8State {
     /// Current palette
     pub(crate) palette: usize,
     pub(crate) draw_state: DrawState,
-    pub(crate) sprite_sheets: Vec<Option<SpriteSheet>>,
     pub(crate) gfx_material: Option<Handle<GfxMaterial>>,
     pub(crate) gfx_materials: HashMap<u64, Handle<GfxMaterial>>,
 }
@@ -35,7 +34,6 @@ impl FromWorld for Pico8State {
                 pen: PColor::Palette(defaults.initial_pen_color),
                 ..default()
             },
-            sprite_sheets: vec![],
             gfx_material: None,
             gfx_materials: default(),
         }

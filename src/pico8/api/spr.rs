@@ -189,38 +189,18 @@ impl super::Pico8<'_, '_> {
 
     fn sprite_sheet(&self, sheet_index: Option<usize>) -> Result<&SpriteSheet, Error> {
         let index = sheet_index.unwrap_or(0);
-        // Get the writeable index if it was ever created. Use the asset directly otherwise.
-        self.state.sprite_sheets
-                  .get(index)
-                  .and_then(|v| v.as_ref())
-                  .or_else(||
-                           self.pico8_asset().ok()?
-                           .sprite_sheets
-                           .get(index))
-                  .ok_or(Error::NoSuch(format!("image index {index}").into()))
+        self.pico8_asset()?
+            .sprite_sheets
+            .get(index)
+            .ok_or(Error::NoSuch(format!("image index {index}").into()))
     }
 
     fn sprite_sheet_mut(&mut self, sheet_index: Option<usize>) -> Result<&mut SpriteSheet, Error> {
         let index = sheet_index.unwrap_or(0);
-
-        let has_entry = self.state.sprite_sheets
-                                  .get(index)
-                                  .ok_or(Error::NoSuch(format!("image index {index}").into()))?
-                                  .is_some();
-        if ! has_entry {
-            let sprite_sheet = self.pico8_asset()?
-                    .sprite_sheets
-                    .get(index)
-                    .ok_or(Error::NoSuch(format!("image index {index}").into()))?
-                    .clone();
-            self.state.sprite_sheets[index] = Some(sprite_sheet);
-        }
-
-        Ok(self.state.sprite_sheets
+        self.pico8_asset_mut()?
+            .sprite_sheets
             .get_mut(index)
-            .ok_or(Error::NoSuch(format!("image index {index}").into()))?
-            .as_mut()
-            .unwrap())
+            .ok_or(Error::NoSuch(format!("image index {index}").into()))
     }
 
     /// spr(n, [x,] [y,] [w,] [h,] [flip_x,] [flip_y])

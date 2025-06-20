@@ -209,7 +209,6 @@ pub fn update_asset(
     assets: Res<Assets<pico8::Pico8Asset>>,
 
     mut next_state: ResMut<NextState<RunState>>,
-    mut pico8_state: ResMut<Pico8State>,
     mut palettes: ResMut<Palettes>,
     mut pico8_handle: Option<ResMut<Pico8Handle>>,
     #[cfg(feature = "scripting")] mut commands: Commands,
@@ -228,8 +227,6 @@ pub fn update_asset(
                         warn!("Script loaded but does not match Pico8Handle.");
                         continue;
                     }
-                    // Reset the pico8_state.
-                    pico8_state.sprite_sheets = vec![None; pico8_asset.sprite_sheets.len()];
                     // Copy the palettes.
                     palettes.0 = pico8_asset.palettes.clone();
                     // XXX: It happens here too!
