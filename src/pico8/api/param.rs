@@ -39,6 +39,11 @@ pub struct Pico8<'w, 's> {
 }
 
 impl Pico8<'_, '_> {
+
+    pub(crate) fn gfx_material(&mut self) ->Handle<GfxMaterial> {
+        self.state.gfx_material(&mut self.gfx_materials)
+    }
+
     /// Resurrects a hidden entity with the same essential attributes.
     pub fn resurrect(&mut self, hash: u64, position: Vec2) -> Option<Entity> {
         // See if there's already an entity available.

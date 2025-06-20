@@ -60,7 +60,7 @@ impl super::Pico8<'_, '_> {
                     mask,
                     sprite_sheets,
                     Some(hash),
-                    self.state.gfx_material(&mut self.gfx_materials),
+                    self.gfx_material(),
                     &mut self.commands,
                 )
             }

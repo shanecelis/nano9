@@ -158,6 +158,7 @@ impl super::Pico8<'_, '_> {
             ..default()
         };
         let clearable = Clearable::new(self.defaults.time_to_live).with_hash(hash);
+        let material = self.gfx_material();
         let mut ecommands = self
             .commands
             .spawn((
@@ -167,8 +168,7 @@ impl super::Pico8<'_, '_> {
                 clearable,
             ));
         if let Some(gfx_handle) = gfx_handle {
-            ecommands.insert(GfxSprite { image: gfx_handle,
-              material: self.state.gfx_material(&mut self.gfx_materials) });
+            ecommands.insert(GfxSprite { image: gfx_handle, material });
         }
         Ok(ecommands
             .id())
@@ -331,12 +331,13 @@ impl super::Pico8<'_, '_> {
             sprite.anchor = Anchor::Center;
             transform.rotation = Quat::from_rotation_z(turns * 2.0 * PI);
         }
+        let material = self.gfx_material();
         let mut ecommands = self
             .commands
             .spawn((Name::new("spr"), sprite, transform, clearable));
 
         if let Some(handle) = gfx_handle {
-            ecommands.insert(GfxSprite { image: handle, material: self.state.gfx_material(&mut self.gfx_materials) });
+            ecommands.insert(GfxSprite { image: handle, material });
         }
         Ok(ecommands
             .id())
