@@ -57,20 +57,19 @@ impl AssetLoader for PngAssetLoader {
 }
 
 fn to_asset(cart: Cart, load_context: &mut LoadContext) -> Result<Pico8Asset, CartLoaderError> {
-    let layout = load_context.labeled_asset_scope("atlas".into(), move |_load_context| {
+    let layout = load_context.add_labeled_asset("atlas".into(),
         TextureAtlasLayout::from_grid(
             PICO8_SPRITE_SIZE,
             PICO8_TILE_COUNT.x,
             PICO8_TILE_COUNT.y,
             None,
             None,
-        )
-    });
+        ));
     let sprite_sheets: Vec<_> = cart
         .gfx
         .map(|gfx| SpriteSheet {
             handle: SprHandle::Gfx(
-                load_context.labeled_asset_scope("gfx".into(), move |_load_context| gfx),
+                load_context.add_labeled_asset("gfx".into(), gfx),
             ),
             sprite_size: UVec2::splat(8),
             flags: cart.flags.clone(),
@@ -84,7 +83,7 @@ fn to_asset(cart: Cart, load_context: &mut LoadContext) -> Result<Pico8Asset, Ca
         #[cfg(feature = "scripting")]
         scripts: if cfg!(feature = "scripting") {
             vec![
-                load_context.labeled_asset_scope("lua".into(), move |_load_context| ScriptAsset {
+                load_context.add_labeled_asset("lua".into(), ScriptAsset {
                     content: code.into_bytes().into_boxed_slice(),
                     asset_path: code_path.into(),
                 }),
@@ -109,7 +108,7 @@ fn to_asset(cart: Cart, load_context: &mut LoadContext) -> Result<Pico8Asset, Ca
                 .map(|(n, sfx)| {
                     Audio::Sfx(
                         load_context
-                            .labeled_asset_scope(format!("sfx{n}"), move |_load_context| sfx),
+                            .add_labeled_asset(format!("sfx{n}"), sfx),
                     )
                 })
                 .collect(),
