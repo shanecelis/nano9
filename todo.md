@@ -9,8 +9,8 @@
 
 ## Nano-9
 - [x] cls() should be a trigger
-- [ ] Revert change to readonly sprite sheets
-- [ ] place gfx_material() on impl Pico8 directly.
+- [x] Revert change to readonly sprite sheets
+- [x] place gfx_material() on impl Pico8 directly.
 - [ ] Remove dbg!s()
       
 - [x] Use Gfx for background pset() colors.

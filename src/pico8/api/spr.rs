@@ -233,10 +233,10 @@ impl super::Pico8<'_, '_> {
             sheet.hash(&mut hasher);
             // Need to hash the palette choice and
             self.state.palette.hash(&mut hasher);
-            dbg!(&self.state.pal_map).hash(&mut hasher);
+            self.state.pal_map.hash(&mut hasher);
             size.inspect(|s| s.as_uvec2().hash(&mut hasher));
             turns.inspect(|t| hash_f32(*t, 2, &mut hasher));
-            dbg!(hasher.finish())
+            hasher.finish()
         };
         self.state.draw_state.mark_drawn();
         let flip = flip.unwrap_or_default();

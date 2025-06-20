@@ -13,7 +13,6 @@ use bevy_mod_scripting::core::asset::ScriptAsset;
 use std::{io, path::PathBuf};
 
 pub(crate) fn plugin(app: &mut App) {
-    dbg!("loader::plugin");
     app
         .init_asset_loader::<ConfigLoader>()
         .init_asset_loader::<LuaLoader>()

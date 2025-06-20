@@ -207,8 +207,8 @@ impl Rays<'_, '_> {
                     let max = (*transform * cover.aabb.max.extend(0.0)).xy();
                     let other = Aabb2d { min, max };
                     ray_cast.aabb_intersection_at(&other).map(|distance| {
-                        dbg!(&other);
-                        dbg!(&ray_cast);
+                        // dbg!(&other);
+                        // dbg!(&ray_cast);
                         dbg!((id, distance))
                     })
                 })
