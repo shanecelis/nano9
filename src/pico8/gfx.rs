@@ -12,7 +12,10 @@ use bevy::{
     // platform::hash::DefaultHasher,
     prelude::*,
 };
-use std::hash::{Hasher, DefaultHasher, Hash};
+use std::{
+    collections::VecDeque,
+    hash::{Hasher, DefaultHasher, Hash},
+};
 use bitvec::{prelude::*, view::BitView};
 
 pub(crate) fn plugin(app: &mut App) {
@@ -23,7 +26,9 @@ pub(crate) fn plugin(app: &mut App) {
         .init_resource::<GfxImageMap>()
         .init_asset::<Gfx>()
         .init_asset::<GfxMaterial>()
-        .add_systems(PostUpdate, (compute_image_on_asset_event, compute_image_on_gfx_sprite_change, check_dirty));
+        .add_systems(PostUpdate, (compute_image_on_asset_event,
+                                  compute_image_on_gfx_sprite_change.after(compute_image_on_asset_event),
+                                  check_dirty));
         // .add_systems(PreUpdate, (create_sprite, update_sprite));
 
 }
@@ -158,6 +163,9 @@ fn compute_image_on_asset_event(
     palettes: Res<Palettes>,
     mut sprites: Query<(Entity, &GfxSprite, Option<&mut Sprite>)>,
     mut pairs: ResMut<GfxImageMap>,
+    mut update_ids: Local<Vec<Entity>>,
+    mut update_images: Local<VecDeque<Handle<Image>>>,
+    // mut update_images: Local<Vec<(Entity, Handle<Image>)>>,
 ) {
     // We store the asset ids of added/modified image assets.
     let added_handles: bevy::utils::HashSet<_> = events
@@ -174,7 +182,7 @@ fn compute_image_on_asset_event(
     if added_handles.is_empty() {
         return;
     }
-    for (id, gfx_sprite, mut sprite) in &mut sprites {
+    for (id, gfx_sprite, sprite) in &sprites {
         if !added_handles.contains(&gfx_sprite.image.id()) {
             continue;
         }
@@ -191,9 +199,13 @@ fn compute_image_on_asset_event(
         match image_handle {
             Ok(image) => {
                 match sprite {
-                    Some(mut sprite) => {
-                        trace!("updating existant sprite on {}", id);
-                        sprite.image = image;
+                    Some(sprite) => {
+                        if sprite.image != image {
+                            trace!("updating existant sprite on {}", id);
+                            // sprite.image = image;
+                            update_ids.push(id);
+                            update_images.push_back(image);
+                        }
                     }
                     None => {
                         trace!("inserting new sprite into {}", id);
@@ -206,6 +218,17 @@ fn compute_image_on_asset_event(
                 warn!("Unable to update gfx {}: {e}", gfx_sprite.image.id());
             }
         }
+    }
+    // Try not to trigger a sprite change if we don't have to.
+    let mut iter = sprites.iter_many_mut(update_ids.iter());
+    while let Some((_, _, mut sprite)) = iter.fetch_next() {
+        match sprite {
+            Some(mut sprite) => {
+                sprite.image = update_images.pop_front().unwrap();
+            }
+            _ => unreachable!()
+        }
+
     }
 }
 
