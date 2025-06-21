@@ -5281,8 +5281,6 @@ dependencies = [
 [[package]]
 name = "pico8-to-lua"
 version = "0.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c1c0282514e2549a93b6c5025f238c448e8803cb5f8b98e4b91319646254beaa"
 dependencies = [
  "find-matching-bracket",
  "lazy-regex",

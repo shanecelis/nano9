@@ -433,7 +433,7 @@ impl AssetLoader for PngCartLoader {
     async fn load(
         &self,
         reader: &mut dyn Reader,
-        _settings: &CartLoaderSettings,
+        settings: &CartLoaderSettings,
         _load_context: &mut LoadContext<'_>,
     ) -> Result<Self::Asset, Self::Error> {
         let mut bytes = Vec::new();
@@ -475,17 +475,37 @@ impl AssetLoader for PngCartLoader {
         // use std::io::Write;
         // std::fs::File::create("code.lua").expect("create code.lua").write_all(&code).expect("write code.lua");
         // dbg!(std::str::from_utf8(&code).expect("utf8"));
-        let mut nybbles = vec![0; 0x2000];
-        nybbles.copy_from_slice(&v[0..=0x1fff]);
+        let (gfx, map, flags) = match settings.shared_data {
+            SharedData::Sprite => {
+                let mut nybbles = vec![0; 0x2000];
+                nybbles.copy_from_slice(&v[0..=0x1fff]);
 
-        let gfx = Gfx {
-            data: BitVec::<u8, Lsb0>::from_vec(nybbles),
-            width: 128,
-            height: 128,
+                let gfx = Gfx {
+                    data: BitVec::<u8, Lsb0>::from_vec(nybbles),
+                    width: 128,
+                    height: 128,
+                };
+                let mut map = vec![0; 0x1000];
+                map.copy_from_slice(&v[0x2000..=0x2fff]);
+                let flags = Vec::from(&v[0x3000..=0x30ff]);
+                (gfx, map, flags)
+            }
+            SharedData::Map => {
+                let mut nybbles = vec![0; 0x1000];
+                nybbles.copy_from_slice(&v[0..=0x0fff]);
+
+                let gfx = Gfx {
+                    data: BitVec::<u8, Lsb0>::from_vec(nybbles),
+                    width: 128,
+                    height: 64,
+                };
+                let mut map = vec![0; 0x2000];
+                map[..=0xfff].copy_from_slice(&v[0x2000..=0x2fff]);
+                map[0x1000..].copy_from_slice(&v[0x1000..=0x1fff]);
+                let flags = Vec::from(&v[0x3000..=0x30ff]);
+                (gfx, map, flags)
+            }
         };
-        let mut map = vec![0; 0x1000];
-        map.copy_from_slice(&v[0x2000..=0x2fff]);
-        let flags = Vec::from(&v[0x3000..=0x30ff]);
 
         let sfx = v[0x3200..=0x42ff].chunks(68).map(Sfx::from_u8).collect();
 

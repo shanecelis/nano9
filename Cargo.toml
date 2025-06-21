@@ -89,6 +89,7 @@ required-features = [ "cli" ]
 
 [patch.crates-io]
 mashmap = { git = "https://github.com/shanecelis/mashmap.git", branch = "drain_key_if" }
+pico8-to-lua = { path = "../pico8-to-lua" }
 # bevy = { path = "../bevy" }
 # bevy_ecs = { path = "../bevy/crates/bevy_ecs" }
 # bevy_ecs_tiled = { path = "../bevy_ecs_tiled" }
