@@ -10,13 +10,40 @@ impl super::Pico8<'_, '_> {
         &mut self,
         upper_left: Vec2,
         lower_right: Vec2,
-        color: Option<impl Into<FillColor>>,
+        color: Option<FillColor>,
     ) -> Result<Entity, Error> {
         let upper_left = pixel_snap(self.state.draw_state.apply_camera_delta(upper_left));
         let lower_right = pixel_snap(self.state.draw_state.apply_camera_delta(lower_right));
         let size = (lower_right - upper_left) + Vec2::ONE;
-        let clearable = Clearable::default();
-        let color = color.map(|x| x.into());
+        let color = color.unwrap_or_else(|| self.state.draw_state.pen.into());
+        let mut clearable = Clearable::default();
+        // If it covers the whole canvas, let's just clear the screen.
+        //
+        // Noteably the game [Celeste][1] does exactly this instead of clearing the
+        // screen. I really wonder why.
+        //
+        // [1]: https://mastodon.gamedev.place/@shanecelis/114725671117902238
+        let camera = self.state.draw_state.camera_position;
+        let canvas = self.canvas.size.as_vec2();
+        if upper_left.x <= camera.x
+            && upper_left.y <= camera.y
+            && lower_right.x >= camera.x + canvas.x
+            && lower_right.y >= camera.y + canvas.y {
+            // We clear the screen.
+            trace!("Clearing the screen on rectfill {:?} {:?}", upper_left, lower_right);
+            self.cls(Some(color.off()));
+
+            // We must manually set the draw count because the trigger
+            // execution is queued.
+            clearable.draw_count = 0;
+            if color.is_one_color() {
+                // We can't do this because we return an Entity. Hmm.
+                // return;
+            } else {
+                // We can't leave because there's a fill color that happens.
+            }
+        }
+
         let id = self
             .commands
             .spawn((
@@ -41,9 +68,9 @@ impl super::Pico8<'_, '_> {
                             // }
                             fill_pat.to_image(8, 8, |bit, _pixel_index, pixel_bytes| {
                                 let c: Option<PColor> = if bit {
-                                    color.and_then(|x| x.on())
+                                    color.on()
                                 } else {
-                                    color.map(|x| x.off()).or(Some(self.state.draw_state.pen))
+                                    Some(color.off())
                                 };
                                 if let Some(c) = c {
                                     // c.map(&self.state.pal_map).write_color(&PALETTE, pixel_bytes);
@@ -78,7 +105,7 @@ impl super::Pico8<'_, '_> {
                     }
                 } else {
                     let c =
-                        self.get_color(color.map(|x| x.off().into()).unwrap_or(N9Color::Pen))?;
+                        self.get_color(color.off())?;
                     Sprite {
                         color: c,
                         anchor: Anchor::TopLeft,

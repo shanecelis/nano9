@@ -35,10 +35,11 @@ impl P8Map {
         sprite_sheets: &[pico8::SpriteSheet],
         hash: Option<u64>,
         gfx_material: Handle<pico8::GfxMaterial>,
+        time_to_live: u8,
         commands: &mut Commands,
     ) -> Result<Entity, pico8::Error> {
         let map_size = TilemapSize::from(size);
-        let mut clearable = Clearable::new(2);
+        let mut clearable = Clearable::new(time_to_live);
         clearable.hash = hash;
         let mut tile_storage = TileStorage::empty(map_size);
         let tilemap_entity = commands.spawn_empty().id();

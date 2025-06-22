@@ -91,8 +91,9 @@ pub(crate) fn compute_image_sys(In(gfx_sprite): In<GfxSprite>,
                                 mut images: ResMut<Assets<Image>>,
                                 palettes: Res<Palettes>,
                                 mut pairs: ResMut<GfxImageMap>) -> Result<Handle<Image>, Error> {
+    let my_span = info_span!("gfx::compute_image", name = "system").entered();
     compute_image(&gfx_sprite.image,
-                  gfx_materials.get(&gfx_sprite.material).ok_or(Error::NoSuch("gfx material".into()))?,
+                  gfx_materials.get(&gfx_sprite.material).ok_or_else(|| Error::NoSuch("gfx material".into()))?,
                   &gfxs,
                   &mut images,
                   &palettes,
@@ -102,12 +103,14 @@ pub(crate) fn compute_image_sys(In(gfx_sprite): In<GfxSprite>,
 
 fn compute_image(gfx_handle: &Handle<Gfx>,
                  gfx_material: &GfxMaterial,
-                 // state: &Pico8State,
                  gfxs: &Assets<Gfx>,
                  mut images: &mut Assets<Image>,
                  palettes: &Palettes,
                  mut pairs: &mut GfxImageMap,
 ) -> Result<Handle<Image>, Error> {
+
+    let my_span = info_span!("gfx::compute_image", name = "function").entered();
+
     if gfx_material.palette >= palettes.len() {
         return Err(Error::NoSuch("palette".into()));
     }
@@ -123,6 +126,7 @@ fn compute_image(gfx_handle: &Handle<Gfx>,
     let palette = palettes.get_pal(gfx_material.palette)?;
     let image_handle: Option<Handle<Image>> = pairs.get(&gfx_id).and_then(|gfx_image| {
         gfx_image.get(&hash).inspect(|handle| {
+            let my_span = info_span!("gfx::compute_image", name = "update image").entered();
             let gfx = gfxs.get(gfx_id);
             // Update existing image.
             if let Some((gfx, mut image)) = gfx.zip(images.get_mut(*handle)) {
@@ -136,6 +140,7 @@ fn compute_image(gfx_handle: &Handle<Gfx>,
         }).cloned()
     });
     let image_handle: Result<Handle<Image>, Error> = image_handle.map(Ok).unwrap_or_else(|| {
+        let my_span = info_span!("gfx::compute_image", name = "create image").entered();
         let gfx = gfxs.get(gfx_handle)
             .ok_or(Error::NoSuch("gfx image".into()))?;
         trace!("creating image for gfx {}", gfx_id);
@@ -143,7 +148,7 @@ fn compute_image(gfx_handle: &Handle<Gfx>,
             // trace!("pixel {} writing color {}", n, i);
             gfx_material.pal_map.write_color(&palette.data, i, bytes)
         })?);
-        // Add image to the map.
+        // Update or add image to the map.
         pairs.entry(gfx_id)
                 .and_modify(|gfx_image| { gfx_image.insert(hash, image.clone()); } )
             .or_insert_with(|| GfxImage::new(hash, image.clone()));
@@ -201,14 +206,14 @@ fn compute_image_on_asset_event(
                 match sprite {
                     Some(sprite) => {
                         if sprite.image != image {
-                            trace!("updating existant sprite on {}", id);
+                            // trace!("updating existant sprite on {}", id);
                             // sprite.image = image;
                             update_ids.push(id);
                             update_images.push_back(image);
                         }
                     }
                     None => {
-                        trace!("inserting new sprite into {}", id);
+                        // trace!("inserting new sprite into {}", id);
                         commands.entity(id)
                             .insert(Sprite::from_image(image));
                     }

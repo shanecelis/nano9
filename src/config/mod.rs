@@ -283,6 +283,21 @@ pub fn run_pico8_when_loaded(
     }
 }
 
+pub fn pause_pico8_when_loaded(
+    state: Res<State<RunState>>,
+    mut next_state: ResMut<NextState<RunState>>,
+) {
+    match **state {
+        RunState::Loaded => {
+            next_state.set(RunState::Init);
+        }
+        RunState::Init => {
+            next_state.set(RunState::Pause);
+        }
+        _ => (),
+    }
+}
+
 impl std::str::FromStr for Config {
     type Err = ConfigError;
     fn from_str(s: &str) -> Result<Self, Self::Err> {

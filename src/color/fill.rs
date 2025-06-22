@@ -21,6 +21,10 @@ pub enum FillColor {
 }
 
 impl FillColor {
+    pub fn is_one_color(&self) -> bool {
+        matches!(self, FillColor::One { .. })
+    }
+
     pub fn on(&self) -> Option<PColor> {
         match self {
             FillColor::One { off: _ } => None,

@@ -48,10 +48,12 @@ impl super::Pico8<'_, '_> {
         self.state.draw_state.mark_drawn();
         // See if there's already an entity available.
         if let Some(id) = self.resurrect(hash, screen_start) {
+            // trace!("Resurrect map with hash {hash}");
             return Ok(id);
         }
         match self.sprite_map(map_index)?.clone() {
             SpriteMap::P8(map) => {
+                // trace!("Create map with hash {hash}");
                 let sprite_sheets = &self.pico8_asset()?.sprite_sheets.clone();
                 map.map(
                     map_pos,
@@ -61,6 +63,7 @@ impl super::Pico8<'_, '_> {
                     sprite_sheets,
                     Some(hash),
                     self.gfx_material(),
+                    self.defaults.time_to_live,
                     &mut self.commands,
                 )
             }
@@ -74,15 +77,16 @@ impl super::Pico8<'_, '_> {
         pos: Vec2,
         map_index: Option<usize>,
         _layer_index: Option<usize>,
-    ) -> Option<usize> {
-        let map: &SpriteMap = self.sprite_map(map_index).ok()?;
+    ) -> Result<usize, Error> {
+        let map: &SpriteMap = self.sprite_map(map_index)?;
         match *map {
             SpriteMap::P8(ref map) => {
-                Some(map[(pos.x as u32 + pos.y as u32 * MAP_COLUMNS) as usize] as usize)
+                let i = (pos.x as u32 + pos.y as u32 * MAP_COLUMNS) as usize;
+                Ok(*map.get(i).ok_or_else(|| Error::NoSuch(format!("map index {i}{}", if i > 0x1000 { "; consider using the '--shared-data=map' argument." } else { "" }).into()))? as usize)
             }
 
             #[cfg(feature = "level")]
-            SpriteMap::Level(ref map) => self.tiled.mget(map, pos, map_index, layer_index),
+            SpriteMap::Level(ref map) => self.tiled.mget(map, pos, map_index, layer_index).ok(),
         }
     }
 
@@ -134,7 +138,7 @@ mod lua {
                  map_index: Option<usize>,
                  layer_index: Option<usize>| {
                     with_pico8(&ctx, move |pico8| {
-                        Ok(pico8.mget(Vec2::new(x, y), map_index, layer_index))
+                        pico8.mget(Vec2::new(x, y), map_index, layer_index)
                     })
                 },
             )

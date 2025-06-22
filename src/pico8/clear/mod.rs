@@ -83,7 +83,7 @@ impl ClearCache {
 // #[component(on_insert = on_insert_hook)]
 // #[component(on_remove = on_remove_hook)]
 pub struct Clearable {
-    draw_count: usize,
+    pub(crate) draw_count: usize,
     pub time_to_live: u8,
     pub hash: Option<u64>,
     pub cached: bool,
@@ -197,6 +197,7 @@ fn handle_clear_event(
             *visibility = Visibility::Hidden;
             if !clearable.cached && clearable.hash.is_some() {
                 clearable.cached = cache.insert(&clearable, id);
+                // trace!("insert clearable with hash {} {}", clearable.hash.unwrap(), if clearable.cached { "worked" } else { "failed" });
             }
         }
     }

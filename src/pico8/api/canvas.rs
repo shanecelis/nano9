@@ -61,6 +61,7 @@ pub fn setup_canvas(mut canvas: Option<ResMut<N9Canvas>>,
                 Name::new("1x1 canvas"),
                 Sprite {
                     image: assets.add(image),
+                    color: Color::BLACK,
                     custom_size: Some(canvas.size.as_vec2()),
                     ..default()
                 },

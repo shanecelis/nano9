@@ -9,7 +9,7 @@ use bevy::{
 use bevy_minibuffer::prelude::*;
 use clap::{Parser, Subcommand};
 use nano9::{
-    config::{front_matter, run_pico8_when_loaded, Config},
+    config::{front_matter, run_pico8_when_loaded, pause_pico8_when_loaded, Config},
     pico8::{Pico8Asset, Pico8Handle, SharedData, CartLoaderSettings},
     *,
 };
@@ -42,6 +42,10 @@ enum Command {
     Run {
         /// Run path.
         path: PathBuf,
+
+        #[arg(long)]
+        /// Start paused.
+        pause: bool,
         #[arg(long)]
         /// Shared data for Pico-8 carts
         shared_data: Option<SharedData>,
@@ -94,7 +98,10 @@ enum StarterKit {
 #[derive(Parser)]
 #[command(long_about = None)]
 struct CliDefault {
+    #[arg(long)]
     shared_data: Option<SharedData>,
+    #[arg(long)]
+    pause: bool,
     path: PathBuf,
 }
 
@@ -105,6 +112,7 @@ fn main() -> io::Result<ExitCode> {
                 command: Command::Run {
                     path: cli_default.path,
                     shared_data: cli_default.shared_data,
+                    pause: cli_default.pause,
                 },
             })
             .map_err(|_| err),
@@ -286,8 +294,8 @@ fn new(cli: Cli) -> io::Result<ExitCode> {
 }
 
 fn run(cli: Cli) -> io::Result<ExitCode> {
-    let (script, shared_data) = match cli.command {
-        Command::Run { path, shared_data } => (path, shared_data),
+    let (script, shared_data, pause) = match cli.command {
+        Command::Run { path, shared_data, pause } => (path, shared_data, pause),
         _ => unreachable!(),
     };
     let script_path = {
@@ -419,8 +427,15 @@ fn run(cli: Cli) -> io::Result<ExitCode> {
         .add_plugins(Nano9Plugins {
             config: nano9_plugin.config,
             ..default()
-        })
-        .add_systems(PreUpdate, run_pico8_when_loaded);
+        });
+
+    if pause {
+        app
+            .add_systems(PreUpdate, pause_pico8_when_loaded);
+    } else {
+        app
+            .add_systems(PreUpdate, run_pico8_when_loaded);
+    }
 
     if app.is_plugin_added::<WindowPlugin>() {
         app.add_systems(Update, action::toggle_fullscreen.run_if(condition::on_just_pressed_with(KeyCode::Enter, vec![KeyCode::AltLeft, KeyCode::AltRight])));
