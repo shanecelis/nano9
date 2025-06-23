@@ -268,6 +268,21 @@ mod lua {
                         // See if there's already an entity available.
                         let cached_id =
                             pico8.resurrect(hash, negate_vy(pos_p8));
+                        if let Some(id) = cached_id {
+                            let pcolor = c
+                                .unwrap_or(N9Color::Pen)
+                                .into_pcolor(&pico8.state.draw_state.pen);
+                            if let Ok(color) = pico8.get_color(pcolor) {
+                                pico8.commands.queue(move |world: &mut World| {
+                                    if let Some(mut text_color) = world.get_mut::<TextColor>(id) {
+                                        text_color.0 = color;
+                                    }
+                                });
+                            } else {
+                                warn!("Could not get textcolor");
+
+                            }
+                        }
                         pico8.state.draw_state.mark_drawn();
                         Ok((pos_p8, hash, cached_id, pico8.defaults.time_to_live))
                     })?;

@@ -40,6 +40,8 @@ impl super::Pico8<'_, '_> {
             let mut hasher = DefaultHashBuilder::default().build_hasher();
             "map".hash(&mut hasher);
             map_pos.hash(&mut hasher);
+            self.state.palette.hash(&mut hasher);
+            self.state.pal_map.hash(&mut hasher);
             size.hash(&mut hasher);
             mask.inspect(|m| m.hash(&mut hasher));
             map_index.inspect(|i| i.hash(&mut hasher));

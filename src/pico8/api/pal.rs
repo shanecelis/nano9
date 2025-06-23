@@ -21,7 +21,7 @@ impl super::Pico8<'_, '_> {
 
     pub(crate) fn get_color(&self, c: impl Into<N9Color>) -> Result<Color, PalError> {
         let pcolor = c.into().into_pcolor(&self.state.draw_state.pen);
-        self.palettes.get_color(pcolor, self.state.palette)
+        self.palettes.get_color(pcolor.map_pal(|i| self.state.pal_map.map(i)), self.state.palette)
     }
 
     pub fn color(&mut self, color: Option<PColor>) -> Result<PColor, Error> {
