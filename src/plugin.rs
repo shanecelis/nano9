@@ -361,19 +361,21 @@ impl Plugin for Nano9Plugin {
                 .map(pico8::Defaults::from_config)
                 .unwrap_or_default(),
         )
-        // Insert the config as a resource.
-        // TODO: Should we constrain it, if it wasn't provided as an option?
-        .insert_resource(Time::<Fixed>::from_seconds(
-            1.0 / self
-                .config
-                .frames_per_second
-                .unwrap_or(DEFAULT_FRAMES_PER_SECOND) as f64,
-        ))
         .insert_resource(N9Canvas {
             size: canvas_size,
             ..default()
         })
         .add_plugins(crate::plugin);
+
+        if let Some(fps) = self.config.frames_per_second {
+            info!("Set FPS {}", &fps);
+            let limiter = bevy_framepace::Limiter::from_framerate(fps as f64);
+            app.add_plugins(bevy_framepace::FramepacePlugin)
+               .insert_resource(bevy_framepace::FramepaceSettings::default().with_limiter(limiter));
+            // app.insert_resource(Time::<Fixed>::from_seconds(
+            //     1.0 / fps as f64,
+            // ));
+        }
 
         #[cfg(feature = "scripting")]
         app.add_plugins(add_lua_logging);

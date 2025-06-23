@@ -51,6 +51,7 @@ cmd_lib = { version = "1.9.5", optional = true }
 log = { version = "0.4.27", optional = true }
 env_logger = { version = "0.11.8", optional = true }
 merge2 = "0.3.2"
+bevy_framepace = "0.18"
 
 [features]
 default = [ "cli" ]
@@ -94,7 +95,7 @@ pico8-to-lua = { path = "../pico8-to-lua" }
 # bevy_ecs = { path = "../bevy/crates/bevy_ecs" }
 # bevy_ecs_tiled = { path = "../bevy_ecs_tiled" }
 # bevy_mod_scripting = { path = "../bevy_mod_scripting" }
-# bevy_minibuffer = { path = "../bevy_minibuffer" }
+bevy_minibuffer = { path = "../bevy_minibuffer" }
 # bevy_asky = { path = "../bevy_asky" }
 # bevy_ecs_ldtk = { path = "../bevy_ecs_ldtk" }
 # bevy_ecs_tilemap = { path = "../bevy_ecs_tilemap" }

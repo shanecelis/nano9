@@ -377,7 +377,7 @@ WASM](https://github.com/makspll/bevy_mod_scripting/issues/166) builds with
 Lua.)
 
 Some game developers have the technical wherewithal to rebuild their game in
-another engine like the celebrated story of the
+another engine like the celebrated story of 
 [Celeste](https://www.thatguyglen.com/article/MSKOQr_YS-U) by [Maddy
 Thorson](https://www.maddymakesgames.com) and [Noel Berry](https://noelberry.ca)
 which originated as a Pico-8 game before it was recreated in C# and XNA and
@@ -418,7 +418,7 @@ Nearly none currently.
 
 Pico-8 provides a memory-mapped interface for its more
 esoteric features. For instance one _can_ access the keyboard keys or the mouse
-position, which are not explicitly available via the API.
+position, which are otherwise not explicitly available via the API.
 
 | Start   | End     | Purpose                                             |
 |---------|---------|-----------------------------------------------------|
