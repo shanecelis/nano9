@@ -58,6 +58,7 @@ impl FromScript for N9Color {
     ) -> Result<Self::This<'_>, InteropError> {
         match value {
             ScriptValue::Integer(n) => Ok(N9Color::PColor((n as usize).into())),
+            ScriptValue::Float(f) => Ok(N9Color::PColor((f as usize).into())),
             ScriptValue::Unit => Ok(N9Color::Pen),
             _ => Err(InteropError::impossible_conversion(TypeId::of::<N9Color>())),
         }
