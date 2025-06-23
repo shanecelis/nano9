@@ -375,15 +375,29 @@ fn run(cli: Cli) -> io::Result<ExitCode> {
             eprintln!("loading cart");
             let config = Config::pico8();
 
-            // let asset_path = AssetPath::from_path(&script_path).into_owned().with_source(&cwd).with_label("lua");
-            // config.code = Some(asset_path.to_string());
-            let path = script_path.clone();
+            let path = script_path;
+            let asset_path: AssetPath<'static> =
+                if fs::exists(&path).unwrap_or(false) {
+                    AssetPath::from_path(&path).with_source(&cwd)
+                } else {
+                    if let Some(s) = path.to_str() {
+                        match AssetPath::try_parse(s) {
+                            Ok(p) => p,
+                            Err(e) => {
+                                eprintln!("Cannot convert {:?} to input path: {e}", &s);
+                                return Ok(ExitCode::from(9));
+                            }
+                        }
+                    } else {
+                        eprintln!("Cannot convert input path to UTF-8 string {:?}.", path.display());
+                        return Ok(ExitCode::from(10));
+                    }
+                }.clone_owned();
             app.add_systems(
                 Startup,
                 move |asset_server: Res<AssetServer>, mut commands: Commands| {
-                    let asset_path = AssetPath::from_path(&path).with_source(&cwd);
                     let shared_data = shared_data.clone().unwrap_or_default();
-                    let pico8_asset: Handle<Pico8Asset> = asset_server.load_with_settings(&asset_path, move |settings: &mut CartLoaderSettings| {
+                    let pico8_asset: Handle<Pico8Asset> = asset_server.load_with_settings(dbg!(&asset_path), move |settings: &mut CartLoaderSettings| {
                         settings.shared_data = shared_data;
                     });
                     commands.insert_resource(Pico8Handle::from(pico8_asset));
