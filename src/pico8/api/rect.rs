@@ -23,8 +23,10 @@ impl super::Pico8<'_, '_> {
         // screen. I really wonder why.
         //
         // [1]: https://mastodon.gamedev.place/@shanecelis/114725671117902238
-        let camera = self.state.draw_state.camera_position;
+        let camera = -self.state.draw_state.camera_position;
+        // XXX: Not sure why negating the camera is needed.
         let canvas = self.canvas.size.as_vec2();
+        // trace!("Checking camera {:?} against rect {:?} {:?}", camera, upper_left, lower_right);
         if upper_left.x <= camera.x
             && upper_left.y <= camera.y
             && lower_right.x >= camera.x + canvas.x

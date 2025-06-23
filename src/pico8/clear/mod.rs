@@ -182,8 +182,8 @@ fn handle_clear_event(
             trace!("Clearing Background pixels.");
             gfx.data.set_elements(0x00);
         }
+        gfx_dirty.0 = false;
     }
-    gfx_dirty.0 = false;
 
     for (id, mut clearable, mut visibility) in &mut query {
         if clearable.time_to_live == 0 {

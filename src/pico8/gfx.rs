@@ -29,8 +29,6 @@ pub(crate) fn plugin(app: &mut App) {
         .add_systems(PostUpdate, (compute_image_on_asset_event,
                                   compute_image_on_gfx_sprite_change.after(compute_image_on_asset_event),
                                   check_dirty));
-        // .add_systems(PreUpdate, (create_sprite, update_sprite));
-
 }
 
 type GfxImage = OneOrMap<u64, Handle<Image>>;
@@ -93,6 +91,7 @@ pub(crate) fn compute_image_sys(In(gfx_sprite): In<GfxSprite>,
                                 mut pairs: ResMut<GfxImageMap>) -> Result<Handle<Image>, Error> {
     let my_span = info_span!("gfx::compute_image", name = "system").entered();
     compute_image(&gfx_sprite.image,
+                  false,
                   gfx_materials.get(&gfx_sprite.material).ok_or_else(|| Error::NoSuch("gfx material".into()))?,
                   &gfxs,
                   &mut images,
@@ -102,6 +101,7 @@ pub(crate) fn compute_image_sys(In(gfx_sprite): In<GfxSprite>,
 
 
 fn compute_image(gfx_handle: &Handle<Gfx>,
+                 gfx_changed: bool,
                  gfx_material: &GfxMaterial,
                  gfxs: &Assets<Gfx>,
                  mut images: &mut Assets<Image>,
@@ -126,16 +126,18 @@ fn compute_image(gfx_handle: &Handle<Gfx>,
     let palette = palettes.get_pal(gfx_material.palette)?;
     let image_handle: Option<Handle<Image>> = pairs.get(&gfx_id).and_then(|gfx_image| {
         gfx_image.get(&hash).inspect(|handle| {
-            let my_span = info_span!("gfx::compute_image", name = "update image").entered();
-            let gfx = gfxs.get(gfx_id);
-            // Update existing image.
-            if let Some((gfx, mut image)) = gfx.zip(images.get_mut(*handle)) {
-                trace!("updating image for gfx {}", gfx_id);
-                gfx.write_bytes(
-                    &mut image.data,
-                    |i, _, bytes| {
-                    gfx_material.pal_map.write_color(&palette.data, i, bytes);
-                });
+            if gfx_changed {
+                let my_span = info_span!("gfx::compute_image", name = "update image").entered();
+                let gfx = gfxs.get(gfx_id);
+                // Update existing image.
+                if let Some((gfx, mut image)) = gfx.zip(images.get_mut(*handle)) {
+                    trace!("updating image for gfx {}", gfx_id);
+                    gfx.write_bytes(
+                        &mut image.data,
+                        |i, _, bytes| {
+                            gfx_material.pal_map.write_color(&palette.data, i, bytes);
+                        });
+                }
             }
         }).cloned()
     });
@@ -196,6 +198,7 @@ fn compute_image_on_asset_event(
             continue;
         };
         let image_handle = compute_image(&gfx_sprite.image,
+                                         true,
                                          &gfx_material,
                                          &gfxs,
                                          &mut images,
@@ -252,6 +255,7 @@ fn compute_image_on_gfx_sprite_change(
             continue;
         };
         let image_handle = compute_image(&gfx_sprite.image,
+                                         false,
                                          &gfx_material,
                                          &gfxs,
                                          &mut images,
@@ -278,39 +282,6 @@ fn compute_image_on_gfx_sprite_change(
     }
 }
 
-
-fn create_sprite(mut query: Query<(Entity, &GfxSprite), Without<Sprite>>,
-                 gfxs: Res<Assets<Gfx>>,
-                 state: Res<Pico8State>,
-                 mut images: ResMut<Assets<Image>>,
-                 palettes: Res<Palettes>,  // for palettes, ugh. TODO: Move palettes elsewhere.
-                 mut commands: Commands,
-) {
-    let palette = state.palette;
-    let Ok(palette) = palettes.get_pal(state.palette) else {
-        return;
-    };
-    for (id, gfx_sprite) in &mut query {
-        info!("create_sprite {id}");
-
-        let Some(gfx) = gfxs.get(&gfx_sprite.image) else { continue; };
-        // TODO: Update existing image if it's the right size instead of recreating it.
-        match gfx.try_to_image(|i, _, bytes| {
-            state.pal_map.write_color(&palette.data, i, bytes)
-        }) {
-            Ok(image) => {
-                commands.entity(id)
-                    .insert(Sprite {
-                        image: images.add(image),
-                        ..default()
-                    });
-            }
-            Err(e) => {
-                error!("Could not write gfx to image: {e}");
-            }
-        }
-    }
-}
 
 /// An indexed image using `N`-bit palette with color index `T`.
 #[derive(Asset, Debug, Reflect, Clone)]
