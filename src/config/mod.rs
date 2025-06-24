@@ -364,6 +364,7 @@ impl Config {
     pub fn inject_template(&mut self, template_name: Option<&str>) -> Result<(), ConfigError> {
         if let Some(template_name) = template_name.or(self.template.as_deref()) {
             let mut template = match template_name {
+                #[cfg(feature = "gameboy")]
                 "gameboy" => Config::gameboy(),
                 "pico8" => Config::pico8(),
                 x => {

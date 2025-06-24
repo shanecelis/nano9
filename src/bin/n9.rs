@@ -92,6 +92,8 @@ enum StarterKit {
     Platformer,
     TopDown,
 }
+
+const HELLO_WORLD: &'static str = include_str!("templates/main.lua");
 // Secondary command line interface used as fallback.
 //
 // [source](https://stackoverflow.com/a/79564853/6454690)
@@ -183,9 +185,10 @@ fn new(cli: Cli) -> io::Result<ExitCode> {
         } => {
             use log::info;
             env_logger::Builder::from_env(
-                env_logger::Env::default().default_filter_or("warn,n9=info"),
+                env_logger::Env::default().default_filter_or("info,n9=info"),
             )
-            .init();
+                .format_timestamp(None)
+                .init();
             if let Some(_starter) = starter {
                 todo!();
             } else if let Some(extension) = path.extension().and_then(|s| s.to_str()) {
@@ -213,13 +216,18 @@ fn new(cli: Cli) -> io::Result<ExitCode> {
                     lang @ Some(Language::Rust | Language::LuaRust) => {
                         use cmd_lib::run_cmd;
                         info!("Creating new cargo project at {:?}.", &path);
+                        let lang = lang.unwrap();
+                        let feature = match lang {
+                            Language::Rust => "rust-lib",
+                            Language::LuaRust => "lua-lib",
+                            Language::Lua => unreachable!(),
+                        };
                         Ok(
-                            match run_cmd!(cargo new $path;
-                                            cd $path;
-                                            cargo add bevy@0.15;
-                                            // cargo add nano9 --features lib --no-default-features
-                                            // cargo add nano9;
-                                            cargo add --path ..;
+                            match run_cmd!(
+                                cargo new $path;
+                                cd $path;
+                                cargo add bevy@0.15;
+                                cargo add nano9 --git "https://github.com/shanecelis/nano-9.git" --branch dev --no-default-features --features $feature;
                             ) {
                                 Ok(_) => {
                                     // Copy files
@@ -231,12 +239,11 @@ fn new(cli: Cli) -> io::Result<ExitCode> {
                                     info!("Creating Nano-9 config at {:?}.", &p);
                                     fs::write(&p, content)?;
 
-                                    if lang == Some(Language::LuaRust) {
-                                        let content = include_str!("templates/main.lua");
+                                    if lang == Language::LuaRust {
                                         let _ = p.pop();
                                         p.push("main.lua");
                                         info!("Creating main Lua code at {:?}.", &p);
-                                        fs::write(&p, content)?;
+                                        fs::write(&p, HELLO_WORLD)?;
 
                                         let content = include_str!("templates/main-lua-rust.rs.txt");
                                         let _ = p.pop();
@@ -256,7 +263,7 @@ fn new(cli: Cli) -> io::Result<ExitCode> {
                                     ExitCode::from(0)
                                 }
                                 Err(e) => {
-                                    eprintln!("error: Problem running cargo {e}");
+                                    error!("error: Problem running cargo {e}");
                                     ExitCode::from(8)
                                 }
                             },
@@ -265,11 +272,11 @@ fn new(cli: Cli) -> io::Result<ExitCode> {
                     Some(Language::Lua) | None => {
                         if path.exists() {
                             if path.is_file() {
-                                eprintln!("error: {path:?} is a file; a directory was expected.");
+                                error!("error: {path:?} is a file; a directory was expected.");
                                 return Ok(ExitCode::from(6));
                             }
                             if path.is_dir() && !force {
-                                eprintln!("error: {path:?} already exists, canceling; cautiously use --force to overwrite.");
+                                error!("error: {path:?} already exists, canceling; cautiously use --force to overwrite.");
                                 return Ok(ExitCode::from(7));
                             }
                         } else {
