@@ -242,8 +242,8 @@ pub fn update_asset(
                     {
                         if !pico8_asset.scripts.is_empty() && pico8_handle.main_script.is_none() {
                             let mut paths: Vec<_> = pico8_asset.scripts.iter()
-                                .map(|scripts| {
-                                    let path: &AssetPath<'static> = scripts.path().unwrap();
+                                .map(|script| {
+                                    let path: &AssetPath<'static> = script.path().unwrap();
                                     let script_path = (script_settings.script_id_mapper.map)(path);
                                     info!("Add script component path {}", &script_path);
                                     script_path

@@ -7,8 +7,13 @@ use bevy_mod_scripting::core::asset::ScriptAsset;
 use std::path::PathBuf;
 
 pub(crate) fn plugin(app: &mut App) {
-    app.init_asset_loader::<P8AssetLoader>()
+    app
+        .init_asset_loader::<P8AssetLoader>()
         .init_asset_loader::<PngAssetLoader>();
+
+    #[cfg(feature = "scripting")]
+    app
+        .init_asset_loader::<P8LuaAssetLoader>();
 }
 
 #[derive(Default)]
@@ -34,6 +39,35 @@ impl AssetLoader for P8AssetLoader {
     }
 }
 
+
+#[cfg(feature = "scripting")]
+#[derive(Default)]
+struct P8LuaAssetLoader;
+
+#[cfg(feature = "scripting")]
+impl AssetLoader for P8LuaAssetLoader {
+    type Asset = ScriptAsset;
+    type Settings = CartLoaderSettings;
+    type Error = CartLoaderError;
+    async fn load(
+        &self,
+        reader: &mut dyn Reader,
+        settings: &CartLoaderSettings,
+        load_context: &mut LoadContext<'_>,
+    ) -> Result<Self::Asset, Self::Error> {
+        let cart = P8CartLoader.load(reader, settings, load_context).await?;
+        let code_path: PathBuf = load_context.path().into();
+        let code = cart.lua;
+        Ok(ScriptAsset {
+            content: code.into_bytes().into_boxed_slice(),
+            asset_path: code_path.into(),
+        })
+    }
+
+    fn extensions(&self) -> &[&str] {
+        &["p8"]
+    }
+}
 #[derive(Default)]
 struct PngAssetLoader;
 

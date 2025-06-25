@@ -5,7 +5,7 @@ use crate::{
     pico8::{self, image::pixel_art_settings, Gfx, Pico8Asset},
 };
 use bevy::{
-    asset::{io::Reader, AssetLoader, AssetPath, LoadContext},
+    asset::{io::{AssetSourceId, Reader}, AssetLoader, AssetPath, LoadContext},
     prelude::*,
 };
 #[cfg(feature = "scripting")]
@@ -353,10 +353,23 @@ async fn into_asset(
         })
         // }
     }
+    let mut scripts = vec![];
+    #[cfg(feature = "scripting")]
+    for p in config.scripts {
+        // Load them in order.
+        let loaded = load_context
+            .loader()
+            .immediate()
+            .load(&*p).await?;
+        let mut script_asset: ScriptAsset = loaded.take();
+        let label =  script_asset.asset_path.path().to_string_lossy().into_owned();
+        script_asset.asset_path = load_context.asset_path().clone_owned().with_source(AssetSourceId::Default).with_label(label);
+        // scripts.push(load_context.add_loaded_labeled_asset(p, loaded));
+        scripts.push(load_context.add_labeled_asset(p, script_asset));
+    }
     let state = pico8::Pico8Asset {
-#[cfg(feature = "scripting")]
-                // code: config.code.map(|p| load_context.loader().with_settings(LuaLoaderSettings::default()).load(&*p)),
-                scripts: config.scripts.into_iter().map(|p| load_context.load(&*p)).collect(),
+        #[cfg(feature = "scripting")]
+                scripts,
                 palettes,
                 border: load_context.loader()
                                     .with_settings(pixel_art_settings)

@@ -1,6 +1,6 @@
 #![allow(deprecated)]
 use bevy::{
-    asset::AssetPath,
+    asset::{AssetPath, io::AssetSourceId},
     image::ImageSampler,
     prelude::*,
     reflect::Reflect,
@@ -16,7 +16,7 @@ use bevy::{
 #[cfg(feature = "scripting")]
 use bevy_mod_scripting::{
     core::{
-        asset::{Language, ScriptAsset, ScriptAssetSettings},
+        asset::{Language, ScriptAsset, ScriptAssetSettings, AssetPathToScriptIdMapper},
         bindings::{function::namespace::NamespaceBuilder},
         callback_labels,
         event::{Recipients, ScriptCallbackEvent, CallbackLabel},
@@ -328,6 +328,9 @@ impl Plugin for Nano9Plugin {
                         .extension_to_language_map
                         .insert("p8", Language::Lua);
 
+                    // settings
+                    //     .extension_to_language_map
+                    //     .insert("toml", Language::Lua);
                     settings
                         .extension_to_language_map
                         .insert("p8lua", Language::Lua);
@@ -338,9 +341,13 @@ impl Plugin for Nano9Plugin {
                     settings
                         .extension_to_language_map
                         .insert("png", Language::Lua);
-                    // settings.script_id_mapper = AssetPathToScriptIdMapper {
-                    //     map: (|path: &AssetPath| path.to_string().into()),
-                    // };
+                    settings.script_id_mapper = AssetPathToScriptIdMapper {
+                        map: (|path: &AssetPath|
+                              path.clone_owned().with_source(AssetSourceId::Default)
+                              .to_string().into()
+                              // path.to_string().into()
+                        ),
+                    };
                     settings
                 });
         }
