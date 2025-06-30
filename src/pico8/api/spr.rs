@@ -104,6 +104,33 @@ pub enum SprHandle {
 }
 
 impl super::Pico8<'_, '_> {
+    pub fn sprite_sheet(&self, sheet_index: Option<usize>) -> Result<&SpriteSheet, Error> {
+        let sheet_index = sheet_index.unwrap_or(0);
+        let handle = self.pico8_asset()?.sprite_sheets.get(sheet_index).ok_or_else(|| Error::NoSuch("sprite sheet handle".into()))?;
+        self.sprite_sheets.get(&*handle).ok_or_else(|| Error::NoSuch("sprite sheet asset".into()))
+    }
+
+    pub fn sprite_sheet_mut(&mut self, sheet_index: Option<usize>) -> Result<&mut SpriteSheet, Error> {
+        let sheet_index = sheet_index.unwrap_or(0);
+        let handle = self.pico8_asset()?.sprite_sheets.get(sheet_index).ok_or_else(|| Error::NoSuch("sprite sheet handle".into()))?;
+        self.sprite_sheets.get_mut(&*handle).ok_or_else(|| Error::NoSuch("sprite sheet asset".into()))
+    }
+
+    // fn sprite_sheet(&self, sheet_index: Option<usize>) -> Result<&SpriteSheet, Error> {
+    //     let index = sheet_index.unwrap_or(0);
+    //     self.pico8_asset()?
+    //         .sprite_sheets
+    //         .get(index)
+    //         .ok_or(Error::NoSuch(format!("image index {index}").into()))
+    // }
+
+    // fn sprite_sheet_mut(&mut self, sheet_index: Option<usize>) -> Result<&mut SpriteSheet, Error> {
+    //     let index = sheet_index.unwrap_or(0);
+    //     self.pico8_asset_mut()?
+    //         .sprite_sheets
+    //         .get_mut(index)
+    //         .ok_or(Error::NoSuch(format!("image index {index}").into()))
+    // }
     /// sspr( sx, sy, sw, sh, dx, dy, [dw,] [dh,] [flip_x,] [flip_y,] [sheet_index])
     pub fn sspr(
         &mut self,
@@ -115,7 +142,7 @@ impl super::Pico8<'_, '_> {
     ) -> Result<Entity, Error> {
         let mut screen_pos = pixel_snap(self.state.draw_state.apply_camera_delta(screen_pos));
         screen_pos.y = negate_y(screen_pos.y);
-        let sheet_index = sheet_index.unwrap_or(0);
+        // let sheet_index = sheet_index.unwrap_or(0);
 
         let hash = {
             let mut hasher = DefaultHashBuilder::default().build_hasher();
@@ -135,12 +162,7 @@ impl super::Pico8<'_, '_> {
         if let Some(id) = self.resurrect(hash, screen_pos) {
             return Ok(id);
         }
-        let sheet = self
-            .pico8_asset()?
-            .sprite_sheets
-            .get(sheet_index)
-            .ok_or(Error::NoSuch(format!("image {sheet_index}").into()))?
-            .clone();
+        let sheet = self.sprite_sheet(sheet_index)?;
         let mut gfx_handle = None;
         let sprite = Sprite {
             image: match sheet.handle {
@@ -187,21 +209,6 @@ impl super::Pico8<'_, '_> {
             .ok_or(Error::NoSuch("Pico8Asset".into()))
     }
 
-    fn sprite_sheet(&self, sheet_index: Option<usize>) -> Result<&SpriteSheet, Error> {
-        let index = sheet_index.unwrap_or(0);
-        self.pico8_asset()?
-            .sprite_sheets
-            .get(index)
-            .ok_or(Error::NoSuch(format!("image index {index}").into()))
-    }
-
-    fn sprite_sheet_mut(&mut self, sheet_index: Option<usize>) -> Result<&mut SpriteSheet, Error> {
-        let index = sheet_index.unwrap_or(0);
-        self.pico8_asset_mut()?
-            .sprite_sheets
-            .get_mut(index)
-            .ok_or(Error::NoSuch(format!("image index {index}").into()))
-    }
 
     /// spr(n, [x,] [y,] [w,] [h,] [flip_x,] [flip_y])
     pub fn spr(

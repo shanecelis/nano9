@@ -36,6 +36,7 @@ pub struct Pico8<'w, 's> {
     pub(crate) clear_cache: ResMut<'w, ClearCache>,
     pub(crate) gfx_sprites: Query<'w, 's, &'static mut GfxSprite>,
     pub(crate) gfx_materials: ResMut<'w, Assets<GfxMaterial>>,
+    pub(crate) sprite_sheets: ResMut<'w, Assets<SpriteSheet>>,
 }
 
 impl Pico8<'_, '_> {

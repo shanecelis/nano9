@@ -1,5 +1,5 @@
 pub use super::{
-    config::{run_pico8_when_loaded, Config, ConfigError, SpriteSheet},
+    config::{run_pico8_when_loaded, Config, ConfigError},
     run::RunState,
     pico8::Pico8,
     PColor,

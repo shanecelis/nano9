@@ -1,0 +1,215 @@
+use bevy::{
+    asset::{io::{AssetSourceId, Reader, VecReader}, AssetLoader, AssetPath, LoadContext},
+
+    image::{ImageLoaderSettings, ImageSampler},
+    prelude::*,
+};
+use crate::{
+    pico8::{self, SprHandle, Palette, Gfx, image::image_sampler}
+};
+
+#[derive(Debug, Clone, Reflect, Asset)]
+pub struct SpriteSheet {
+    pub handle: SprHandle,
+    pub layout: Handle<TextureAtlasLayout>,
+    pub sprite_size: UVec2,
+    pub flags: Vec<u8>,
+    pub palette: Option<Palette>,
+}
+
+#[derive(Default)]
+pub struct SpriteSheetLoader;
+
+#[derive(Default, serde::Serialize, serde::Deserialize)]
+pub struct SpriteSheetSettings {
+    pub index_color: Option<bool>,
+    pub extract_palette: bool,
+    pub sprite_size: Option<UVec2>,
+    pub sprite_counts: Option<UVec2>,
+    pub padding: Option<UVec2>,
+    pub offset: Option<UVec2>,
+    pub sampler: Option<ImageSampler>,
+}
+
+pub(crate) fn plugin(app: &mut App) {
+    app
+        .init_asset::<SpriteSheet>();
+}
+
+#[derive(Debug, thiserror::Error)]
+pub enum SpriteSheetError {
+    #[error("Could not read str: {0}")]
+    Utf8(#[from] std::str::Utf8Error),
+    #[error("io error: {0}")]
+    Io(#[from] std::io::Error),
+    #[error("Could not read asset: {0}")]
+    AssetBytes(#[from] bevy::asset::ReadAssetBytesError),
+    #[error("Decoding error: {0}")]
+    Decoding(#[from] png::DecodingError),
+    #[error("image ({image_size:?}) does not fit sprite size {sprite_size:?}")]
+    InvalidSpriteSize {
+        image_size: UVec2,
+        sprite_size: UVec2,
+    },
+    #[error("image ({image_size:?}) does not fit sprite counts {sprite_counts:?}")]
+    InvalidSpriteCounts {
+        image_size: UVec2,
+        sprite_counts: UVec2,
+    },
+    #[error("Could not load dependency: {0}")]
+    Load(#[from] bevy::asset::LoadDirectError),
+}
+
+impl AssetLoader for SpriteSheetLoader {
+    type Asset = SpriteSheet;
+    type Settings = SpriteSheetSettings;
+    type Error = SpriteSheetError;
+
+    async fn load(
+        &self,
+        reader: &mut dyn Reader,
+        settings: &Self::Settings,
+        load_context: &mut LoadContext<'_>,
+    ) -> Result<Self::Asset, Self::Error> {
+        let mut bytes = Vec::new();
+        let _ = reader.read_to_end(&mut bytes).await?;
+        let extension = load_context.path().extension().and_then(|x| x.to_str()).unwrap_or_default();
+        let index_color = settings.index_color.unwrap_or_else(|| extension == "p8");
+        let mut extract_palette = None;
+        let mut sprite_size = settings.sprite_size.clone();
+        let (handle, layout_maybe) = if index_color {
+            match extension {
+                "p8" => {
+                    todo!()
+                }
+                "png" => {
+                    let mut palette = pico8::Palette::default();
+                    let is_extract = settings.extract_palette;
+                    let gfx = Gfx::from_png(&bytes, is_extract.then_some(&mut palette))?;
+                    if is_extract {
+                        trace!("Extract palette from image {:?}", &palette);
+                        extract_palette = Some(palette);
+                    }
+                    let image_size = UVec2::new(gfx.width as u32, gfx.height as u32);
+                    let layout = get_layout(
+                        image_size,
+                        &mut sprite_size,
+                        settings.sprite_counts,
+                        settings.padding,
+                        settings.offset,
+                    )?
+                        .map(|layout| load_context.add_labeled_asset(format!("atlas"), layout));
+                    (
+                        pico8::SprHandle::Gfx(
+                            load_context.add_labeled_asset(format!("gfx"), gfx),
+                        ),
+                        layout,
+                    )
+                }
+                x => {
+                    panic!("Can't load {:?} as sprite sheet.", load_context.path().display());
+                }
+            }
+        } else {
+            let sampler = settings.sampler.clone().or_else(|| image_sampler());
+
+            let mut reader = VecReader::new(bytes);
+            let path = load_context.asset_path().clone_owned();
+            let loaded = load_context
+                .loader()
+                .immediate()
+                .with_reader(&mut reader)
+                .with_settings(move |settings: &mut ImageLoaderSettings| {
+                    if let Some(sampler) = &sampler {
+                        settings.sampler = sampler.clone();
+                    }
+                })
+                .load::<Image>(path)
+                .await?;
+            let image_size = loaded.get().size();
+            let layout = get_layout(
+                image_size,
+                &mut sprite_size,
+                settings.sprite_counts,
+                settings.padding,
+                settings.offset,
+            )?
+            .map(|layout| load_context.add_labeled_asset(format!("atlas"), layout));
+
+            (
+                pico8::SprHandle::Image(
+                    load_context.add_loaded_labeled_asset(format!("image"), loaded),
+                ),
+                layout,
+            )
+        };
+        Ok(pico8::SpriteSheet {
+            handle,
+            sprite_size: sprite_size.expect("computed sprite size"),
+            flags: vec![], // TODO!
+            layout: layout_maybe.unwrap_or(Handle::default()),
+            palette: extract_palette,
+        })
+    }
+
+    fn extensions(&self) -> &[&str] {
+        // This can load "lua" files, but bevy_mod_scripting has a loader as
+        // well, so having it here generates a warning. We don't need to load
+        // .lua files ourselves, so we're dropping it.
+
+        // static EXTENSIONS: &[&str] = &["lua", "p8lua"];
+        static EXTENSIONS: &[&str] = &["png", "p8"];
+        EXTENSIONS
+    }
+}
+
+fn get_layout(
+    image_size: UVec2,
+    sprite_size: &mut Option<UVec2>,
+    sprite_counts: Option<UVec2>,
+    padding: Option<UVec2>,
+    offset: Option<UVec2>,
+) -> Result<Option<TextureAtlasLayout>, SpriteSheetError> {
+    if let Some((size, counts)) = sprite_size.zip(sprite_counts) {
+        Ok(Some(TextureAtlasLayout::from_grid(
+            size, counts.x, counts.y, padding, offset,
+        )))
+    } else if let Some(sprite_size) = *sprite_size {
+        let counts = image_size / sprite_size;
+        let remainders = image_size % sprite_size;
+        if remainders == UVec2::ZERO {
+            Ok(Some(TextureAtlasLayout::from_grid(
+                sprite_size,
+                counts.x,
+                counts.y,
+                padding,
+                offset,
+            )))
+        } else {
+            Err(SpriteSheetError::InvalidSpriteSize {
+                image_size,
+                sprite_size,
+            })
+        }
+    } else if let Some(sprite_counts) = sprite_counts {
+        let size = image_size / sprite_counts;
+        *sprite_size = Some(size);
+        let remainders = image_size % sprite_counts;
+        if remainders == UVec2::ZERO {
+            Ok(Some(TextureAtlasLayout::from_grid(
+                size,
+                sprite_counts.x,
+                sprite_counts.y,
+                padding,
+                offset,
+            )))
+        } else {
+            Err(SpriteSheetError::InvalidSpriteCounts {
+                image_size,
+                sprite_counts,
+            })
+        }
+    } else {
+        Ok(None)
+    }
+}

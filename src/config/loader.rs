@@ -295,65 +295,66 @@ async fn into_asset(
         // } else if sheet.path.extension() == Some(OsStr::new("p8")) {
         //     todo!()
         // } else {
-        let (handle, layout_maybe) = if sheet.index_color {
-            // XXX: This should be simple! There's another loader here we need to strip out.
-            //
-            // Do I need an SprImage Asset that holds a Gfx or an Image?
-            let bytes = load_context.read_asset_bytes(&*sheet.path).await?;
-            let mut palette = pico8::Palette::default();
-            let is_extract = sheet.extract_palette;
-            let gfx = Gfx::from_png(&bytes, is_extract.then_some(&mut palette))?;
-            if is_extract {
-                trace!("Extract palette {} from image {:?}", palettes.len(), &palette);
-                palettes.push(palette);
-            }
-            let image_size = UVec2::new(gfx.width as u32, gfx.height as u32);
-            let layout = get_layout(
-                i,
-                image_size,
-                &mut sheet.sprite_size,
-                sheet.sprite_counts,
-                sheet.padding,
-                sheet.offset,
-            )?
-            .map(|layout| load_context.add_labeled_asset(format!("atlas{i}"), layout));
-            (
-                pico8::SprHandle::Gfx(
-                    load_context.add_labeled_asset(format!("spritesheet{i}"), gfx),
-                ),
-                layout,
-            )
-        } else {
-            let loaded = load_context
-                .loader()
-                .immediate()
-                .with_settings(pixel_art_settings)
-                .load::<Image>(&*sheet.path)
-                .await?;
-            let image_size = loaded.get().size();
-            let layout = get_layout(
-                i,
-                image_size,
-                &mut sheet.sprite_size,
-                sheet.sprite_counts,
-                sheet.padding,
-                sheet.offset,
-            )?
-            .map(|layout| load_context.add_labeled_asset(format!("atlas{i}"), layout));
+        todo!()
+        // let (handle, layout_maybe) = if sheet.index_color {
+        //     // XXX: This should be simple! There's another loader here we need to strip out.
+        //     //
+        //     // Do I need an SprImage Asset that holds a Gfx or an Image?
+        //     let bytes = load_context.read_asset_bytes(&*sheet.path).await?;
+        //     let mut palette = pico8::Palette::default();
+        //     let is_extract = sheet.extract_palette;
+        //     let gfx = Gfx::from_png(&bytes, is_extract.then_some(&mut palette))?;
+        //     if is_extract {
+        //         trace!("Extract palette {} from image {:?}", palettes.len(), &palette);
+        //         palettes.push(palette);
+        //     }
+        //     let image_size = UVec2::new(gfx.width as u32, gfx.height as u32);
+        //     let layout = get_layout(
+        //         i,
+        //         image_size,
+        //         &mut sheet.sprite_size,
+        //         sheet.sprite_counts,
+        //         sheet.padding,
+        //         sheet.offset,
+        //     )?
+        //     .map(|layout| load_context.add_labeled_asset(format!("atlas{i}"), layout));
+        //     (
+        //         pico8::SprHandle::Gfx(
+        //             load_context.add_labeled_asset(format!("spritesheet{i}"), gfx),
+        //         ),
+        //         layout,
+        //     )
+        // } else {
+        //     let loaded = load_context
+        //         .loader()
+        //         .immediate()
+        //         .with_settings(pixel_art_settings)
+        //         .load::<Image>(&*sheet.path)
+        //         .await?;
+        //     let image_size = loaded.get().size();
+        //     let layout = get_layout(
+        //         i,
+        //         image_size,
+        //         &mut sheet.sprite_size,
+        //         sheet.sprite_counts,
+        //         sheet.padding,
+        //         sheet.offset,
+        //     )?
+        //     .map(|layout| load_context.add_labeled_asset(format!("atlas{i}"), layout));
 
-            (
-                pico8::SprHandle::Image(
-                    load_context.add_loaded_labeled_asset(format!("spritesheet{i}"), loaded),
-                ),
-                layout,
-            )
-        };
-        sprite_sheets.push(pico8::SpriteSheet {
-            handle,
-            sprite_size: sheet.sprite_size.unwrap_or(UVec2::splat(8)),
-            flags: vec![],
-            layout: layout_maybe.unwrap_or(Handle::default()),
-        })
+        //     (
+        //         pico8::SprHandle::Image(
+        //             load_context.add_loaded_labeled_asset(format!("spritesheet{i}"), loaded),
+        //         ),
+        //         layout,
+        //     )
+        // };
+        // sprite_sheets.push(pico8::SpriteSheet {
+        //     handle,
+        //     sprite_size: sheet.sprite_size.unwrap_or(UVec2::splat(8)),
+        //     flags: vec![],
+        //     layout: layout_maybe.unwrap_or(Handle::default()),
+        // })
         // }
     }
     let mut scripts = vec![];
@@ -449,56 +450,3 @@ async fn into_asset(
     Ok(state)
 }
 
-fn get_layout(
-    image_index: usize,
-    image_size: UVec2,
-    sprite_size: &mut Option<UVec2>,
-    sprite_counts: Option<UVec2>,
-    padding: Option<UVec2>,
-    offset: Option<UVec2>,
-) -> Result<Option<TextureAtlasLayout>, ConfigError> {
-    if let Some((size, counts)) = sprite_size.zip(sprite_counts) {
-        Ok(Some(TextureAtlasLayout::from_grid(
-            size, counts.x, counts.y, padding, offset,
-        )))
-    } else if let Some(sprite_size) = *sprite_size {
-        let counts = image_size / sprite_size;
-        let remainders = image_size % sprite_size;
-        if remainders == UVec2::ZERO {
-            Ok(Some(TextureAtlasLayout::from_grid(
-                sprite_size,
-                counts.x,
-                counts.y,
-                padding,
-                offset,
-            )))
-        } else {
-            Err(ConfigError::InvalidSpriteSize {
-                image_index,
-                image_size,
-                sprite_size,
-            })
-        }
-    } else if let Some(sprite_counts) = sprite_counts {
-        let size = image_size / sprite_counts;
-        *sprite_size = Some(size);
-        let remainders = image_size % sprite_counts;
-        if remainders == UVec2::ZERO {
-            Ok(Some(TextureAtlasLayout::from_grid(
-                size,
-                sprite_counts.x,
-                sprite_counts.y,
-                padding,
-                offset,
-            )))
-        } else {
-            Err(ConfigError::InvalidSpriteCounts {
-                image_index,
-                image_size,
-                sprite_counts,
-            })
-        }
-    } else {
-        Ok(None)
-    }
-}
