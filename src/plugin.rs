@@ -16,7 +16,7 @@ use bevy::{
 #[cfg(feature = "scripting")]
 use bevy_mod_scripting::{
     core::{
-        asset::{Language, ScriptAsset, ScriptAssetSettings, AssetPathToScriptIdMapper},
+        asset::{Language, ScriptAsset},
         bindings::{function::namespace::NamespaceBuilder},
         callback_labels,
         event::{Recipients, ScriptCallbackEvent, CallbackLabel},
@@ -129,8 +129,8 @@ pub fn send(label: impl Into<CallbackLabel>) -> impl Fn(EventWriter<ScriptCallba
                 writer.send(ScriptCallbackEvent::new(
                     label.clone(),
                     vec![],
-                    // Recipients::Entity(id)
-                    Recipients::Script("main.lua".into())
+                    Recipients::All,
+                    // Recipients::Script("main.lua".into())
                 ));
             }
             None => {
@@ -280,7 +280,7 @@ impl Plugin for Nano9Plugin {
             lua_scripting_plugin
                 .scripting_plugin
                 .add_context_initializer(
-                    |_script_id: &str, context: &mut bevy_mod_scripting::lua::mlua::Lua| {
+                    |_script_id: &Handle<ScriptAsset>, context: &mut bevy_mod_scripting::lua::mlua::Lua| {
                         context.globals().set(
                             "_eval_string",
                             context.create_function(|ctx, arg: String| {
@@ -319,39 +319,7 @@ impl Plugin for Nano9Plugin {
             //         },
             //     );
 
-            app.add_plugins(BMSPlugin.set(lua_scripting_plugin))
-                .insert_resource({
-                    let mut settings = ScriptAssetSettings::default();
-                    // settings
-                    //     .extension_to_language_map
-                    //     .insert("p8#lua", Language::Lua);
-                    settings
-                        .extension_to_language_map
-                        .insert("p8", Language::Lua);
-
-                    // settings
-                    //     .extension_to_language_map
-                    //     .insert("toml", Language::Lua);
-                    settings
-                        .extension_to_language_map
-                        .insert("p8lua", Language::Lua);
-
-                    // settings
-                    //     .extension_to_language_map
-                    //     .insert("png#lua", Language::Lua);
-                    settings
-                        .extension_to_language_map
-                        .insert("png", Language::Lua);
-                    settings.script_id_mapper = AssetPathToScriptIdMapper {
-                        map: (|path: &AssetPath|
-                              path.label().map(|x| x.to_string().into()).unwrap_or(path.path().to_string_lossy().into_owned().into())
-                              // path.clone_owned().with_source(AssetSourceId::Default)
-                              // .to_string().into()
-                              // path.to_string().into()
-                        ),
-                    };
-                    settings
-                });
+            app.add_plugins(BMSPlugin.set(lua_scripting_plugin));
         }
         // let resolution = settings.canvas_size.as_vec2() * settings.pixel_scale;
         app.insert_resource(bevy::winit::WinitSettings {

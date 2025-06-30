@@ -1,9 +1,15 @@
 use super::*;
 
+pub(crate) fn plugin(app: &mut App) {
+    app
+        .init_asset::<SpriteSheet>();
+}
+
 #[derive(Clone, Asset, Debug, Reflect)]
 pub struct Pico8Asset {
     #[cfg(feature = "scripting")]
     pub scripts: Vec<Handle<bevy_mod_scripting::core::asset::ScriptAsset>>,
+    // this palette is given away and not actually used here.
     pub(crate) palettes: Vec<Palette>,
     pub(crate) border: Handle<Image>,
     pub(crate) sprite_sheets: Vec<SpriteSheet>,
@@ -17,7 +23,7 @@ pub struct N9Font {
     pub handle: Handle<Font>,
 }
 
-#[derive(Debug, Clone, Reflect)]
+#[derive(Debug, Clone, Reflect, Asset)]
 pub struct SpriteSheet {
     pub handle: SprHandle,
     pub layout: Handle<TextureAtlasLayout>,

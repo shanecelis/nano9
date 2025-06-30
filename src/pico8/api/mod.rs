@@ -71,7 +71,10 @@ pub(crate) fn plugin(app: &mut App) {
         .init_asset::<Pico8Asset>()
         .init_resource::<Pico8State>()
         .init_resource::<PlayerInputs>()
-        .add_plugins(rand::plugin)
+        .add_plugins((
+            rand::plugin,
+            asset::plugin,
+        ))
         .add_plugins((
             sfx::plugin,
             spr::plugin,

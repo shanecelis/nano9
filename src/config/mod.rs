@@ -15,7 +15,7 @@ use bevy::{
 #[cfg(feature = "scripting")]
 use bevy_mod_scripting::core::{
     event::Recipients,
-    asset::{ScriptAsset, ScriptAssetSettings}, script::ScriptComponent};
+    asset::{ScriptAsset}, script::ScriptComponent};
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 use merge2::Merge;
@@ -222,7 +222,6 @@ pub fn update_asset(
     mut palettes: ResMut<Palettes>,
     mut pico8_handle: Option<ResMut<Pico8Handle>>,
     #[cfg(feature = "scripting")] mut commands: Commands,
-    #[cfg(feature = "scripting")] script_settings: Res<ScriptAssetSettings>,
     #[cfg(feature = "scripting")] mut scripts: ResMut<Assets<ScriptAsset>>,
 ) {
     for e in reader.read() {
@@ -244,19 +243,10 @@ pub fn update_asset(
                     #[cfg(feature = "scripting")]
                     {
                         if !pico8_asset.scripts.is_empty() && pico8_handle.main_script.is_none() {
-                            let mut paths: Vec<_> = pico8_asset.scripts.iter()
-                                .map(|script| {
-                                    let path: &AssetPath<'static> = script.path().unwrap();
-                                    let script_path = (script_settings.script_id_mapper.map)(path);
-                                    info!("Add script component path {}", &script_path);
-                                    script_path
-                                }).collect();
-
-                            pico8_handle.main_script = Some(Recipients::Script(paths.last().unwrap().to_string().into()));
-                            if ! paths.is_empty() {
-                                // Spawn another script component for the libraries.
-                                commands.spawn(ScriptComponent(paths));
-                            }
+                            // pico8_handle.main_script = Some(Recipients::All);
+                            // Spawn another script component for the libraries.
+                            let entity = commands.spawn(ScriptComponent(pico8_asset.scripts.clone())).id();
+                            pico8_handle.main_script = Some(Recipients::Entity(entity));
                         }
                     }
                     info!("Goto Loaded state");

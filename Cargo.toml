@@ -94,7 +94,7 @@ pico8-to-lua = { path = "../pico8-to-lua" }
 # bevy = { path = "../bevy" }
 # bevy_ecs = { path = "../bevy/crates/bevy_ecs" }
 # bevy_ecs_tiled = { path = "../bevy_ecs_tiled" }
-# bevy_mod_scripting = { path = "../bevy_mod_scripting" }
+bevy_mod_scripting = { path = "../bevy_mod_scripting" }
 bevy_minibuffer = { path = "../bevy_minibuffer" }
 # bevy_asky = { path = "../bevy_asky" }
 # bevy_ecs_ldtk = { path = "../bevy_ecs_ldtk" }

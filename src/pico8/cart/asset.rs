@@ -3,7 +3,7 @@ use bevy::asset::{io::Reader, AssetLoader, LoadContext};
 
 use super::*;
 #[cfg(feature = "scripting")]
-use bevy_mod_scripting::core::asset::ScriptAsset;
+use bevy_mod_scripting::core::asset::{Language, ScriptAsset};
 use std::path::PathBuf;
 
 pub(crate) fn plugin(app: &mut App) {
@@ -60,7 +60,7 @@ impl AssetLoader for P8LuaAssetLoader {
         let code = cart.lua;
         Ok(ScriptAsset {
             content: code.into_bytes().into_boxed_slice(),
-            asset_path: code_path.into(),
+            language: Language::Lua,
         })
     }
 
@@ -119,7 +119,7 @@ fn to_asset(cart: Cart, load_context: &mut LoadContext) -> Result<Pico8Asset, Ca
             vec![
                 load_context.add_labeled_asset("lua".into(), ScriptAsset {
                     content: code.into_bytes().into_boxed_slice(),
-                    asset_path: code_path.into(),
+                    language: Language::Lua,
                 }),
             ]
         } else {
