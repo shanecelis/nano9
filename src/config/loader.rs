@@ -296,6 +296,9 @@ async fn into_asset(
         //     todo!()
         // } else {
         let (handle, layout_maybe) = if sheet.index_color {
+            // XXX: This should be simple! There's another loader here we need to strip out.
+            //
+            // Do I need an SprImage Asset that holds a Gfx or an Image?
             let bytes = load_context.read_asset_bytes(&*sheet.path).await?;
             let mut palette = pico8::Palette::default();
             let is_extract = sheet.extract_palette;
@@ -361,11 +364,52 @@ async fn into_asset(
             .loader()
             .immediate()
             .load(&*p).await?;
-        let mut script_asset: ScriptAsset = loaded.take();
-        let label =  script_asset.asset_path.path().to_string_lossy().into_owned();
-        script_asset.asset_path = load_context.asset_path().clone_owned().with_source(AssetSourceId::Default).with_label(label);
-        // scripts.push(load_context.add_loaded_labeled_asset(p, loaded));
-        scripts.push(load_context.add_labeled_asset(p, script_asset));
+        // let mut script_asset: ScriptAsset = loaded.take();
+        // let label =  script_asset.asset_path.path().to_string_lossy().into_owned();
+        // script_asset.asset_path = load_context.asset_path().clone_owned().with_source(AssetSourceId::Default).with_label(label);
+        scripts.push(load_context.add_loaded_labeled_asset(p, loaded));
+        // scripts.push(load_context.add_labeled_asset(p, script_asset));
+    }
+
+    let mut maps: Vec<pico8::SpriteMap> = Vec::with_capacity(config.maps.len());
+    for map in config.maps {
+        let extension = map.path.extension().and_then(|s| s. to_str());
+        if let Some(ext) = extension {
+            let p8map = match ext {
+                "p8" => {
+                    let bytes = load_context.read_asset_bytes(map.path).await?;
+                    let content = std::str::from_utf8(&bytes)?;
+                    let settings = pico8::CartLoaderSettings::default();
+                    let mut cart = pico8::Cart::from_str(content, &settings)?;
+                    cart.map.resize(128 * 64, 0);
+                    Ok(pico8::P8Map {
+                        entries: cart.map,
+                        sheet_index: 0, // XXX: This is not true for every map.
+                    }.into())
+                },
+                // "tmx" => {
+                //     #[cfg(feature = "level")]
+                //     return Ok(level::Tiled::SpriteMap {
+                //         handle: load_context.load(&*map.path),
+                //     }.into());
+                //     #[cfg(not(feature = "level"))]
+                //     Err(ConfigError::Message(format!("The map {:?} is a Tiled map; consider using the '--features=level' flag.", &map.path)))
+                // }
+                // "world" => {
+                //     #[cfg(feature = "level")]
+                //     return Ok(level::Tiled::World {
+                //         handle: load_context.load(&*map.path),
+                //     }.into());
+                //     #[cfg(not(feature = "level"))]
+                //     Err(ConfigError::Message(format!("The map {:?} is a Tiled world; consider using the '--features=level' flag.", &map.path)))
+                // }
+                _ => Err(ConfigError::Message(format!("Unknown map format {:?}", &map.path)))
+            }?;
+            maps.push(p8map);
+            Ok(())
+        } else {
+            Err(ConfigError::Message(format!("The map path {:?} did not have an extension.", &map.path)))
+        }?
     }
     let state = pico8::Pico8Asset {
         #[cfg(feature = "scripting")]
@@ -374,33 +418,7 @@ async fn into_asset(
                 border: load_context.loader()
                                     .with_settings(pixel_art_settings)
                                     .load(pico8::PICO8_BORDER),
-                maps: config.maps.into_iter().map(|map| {
-                    let extension = map.path.extension().and_then(|s| s. to_str());
-                    if let Some(ext) = extension {
-                        match ext {
-                            "p8" => todo!(),
-                            "tmx" => {
-                                    #[cfg(feature = "level")]
-                                    return Ok(level::Tiled::SpriteMap {
-                                        handle: load_context.load(&*map.path),
-                                    }.into());
-                                    #[cfg(not(feature = "level"))]
-                                    Err(ConfigError::Message(format!("The map {:?} is a Tiled map; consider using the '--features=level' flag.", &map.path)))
-                            }
-                            "world" => {
-                                    #[cfg(feature = "level")]
-                                    return Ok(level::Tiled::World {
-                                        handle: load_context.load(&*map.path),
-                                    }.into());
-                                    #[cfg(not(feature = "level"))]
-                                    Err(ConfigError::Message(format!("The map {:?} is a Tiled world; consider using the '--features=level' flag.", &map.path)))
-                            }
-                            _ => Err(ConfigError::Message(format!("Unknown map format {:?}", &map.path)))
-                        }
-                    } else {
-                        Err(ConfigError::Message(format!("The map path {:?} did not have an extension.", &map.path)))
-                    }
-                }).collect::<Result<Vec<_>, _>>()?,
+                maps,
                 audio_banks: config.audio_banks.into_iter().map(|bank| pico8::audio::AudioBank(match bank {
                     AudioBank::P8 { p8, count } => {
                             (0..count).map(|i|

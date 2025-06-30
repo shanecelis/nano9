@@ -84,7 +84,7 @@ impl super::Pico8<'_, '_> {
         match *map {
             SpriteMap::P8(ref map) => {
                 let i = (pos.x as u32 + pos.y as u32 * MAP_COLUMNS) as usize;
-                Ok(*map.get(i).ok_or_else(|| Error::NoSuch(format!("map index {i}{}", if i > 0x1000 { "; consider using the '--shared-data=map' argument." } else { "" }).into()))? as usize)
+                Ok(*map.get(i).ok_or_else(|| Error::NoSuch(format!("map index {i} with length {} {}", map.len(), if i > 0x1000 { "; consider using the '--shared-data=map' argument." } else { "" }).into()))? as usize)
             }
 
             #[cfg(feature = "level")]

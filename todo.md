@@ -12,6 +12,8 @@
 - [x] Revert change to readonly sprite sheets
 - [x] place gfx_material() on impl Pico8 directly.
 - [ ] Remove dbg!s()
+- [ ] Make sprites loadable from .p8 files.
+- [ ] Fix no flags present for platformer.
       
 - [x] Use Gfx for background pset() colors.
       Don't overwrite all colors unless it's marked dirty.

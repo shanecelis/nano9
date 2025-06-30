@@ -13,7 +13,9 @@ use bevy::{
     prelude::*,
 };
 #[cfg(feature = "scripting")]
-use bevy_mod_scripting::core::{asset::ScriptAssetSettings, script::ScriptComponent};
+use bevy_mod_scripting::core::{
+    event::Recipients,
+    asset::{ScriptAsset, ScriptAssetSettings}, script::ScriptComponent};
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 use merge2::Merge;
@@ -221,6 +223,7 @@ pub fn update_asset(
     mut pico8_handle: Option<ResMut<Pico8Handle>>,
     #[cfg(feature = "scripting")] mut commands: Commands,
     #[cfg(feature = "scripting")] script_settings: Res<ScriptAssetSettings>,
+    #[cfg(feature = "scripting")] mut scripts: ResMut<Assets<ScriptAsset>>,
 ) {
     for e in reader.read() {
         // TODO: This next line is a bit noisy but reveals a lot of asset
@@ -248,8 +251,8 @@ pub fn update_asset(
                                     info!("Add script component path {}", &script_path);
                                     script_path
                                 }).collect();
-                            pico8_handle.main_script =
-                                Some(commands.spawn(ScriptComponent(vec![paths.pop().unwrap()])).id());
+
+                            pico8_handle.main_script = Some(Recipients::Script(paths.last().unwrap().to_string().into()));
                             if ! paths.is_empty() {
                                 // Spawn another script component for the libraries.
                                 commands.spawn(ScriptComponent(paths));

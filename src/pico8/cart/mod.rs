@@ -79,8 +79,16 @@ pub(crate) const PALETTE: [[u8; 4]; 16] = [
     [0xff, 0xcc, 0xaa, 0xff], //light-peach
 ];
 
+
+// impl std::str::FromStr for Cart {
+//     type Err = CartLoaderError;
+//     fn from_str(s: &str) -> Result<Self, Self::Err> {
+//         Ok(toml::from_str::<Config>(s)?)
+//     }
+// }
+
 impl Cart {
-    fn from_str(content: &str, settings: &CartLoaderSettings) -> Result<Cart, CartLoaderError> {
+    pub fn from_str(content: &str, settings: &CartLoaderSettings) -> Result<Cart, CartLoaderError> {
         const LUA: usize = 0;
         const GFX: usize = 1;
         const GFF: usize = 3;

@@ -118,18 +118,19 @@ pub fn fullscreen_key(
 
 #[cfg(feature = "scripting")]
 pub fn send(label: impl Into<CallbackLabel>) -> impl Fn(EventWriter<ScriptCallbackEvent>,
-                                             Option<Res<Pico8Handle>>) {
+                                                        Option<Res<Pico8Handle>>) {
     let label = label.into();
     move |mut writer: EventWriter<ScriptCallbackEvent>,
     maybe_pico8_handle: Option<Res<Pico8Handle>>| {
-        let maybe_id = maybe_pico8_handle.and_then(|pico8_handle| pico8_handle.main_script);
+        let maybe_id = maybe_pico8_handle.and_then(|pico8_handle| pico8_handle.main_script.clone());
 
         match maybe_id {
             Some(id) => {
                 writer.send(ScriptCallbackEvent::new(
                     label.clone(),
                     vec![],
-                    Recipients::Entity(id)
+                    // Recipients::Entity(id)
+                    Recipients::Script("main.lua".into())
                 ));
             }
             None => {
@@ -343,8 +344,9 @@ impl Plugin for Nano9Plugin {
                         .insert("png", Language::Lua);
                     settings.script_id_mapper = AssetPathToScriptIdMapper {
                         map: (|path: &AssetPath|
-                              path.clone_owned().with_source(AssetSourceId::Default)
-                              .to_string().into()
+                              path.label().map(|x| x.to_string().into()).unwrap_or(path.path().to_string_lossy().into_owned().into())
+                              // path.clone_owned().with_source(AssetSourceId::Default)
+                              // .to_string().into()
                               // path.to_string().into()
                         ),
                     };
