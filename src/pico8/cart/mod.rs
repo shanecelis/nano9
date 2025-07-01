@@ -24,7 +24,9 @@ pub enum CartLoaderError {
     #[error("io error: {0}")]
     Io(#[from] std::io::Error),
     #[error("Could not convert to utf-8: {0}")]
-    Utf8(#[from] std::string::FromUtf8Error),
+    Utf8(#[from] std::str::Utf8Error),
+    #[error("Could not convert to utf-8: {0}")]
+    FromUtf8(#[from] std::string::FromUtf8Error),
     #[error("Unexpected header: {0}")]
     UnexpectedHeader(String),
     #[error("Unexpected hexadecimal: {0}")]
@@ -80,14 +82,20 @@ pub(crate) const PALETTE: [[u8; 4]; 16] = [
 ];
 
 
-// impl std::str::FromStr for Cart {
-//     type Err = CartLoaderError;
-//     fn from_str(s: &str) -> Result<Self, Self::Err> {
-//         Ok(toml::from_str::<Config>(s)?)
-//     }
-// }
+impl std::str::FromStr for Cart {
+    type Err = CartLoaderError;
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Cart::from_str(s, &CartLoaderSettings::default())
+    }
+}
 
 impl Cart {
+
+    pub fn from_bytes(bytes: &[u8], settings: &CartLoaderSettings) -> Result<Cart, CartLoaderError> {
+        let content = std::str::from_utf8(bytes)?;
+        Cart::from_str(content, settings)
+    }
+
     pub fn from_str(content: &str, settings: &CartLoaderSettings) -> Result<Cart, CartLoaderError> {
         const LUA: usize = 0;
         const GFX: usize = 1;
@@ -349,8 +357,7 @@ impl AssetLoader for P8CartLoader {
     ) -> Result<Self::Asset, Self::Error> {
         let mut bytes = Vec::new();
         reader.read_to_end(&mut bytes).await?;
-        let content = String::from_utf8(bytes)?;
-        let mut parts = Cart::from_str(&content, settings)?;
+        let mut parts = Cart::from_bytes(&bytes, settings)?;
         #[cfg(feature = "pico8-to-lua")]
         if let Some(patched_code) = translate_pico8_to_lua(&parts.lua, load_context).await? {
             parts.lua = patched_code;

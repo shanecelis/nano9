@@ -33,7 +33,8 @@ pub struct SpriteSheetSettings {
 
 pub(crate) fn plugin(app: &mut App) {
     app
-        .init_asset::<SpriteSheet>();
+        .init_asset::<SpriteSheet>()
+        .init_asset_loader::<SpriteSheetLoader>();
 }
 
 #[derive(Debug, thiserror::Error)]
@@ -58,6 +59,8 @@ pub enum SpriteSheetError {
     },
     #[error("Could not load dependency: {0}")]
     Load(#[from] bevy::asset::LoadDirectError),
+    #[error("Could not load cart: {0}")]
+    Cart(#[from] Box<pico8::CartLoaderError>),
 }
 
 impl AssetLoader for SpriteSheetLoader {
@@ -80,7 +83,25 @@ impl AssetLoader for SpriteSheetLoader {
         let (handle, layout_maybe) = if index_color {
             match extension {
                 "p8" => {
-                    todo!()
+                    let settings = pico8::CartLoaderSettings::default();
+                    let mut parts = pico8::Cart::from_bytes(&bytes, &settings).map_err(Box::new)?;
+                    let gfx = parts.gfx.expect("no gfx in cart");
+                    let image_size = UVec2::new(gfx.width as u32, gfx.height as u32);
+                    sprite_size = Some(UVec2::splat(8));
+                    let layout = get_layout(
+                        image_size,
+                        &mut sprite_size,
+                        None,
+                        None,
+                        None,
+                    )?
+                        .map(|layout| load_context.add_labeled_asset(format!("atlas"), layout));
+                    (
+                        pico8::SprHandle::Gfx(
+                            load_context.add_labeled_asset(format!("gfx"), gfx),
+                        ),
+                        layout,
+                    )
                 }
                 "png" => {
                     let mut palette = pico8::Palette::default();

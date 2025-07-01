@@ -248,9 +248,10 @@ async fn into_asset(
             palettes.push(pico8::Palette::from_image(image.get(), palette.row));
         }
     }
-    let mut sprite_sheets = vec![];
+    let mut sprite_sheets: Vec<Handle<pico8::SpriteSheet>> = vec![];
     for (i, mut sheet) in config.sprite_sheets.into_iter().enumerate() {
-        let handle = load_context.loader()
+        let handle = load_context
+            .loader()
             .with_settings(move |settings: &mut pico8::SpriteSheetSettings| {
                 settings.index_color = sheet.index_color;
                 settings.extract_palette = sheet.extract_palette;
