@@ -1,22 +1,16 @@
 #![allow(deprecated)]
 use bevy::{
-    asset::{AssetPath, io::AssetSourceId},
-    image::ImageSampler,
+    asset::AssetPath,
     prelude::*,
     reflect::Reflect,
-    render::{
-        camera::{ScalingMode, Viewport},
-        render_asset::RenderAssetUsages,
-        render_resource::{Extent3d, TextureDimension, TextureFormat},
-    },
     utils::Duration,
-    window::{PresentMode, PrimaryWindow, WindowMode, WindowResized},
+    window::{PresentMode, PrimaryWindow, WindowMode},
 };
 
 #[cfg(feature = "scripting")]
 use bevy_mod_scripting::{
     core::{
-        asset::{Language, ScriptAsset},
+        asset::ScriptAsset,
         bindings::{function::namespace::NamespaceBuilder},
         callback_labels,
         event::{Recipients, ScriptCallbackEvent, CallbackLabel},
@@ -34,8 +28,6 @@ use crate::{
     PColor,
 };
 
-#[cfg(feature = "scripting")]
-use crate::N9Var;
 
 #[derive(Clone, Debug, Reflect)]
 pub struct DrawState {

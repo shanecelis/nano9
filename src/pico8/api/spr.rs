@@ -107,7 +107,7 @@ impl super::Pico8<'_, '_> {
     pub fn sprite_sheet(&self, sheet_index: Option<usize>) -> Result<&SpriteSheet, Error> {
         let sheet_index = sheet_index.unwrap_or(0);
         let handle = self.pico8_asset()?.sprite_sheets.get(sheet_index).ok_or_else(|| Error::NoSuch("sprite sheet handle".into()))?;
-        self.sprite_sheets.get(&*handle).ok_or_else(|| Error::NoSuch("sprite sheet asset".into()))
+        self.sprite_sheets.get(handle).ok_or_else(|| Error::NoSuch("sprite sheet asset".into()))
     }
 
     pub fn sprite_sheet_mut(&mut self, sheet_index: Option<usize>) -> Result<&mut SpriteSheet, Error> {

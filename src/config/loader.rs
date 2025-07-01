@@ -2,10 +2,10 @@
 use crate::level::{self};
 use crate::{
     config::{self, *},
-    pico8::{self, image::pixel_art_settings, Gfx, Pico8Asset},
+    pico8::{self, image::pixel_art_settings, Pico8Asset},
 };
 use bevy::{
-    asset::{io::{AssetSourceId, Reader}, AssetLoader, AssetPath, LoadContext},
+    asset::{io::Reader, AssetLoader, AssetPath, LoadContext},
     prelude::*,
 };
 #[cfg(feature = "scripting")]
@@ -249,7 +249,7 @@ async fn into_asset(
         }
     }
     let mut sprite_sheets: Vec<Handle<pico8::SpriteSheet>> = vec![];
-    for (i, mut sheet) in config.sprite_sheets.into_iter().enumerate() {
+    for (i, sheet) in config.sprite_sheets.into_iter().enumerate() {
         let handle = load_context
             .loader()
             .with_settings(move |settings: &mut pico8::SpriteSheetSettings| {

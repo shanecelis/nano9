@@ -1,4 +1,4 @@
-use crate::pico8::{self, Clearable, Error, Gfx, GfxMaterial, SprHandle, SpriteSheet};
+use crate::pico8::{self, Error, Gfx, GfxMaterial, SprHandle, SpriteSheet};
 use bevy::prelude::*;
 
 #[cfg(feature = "level")]
@@ -88,7 +88,7 @@ fn add_tilemaps(
         //         clearable,
         //     ))
         //     .id();
-        let mask = p8sprite_map.mask.clone();
+        let mask = p8sprite_map.mask;
         commands
             .entity(tilemap_entity)
             .with_children(|builder| {

@@ -8,9 +8,7 @@ use bevy::{
         render_asset::RenderAssetUsages,
         render_resource::{Extent3d, TextureDimension, TextureFormat},
     },
-    utils::{HashMap, hashbrown::hash_map::DefaultHashBuilder},
-    // platform::hash::DefaultHasher,
-    prelude::*,
+    utils::HashMap,
 };
 use std::{
     collections::VecDeque,
@@ -104,9 +102,9 @@ fn compute_image(gfx_handle: &Handle<Gfx>,
                  gfx_changed: bool,
                  gfx_material: &GfxMaterial,
                  gfxs: &Assets<Gfx>,
-                 mut images: &mut Assets<Image>,
+                 images: &mut Assets<Image>,
                  palettes: &Palettes,
-                 mut pairs: &mut GfxImageMap,
+                 pairs: &mut GfxImageMap,
 ) -> Result<Handle<Image>, Error> {
 
     let my_span = info_span!("gfx::compute_image", name = "function").entered();
@@ -130,7 +128,7 @@ fn compute_image(gfx_handle: &Handle<Gfx>,
                 let my_span = info_span!("gfx::compute_image", name = "update image").entered();
                 let gfx = gfxs.get(gfx_id);
                 // Update existing image.
-                if let Some((gfx, mut image)) = gfx.zip(images.get_mut(*handle)) {
+                if let Some((gfx, image)) = gfx.zip(images.get_mut(*handle)) {
                     trace!("updating image for gfx {}", gfx_id);
                     gfx.write_bytes(
                         &mut image.data,
@@ -199,7 +197,7 @@ fn compute_image_on_asset_event(
         };
         let image_handle = compute_image(&gfx_sprite.image,
                                          true,
-                                         &gfx_material,
+                                         gfx_material,
                                          &gfxs,
                                          &mut images,
                                          &palettes,
@@ -229,7 +227,7 @@ fn compute_image_on_asset_event(
     }
     // Try not to trigger a sprite change if we don't have to.
     let mut iter = sprites.iter_many_mut(update_ids.iter());
-    while let Some((_, _, mut sprite)) = iter.fetch_next() {
+    while let Some((_, _, sprite)) = iter.fetch_next() {
         match sprite {
             Some(mut sprite) => {
                 sprite.image = update_images.pop_front().unwrap();
@@ -250,13 +248,13 @@ fn compute_image_on_gfx_sprite_change(
     mut sprites: Query<(Entity, &GfxSprite, Option<&mut Sprite>), Changed<GfxSprite>>,
     mut pairs: ResMut<GfxImageMap>,
 ) {
-    for (id, gfx_sprite, mut sprite) in &mut sprites {
+    for (id, gfx_sprite, sprite) in &mut sprites {
         let Some(gfx_material) = gfx_materials.get(&gfx_sprite.material) else {
             continue;
         };
         let image_handle = compute_image(&gfx_sprite.image,
                                          false,
-                                         &gfx_material,
+                                         gfx_material,
                                          &gfxs,
                                          &mut images,
                                          &palettes,
@@ -320,7 +318,7 @@ impl<const N: usize> Gfx<N, u8> {
         let info = reader.info();
         if let Some(ref mut palette) = &mut palette {
             info.palette.as_ref().inspect(|png_palette| {
-                let mut colors = png_palette.chunks(3);
+                let colors = png_palette.chunks(3);
                 let mut data = vec![[0x00, 0x00, 0x00, 0xff]; colors.len()];
                 for (i, rgb) in colors.enumerate() {
                     data[i][0..3].copy_from_slice(rgb);
@@ -438,7 +436,7 @@ impl<
     ) {
         // let mut pixel_bytes = vec![0x00; self.width * self.height * 4];
         let mut color_index = T::default();
-        let mut chunks = self.data.chunks_exact(N);
+        let chunks = self.data.chunks_exact(N);
         assert!(chunks.len() >= self.width * self.height,
                 "cannot write full {}x{} gfx to image only has {} pixels", self.width, self.height, chunks.len());
         for (i, pixel) in chunks.enumerate() {

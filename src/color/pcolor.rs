@@ -1,10 +1,7 @@
 use bevy::prelude::*;
-use std::{any::TypeId, sync::Arc};
+use std::any::TypeId;
 
-use crate::{
-    pico8::{Error, PalMap},
-    ValueExt,
-};
+use crate::pico8::{Error, PalMap};
 #[cfg(feature = "scripting")]
 use bevy_mod_scripting::{
     core::docgen::typed_through::{ThroughTypeInfo, TypedThrough},
@@ -14,7 +11,6 @@ use bevy_mod_scripting::{
         },
         error::InteropError,
     },
-    lua::mlua::{self, prelude::LuaError, FromLua, Lua, Value},
     GetTypeDependencies,
 };
 

@@ -6,12 +6,9 @@ pub use loader::*;
 pub mod front_matter;
 use crate::{
     run::RunState,
-    pico8::{self, Pico8Handle, Pico8State, Palettes},
+    pico8::{self, Pico8Handle, Palettes},
 };
-use bevy::{
-    asset::AssetPath,
-    prelude::*,
-};
+use bevy::prelude::*;
 #[cfg(feature = "scripting")]
 use bevy_mod_scripting::core::{
     event::Recipients,
@@ -221,7 +218,7 @@ pub fn update_asset(
     mut palettes: ResMut<Palettes>,
     mut pico8_handle: Option<ResMut<Pico8Handle>>,
     #[cfg(feature = "scripting")] mut commands: Commands,
-    #[cfg(feature = "scripting")] mut scripts: ResMut<Assets<ScriptAsset>>,
+    #[cfg(feature = "scripting")] scripts: ResMut<Assets<ScriptAsset>>,
 ) {
     for e in reader.read() {
         // TODO: This next line is a bit noisy but reveals a lot of asset

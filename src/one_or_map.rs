@@ -2,10 +2,7 @@ use bevy::{
     utils::{HashMap, hashbrown::Equivalent},
     prelude::*,
 };
-use std::{
-    hash::Hash,
-    borrow::Borrow,
-};
+use std::hash::Hash;
 
 
 /// One or map
@@ -44,7 +41,7 @@ impl<K,V> OneOrMap<K,V> {
         }
     }
 
-    pub fn insert(&mut self, key: K, mut value: V) -> Option<V>
+    pub fn insert(&mut self, key: K, value: V) -> Option<V>
     where K: Eq + Hash {
         match self {
             OneOrMap::One { key: single_key, value: single_value } => {

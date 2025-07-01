@@ -1,5 +1,5 @@
 use bevy::{
-    asset::{io::{AssetSourceId, Reader, VecReader}, AssetLoader, AssetPath, LoadContext},
+    asset::{io::{Reader, VecReader}, AssetLoader, LoadContext},
 
     image::{ImageLoaderSettings, ImageSampler},
     prelude::*,
@@ -79,12 +79,12 @@ impl AssetLoader for SpriteSheetLoader {
         let extension = load_context.path().extension().and_then(|x| x.to_str()).unwrap_or_default();
         let index_color = settings.index_color.unwrap_or_else(|| extension == "p8");
         let mut extract_palette = None;
-        let mut sprite_size = settings.sprite_size.clone();
+        let mut sprite_size = settings.sprite_size;
         let (handle, layout_maybe) = if index_color {
             match extension {
                 "p8" => {
                     let settings = pico8::CartLoaderSettings::default();
-                    let mut parts = pico8::Cart::from_bytes(&bytes, &settings).map_err(Box::new)?;
+                    let parts = pico8::Cart::from_bytes(&bytes, &settings).map_err(Box::new)?;
                     let gfx = parts.gfx.expect("no gfx in cart");
                     let image_size = UVec2::new(gfx.width as u32, gfx.height as u32);
                     sprite_size = Some(UVec2::splat(8));
@@ -95,10 +95,10 @@ impl AssetLoader for SpriteSheetLoader {
                         None,
                         None,
                     )?
-                        .map(|layout| load_context.add_labeled_asset(format!("atlas"), layout));
+                        .map(|layout| load_context.add_labeled_asset("atlas".to_string(), layout));
                     (
                         pico8::SprHandle::Gfx(
-                            load_context.add_labeled_asset(format!("gfx"), gfx),
+                            load_context.add_labeled_asset("gfx".to_string(), gfx),
                         ),
                         layout,
                     )
@@ -119,10 +119,10 @@ impl AssetLoader for SpriteSheetLoader {
                         settings.padding,
                         settings.offset,
                     )?
-                        .map(|layout| load_context.add_labeled_asset(format!("atlas"), layout));
+                        .map(|layout| load_context.add_labeled_asset("atlas".to_string(), layout));
                     (
                         pico8::SprHandle::Gfx(
-                            load_context.add_labeled_asset(format!("gfx"), gfx),
+                            load_context.add_labeled_asset("gfx".to_string(), gfx),
                         ),
                         layout,
                     )
@@ -132,7 +132,7 @@ impl AssetLoader for SpriteSheetLoader {
                 }
             }
         } else {
-            let sampler = settings.sampler.clone().or_else(|| image_sampler());
+            let sampler = settings.sampler.clone().or_else(image_sampler);
 
             let mut reader = VecReader::new(bytes);
             let path = load_context.asset_path().clone_owned();
@@ -155,11 +155,11 @@ impl AssetLoader for SpriteSheetLoader {
                 settings.padding,
                 settings.offset,
             )?
-            .map(|layout| load_context.add_labeled_asset(format!("atlas"), layout));
+            .map(|layout| load_context.add_labeled_asset("atlas".to_string(), layout));
 
             (
                 pico8::SprHandle::Image(
-                    load_context.add_loaded_labeled_asset(format!("image"), loaded),
+                    load_context.add_loaded_labeled_asset("image".to_string(), loaded),
                 ),
                 layout,
             )

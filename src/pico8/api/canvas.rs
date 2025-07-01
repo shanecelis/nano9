@@ -2,7 +2,7 @@ use bevy::{
     render::{
         camera::{ScalingMode, Viewport},
     },
-    window::{PresentMode, PrimaryWindow, WindowMode, WindowResized},
+    window::{PrimaryWindow, WindowResized},
 };
 use super::*;
 
@@ -116,7 +116,7 @@ fn spawn_camera(mut commands: Commands, canvas: Res<N9Canvas>) {
             InheritedVisibility::default(),
         ))
         .with_children(|parent| {
-            let mut camera_commands = parent.spawn((
+            let camera_commands = parent.spawn((
                 Name::new("camera"),
                 Camera2d,
                 Msaa::Off,
@@ -194,7 +194,7 @@ impl super::Pico8<'_, '_> {
 
         match color.into_pcolor(&self.state.draw_state.pen) {
             PColor::Palette(p) => {
-                let mut gfx = self.gfxs.get_mut(&self.canvas.gfx_handle).ok_or(Error::NoAsset("gfx".into()))?;
+                let gfx = self.gfxs.get_mut(&self.canvas.gfx_handle).ok_or(Error::NoAsset("gfx".into()))?;
                 if gfx.set(pos.x as usize, pos.y as usize, p as u8) {
                     // if let Some(background) = self.canvas.background {
                     //     self.commands

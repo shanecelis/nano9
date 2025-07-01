@@ -157,10 +157,10 @@ fn handle_clear_event(
     mut state: ResMut<Pico8State>,
     mut cache: ResMut<ClearCache>,
     mut gfxs: ResMut<Assets<Gfx>>,
-    mut one_color: Single<&mut Sprite, With<canvas::OneColorBackground>>,
-    mut background: Single<(Entity, &GfxSprite, &mut GfxDirty, &mut canvas::Background), With<canvas::Background>>,
-    mut palettes: Res<Palettes>,
-    mut background_dirty: Local<bool>,
+    one_color: Single<&mut Sprite, With<canvas::OneColorBackground>>,
+    background: Single<(Entity, &GfxSprite, &mut GfxDirty, &mut canvas::Background), With<canvas::Background>>,
+    palettes: Res<Palettes>,
+    background_dirty: Local<bool>,
 ) {
     state.draw_state.clear_screen();
     // Clear the 1x1 background.
@@ -174,11 +174,11 @@ fn handle_clear_event(
             sprite.color = Srgba::rgb(1.0, 0.0, 1.0).into(); // Ugly pink
         }
     }
-    let (background_id, gfx_sprite, mut gfx_dirty, mut background) = background.into_inner();
+    let (background_id, gfx_sprite, mut gfx_dirty, background) = background.into_inner();
 
     // Clear the background if needed.
     if gfx_dirty.0 {
-        if let Some(mut gfx) = gfxs.get_mut(&gfx_sprite.image) {
+        if let Some(gfx) = gfxs.get_mut(&gfx_sprite.image) {
             trace!("Clearing Background pixels.");
             gfx.data.set_elements(0x00);
         }

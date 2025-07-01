@@ -1,4 +1,3 @@
-use crate::pico8::Error;
 use bevy::prelude::*;
 
 #[derive(Debug, Clone, Reflect, Default)]
