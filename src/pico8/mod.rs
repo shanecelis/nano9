@@ -29,7 +29,7 @@ pub(crate) mod keyboard;
 pub(crate) mod mouse;
 pub(crate) use defaults::*;
 pub(crate) mod sprite_sheet;
-use sprite_sheet::*;
+pub use sprite_sheet::*;
 // mod gfx2;
 pub const PICO8_PALETTE: &str = "embedded://nano9/pico8/pico-8-palette.png";
 pub const PICO8_BORDER: &str = "embedded://nano9/pico8/rect-border.png";

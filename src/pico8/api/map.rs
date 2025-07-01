@@ -1,6 +1,7 @@
 use super::*;
 use bevy::utils::hashbrown::hash_map::DefaultHashBuilder;
 use std::hash::{BuildHasher, Hash, Hasher};
+use bevy_ecs_tilemap::prelude::*;
 
 pub(crate) fn plugin(app: &mut App) {
     #[cfg(feature = "scripting")]
@@ -32,6 +33,7 @@ impl super::Pico8<'_, '_> {
         map_index: Option<usize>,
     ) -> Result<Entity, Error> {
         trace!("map");
+        let map_index = map_index.unwrap_or(0);
         screen_start = self.state.draw_state.apply_camera_delta(screen_start);
         if cfg!(feature = "negate-y") {
             screen_start.y = -screen_start.y;
@@ -44,34 +46,48 @@ impl super::Pico8<'_, '_> {
             self.state.pal_map.hash(&mut hasher);
             size.hash(&mut hasher);
             mask.inspect(|m| m.hash(&mut hasher));
-            map_index.inspect(|i| i.hash(&mut hasher));
+            map_index.hash(&mut hasher);
             hasher.finish()
         };
+        let rect = URect { min: map_pos,
+                           max: map_pos + size };
         self.state.draw_state.mark_drawn();
         // See if there's already an entity available.
         if let Some(id) = self.resurrect(hash, screen_start) {
             // trace!("Resurrect map with hash {hash}");
             return Ok(id);
         }
-        match self.sprite_map(map_index)?.clone() {
-            SpriteMap::P8(map) => {
+        // match self.sprite_map(map_index)?.clone() {
+        //     SpriteMap::P8(map) => {
                 // trace!("Create map with hash {hash}");
-                let sprite_sheets = &self.pico8_asset()?.sprite_sheets.clone();
-                map.map(
-                    map_pos,
-                    screen_start,
-                    size,
-                    mask,
-                    sprite_sheets,
-                    Some(hash),
-                    self.gfx_material(),
-                    self.defaults.time_to_live,
-                    &mut self.commands,
-                )
-            }
-            #[cfg(feature = "level")]
-            SpriteMap::Level(map) => Ok(map.map(screen_start, 0, &mut self.commands)),
-        }
+
+                let map_size = TilemapSize::from(size);
+                let mut clearable = Clearable::new(self.defaults.time_to_live).with_hash(hash);
+                let mut tile_storage = TileStorage::empty(map_size);
+        let gfx_material = self.gfx_material().clone();
+        let sprite_sheet = self.pico8_asset()?.sprite_sheets.get(self.state.sprite_sheet_index)
+                                                       .ok_or(Error::NoSuch("Sprite sheet for map".into()))?;
+
+                let map_entity = self.commands
+                    .spawn((
+                        Name::new("map"),
+                        Transform::from_translation(screen_start.extend(clearable.suggest_z())),
+                        Visibility::Inherited,
+                        clearable,
+                        P8SpriteMap {
+                            map_index,
+                            sprite_sheet: sprite_sheet.clone(),
+                            gfx_material,
+                            rect,
+                            mask,
+                        },
+                    ))
+                    .id();
+                Ok(map_entity)
+            // }
+            // #[cfg(feature = "level")]
+            // SpriteMap::Level(map) => Ok(map.map(screen_start, 0, &mut self.commands)),
+        // }
     }
 
     pub fn mget(

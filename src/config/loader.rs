@@ -250,6 +250,20 @@ async fn into_asset(
     }
     let mut sprite_sheets = vec![];
     for (i, mut sheet) in config.sprite_sheets.into_iter().enumerate() {
+        let handle = load_context.loader()
+            .with_settings(move |settings: &mut pico8::SpriteSheetSettings| {
+                settings.index_color = sheet.index_color;
+                settings.extract_palette = sheet.extract_palette;
+                settings.sprite_size = sheet.sprite_size;
+                settings.sprite_counts = sheet.sprite_counts;
+                settings.padding = sheet.padding;
+                settings.offset = sheet.offset;
+                settings.offset = sheet.offset;
+                // TODO: Provide sampler sampler?
+            })
+            .load::<pico8::SpriteSheet>(sheet.path);
+        sprite_sheets.push(handle);
+
         // let flags: Vec<u8>;
         // if sheet.path.extension() == Some(OsStr::new("tsx")) {
         //     #[cfg(feature = "level")]
@@ -295,7 +309,7 @@ async fn into_asset(
         // } else if sheet.path.extension() == Some(OsStr::new("p8")) {
         //     todo!()
         // } else {
-        todo!()
+        // todo!()
         // let (handle, layout_maybe) = if sheet.index_color {
         //     // XXX: This should be simple! There's another loader here we need to strip out.
         //     //
@@ -385,7 +399,6 @@ async fn into_asset(
                     cart.map.resize(128 * 64, 0);
                     Ok(pico8::P8Map {
                         entries: cart.map,
-                        sheet_index: 0, // XXX: This is not true for every map.
                     }.into())
                 },
                 // "tmx" => {

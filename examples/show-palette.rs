@@ -18,7 +18,7 @@ fn init(mut pico8: Pico8) {
             .rectfill(
                 Vec2::new(i as f32 * dw, 0.0),
                 Vec2::new((i + 1) as f32 * dw, height as f32),
-                Some(i),
+                Some(i.into()),
             )
             .unwrap();
     }

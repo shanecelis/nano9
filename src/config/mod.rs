@@ -155,8 +155,7 @@ pub struct SpriteSheet {
     pub offset: Option<UVec2>,
     /// Indexed sprite, if true it reads in the palette colors from the image
     /// and uses the current palette when the image is drawn
-    #[serde(default)]
-    pub index_color: bool,
+    pub index_color: Option<bool>,
     #[serde(default)]
     pub extract_palette: bool,
 

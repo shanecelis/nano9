@@ -14,6 +14,7 @@ pub struct Pico8State {
     pub(crate) pal_map: PalMap,
     /// Current palette
     pub(crate) palette: usize,
+    pub(crate) sprite_sheet_index: usize,
     // TODO: Add image_index?
     pub(crate) draw_state: DrawState,
     pub(crate) gfx_material: Option<Handle<GfxMaterial>>,
@@ -30,6 +31,7 @@ impl FromWorld for Pico8State {
         }
         Pico8State {
             palette: 0,
+            sprite_sheet_index: 0,
             pal_map,
             draw_state: DrawState {
                 pen: PColor::Palette(defaults.initial_pen_color),

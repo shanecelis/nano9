@@ -112,8 +112,8 @@ impl super::Pico8<'_, '_> {
 
     pub fn sprite_sheet_mut(&mut self, sheet_index: Option<usize>) -> Result<&mut SpriteSheet, Error> {
         let sheet_index = sheet_index.unwrap_or(0);
-        let handle = self.pico8_asset()?.sprite_sheets.get(sheet_index).ok_or_else(|| Error::NoSuch("sprite sheet handle".into()))?;
-        self.sprite_sheets.get_mut(&*handle).ok_or_else(|| Error::NoSuch("sprite sheet asset".into()))
+        let handle = self.pico8_asset()?.sprite_sheets.get(sheet_index).ok_or_else(|| Error::NoSuch("sprite sheet handle".into()))?.clone_weak();
+        self.sprite_sheets.get_mut(&handle).ok_or_else(|| Error::NoSuch("sprite sheet asset".into()))
     }
 
     // fn sprite_sheet(&self, sheet_index: Option<usize>) -> Result<&SpriteSheet, Error> {
@@ -165,10 +165,10 @@ impl super::Pico8<'_, '_> {
         let sheet = self.sprite_sheet(sheet_index)?;
         let mut gfx_handle = None;
         let sprite = Sprite {
-            image: match sheet.handle {
-                SprHandle::Image(handle) => handle,
+            image: match &sheet.handle {
+                SprHandle::Image(handle) => handle.clone(),
                 SprHandle::Gfx(handle) => {
-                    gfx_handle = Some(handle);
+                    gfx_handle = Some(handle.clone());
                     Handle::default()
                 }
             },

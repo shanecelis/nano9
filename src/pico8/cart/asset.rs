@@ -101,14 +101,14 @@ fn to_asset(cart: Cart, load_context: &mut LoadContext) -> Result<Pico8Asset, Ca
         ));
     let sprite_sheets: Vec<_> = cart
         .gfx
-        .map(|gfx| SpriteSheet {
-            handle: SprHandle::Gfx(
-                load_context.add_labeled_asset("gfx".into(), gfx),
-            ),
+        .map(|gfx| load_context.add_labeled_asset("gfx".into(), gfx))
+        .map(|gfx_handle| load_context.add_labeled_asset("sprite_sheet0".into(), SpriteSheet {
+            handle: SprHandle::Gfx(gfx_handle),
+            palette: None,
             sprite_size: UVec2::splat(8),
             flags: cart.flags.clone(),
             layout,
-        })
+        }))
         .into_iter()
         .collect();
     let code = cart.lua;
@@ -132,7 +132,6 @@ fn to_asset(cart: Cart, load_context: &mut LoadContext) -> Result<Pico8Asset, Ca
             .load(pico8::PICO8_BORDER),
         maps: vec![P8Map {
             entries: cart.map.clone(),
-            sheet_index: 0,
         }
         .into()],
         audio_banks: vec![AudioBank(

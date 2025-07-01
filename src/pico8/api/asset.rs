@@ -21,6 +21,22 @@ pub struct N9Font {
     pub handle: Handle<Font>,
 }
 
+impl Pico8Asset {
+    pub fn sprite_map(&self, map_index: Option<usize>) -> Result<&SpriteMap, Error> {
+        let index = map_index.unwrap_or(0);
+        self.maps
+            .get(index)
+            .ok_or(Error::NoSuch(format!("map index {index}").into()))
+    }
+
+    pub fn sprite_map_mut(&mut self, map_index: Option<usize>) -> Result<&mut SpriteMap, Error> {
+        let index = map_index.unwrap_or(0);
+        self.maps
+            .get_mut(index)
+            .ok_or(Error::NoSuch(format!("map index {index}").into()))
+    }
+}
+
 impl FromWorld for Pico8Asset {
     fn from_world(world: &mut World) -> Self {
         let asset_server = world.resource::<AssetServer>();

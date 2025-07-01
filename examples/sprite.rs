@@ -36,7 +36,7 @@ fn main() {
         println!("Constructing configuration manually.");
         // Construct a configuration.
         let mut config = Config::pico8();
-        config.sprite_sheets.push(SpriteSheet {
+        config.sprite_sheets.push(nano9::config::SpriteSheet {
             path: "BirdSprite.png".into(),
             sprite_size: Some(UVec2::splat(16)),
             ..default()
