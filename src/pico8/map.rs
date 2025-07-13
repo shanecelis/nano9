@@ -7,7 +7,7 @@ use bevy_ecs_tilemap::prelude::*;
 
 #[derive(Clone, Debug, Reflect)]
 pub enum SpriteMap {
-    P8(P8Map),
+    P8(Handle<P8Map>),
     #[cfg(feature = "level")]
     Level(level::Tiled),
 }
@@ -18,21 +18,25 @@ pub struct GfxTilemapTexture {
 }
 
 impl SpriteMap {
-    pub fn entries(&self) -> &[u8] {
-        match self {
-            SpriteMap::P8(p8map) => &p8map.entries,
-        }
-    }
+    // pub fn entries(&self) -> &[u8] {
+    //     match self {
+    //         SpriteMap::P8(p8map) => &p8map.entries,
+    //     }
+    // }
 }
 
-#[derive(Clone, Debug, Deref, DerefMut, Reflect)]
+#[derive(Clone, Debug, Deref, DerefMut, Reflect, Asset)]
 pub struct P8Map {
     #[deref]
     pub entries: Vec<u8>,
 }
 
-impl From<P8Map> for SpriteMap {
-    fn from(map: P8Map) -> Self {
+pub(crate) fn plugin(app: &mut App) {
+    app.init_asset::<P8Map>();
+}
+
+impl From<Handle<P8Map>> for SpriteMap {
+    fn from(map: Handle<P8Map>) -> Self {
         SpriteMap::P8(map)
     }
 }
@@ -52,6 +56,7 @@ fn add_tilemaps(
     sprite_sheets: Res<Assets<SpriteSheet>>,
     pico8_asset: Res<Assets<pico8::Pico8Asset>>,
     pico8_handle: Res<pico8::Pico8Handle>,
+    p8_maps: Res<Assets<pico8::P8Map>>,
     mut commands: Commands,
 ) {
     let mut p8map_maybe = None;
@@ -94,8 +99,16 @@ fn add_tilemaps(
             .with_children(|builder| {
                 for x in 0..map_size.x {
                     for y in 0..map_size.y {
-                        let texture_index = p8map
-                            .entries()
+                        let entries = match p8map {
+                            SpriteMap::P8(handle) => {
+                                let Some(p8map_asset) = p8_maps.get(handle) else {
+                                    warn!("Unable to get p8 map");
+                                    continue;
+                                };
+                                &p8map_asset.entries
+                            }
+                        };
+                        let texture_index = entries
                             .get((map_pos.x + x + (map_pos.y + y) * pico8::MAP_COLUMNS) as usize)
                             .and_then(|index| {
                                 if let Some(mask) = mask {

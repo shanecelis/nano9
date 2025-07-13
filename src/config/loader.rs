@@ -5,7 +5,7 @@ use crate::{
     pico8::{self, image::pixel_art_settings, Pico8Asset},
 };
 use bevy::{
-    asset::{io::Reader, AssetLoader, AssetPath, LoadContext},
+    asset::{io::{AssetSourceId, Reader}, AssetLoader, AssetPath, LoadContext, ErasedLoadedAsset},
     prelude::*,
 };
 #[cfg(feature = "scripting")]
@@ -57,6 +57,8 @@ pub enum ConfigError {
     Cart(#[from] pico8::CartLoaderError),
     #[error("toml error: {0}")]
     Toml(#[from] toml::de::Error),
+    #[error("asset path error: {0}")]
+    AssetPath(#[from] bevy::asset::ParseAssetPathError),
 }
 
 #[derive(Default)]
@@ -248,21 +250,30 @@ async fn into_asset(
             palettes.push(pico8::Palette::from_image(image.get(), palette.row));
         }
     }
-    let mut sprite_sheets: Vec<Handle<pico8::SpriteSheet>> = vec![];
-    for (i, sheet) in config.sprite_sheets.into_iter().enumerate() {
-        let handle = load_context
-            .loader()
-            .with_settings(move |settings: &mut pico8::SpriteSheetSettings| {
-                settings.index_color = sheet.index_color;
-                settings.extract_palette = sheet.extract_palette;
-                settings.sprite_size = sheet.sprite_size;
-                settings.sprite_counts = sheet.sprite_counts;
-                settings.padding = sheet.padding;
-                settings.offset = sheet.offset;
-                settings.offset = sheet.offset;
-                // TODO: Provide sampler sampler?
-            })
-            .load::<pico8::SpriteSheet>(sheet.path);
+    let mut sprite_sheets = vec![];
+    for (i, mut sheet) in config.sprite_sheets.into_iter().enumerate() {
+        let asset_path = AssetPath::try_parse(&sheet.path)?.into_owned();
+        let handle = load_context.loader()
+                                 // .with_settings(
+            // move |settings: &mut pico8::SpriteSheetSettings| {
+            //     settings.index_color = sheet.index_color;
+            //     settings.extract_palette = sheet.extract_palette;
+            //     settings.sprite_size = sheet.sprite_size;
+            //     settings.sprite_counts = sheet.sprite_counts;
+            //     settings.padding = sheet.padding;
+            //     settings.offset = sheet.offset;
+            //     settings.offset = sheet.offset;
+            //     // TODO: Provide sampler sampler?
+            // })
+            .load::<pico8::SpriteSheet>(&asset_path);
+        //     .load::<pico8>(&asset_path)
+        //     .await?;
+        // let handle = if let Some(label) = asset_path.label_cow() {
+        //     let sprite_sheet = loaded.get_labeled(label).and_then(|asset| asset.get::<pico8::SpriteSheet>()).expect("sprite_sheet").clone();
+        //     load_context.add_labeled_asset(format!("sprite_sheet{i}"), sprite_sheet)
+        // } else {
+        //     todo!()
+        // };
         sprite_sheets.push(handle);
 
         // let flags: Vec<u8>;
@@ -374,57 +385,81 @@ async fn into_asset(
     }
     let mut scripts = vec![];
     #[cfg(feature = "scripting")]
-    for p in config.scripts {
+    for (i, p) in config.scripts.into_iter().enumerate() {
         // Load them in order.
-        let loaded = load_context
+        //
+        let mut asset_path = AssetPath::try_parse(&p)?.into_owned();
+        let label = asset_path.take_label();
+        let loaded: ErasedLoadedAsset = load_context
             .loader()
+            .with_unknown_type()
             .immediate()
-            .load(&*p).await?;
+            .load(&asset_path)
+            .await?;
+        // let handle = if let Some(label) = asset_path.label_cow() {
+        let erased_asset = label.and_then(|label| {
+            let labels: Vec<&str> = loaded.iter_labels().collect();
+            info!("got label {}, have asset with labels: {:?}", &label, labels);
+            loaded.get_labeled(label)
+                               // .and_then(|asset| asset.get::<bevy_mod_scripting::prelude::ScriptAsset>())
+                               // .expect("script asset")
+                               // .clone();
+        }).unwrap_or(&loaded);
+        let Some(script_asset) = erased_asset.get::<ScriptAsset>() else {
+            return Err(ConfigError::Message(format!("Cannot create `ScriptAsset` from {:?}", asset_path)));
+        };
+
+        //                        else {
+        //     if loaded.downcast::<ScriptAsset>()
+        //     todo!()
+        // };
+        scripts.push(load_context.add_labeled_asset(format!("script{i}"), script_asset.clone()));
         // let mut script_asset: ScriptAsset = loaded.take();
         // let label =  script_asset.asset_path.path().to_string_lossy().into_owned();
         // script_asset.asset_path = load_context.asset_path().clone_owned().with_source(AssetSourceId::Default).with_label(label);
-        scripts.push(load_context.add_loaded_labeled_asset(p, loaded));
+        // scripts.push(load_context.add_loaded_labeled_asset(p, loaded));
         // scripts.push(load_context.add_labeled_asset(p, script_asset));
     }
 
     let mut maps: Vec<pico8::SpriteMap> = Vec::with_capacity(config.maps.len());
-    for map in config.maps {
-        let extension = map.path.extension().and_then(|s| s. to_str());
-        if let Some(ext) = extension {
-            let p8map = match ext {
-                "p8" => {
-                    let bytes = load_context.read_asset_bytes(map.path).await?;
-                    let content = std::str::from_utf8(&bytes)?;
-                    let settings = pico8::CartLoaderSettings::default();
-                    let mut cart = pico8::Cart::from_str(content, &settings)?;
-                    cart.map.resize(128 * 64, 0);
-                    Ok(pico8::P8Map {
-                        entries: cart.map,
-                    }.into())
-                },
-                // "tmx" => {
-                //     #[cfg(feature = "level")]
-                //     return Ok(level::Tiled::SpriteMap {
-                //         handle: load_context.load(&*map.path),
-                //     }.into());
-                //     #[cfg(not(feature = "level"))]
-                //     Err(ConfigError::Message(format!("The map {:?} is a Tiled map; consider using the '--features=level' flag.", &map.path)))
-                // }
-                // "world" => {
-                //     #[cfg(feature = "level")]
-                //     return Ok(level::Tiled::World {
-                //         handle: load_context.load(&*map.path),
-                //     }.into());
-                //     #[cfg(not(feature = "level"))]
-                //     Err(ConfigError::Message(format!("The map {:?} is a Tiled world; consider using the '--features=level' flag.", &map.path)))
-                // }
-                _ => Err(ConfigError::Message(format!("Unknown map format {:?}", &map.path)))
-            }?;
-            maps.push(p8map);
-            Ok(())
-        } else {
-            Err(ConfigError::Message(format!("The map path {:?} did not have an extension.", &map.path)))
-        }?
+    for (i, map) in config.maps.into_iter().enumerate() {
+        let p8map: Handle<pico8::P8Map> = load_context.load::<pico8::P8Map>(map.path);
+        // let extension = map.path.extension().and_then(|s| s. to_str());
+        // if let Some(ext) = extension {
+        //     let p8map = match ext {
+        //         "p8" => {
+        //             let bytes = load_context.read_asset_bytes(map.path).await?;
+        //             let content = std::str::from_utf8(&bytes)?;
+        //             let settings = pico8::CartLoaderSettings::default();
+        //             let mut cart = pico8::Cart::from_str(content, &settings)?;
+        //             cart.map.resize(128 * 64, 0);
+        //             let handle = load_context.add_labeled_asset(format!("map{i}"), pico8::P8Map {
+        //                 entries: cart.map,
+        //             });
+        //             Ok(handle.into())
+        //         },
+        //         // "tmx" => {
+        //         //     #[cfg(feature = "level")]
+        //         //     return Ok(level::Tiled::SpriteMap {
+        //         //         handle: load_context.load(&*map.path),
+        //         //     }.into());
+        //         //     #[cfg(not(feature = "level"))]
+        //         //     Err(ConfigError::Message(format!("The map {:?} is a Tiled map; consider using the '--features=level' flag.", &map.path)))
+        //         // }
+        //         // "world" => {
+        //         //     #[cfg(feature = "level")]
+        //         //     return Ok(level::Tiled::World {
+        //         //         handle: load_context.load(&*map.path),
+        //         //     }.into());
+        //         //     #[cfg(not(feature = "level"))]
+        //         //     Err(ConfigError::Message(format!("The map {:?} is a Tiled world; consider using the '--features=level' flag.", &map.path)))
+        //         // }
+        //         _ => Err(ConfigError::Message(format!("Unknown map format {:?}", &map.path)))
+        //     }?;
+        maps.push(p8map.into());
+        // } else {
+        //     Err(ConfigError::Message(format!("The map path {:?} did not have an extension.", &map.path)))
+        // }?
     }
     let state = pico8::Pico8Asset {
         #[cfg(feature = "scripting")]

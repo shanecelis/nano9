@@ -231,6 +231,7 @@ fn get_layout(
             })
         }
     } else {
+        *sprite_size = Some(image_size);
         Ok(None)
     }
 }

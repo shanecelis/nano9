@@ -11,11 +11,14 @@ use bevy::{
 use bevy_mod_scripting::{
     core::{
         asset::ScriptAsset,
+        ConfigureScriptAssetSettings,
+        asset::{Language, ScriptAsset},
         bindings::{function::namespace::NamespaceBuilder},
         callback_labels,
         event::{Recipients, ScriptCallbackEvent, CallbackLabel},
         handler::event_handler,
         ConfigureScriptPlugin,
+        script::{ScriptContext, ContextKey},
     },
     lua::LuaScriptingPlugin,
     BMSPlugin,
@@ -257,7 +260,7 @@ impl Plugin for Nano9Plugin {
                 panic!("No 'n9mem://' asset source configured.");
             }
         });
-
+        // app.add_supported_script_extensions(&[".p8"], Language::Lua);
         app.add_systems(
             Startup,
             move |asset_server: Res<AssetServer>, mut commands: Commands| {
@@ -268,18 +271,18 @@ impl Plugin for Nano9Plugin {
         );
         #[cfg(feature = "scripting")]
         {
-            let mut lua_scripting_plugin = LuaScriptingPlugin::default().enable_context_sharing();
+            app.insert_resource(ScriptContext::<LuaScriptingPlugin>::shared());
+            let mut lua_scripting_plugin = LuaScriptingPlugin::default();//.enable_context_sharing();
             lua_scripting_plugin
                 .scripting_plugin
                 .add_context_initializer(
-                    |_script_id: &Handle<ScriptAsset>, context: &mut bevy_mod_scripting::lua::mlua::Lua| {
+                    |_script_id: &ContextKey, context: &mut bevy_mod_scripting::lua::mlua::Lua| {
                         context.globals().set(
                             "_eval_string",
                             context.create_function(|ctx, arg: String| {
                                 ctx.load(format!("tostring({arg})")).eval::<String>()
                             })?,
                         )?;
-
                         context
                             .load(include_str!("builtin.lua"))
                             .exec()

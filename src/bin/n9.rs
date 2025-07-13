@@ -39,6 +39,11 @@ struct Cli {
 #[derive(Subcommand)]
 enum Command {
     /// Run a Pico-8 cart or Nano-9 project
+    ///
+    /// Environment variables:
+    ///
+    /// NANO9_ASSETS_DIR - override the assets directory
+    /// NANO9_LUA_CODE   - log the translated code to file
     Run {
         /// Run path.
         path: PathBuf,

@@ -183,7 +183,7 @@ pub enum ImagePalette {
 // #[serde(untagged)]
 pub struct SpriteMap {
     /// Path to map, can have extensions .p8 or .tmx
-    path: PathBuf,
+    path: String,
 }
 
 /// Font
@@ -241,7 +241,9 @@ pub fn update_asset(
                         if !pico8_asset.scripts.is_empty() && pico8_handle.main_script.is_none() {
                             // pico8_handle.main_script = Some(Recipients::All);
                             // Spawn another script component for the libraries.
-                            let entity = commands.spawn(ScriptComponent(pico8_asset.scripts.clone())).id();
+                            let entity = commands.spawn((Name::new("scripts"),
+                                                         ScriptComponent(pico8_asset.scripts.clone()))).id();
+                            info!("Add scripts to entity {}", &entity);
                             pico8_handle.main_script = Some(Recipients::Entity(entity));
                         }
                     }

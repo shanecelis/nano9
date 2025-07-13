@@ -98,7 +98,8 @@ impl super::Pico8<'_, '_> {
     ) -> Result<usize, Error> {
         let map: &SpriteMap = self.sprite_map(map_index)?;
         match *map {
-            SpriteMap::P8(ref map) => {
+            SpriteMap::P8(ref handle) => {
+                let map = self.p8_maps.get(handle).ok_or_else(|| Error::NoSuch("map for handle".into()))?;
                 let i = (pos.x as u32 + pos.y as u32 * MAP_COLUMNS) as usize;
                 Ok(*map.get(i).ok_or_else(|| Error::NoSuch(format!("map index {i} with length {} {}", map.len(), if i > 0x1000 { "; consider using the '--shared-data=map' argument." } else { "" }).into()))? as usize)
             }
@@ -115,12 +116,16 @@ impl super::Pico8<'_, '_> {
         map_index: Option<usize>,
         _layer_index: Option<usize>,
     ) -> Result<(), Error> {
-        let map = self.sprite_map_mut(map_index)?;
+        let map = self.sprite_map(map_index)?.clone();
         match map {
-            SpriteMap::P8(ref mut map) => map
+            SpriteMap::P8(handle) => {
+
+                let mut map = self.p8_maps.get_mut(&handle).ok_or_else(|| Error::NoSuch("map for handle".into()))?;
+                map
                 .get_mut((pos.x as u32 + pos.y as u32 * MAP_COLUMNS) as usize)
                 .map(|value| *value = sprite_index as u8)
-                .ok_or(Error::NoSuch("map entry".into())),
+                .ok_or_else(|| Error::NoSuch("map entry".into()))
+            }
             #[cfg(feature = "level")]
             SpriteMap::Level(ref mut map) => {
                 todo!()
