@@ -8,6 +8,7 @@
 - [ ] Fix tiled import for lilly's house inside
 
 ## Nano-9
+- [ ] Remove the other .p8 loader?
 - [x] cls() should be a trigger
 - [x] Revert change to readonly sprite sheets
 - [x] place gfx_material() on impl Pico8 directly.

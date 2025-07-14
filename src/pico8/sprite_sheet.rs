@@ -80,7 +80,7 @@ impl AssetLoader for SpriteSheetLoader {
         let index_color = settings.index_color.unwrap_or_else(|| extension == "p8");
         let mut extract_palette = None;
         let mut sprite_size = settings.sprite_size;
-        let (handle, layout_maybe) = if index_color {
+        let (handle, layout_maybe, flags_maybe) = if index_color {
             match extension {
                 "p8" => {
                     let settings = pico8::CartLoaderSettings::default();
@@ -101,6 +101,7 @@ impl AssetLoader for SpriteSheetLoader {
                             load_context.add_labeled_asset("gfx".to_string(), gfx),
                         ),
                         layout,
+                        Some(parts.flags)
                     )
                 }
                 "png" => {
@@ -125,6 +126,7 @@ impl AssetLoader for SpriteSheetLoader {
                             load_context.add_labeled_asset("gfx".to_string(), gfx),
                         ),
                         layout,
+                        None
                     )
                 }
                 x => {
@@ -162,12 +164,13 @@ impl AssetLoader for SpriteSheetLoader {
                     load_context.add_loaded_labeled_asset("image".to_string(), loaded),
                 ),
                 layout,
+                None,
             )
         };
         Ok(pico8::SpriteSheet {
             handle,
             sprite_size: sprite_size.expect("computed sprite size"),
-            flags: vec![], // TODO!
+            flags: flags_maybe.unwrap_or(vec![]),
             layout: layout_maybe.unwrap_or(Handle::default()),
             palette: extract_palette,
         })

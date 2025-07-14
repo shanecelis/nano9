@@ -271,11 +271,11 @@ impl Plugin for Nano9Plugin {
         #[cfg(feature = "scripting")]
         {
             app.insert_resource(ScriptContext::<LuaScriptingPlugin>::shared());
-            let mut lua_scripting_plugin = LuaScriptingPlugin::default();//.enable_context_sharing();
+            let mut lua_scripting_plugin = LuaScriptingPlugin::default();
             lua_scripting_plugin
                 .scripting_plugin
                 .add_context_initializer(
-                    |_script_id: &ContextKey, context: &mut bevy_mod_scripting::lua::mlua::Lua| {
+                    |_context_key: &ContextKey, context: &mut bevy_mod_scripting::lua::mlua::Lua| {
                         context.globals().set(
                             "_eval_string",
                             context.create_function(|ctx, arg: String| {

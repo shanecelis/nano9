@@ -472,7 +472,12 @@ async fn into_asset(
                 audio_banks: config.audio_banks.into_iter().map(|bank| pico8::audio::AudioBank(match bank {
                     AudioBank::P8 { p8, count } => {
                             (0..count).map(|i|
-                                           pico8::audio::Audio::Sfx(load_context.load(AssetPath::from_path(&p8).into_owned().with_label(format!("sfx{i}"))))
+                                           // pico8::audio::Audio::Sfx(load_context.load::<pico8::audio::Sfx>(AssetPath::from_path(&p8).into_owned().with_label(format!("sfx{i}"))))
+                                           pico8::audio::Audio::Sfx(load_context
+                                                                    .loader()
+                                                                    .with_dynamic_type(std::any::TypeId::of::<pico8::audio::Sfx>())
+                                                                    .load(AssetPath::from_path(&p8).into_owned().with_label(format!("sfx{i}")))
+                                                                    .typed::<pico8::audio::Sfx>())
                             ).collect::<Vec<_>>()
                     }
                     AudioBank::Paths { paths } => {
