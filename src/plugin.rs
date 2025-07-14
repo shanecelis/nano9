@@ -10,7 +10,6 @@ use bevy::{
 #[cfg(feature = "scripting")]
 use bevy_mod_scripting::{
     core::{
-        asset::ScriptAsset,
         ConfigureScriptAssetSettings,
         asset::{Language, ScriptAsset},
         bindings::{function::namespace::NamespaceBuilder},
