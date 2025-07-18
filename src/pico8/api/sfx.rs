@@ -22,6 +22,16 @@ impl From<u8> for SfxCommand {
 }
 
 impl super::Pico8<'_, '_> {
+
+    pub fn bank(&self, bank: usize) -> Result<&AudioBank, Error> {
+        let bank_handle = self
+            .pico8_asset()?
+            .audio_banks
+            .get(bank)
+            .ok_or(Error::NoAsset(format!("bank {bank}").into()))?;
+        self.audio_banks.get(bank_handle)
+                        .ok_or(Error::NoAsset("audio bank handle".into()))
+    }
     // sfx( n, [channel,] [offset,] [length] )
     pub fn sfx(
         &mut self,
@@ -58,11 +68,7 @@ impl super::Pico8<'_, '_> {
                 }
             }
             SfxCommand::Play(n) => {
-                let sfx = self
-                    .pico8_asset()?
-                    .audio_banks
-                    .get(bank as usize)
-                    .ok_or(Error::NoAsset(format!("bank {bank}").into()))?
+                let sfx = self.bank(bank as usize)?
                     .get(n as usize)
                     .ok_or(Error::NoAsset(format!("sfx {n}").into()))?
                     .clone();
@@ -111,11 +117,7 @@ impl super::Pico8<'_, '_> {
                 // }
             }
             SfxCommand::Play(n) => {
-                let sfx = self
-                    .pico8_asset()?
-                    .audio_banks
-                    .get(bank as usize)
-                    .ok_or(Error::NoSuch(format!("audio bank {bank}").into()))?
+                let sfx = self.bank(bank as usize)?
                     .get(n as usize)
                     .ok_or(Error::NoAsset(format!("music {n}").into()))?
                     .clone();

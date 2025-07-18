@@ -13,7 +13,7 @@ pub struct Pico8Asset {
     pub(crate) sprite_sheets: Vec<Handle<SpriteSheet>>,
     pub(crate) maps: Vec<SpriteMap>,
     pub(crate) font: Vec<N9Font>,
-    pub(crate) audio_banks: Vec<AudioBank>,
+    pub(crate) audio_banks: Vec<Handle<AudioBank>>,
 }
 
 #[derive(Clone, Debug, Reflect)]

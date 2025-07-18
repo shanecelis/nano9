@@ -236,8 +236,6 @@ async fn into_asset(
     let mut palettes = Vec::new();
     if config.palettes.is_empty() {
         warn!("No palettes were provided.");
-        // XXX: Should we provide a default pico8 palette?
-        // config.palettes.push(Palette { path: pico8::PICO8_PALETTE.to_string(), row: None });
     } else {
         palettes = Vec::with_capacity(config.palettes.len());
         for palette in config.palettes.iter() {
@@ -253,27 +251,33 @@ async fn into_asset(
     let mut sprite_sheets = vec![];
     for (i, mut sheet) in config.sprite_sheets.into_iter().enumerate() {
         let asset_path = AssetPath::try_parse(&sheet.path)?.into_owned();
+        // let loaded = match load_context.loader()
+            // .immediate()
         let handle = load_context.loader()
-                                 // .with_settings(
-            // move |settings: &mut pico8::SpriteSheetSettings| {
-            //     settings.index_color = sheet.index_color;
-            //     settings.extract_palette = sheet.extract_palette;
-            //     settings.sprite_size = sheet.sprite_size;
-            //     settings.sprite_counts = sheet.sprite_counts;
-            //     settings.padding = sheet.padding;
-            //     settings.offset = sheet.offset;
-            //     settings.offset = sheet.offset;
-            //     // TODO: Provide sampler sampler?
-            // })
-            .load::<pico8::SpriteSheet>(&asset_path);
-        //     .load::<pico8>(&asset_path)
-        //     .await?;
-        // let handle = if let Some(label) = asset_path.label_cow() {
-        //     let sprite_sheet = loaded.get_labeled(label).and_then(|asset| asset.get::<pico8::SpriteSheet>()).expect("sprite_sheet").clone();
-        //     load_context.add_labeled_asset(format!("sprite_sheet{i}"), sprite_sheet)
-        // } else {
-        //     todo!()
-        // };
+                                 .load::<pico8::SpriteSheet>(&asset_path);
+            // .await {
+            //     Ok(handle) => handle,
+            //     Err(e) => {
+            //         load_context.loader()
+            //             .immediate()
+            //             .with_settings(
+            //                 move |settings: &mut pico8::SpriteSheetSettings| {
+            //                     settings.index_color = sheet.index_color;
+            //                     settings.extract_palette = sheet.extract_palette;
+            //                     settings.sprite_size = sheet.sprite_size;
+            //                     settings.sprite_counts = sheet.sprite_counts;
+            //                     settings.padding = sheet.padding;
+            //                     settings.offset = sheet.offset;
+            //                     settings.offset = sheet.offset;
+            //                     // TODO: Provide sampler sampler?
+            //                 })
+            //             .load::<pico8::SpriteSheet>(&asset_path)
+            //             .await?
+
+            //     }
+            // };
+        // let handle = load_context.add_loaded_labeled_asset(format!("sprite_sheet{}", i), loaded);
+
         sprite_sheets.push(handle);
 
         // let flags: Vec<u8>;
@@ -396,70 +400,63 @@ async fn into_asset(
             .immediate()
             .load(&asset_path)
             .await?;
-        // let handle = if let Some(label) = asset_path.label_cow() {
         let erased_asset = label.and_then(|label| {
-            let labels: Vec<&str> = loaded.iter_labels().collect();
-            info!("got label {}, have asset with labels: {:?}", &label, labels);
+            // let labels: Vec<&str> = loaded.iter_labels().collect();
+            // info!("got label {}, have asset with labels: {:?}", &label, labels);
             loaded.get_labeled(label)
-                               // .and_then(|asset| asset.get::<bevy_mod_scripting::prelude::ScriptAsset>())
-                               // .expect("script asset")
-                               // .clone();
         }).unwrap_or(&loaded);
         let Some(script_asset) = erased_asset.get::<ScriptAsset>() else {
             return Err(ConfigError::Message(format!("Cannot create `ScriptAsset` from {:?}", asset_path)));
         };
-
-        //                        else {
-        //     if loaded.downcast::<ScriptAsset>()
-        //     todo!()
-        // };
         scripts.push(load_context.add_labeled_asset(format!("script{i}"), script_asset.clone()));
-        // let mut script_asset: ScriptAsset = loaded.take();
-        // let label =  script_asset.asset_path.path().to_string_lossy().into_owned();
-        // script_asset.asset_path = load_context.asset_path().clone_owned().with_source(AssetSourceId::Default).with_label(label);
-        // scripts.push(load_context.add_loaded_labeled_asset(p, loaded));
-        // scripts.push(load_context.add_labeled_asset(p, script_asset));
     }
 
     let mut maps: Vec<pico8::SpriteMap> = Vec::with_capacity(config.maps.len());
     for (i, map) in config.maps.into_iter().enumerate() {
         let p8map: Handle<pico8::P8Map> = load_context.load::<pico8::P8Map>(map.path);
-        // let extension = map.path.extension().and_then(|s| s. to_str());
-        // if let Some(ext) = extension {
-        //     let p8map = match ext {
-        //         "p8" => {
-        //             let bytes = load_context.read_asset_bytes(map.path).await?;
-        //             let content = std::str::from_utf8(&bytes)?;
-        //             let settings = pico8::CartLoaderSettings::default();
-        //             let mut cart = pico8::Cart::from_str(content, &settings)?;
-        //             cart.map.resize(128 * 64, 0);
-        //             let handle = load_context.add_labeled_asset(format!("map{i}"), pico8::P8Map {
-        //                 entries: cart.map,
-        //             });
-        //             Ok(handle.into())
-        //         },
-        //         // "tmx" => {
-        //         //     #[cfg(feature = "level")]
-        //         //     return Ok(level::Tiled::SpriteMap {
-        //         //         handle: load_context.load(&*map.path),
-        //         //     }.into());
-        //         //     #[cfg(not(feature = "level"))]
-        //         //     Err(ConfigError::Message(format!("The map {:?} is a Tiled map; consider using the '--features=level' flag.", &map.path)))
-        //         // }
-        //         // "world" => {
-        //         //     #[cfg(feature = "level")]
-        //         //     return Ok(level::Tiled::World {
-        //         //         handle: load_context.load(&*map.path),
-        //         //     }.into());
-        //         //     #[cfg(not(feature = "level"))]
-        //         //     Err(ConfigError::Message(format!("The map {:?} is a Tiled world; consider using the '--features=level' flag.", &map.path)))
-        //         // }
-        //         _ => Err(ConfigError::Message(format!("Unknown map format {:?}", &map.path)))
-        //     }?;
         maps.push(p8map.into());
-        // } else {
-        //     Err(ConfigError::Message(format!("The map path {:?} did not have an extension.", &map.path)))
-        // }?
+    }
+    let mut audio_banks = vec![];
+    for (i, bank) in config.audio_banks.into_iter().enumerate() {
+        let mut items = vec![];
+        for (j, p) in bank.paths.into_iter().enumerate() {
+
+            let mut asset_path = AssetPath::try_parse(&p)?.into_owned();
+            let label = asset_path.take_label();
+            let erased_loaded = load_context.loader()
+                                            .with_unknown_type()
+                                            .immediate()
+                                            .load(&asset_path)
+                                            .await?;
+            match erased_loaded.downcast::<pico8::audio::AudioBank>() {
+                Ok(loaded) => {
+                    let audio_bank = loaded.take();
+                    items.extend(audio_bank.0);
+                }
+                Err(erased_loaded) => {
+                    match erased_loaded.downcast::<AudioSource>() {
+                        Ok(loaded) => {
+                            items.push(pico8::audio::Audio::AudioSource(load_context.add_loaded_labeled_asset(format!("audio_bank{}sfx{}", i, j), loaded)));
+                        }
+                        Err(erased_loaded) => {
+                            if let Some(erased_asset) = label.and_then(|label| {
+                                info!("getting label {}", &label);
+                                erased_loaded.get_labeled(label)
+                            }) {
+                                if let Some(audio_bank) = erased_asset.get::<pico8::audio::AudioBank>() {
+                                    items.extend(audio_bank.clone().0);
+                                } else {
+                                    error!("unable to add {:?} to audio bank, label had asset type {}", p, erased_asset.asset_type_name());
+                                }
+                            } else {
+                                error!("unable to add {:?} to audio bank, has asset type {}", p, erased_loaded.asset_type_name());
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        audio_banks.push(load_context.add_labeled_asset(format!("audio_bank{}", i), pico8::audio::AudioBank(items)));
     }
     let state = pico8::Pico8Asset {
         #[cfg(feature = "scripting")]
@@ -469,21 +466,7 @@ async fn into_asset(
                                     .with_settings(pixel_art_settings)
                                     .load(pico8::PICO8_BORDER),
                 maps,
-                audio_banks: config.audio_banks.into_iter().map(|bank| pico8::audio::AudioBank(match bank {
-                    AudioBank::P8 { p8, count } => {
-                            (0..count).map(|i|
-                                           // pico8::audio::Audio::Sfx(load_context.load::<pico8::audio::Sfx>(AssetPath::from_path(&p8).into_owned().with_label(format!("sfx{i}"))))
-                                           pico8::audio::Audio::Sfx(load_context
-                                                                    .loader()
-                                                                    .with_dynamic_type(std::any::TypeId::of::<pico8::audio::Sfx>())
-                                                                    .load(AssetPath::from_path(&p8).into_owned().with_label(format!("sfx{i}")))
-                                                                    .typed::<pico8::audio::Sfx>())
-                            ).collect::<Vec<_>>()
-                    }
-                    AudioBank::Paths { paths } => {
-                        paths.into_iter().map(|p| pico8::audio::Audio::AudioSource(load_context.load(p))).collect::<Vec<_>>()
-                    }
-                })).collect::<Vec<_>>(),
+                audio_banks,
                 sprite_sheets,
                 font: config.fonts.into_iter().map(|font|
                                                      match font {

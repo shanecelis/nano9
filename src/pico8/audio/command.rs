@@ -10,10 +10,13 @@ use std::sync::{
 };
 
 pub(crate) fn plugin(app: &mut App) {
-    app.register_type::<Audio>().register_type::<AudioBank>();
+    app
+        .register_type::<Audio>()
+        .register_type::<AudioBank>()
+        .init_asset::<AudioBank>();
 }
 
-#[derive(Clone, Debug, Deref, DerefMut, Reflect)]
+#[derive(Clone, Debug, Deref, DerefMut, Reflect, Asset)]
 pub struct AudioBank(pub Vec<Audio>);
 
 #[derive(Debug, Clone, Reflect)]

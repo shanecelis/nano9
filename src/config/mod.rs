@@ -106,20 +106,9 @@ pub struct Defaults {
 
 /// Audio bank
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
-#[serde(untagged)]
-pub enum AudioBank {
-    // #[serde(rename = "p8")]
-    P8 {
-        /// Path to Pico-8 file
-        p8: PathBuf,
-        /// Count of Sfx to read
-        count: usize,
-    },
-    // #[serde(rename = "paths")]
-    Paths {
-        /// Paths to audio files
-        paths: Vec<PathBuf>,
-    },
+pub struct AudioBank {
+    /// Paths to audio files
+    paths: Vec<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Merge)]
@@ -265,9 +254,11 @@ pub fn run_pico8_when_loaded(
 ) {
     match **state {
         RunState::Loaded => {
+            info!("Goto Init state.");
             next_state.set(RunState::Init);
         }
         RunState::Init => {
+            info!("Goto Run state.");
             next_state.set(RunState::Run);
         }
         _ => (),

@@ -38,6 +38,7 @@ pub struct Pico8<'w, 's> {
     pub(crate) gfx_materials: ResMut<'w, Assets<GfxMaterial>>,
     pub(crate) sprite_sheets: ResMut<'w, Assets<SpriteSheet>>,
     pub(crate) p8_maps: ResMut<'w, Assets<P8Map>>,
+    pub(crate) audio_banks: ResMut<'w, Assets<AudioBank>>,
 }
 
 impl Pico8<'_, '_> {

@@ -146,7 +146,8 @@ fn to_asset(cart: Cart, load_context: &mut LoadContext) -> Result<Pico8Asset, Ca
                     entries: cart.map.clone(),
                 })
                 .into()],
-        audio_banks: vec![AudioBank(
+        audio_banks: vec![{
+            let bank = AudioBank(
             cart.sfx
                 .into_iter()
                 .enumerate()
@@ -157,7 +158,9 @@ fn to_asset(cart: Cart, load_context: &mut LoadContext) -> Result<Pico8Asset, Ca
                     )
                 })
                 .collect(),
-        )],
+        );
+            load_context.add_labeled_asset("audio_bank".into(), bank)
+        }],
         sprite_sheets,
         font: vec![N9Font {
             handle: load_context.load(PICO8_FONT),

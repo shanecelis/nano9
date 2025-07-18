@@ -181,23 +181,23 @@ impl Nano9Plugin {
 }
 
 #[cfg(feature = "scripting")]
-fn add_lua_logging(app: &mut App) {
+fn add_logging(app: &mut App) {
     let world = app.world_mut();
     NamespaceBuilder::<World>::new_unregistered(world)
         .register("info", |s: String| {
-            bevy::log::info!(s);
+            bevy::log::info!("{}", s);
         })
         .register("warn", |s: String| {
-            bevy::log::warn!(s);
+            bevy::log::warn!("{}", s);
         })
         .register("error", |s: String| {
-            bevy::log::error!(s);
+            bevy::log::error!("{}", s);
         })
         .register("debug", |s: String| {
-            bevy::log::debug!(s);
+            bevy::log::debug!("{}", s);
         })
         .register("trace", |s: String| {
-            bevy::log::trace!(s);
+            bevy::log::trace!("{}", s);
         });
 }
 // use bevy_mod_scripting::core::error::InteropError;
@@ -349,7 +349,7 @@ impl Plugin for Nano9Plugin {
         }
 
         #[cfg(feature = "scripting")]
-        app.add_plugins(add_lua_logging);
+        app.add_plugins(add_logging);
         #[cfg(feature = "scripting")]
         app.add_systems(
             Update,
