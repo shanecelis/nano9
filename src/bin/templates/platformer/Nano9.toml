@@ -1,0 +1,61 @@
+### Nano-9 Config
+
+## Info
+# name = "My Nano-9 Game"
+# description = "Yet another platformer"
+# author = "Jane Doe <jane.doe@email.com>"
+# license = "MIT"
+frames_per_second = 60
+template = "pico8"
+scripts = [
+"vector.p8#lua",
+"actor.p8#lua",
+"platformer.p8#lua",
+"dolly.p8#lua",
+"main.lua",
+]
+
+## Screen
+# [screen]
+# canvas_size = [128, 128]
+# screen_size = [512, 512]
+
+## Defaults
+# [defaults]
+# font_size = 5
+# initial_pen_color = 6
+# initial_transparent_color = 7
+# clear_color = 8
+
+## Fonts
+# [[font]] # 0
+# path = "embedded://nano9/pico8/pico-8.ttf"
+# [[font]] # 1
+# path = "font.tff"
+# [[font]] # 2
+# default = true # The default Bevy font
+
+## Palettes
+# [[palette]] # 0
+# path = "1bit-palette.png"
+# [[palette]] # 1
+# path = "dawn-palette.png"
+
+## Images and sprite sheets
+[[sprite_sheet]] # 0
+path = "micro-platformer.p8#sprite_sheet"
+# sprite_size = [8, 8]
+# indexed = true # An indexed image
+# [[sprite_sheet]] # 1
+# path = "main-character.png"
+# sprite_counts = [13, 1]
+
+## Audio banks
+[[audio_bank]] #0
+path = "micro-platformer.p8#audio_bank"
+
+## Maps
+[[map]] # 0
+path = "micro-platformer.p8#map"
+# [[map]] # 1
+# path = "map1.p8#map"

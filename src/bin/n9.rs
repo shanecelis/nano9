@@ -194,9 +194,7 @@ fn new(cli: Cli) -> io::Result<ExitCode> {
             )
                 .format_timestamp(None)
                 .init();
-            if let Some(_starter) = starter {
-                todo!();
-            } else if let Some(extension) = path.extension().and_then(|s| s.to_str()) {
+            if let Some(extension) = path.extension().and_then(|s| s.to_str()) {
                 match extension {
                     "lua" => {
                         // Copy the lua template.
@@ -217,7 +215,7 @@ fn new(cli: Cli) -> io::Result<ExitCode> {
                 }
             } else {
                 // It's a directory path.
-                match language {
+                let assets_path = match language {
                     lang @ Some(Language::Rust | Language::LuaRust) => {
                         use cmd_lib::run_cmd;
                         info!("Creating new cargo project at {:?}.", &path);
@@ -227,52 +225,51 @@ fn new(cli: Cli) -> io::Result<ExitCode> {
                             Language::LuaRust => "lua-lib",
                             Language::Lua => unreachable!(),
                         };
-                        Ok(
-                            match run_cmd!(
-                                cargo new $path;
-                                cd $path;
-                                cargo add bevy@0.15;
-                                cargo add nano9 --git "https://github.com/shanecelis/nano-9.git" --branch dev --no-default-features --features $feature;
-                            ) {
-                                Ok(_) => {
-                                    // Copy files
-                                    let content = include_str!("templates/Nano9.toml");
-                                    let mut p = path.to_path_buf();
-                                    p.push("assets");
-                                    fs::create_dir_all(&p)?;
-                                    p.push("Nano9.toml");
-                                    info!("Creating Nano-9 config at {:?}.", &p);
+                        match run_cmd!(
+                            cargo new $path;
+                            cd $path;
+                            cargo add bevy@0.15;
+                            cargo add nano9 --git "https://github.com/shanecelis/nano-9.git" --branch dev --no-default-features --features $feature;
+                        ) {
+                            Ok(_) => {
+                                // Copy files
+                                let content = include_str!("templates/Nano9.toml");
+                                let mut p = path.to_path_buf();
+                                p.push("assets");
+                                fs::create_dir_all(&p)?;
+                                p.push("Nano9.toml");
+                                info!("Creating Nano-9 config at {:?}.", &p);
+                                fs::write(&p, content)?;
+
+                                if lang == Language::LuaRust {
+                                    let _ = p.pop();
+                                    p.push("main.lua");
+                                    info!("Creating main Lua code at {:?}.", &p);
+                                    fs::write(&p, HELLO_WORLD)?;
+
+                                    let content = include_str!("templates/main-lua-rust.rs.txt");
+                                    let _ = p.pop();
+                                    let _ = p.pop();
+                                    p.push("src/main.rs");
+                                    info!("Creating main Rust code at {:?}.", &p);
                                     fs::write(&p, content)?;
-
-                                    if lang == Language::LuaRust {
-                                        let _ = p.pop();
-                                        p.push("main.lua");
-                                        info!("Creating main Lua code at {:?}.", &p);
-                                        fs::write(&p, HELLO_WORLD)?;
-
-                                        let content = include_str!("templates/main-lua-rust.rs.txt");
-                                        let _ = p.pop();
-                                        let _ = p.pop();
-                                        p.push("src/main.rs");
-                                        info!("Creating main Rust code at {:?}.", &p);
-                                        fs::write(&p, content)?;
-                                    } else {
-                                        let content = include_str!("templates/main-rust.rs.txt");
-                                        let _ = p.pop();
-                                        let _ = p.pop();
-                                        p.push("src/main.rs");
-                                        info!("Creating main Rust code at {:?}.", &p);
-                                        fs::write(&p, content)?;
-                                    }
-
-                                    ExitCode::from(0)
+                                } else {
+                                    let content = include_str!("templates/main-rust.rs.txt");
+                                    let _ = p.pop();
+                                    let _ = p.pop();
+                                    p.push("src/main.rs");
+                                    info!("Creating main Rust code at {:?}.", &p);
+                                    fs::write(&p, content)?;
                                 }
-                                Err(e) => {
-                                    error!("error: Problem running cargo {e}");
-                                    ExitCode::from(8)
-                                }
-                            },
-                        )
+                            }
+                            Err(e) => {
+                                error!("error: Problem running cargo {e}");
+                                return Ok(ExitCode::from(8));
+                            }
+                        }
+                        let mut p = path.to_path_buf();
+                        p.push("assets");
+                        Some(p)
                     }
                     Some(Language::Lua) | None => {
                         if path.exists() {
@@ -287,23 +284,61 @@ fn new(cli: Cli) -> io::Result<ExitCode> {
                         } else {
                             fs::create_dir_all(&path)?;
                         }
-                        let config = include_str!("../../examples/sprite/Nano9.toml");
-                        let mut p = path.to_path_buf();
-                        p.push("Nano9.toml");
-                        fs::write(&p, config)?;
+                        copy_template!("../../examples/sprite/Nano9.toml", path, "Nano9.toml");
 
-                        let code = include_str!("../../examples/sprite/main.p8lua");
-                        let mut code_path = path.to_path_buf();
-                        code_path.push("main.lua");
-                        fs::write(&code_path, code)?;
-                        Ok(ExitCode::from(0))
+                        copy_template!("../../examples/sprite/main.p8lua", path, "main.lua");
+                        // let config = include_str!("../../examples/sprite/Nano9.toml");
+                        // let mut p = path.to_path_buf();
+                        // p.push("Nano9.toml");
+                        // fs::write(&p, config)?;
+
+                        // let code = include_str!("../../examples/sprite/main.p8lua");
+                        // let mut code_path = path.to_path_buf();
+                        // code_path.push("main.lua");
+                        // fs::write(&code_path, code)?;
+                        Some(path.to_path_buf())
                     }
+                    _ => None,
+                };
+                if starter.is_some() && assets_path.is_none() {
+                    error!("No assets path to copy template to for starter kit {:?}", starter);
+                    return Ok(ExitCode::from(9));
                 }
+                match starter {
+                    Some(StarterKit::Platformer) => {
+                        if let Some(assets_path) = assets_path {
+                            copy_template!("templates/platformer/Nano9.toml", assets_path, "Nano9.toml");
+                            copy_template!("templates/platformer/actor.p8", assets_path, "actor.p8");
+                            copy_template!("templates/platformer/dolly.p8", assets_path, "dolly.p8");
+                            copy_template!("templates/platformer/main.lua", assets_path, "main.lua");
+                            copy_template!("templates/platformer/micro-platformer.p8", assets_path, "micro-platformer.p8");
+                            copy_template!("templates/platformer/platformer.p8", assets_path, "platformer.p8");
+                            copy_template!("templates/platformer/vector.p8", assets_path, "vector.p8");
+                        }
+                    }
+                    None => (),
+                    _ => todo!()
+                }
+
+                Ok(ExitCode::from(0))
             }
         }
         _ => unreachable!(),
     }
 }
+
+#[macro_export]
+macro_rules! copy_template {
+    ($src:expr, $path:expr, $filename:expr) => {{
+        let config = include_str!($src);
+        let mut p = $path.to_path_buf();
+        p.push($filename);
+        std::fs::write(&p, config)?;
+        let _ = p.pop();
+        p
+    }};
+}
+
 
 fn run(cli: Cli) -> io::Result<ExitCode> {
     let (script, shared_data, pause) = match cli.command {
