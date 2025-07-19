@@ -38,11 +38,11 @@ The goals for Nano-9 are to
 - Do not use fixed-point numbers in general.
 - Do not support the same performance characteristics.
   
-  Let me provide an example where Nano-9 and Pico-8 performance differ. In
+  Let me provide an example where Nano-9 and Pico-8 performance differs. In
   Pico-8 if one doesn't clear the screen `cls()` and continues to draw sprites
-  `spr()` each `_draw()`, the performance curve will be flat. However, in Nano-9
-  a `spr()` creates a Bevy `Sprite` and if one doesn't clear them frequently,
-  they will accumulate and degrade performance.
+  `spr()` each `_draw()` call, the performance curve will be flat. However, in
+  Nano-9 a `spr()` creates a Bevy `Sprite` and if one doesn't clear them
+  frequently, they will accumulate and degrade performance.
   
   Why not reify the last render to an image to preserve Pico-8's performance?
   One could do this certainly but the aim is to support Bevy's native elements
@@ -54,7 +54,8 @@ The goals for Nano-9 are to
   [`bevy_ecs_tilemap::TilemapBundle`](https://docs.rs/bevy_ecs_tilemap/latest/bevy_ecs_tilemap/type.TilemapBundle.html).
   In this way the comfortable world of Pico-8 can help introduce one to the
   world of Bevy, and it can also provide affordances not possible in Pico-8. For
-  instance one could query on-screen entities for collision information.
+  instance one could query on-screen entities for collision information with a
+  suitable extension.
 
 ## Install
 
@@ -79,6 +80,14 @@ cargo add nano9@0.1.0-alpha.2
 Recommended if you are writing your game in Lua and not Rust.
 ``` sh
 cargo install nano9@0.1.0-alpha.2
+```
+
+## Exercise
+
+Run a cart directly from a URL. For instance one may run Celeste like so:
+
+``` sh
+cargo run --features web-asset -- run --shared-data=map https://www.lexaloffle.com/bbs/cposts/1/15133.p8.png
 ```
 
 ## API Extensions
