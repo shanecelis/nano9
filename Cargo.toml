@@ -42,7 +42,7 @@ bevy_rand = { version = "0.9.0", features = ["wyrand"] }
 bevy_prng = "0.9.0"
 pico8_decompress = { version = "0.1.0" }
 png = "0.17.16"
-pico8-to-lua = { version = "0.1.0", optional = true }
+pico8-to-lua = { version = "0.1.1", optional = true }
 fixed = { version = "1.29.0", optional = true }
 bevy_web_asset = { version = "0.10.0", optional = true, default-features = false }
 mashmap = "0.2.2"
@@ -90,12 +90,13 @@ required-features = [ "cli" ]
 
 [patch.crates-io]
 # mashmap = { git = "https://github.com/shanecelis/mashmap.git", branch = "drain_key_if" }
-pico8-to-lua = { path = "../pico8-to-lua" }
+# pico8-to-lua = { path = "../pico8-to-lua" }
 # bevy = { path = "../bevy" }
 # bevy_ecs = { path = "../bevy/crates/bevy_ecs" }
 # bevy_ecs_tiled = { path = "../bevy_ecs_tiled" }
-bevy_mod_scripting = { path = "../bevy_mod_scripting" }
-bevy_minibuffer = { path = "../bevy_minibuffer" }
+# bevy_mod_scripting = { path = "../bevy_mod_scripting" }
+bevy_mod_scripting = { git = "https://github.com/shanecelis/bevy_mod_scripting.git", branch = "use-handles" }
+# bevy_minibuffer = { path = "../bevy_minibuffer" }
 # bevy_asky = { path = "../bevy_asky" }
 # bevy_ecs_ldtk = { path = "../bevy_ecs_ldtk" }
 # bevy_ecs_tilemap = { path = "../bevy_ecs_tilemap" }

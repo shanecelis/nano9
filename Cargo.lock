@@ -1361,6 +1361,8 @@ dependencies = [
 [[package]]
 name = "bevy_minibuffer"
 version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b3e720841498d27261b92839f13bcd06c494eb9b48cba76db3d5252c377f8248"
 dependencies = [
  "accesskit",
  "bevy",
@@ -1412,6 +1414,7 @@ dependencies = [
 [[package]]
 name = "bevy_mod_scripting"
 version = "0.13.0"
+source = "git+https://github.com/shanecelis/bevy_mod_scripting.git?branch=use-handles#b8b0ef5d2b3f15c4d325008bc00df03d5ead3f44"
 dependencies = [
  "bevy",
  "bevy_mod_scripting_core",
@@ -1423,6 +1426,7 @@ dependencies = [
 [[package]]
 name = "bevy_mod_scripting_core"
 version = "0.13.0"
+source = "git+https://github.com/shanecelis/bevy_mod_scripting.git?branch=use-handles#b8b0ef5d2b3f15c4d325008bc00df03d5ead3f44"
 dependencies = [
  "bevy",
  "bevy_mod_debugdump",
@@ -1445,6 +1449,7 @@ dependencies = [
 [[package]]
 name = "bevy_mod_scripting_derive"
 version = "0.13.0"
+source = "git+https://github.com/shanecelis/bevy_mod_scripting.git?branch=use-handles#b8b0ef5d2b3f15c4d325008bc00df03d5ead3f44"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1454,6 +1459,7 @@ dependencies = [
 [[package]]
 name = "bevy_mod_scripting_functions"
 version = "0.13.0"
+source = "git+https://github.com/shanecelis/bevy_mod_scripting.git?branch=use-handles#b8b0ef5d2b3f15c4d325008bc00df03d5ead3f44"
 dependencies = [
  "bevy",
  "bevy_mod_scripting_core",
@@ -1468,6 +1474,7 @@ dependencies = [
 [[package]]
 name = "bevy_mod_scripting_lua"
 version = "0.13.0"
+source = "git+https://github.com/shanecelis/bevy_mod_scripting.git?branch=use-handles#b8b0ef5d2b3f15c4d325008bc00df03d5ead3f44"
 dependencies = [
  "bevy",
  "bevy_mod_scripting_core",
@@ -1744,6 +1751,7 @@ dependencies = [
 [[package]]
 name = "bevy_system_reflection"
 version = "0.1.2"
+source = "git+https://github.com/shanecelis/bevy_mod_scripting.git?branch=use-handles#b8b0ef5d2b3f15c4d325008bc00df03d5ead3f44"
 dependencies = [
  "bevy",
  "dot-writer",
@@ -5290,7 +5298,9 @@ dependencies = [
 
 [[package]]
 name = "pico8-to-lua"
-version = "0.1.0"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3bd656b9c34e1936022846c5e074e1c87d361412f9b7104b2b20b8fec80a166b"
 dependencies = [
  "find-matching-bracket",
  "lazy-regex",
