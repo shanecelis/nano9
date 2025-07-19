@@ -1,5 +1,6 @@
 use crate::pico8::{self, Error, Gfx, GfxMaterial, SprHandle, SpriteSheet};
 use bevy::prelude::*;
+use std::collections::VecDeque;
 
 #[cfg(feature = "level")]
 use crate::level;
@@ -11,7 +12,7 @@ pub enum SpriteMap {
     #[cfg(feature = "level")]
     Level(level::Tiled),
 }
-#[derive(Component)]
+#[derive(Component, Reflect)]
 pub struct GfxTilemapTexture {
     image: Handle<Gfx>,
     material: Handle<GfxMaterial>,
@@ -32,7 +33,13 @@ pub struct P8Map {
 }
 
 pub(crate) fn plugin(app: &mut App) {
-    app.init_asset::<P8Map>();
+    app
+        .register_type::<GfxTilemapTexture>()
+        .register_type::<P8SpriteMap>()
+        .init_asset::<P8Map>()
+        .add_systems(PostUpdate, (add_tilemaps,
+                                  compute_gfx_tilemap_texture_on_asset_event.after(add_tilemaps),
+                                  compute_image_on_gfx_tilemap_texture_change.after(compute_gfx_tilemap_texture_on_asset_event)));
 }
 
 impl From<Handle<P8Map>> for SpriteMap {
@@ -41,7 +48,7 @@ impl From<Handle<P8Map>> for SpriteMap {
     }
 }
 
-#[derive(Component)]
+#[derive(Component, Reflect)]
 pub struct P8SpriteMap {
     // TODO: This should really be a Handle<P8Map>.
     pub map_index: usize,
@@ -49,6 +56,127 @@ pub struct P8SpriteMap {
     pub gfx_material: Handle<pico8::GfxMaterial>,
     pub rect: URect,
     pub mask: Option<u8>,
+}
+
+// Informed from Bevy's Sprite::compute_slices_on_asset_event.
+fn compute_gfx_tilemap_texture_on_asset_event(
+    mut commands: Commands,
+    mut events: EventReader<AssetEvent<Gfx>>,
+    mut images: ResMut<Assets<Image>>,
+    gfxs: Res<Assets<Gfx>>,
+    gfx_materials: Res<Assets<GfxMaterial>>,
+    palettes: Res<pico8::Palettes>,
+    mut textures: Query<(Entity, &GfxTilemapTexture, Option<&mut TilemapTexture>)>,
+    mut pairs: ResMut<pico8::GfxImageMap>,
+    mut update_ids: Local<Vec<Entity>>,
+    mut update_images: Local<VecDeque<Handle<Image>>>,
+) {
+    // We store the asset ids of added/modified image assets.
+    let added_handles: bevy::utils::HashSet<_> = events
+        .read()
+        .filter_map(|e| match e {
+            AssetEvent::Added { id } | AssetEvent::Modified { id } => Some(*id),
+            AssetEvent::Removed { id } => {
+                pairs.remove(id);
+                None
+            }
+            _ => None,
+        })
+        .collect();
+    if added_handles.is_empty() {
+        return;
+    }
+    for (id, gfx_sprite, sprite) in &textures {
+        if !added_handles.contains(&gfx_sprite.image.id()) {
+            continue;
+        }
+        let Some(gfx_material) = gfx_materials.get(&gfx_sprite.material) else {
+            continue;
+        };
+        let image_handle = crate::pico8::gfx::compute_image(&gfx_sprite.image,
+                                         true,
+                                         gfx_material,
+                                         &gfxs,
+                                         &mut images,
+                                         &palettes,
+                                         &mut pairs);
+        match image_handle {
+            Ok(image) => {
+                match sprite {
+                    Some(tilemap_texture) => {
+                        match tilemap_texture {
+                            TilemapTexture::Single(handle) if *handle != image => {
+                            // trace!("updating existant sprite on {}", id);
+                            update_ids.push(id);
+                            update_images.push_back(image);
+                            }
+                            _ => {}
+                        }
+                    }
+                    None => {
+                        // trace!("inserting new sprite into {}", id);
+                        commands.entity(id)
+                            .insert(TilemapTexture::Single(image));
+                    }
+                }
+            }
+            Err(e) => {
+                warn!("Unable to update gfx {}: {e}", gfx_sprite.image.id());
+            }
+        }
+    }
+    // Try not to trigger a sprite change if we don't have to.
+    let mut iter = textures.iter_many_mut(update_ids.iter());
+    while let Some((_, _, tilemap_texture)) = iter.fetch_next() {
+        match tilemap_texture {
+            Some(mut tilemap_texture) => {
+                *tilemap_texture = TilemapTexture::Single(update_images.pop_front().unwrap());
+            }
+            _ => unreachable!()
+        }
+
+    }
+}
+
+fn compute_image_on_gfx_tilemap_texture_change(
+    mut commands: Commands,
+    mut images: ResMut<Assets<Image>>,
+    gfxs: Res<Assets<Gfx>>,
+    gfx_materials: Res<Assets<GfxMaterial>>,
+    palettes: Res<pico8::Palettes>,
+    mut sprites: Query<(Entity, &GfxTilemapTexture, Option<&mut TilemapTexture>), Changed<GfxTilemapTexture>>,
+    mut pairs: ResMut<pico8::GfxImageMap>,
+) {
+    for (id, gfx_sprite, sprite) in &mut sprites {
+        let Some(gfx_material) = gfx_materials.get(&gfx_sprite.material) else {
+            continue;
+        };
+        let image_handle = crate::pico8::gfx::compute_image(&gfx_sprite.image,
+                                         false,
+                                         gfx_material,
+                                         &gfxs,
+                                         &mut images,
+                                         &palettes,
+                                         &mut pairs);
+        match image_handle {
+            Ok(image) => {
+                match sprite {
+                    Some(mut tilemap_texture) => {
+                        trace!("updating existant tilemap texture on {}", id);
+                        *tilemap_texture = TilemapTexture::Single(image);
+                    }
+                    None => {
+                        trace!("inserting new tilemap texture into {}", id);
+                        commands.entity(id)
+                            .insert(TilemapTexture::Single(image));
+                    }
+                }
+            }
+            Err(e) => {
+                warn!("Unable to update gfx {}: {e}", gfx_sprite.image.id());
+            }
+        }
+    }
 }
 
 fn add_tilemaps(

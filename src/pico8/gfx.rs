@@ -98,7 +98,7 @@ pub(crate) fn compute_image_sys(In(gfx_sprite): In<GfxSprite>,
 }
 
 
-fn compute_image(gfx_handle: &Handle<Gfx>,
+pub(crate) fn compute_image(gfx_handle: &Handle<Gfx>,
                  gfx_changed: bool,
                  gfx_material: &GfxMaterial,
                  gfxs: &Assets<Gfx>,
@@ -237,6 +237,7 @@ fn compute_image_on_asset_event(
 
     }
 }
+
 
 fn compute_image_on_gfx_sprite_change(
     mut commands: Commands,
