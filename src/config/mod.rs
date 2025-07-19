@@ -66,7 +66,7 @@ pub struct Config {
     #[serde(default, rename = "font")]
     pub fonts: Vec<Font>,
     /// Images
-    #[serde(default, rename = "image")]
+    #[serde(default, rename = "sprite_sheet")]
     pub sprite_sheets: Vec<SpriteSheet>,
     /// Scripts
     #[serde(default)]
@@ -95,20 +95,25 @@ pub struct Defaults {
     pub time_to_live: Option<u8>,
 }
 
-// pub enum SharedData {
-
-// }
-
-// pub struct Cart {
-//     pub shared_data:
-
-// }
-
 /// Audio bank
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
-pub struct AudioBank {
+#[serde(untagged)]
+pub enum AudioBank {
     /// Paths to audio files
-    paths: Vec<String>,
+    Paths { paths: Vec<String> },
+    /// Path to audio file or audio bank
+    Path { path: String },
+}
+
+impl AudioBank {
+    /// Iterate through the paths
+    pub fn paths(&self) -> impl Iterator<Item = &str> {
+        let (a, b) = match self {
+            AudioBank::Paths { paths: v } => (Some(v), None),
+            AudioBank::Path { path: s } => (None, Some(s.as_str())),
+        };
+        a.into_iter().flatten().map(|x| x.as_str()).chain(b.into_iter())
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Merge)]
@@ -119,13 +124,6 @@ pub struct Screen {
     /// Screen size, physical pixels, e.g., [512, 512] for pico8
     pub screen_size: Option<UVec2>,
 }
-
-// #[derive(Debug, Clone, Deserialize)]
-// #[serde(untagged)]
-// pub enum Sprite {
-//     Sheet { sheet: SpriteSheet },
-//     Tiled { path: PathBuf },
-// }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default, Merge)]
 pub struct SpriteSheet {
@@ -239,7 +237,7 @@ pub fn update_asset(
                     info!("Goto Loaded state");
                     next_state.set(RunState::Loaded);
                 } else {
-                    error!("Pico8Asset not available for loaded {:?}.", id);
+                    debug!("Pico8Asset not available for loaded {:?}.", id);
                 }
             } else {
                 warn!("Script loaded but no Pico8Handle is loaded.");
@@ -386,7 +384,7 @@ image = []
     fn test_config_1() {
         let config: Config = toml::from_str(
             r#"
-[[image]]
+[[sprite_sheet]]
 path = "sprites.png"
 sprite_size = [8, 8]
 "#,
@@ -421,7 +419,7 @@ path = "sprites.png"
             r#"
 [screen]
 canvas_size = [128,128]
-[[image]]
+[[sprite_sheet]]
 path = "sprites.png"
 sprite_size = [8, 8]
 "#,
@@ -441,18 +439,14 @@ sprite_size = [8, 8]
         let config: Config = toml::from_str(
             r#"
 [[audio_bank]]
-p8 = "blah.p8"
-count = 1
+paths = ["blah.p8"]
 "#,
         )
         .unwrap();
         assert_eq!(config.audio_banks.len(), 1);
         assert_eq!(
-            config.audio_banks[0],
-            AudioBank::P8 {
-                p8: "blah.p8".into(),
-                count: 1
-            }
+            config.audio_banks[0].paths().collect::<Vec<_>>(),
+            vec!["blah.p8"],
         );
     }
 
@@ -469,10 +463,8 @@ paths = [
         .unwrap();
         assert_eq!(config.audio_banks.len(), 1);
         assert_eq!(
-            config.audio_banks[0],
-            AudioBank::Paths {
-                paths: vec!["blah.mp3".into()]
-            }
+            config.audio_banks[0].paths().collect::<Vec<_>>(),
+            vec!["blah.mp3"],
         );
     }
 
@@ -585,32 +577,32 @@ clear_color = 8
     fn test_image_palette0() {
         let config: Config = toml::from_str(
             r#"
-[[image]]
+[[sprite_sheet]]
 path = "sprites.png"
 index_color = true
 "#,
         )
         .unwrap();
-        assert_eq!(config.sprite_sheets[0].index_color, true);
+        assert_eq!(config.sprite_sheets[0].index_color, Some(true));
     }
 
     #[test]
     fn test_image_palette1() {
         let config: Config = toml::from_str(
             r#"
-[[image]]
+[[sprite_sheet]]
 path = "sprites.png"
 "#,
         )
         .unwrap();
-        assert_eq!(config.sprite_sheets[0].index_color, false);
+        assert_eq!(config.sprite_sheets[0].index_color, None);
     }
 
     #[test]
     fn test_image_palette2() {
         let config: Config = toml::from_str(
             r#"
-[[image]]
+[[sprite_sheet]]
 path = "sprites.png"
 extract_palette = true
 "#,

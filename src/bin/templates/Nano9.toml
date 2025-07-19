@@ -36,11 +36,11 @@ scripts = [ "main.lua" ]
 # path = "dawn-palette.png"
 
 ## Images and sprite sheets
-# [[image]] # 0
+# [[sprite_sheet]] # 0
 # path = "sprite-sheet.png"
 # sprite_size = [8, 8]
 # indexed = true # An indexed image
-# [[image]] # 1
+# [[sprite_sheet]] # 1
 # path = "main-character.png"
 # sprite_counts = [13, 1]
 

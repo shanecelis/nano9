@@ -194,7 +194,7 @@ configuration:
 ``` lua
 --[===[
 template = "pico8"
-[[image]]
+[[sprite_sheet]]
 path = "BirdSprite.png"
 sprite_size = [16, 16]
 ]===]

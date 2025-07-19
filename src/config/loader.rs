@@ -419,7 +419,7 @@ async fn into_asset(
     let mut audio_banks = vec![];
     for (i, bank) in config.audio_banks.into_iter().enumerate() {
         let mut items = vec![];
-        for (j, p) in bank.paths.into_iter().enumerate() {
+        for (j, p) in bank.paths().enumerate() {
 
             let mut asset_path = AssetPath::try_parse(&p)?.into_owned();
             let label = asset_path.take_label();

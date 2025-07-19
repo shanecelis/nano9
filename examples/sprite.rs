@@ -28,7 +28,7 @@ fn main() {
         // OR provide configuration string.
         Config::from_str(r#"
             template = "pico8"
-            [[image]]
+            [[sprite_sheet]]
             path = "BirdSprite.png"
             sprite_size = [16, 16]
         "#).expect("invalid config")
