@@ -105,7 +105,7 @@ impl super::Pico8<'_, '_> {
             }
 
             #[cfg(feature = "level")]
-            SpriteMap::Level(ref map) => self.tiled.mget(map, pos, map_index, layer_index).ok(),
+            SpriteMap::Level(ref map) => self.tiled.mget(map, pos, map_index, _layer_index).ok(),
         }
     }
 

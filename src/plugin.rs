@@ -116,15 +116,14 @@ pub fn send(label: impl Into<CallbackLabel>) -> impl Fn(EventWriter<ScriptCallba
     let label = label.into();
     move |mut writer: EventWriter<ScriptCallbackEvent>,
     maybe_pico8_handle: Option<Res<Pico8Handle>>| {
-        let maybe_id = maybe_pico8_handle.and_then(|pico8_handle| pico8_handle.main_script.clone());
+        let maybe_recipients = maybe_pico8_handle.and_then(|pico8_handle| pico8_handle.main_script.clone());
 
-        match maybe_id {
-            Some(id) => {
+        match maybe_recipients {
+            Some(recipients) => {
                 writer.send(ScriptCallbackEvent::new(
                     label.clone(),
                     vec![],
-                    Recipients::All,
-                    // Recipients::Script("main.lua".into())
+                    recipients,
                 ));
             }
             None => {

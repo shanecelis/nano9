@@ -193,7 +193,6 @@ impl AssetLoader for LuaLoader {
         // let mut asset = into_asset(config, load_context).await?;
         // assert!(asset.scripts.is_none());
 
-        let code_path: PathBuf = load_context.path().into();
         let mut code = content;
         let translate = settings
             .translate_pico8

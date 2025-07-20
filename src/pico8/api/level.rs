@@ -1,14 +1,16 @@
 use super::*;
+use crate::ValueExt;
 
 #[cfg(feature = "scripting")]
 use bevy_mod_scripting::core::{
+    docgen::{TypedThrough, ThroughTypeInfo},
     bindings::{function::from::FromScript, script_value::ScriptValue, WorldAccessGuard},
     error::InteropError,
 };
 
 use crate::pico8::Gfx;
 
-use std::any::TypeId;
+use std::{collections::HashMap, any::TypeId};
 
 pub(crate) fn plugin(app: &mut App) {
     #[cfg(feature = "scripting")]
