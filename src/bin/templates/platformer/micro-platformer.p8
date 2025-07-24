@@ -4,7 +4,7 @@ __lua__
 --advanced micro platformer
 --original code 2017 (c) matt hughson
 --modified code 2023 (c) shane celis
---license cc4-by-nc-sa
+--license mit
 
 --if you make a game with this
 --starter kit, please consider
