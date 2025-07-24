@@ -1,7 +1,7 @@
 -- Advanced Micro Platformer
 -- Original code 2017 (c) Matt Hughson
 -- Modified code 2023 (c) Shane Celis
--- License CC4-BY-NC-SA
+-- License MIT
 
 -- If you make a game with this starter kit, please consider linking back to the
 -- [bbs post](https://www.lexaloffle.com/bbs/?tid=28793) for this cart, so that
