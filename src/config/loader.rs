@@ -15,11 +15,7 @@ use std::{io, path::PathBuf};
 pub(crate) fn plugin(app: &mut App) {
     app
         .init_asset_loader::<ConfigLoader>()
-        .init_asset_loader::<LuaLoader>()
-        // .register_asset_processor(LuaProcess {})
-        // .set_default_asset_processor::<LuaProcess>("lua")
-        // .set_default_asset_processor::<LuaProcess>("p8lua")
-        ;
+        .init_asset_loader::<LuaLoader>();
 }
 
 #[derive(Debug, thiserror::Error)]
@@ -28,7 +24,6 @@ pub enum ConfigError {
     Utf8(#[from] std::str::Utf8Error),
     #[error("Could not read string: {0}")]
     FromUtf8(#[from] std::string::FromUtf8Error),
-    /// An [IO](std::io) Error
     #[error("io error: {0}")]
     Io(#[from] std::io::Error),
     #[error("{0}")]
@@ -98,71 +93,6 @@ pub struct LuaLoaderSettings {
     pub translate_pico8: Option<bool>,
 }
 
-// impl Default for LuaLoaderSettings {
-//     fn default() -> Self {
-//         Self {
-//             translate_pico8: true,
-//         }
-//     }
-// }
-
-// impl AssetLoader for LuaLoader {
-//     type Asset = pico8::Pico8Asset;
-//     type Settings = ();
-//     type Error = ConfigError;
-
-//     async fn load(
-//         &self,
-//         reader: &mut dyn Reader,
-//         _settings: &Self::Settings,
-//         load_context: &mut LoadContext<'_>,
-//     ) -> Result<Self::Asset, Self::Error> {
-//         warn!("LUA LOADER");
-//         let mut bytes = Vec::new();
-//         let _ = reader.read_to_end(&mut bytes).await?;
-//         let mut content = String::from_utf8(bytes)?;
-
-//         let config = if let Some(front_matter) = front_matter::LUA.parse_in_place(&mut content) {
-//             let mut config: Config = toml::from_str::<Config>(&front_matter)
-//                 .map_err(|e| io::Error::new(io::ErrorKind::Other, format!("{e}")))?;
-//             if let Some(template) = config.template.take() {
-//                 config.inject_template(&template)?;
-//             }
-//             config
-//         } else {
-//             Config::pico8()
-//         };
-//         let mut asset = into_asset(config, load_context).await?;
-//         assert!(asset.code.is_none());
-
-//         let code_path: PathBuf = load_context.path().into();
-//         let mut code = content;
-
-//         dbg!(1);
-//         #[cfg(feature = "pico8-to-lua")]
-//         {
-//             if load_context.path().extension().map(|x| x == "p8lua").unwrap_or(false) {
-//         dbg!(2);
-//                 if let Some(patched_code) = pico8::translate_pico8_to_lua(&code, load_context).await? {
-//         dbg!(3);
-//                     code = patched_code;
-//                 }
-//             }
-//         }
-
-//         asset.code = Some(load_context.add_labeled_asset("lua".into(), ScriptAsset {
-//             content: code.into_bytes().into_boxed_slice(),
-//             asset_path: code_path.into(),
-//         }));
-//         Ok(asset)
-//     }
-
-//     fn extensions(&self) -> &[&str] {
-//         static EXTENSIONS: &[&str] = &["lua", "p8lua"];
-//         EXTENSIONS
-//     }
-// }
-
 impl AssetLoader for LuaLoader {
     type Asset = ScriptAsset;
     type Settings = LuaLoaderSettings;
@@ -217,11 +147,10 @@ impl AssetLoader for LuaLoader {
     }
 
     fn extensions(&self) -> &[&str] {
-        // This can load "lua" files, but bevy_mod_scripting has a loader as
-        // well, so having it here generates a warning. We don't need to load
-        // .lua files ourselves, so we're dropping it.
+        // This loader can load "lua" files, but `bevy_mod_scripting` has a
+        // loader as well, so having it here generates a warning. We don't need
+        // to load .lua files ourselves, so we don't.
 
-        // static EXTENSIONS: &[&str] = &["lua", "p8lua"];
         static EXTENSIONS: &[&str] = &["p8lua"];
         EXTENSIONS
     }
@@ -249,165 +178,34 @@ async fn into_asset(
     }
     let mut sprite_sheets = vec![];
     for (i, mut sheet) in config.sprite_sheets.into_iter().enumerate() {
-        let asset_path = AssetPath::try_parse(&sheet.path)?.into_owned();
-        // let loaded = match load_context.loader()
-            // .immediate()
-        let handle = load_context.loader()
-                                 .load::<pico8::SpriteSheet>(&asset_path);
-            // .await {
-            //     Ok(handle) => handle,
-            //     Err(e) => {
-            //         load_context.loader()
-            //             .immediate()
-            //             .with_settings(
-            //                 move |settings: &mut pico8::SpriteSheetSettings| {
-            //                     settings.index_color = sheet.index_color;
-            //                     settings.extract_palette = sheet.extract_palette;
-            //                     settings.sprite_size = sheet.sprite_size;
-            //                     settings.sprite_counts = sheet.sprite_counts;
-            //                     settings.padding = sheet.padding;
-            //                     settings.offset = sheet.offset;
-            //                     settings.offset = sheet.offset;
-            //                     // TODO: Provide sampler sampler?
-            //                 })
-            //             .load::<pico8::SpriteSheet>(&asset_path)
-            //             .await?
-
-            //     }
-            // };
-        // let handle = load_context.add_loaded_labeled_asset(format!("sprite_sheet{}", i), loaded);
-
+        let asset_path = AssetPath::try_parse(&sheet.path)?;
+        let handle = if asset_path.path().extension().map(|ext| ext == "p8").unwrap_or(false) {
+            load_context.loader()
+                        .load::<pico8::SpriteSheet>(&asset_path)
+        } else {
+            load_context.loader()
+                        .with_settings(
+                            move |settings: &mut pico8::SpriteSheetSettings| {
+                                settings.index_color = sheet.index_color;
+                                settings.extract_palette = sheet.extract_palette;
+                                settings.sprite_size = sheet.sprite_size;
+                                settings.sprite_counts = sheet.sprite_counts;
+                                settings.padding = sheet.padding;
+                                settings.offset = sheet.offset;
+                                settings.offset = sheet.offset;
+                                // TODO: Provide sampler sampler?
+                            })
+                        .load::<pico8::SpriteSheet>(&asset_path)
+        };
         sprite_sheets.push(handle);
-
-        // let flags: Vec<u8>;
-        // if sheet.path.extension() == Some(OsStr::new("tsx")) {
-        //     #[cfg(feature = "level")]
-        //     {
-        //         let tiledset = load_context
-        //             .loader()
-        //             .immediate()
-        //             .load::<TiledSet>(&*sheet.path)
-        //             .await?;
-        //         let tileset = &tiledset.get().0;
-        //         let handle = load_context
-        //             .add_labeled_asset(format!("atlas{i}"), layout_from_tileset(tileset));
-        //         let tile_size = UVec2::new(tileset.tile_width, tileset.tile_height);
-        //         if let Some(sprite_size) = sheet.sprite_size {
-        //             assert_eq!(sprite_size, tile_size);
-        //         }
-        //         let flags = flags_from_tileset(tileset);
-        //         sprite_sheets.push(pico8::SpriteSheet {
-        //             handle: pico8::SprHandle::Image(
-        //                 load_context
-        //                     .loader()
-        //                     .with_settings(pixel_art_settings)
-        //                     .load(
-        //                         &*tileset
-        //                             .image
-        //                             .as_ref()
-        //                             .ok_or(ConfigError::Message(format!(
-        //                                 "could not load .tsx image {i}"
-        //                             )))?
-        //                             .source,
-        //                     ),
-        //             ),
-        //             sprite_size: tile_size,
-        //             flags,
-        //             layout: handle,
-        //         })
-        //     }
-        //     #[cfg(not(feature = "level"))]
-        //     panic!(
-        //         "Can not load {:?} file without 'level' feature.",
-        //         &sheet.path
-        //     );
-        // } else if sheet.path.extension() == Some(OsStr::new("p8")) {
-        //     todo!()
-        // } else {
-        // todo!()
-        // let (handle, layout_maybe) = if sheet.index_color {
-        //     // XXX: This should be simple! There's another loader here we need to strip out.
-        //     //
-        //     // Do I need an SprImage Asset that holds a Gfx or an Image?
-        //     let bytes = load_context.read_asset_bytes(&*sheet.path).await?;
-        //     let mut palette = pico8::Palette::default();
-        //     let is_extract = sheet.extract_palette;
-        //     let gfx = Gfx::from_png(&bytes, is_extract.then_some(&mut palette))?;
-        //     if is_extract {
-        //         trace!("Extract palette {} from image {:?}", palettes.len(), &palette);
-        //         palettes.push(palette);
-        //     }
-        //     let image_size = UVec2::new(gfx.width as u32, gfx.height as u32);
-        //     let layout = get_layout(
-        //         i,
-        //         image_size,
-        //         &mut sheet.sprite_size,
-        //         sheet.sprite_counts,
-        //         sheet.padding,
-        //         sheet.offset,
-        //     )?
-        //     .map(|layout| load_context.add_labeled_asset(format!("atlas{i}"), layout));
-        //     (
-        //         pico8::SprHandle::Gfx(
-        //             load_context.add_labeled_asset(format!("spritesheet{i}"), gfx),
-        //         ),
-        //         layout,
-        //     )
-        // } else {
-        //     let loaded = load_context
-        //         .loader()
-        //         .immediate()
-        //         .with_settings(pixel_art_settings)
-        //         .load::<Image>(&*sheet.path)
-        //         .await?;
-        //     let image_size = loaded.get().size();
-        //     let layout = get_layout(
-        //         i,
-        //         image_size,
-        //         &mut sheet.sprite_size,
-        //         sheet.sprite_counts,
-        //         sheet.padding,
-        //         sheet.offset,
-        //     )?
-        //     .map(|layout| load_context.add_labeled_asset(format!("atlas{i}"), layout));
-
-        //     (
-        //         pico8::SprHandle::Image(
-        //             load_context.add_loaded_labeled_asset(format!("spritesheet{i}"), loaded),
-        //         ),
-        //         layout,
-        //     )
-        // };
-        // sprite_sheets.push(pico8::SpriteSheet {
-        //     handle,
-        //     sprite_size: sheet.sprite_size.unwrap_or(UVec2::splat(8)),
-        //     flags: vec![],
-        //     layout: layout_maybe.unwrap_or(Handle::default()),
-        // })
-        // }
     }
     let mut scripts = vec![];
     #[cfg(feature = "scripting")]
     for (i, p) in config.scripts.into_iter().enumerate() {
         // Load them in order.
-        //
-        let mut asset_path = AssetPath::try_parse(&p)?.into_owned();
-        let label = asset_path.take_label();
-        let loaded: ErasedLoadedAsset = load_context
-            .loader()
-            .with_unknown_type()
-            .immediate()
-            .load(&asset_path)
-            .await?;
-        let erased_asset = label.and_then(|label| {
-            // let labels: Vec<&str> = loaded.iter_labels().collect();
-            // info!("got label {}, have asset with labels: {:?}", &label, labels);
-            loaded.get_labeled(label)
-        }).unwrap_or(&loaded);
-        let Some(script_asset) = erased_asset.get::<ScriptAsset>() else {
-            return Err(ConfigError::Message(format!("Cannot create `ScriptAsset` from {:?}", asset_path)));
-        };
-        scripts.push(load_context.add_labeled_asset(format!("script{i}"), script_asset.clone()));
+        let mut asset_path = AssetPath::try_parse(&p)?;
+        let handle = load_context.load::<ScriptAsset>(&asset_path);
+        scripts.push(handle);
     }
 
     let mut maps: Vec<pico8::SpriteMap> = Vec::with_capacity(config.maps.len());

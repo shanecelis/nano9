@@ -84,10 +84,13 @@ cargo install nano9@0.1.0-alpha.2
 
 ## Exercise
 
-Run a cart directly from a URL. For instance one may run Celeste like so:
+Run a cart directly from a URL. For instance one may run the Pico-8 version of
+Celeste like so:
 
 ``` sh
-cargo run --features web-asset -- run --shared-data=map https://www.lexaloffle.com/bbs/cposts/1/15133.p8.png
+cd nano-9
+cargo install --features web-asset --path .
+n9 run --shared-data=map https://www.lexaloffle.com/bbs/cposts/1/15133.p8.png
 ```
 
 ## API Extensions
