@@ -17,7 +17,7 @@ use bevy_mod_scripting::{
         event::{Recipients, ScriptCallbackEvent, CallbackLabel},
         handler::event_handler,
         ConfigureScriptPlugin,
-        script::{ScriptContext, ContextKey},
+        script::{ScriptContext, ContextKey, ContextPolicy},
     },
     lua::LuaScriptingPlugin,
     BMSPlugin,
@@ -269,7 +269,7 @@ impl Plugin for Nano9Plugin {
         );
         #[cfg(feature = "scripting")]
         {
-            app.insert_resource(ScriptContext::<LuaScriptingPlugin>::shared());
+            app.insert_resource(ScriptContext::<LuaScriptingPlugin>::new(ContextPolicy::shared()));
             let mut lua_scripting_plugin = LuaScriptingPlugin::default();
             lua_scripting_plugin
                 .scripting_plugin
