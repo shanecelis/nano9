@@ -165,6 +165,7 @@ fn to_asset(cart: Cart, load_context: &mut LoadContext) -> Result<Pico8Asset, Ca
         font: vec![N9Font {
             handle: load_context.load(PICO8_FONT),
         }],
+        meshes: vec![],
     };
     Ok(asset)
 }

@@ -1,8 +1,8 @@
 #[cfg(feature = "level")]
 use crate::level::{self};
 use crate::{
-    config::{self, *},
-    pico8::{self, image::pixel_art_settings, Pico8Asset},
+    config::{self, *, Mesh},
+    pico8::{self, image::pixel_art_settings, Pico8Asset, MeshHandle},
 };
 use bevy::{
     asset::{io::{AssetSourceId, Reader}, AssetLoader, AssetPath, LoadContext, ErasedLoadedAsset},
@@ -255,6 +255,24 @@ async fn into_asset(
         }
         audio_banks.push(load_context.add_labeled_asset(format!("audio_bank{}", i), pico8::audio::AudioBank(items)));
     }
+
+    let mut meshes = vec![];
+    for (i, mesh) in config.meshes.into_iter().enumerate() {
+        let handle = match mesh {
+            Mesh::Path { path } => {
+            //let mut asset_path = AssetPath::try_parse(&p)?.into_owned();
+                // let extension = mesh_path.extension().and_then(|s| s.to_str()).unwrap_or("");
+                todo!()
+            }
+            Mesh::Cuboid { cuboid: size } => {
+                let cuboid = Cuboid::new(size[0], size[1], size[2]);
+                let mesh = cuboid.mesh().build();
+                MeshHandle::Mesh(load_context.add_labeled_asset(format!("mesh{}", i), mesh))
+            }
+        };
+        meshes.push(handle);
+    }
+
     let state = pico8::Pico8Asset {
         #[cfg(feature = "scripting")]
                 scripts,
@@ -279,6 +297,7 @@ async fn into_asset(
                                                          }
                                                          config::Font::Default { .. } => { panic!("Must use a path if not default font.") }
                                                      }).collect::<Vec<_>>(),
+                meshes,
 
             };
     Ok(state)

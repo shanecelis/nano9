@@ -116,7 +116,7 @@ fn spawn_camera(mut commands: Commands, canvas: Res<N9Canvas>) {
             InheritedVisibility::default(),
         ))
         .with_children(|parent| {
-            let camera_commands = parent.spawn((
+            parent.spawn((
                 Name::new("camera"),
                 Camera2d,
                 Msaa::Off,
@@ -125,6 +125,10 @@ fn spawn_camera(mut commands: Commands, canvas: Res<N9Canvas>) {
                 InheritedVisibility::default(),
                 Nano9Camera,
             ));
+            parent.spawn((Name::new("3d-camera"),
+                          Camera3d::default(),
+                          Transform::default().looking_to(Dir3::NEG_Z, Dir3::Y),
+                          Camera { order: 1, ..default() }));
         });
 }
 

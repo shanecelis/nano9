@@ -79,6 +79,9 @@ pub struct Config {
     /// Maps
     #[serde(default, rename = "map")]
     pub maps: Vec<SpriteMap>,
+    /// Meshes
+    #[serde(default, rename = "mesh")]
+    pub meshes: Vec<Mesh>,
 }
 
 #[derive(Default, Debug, Clone, Deserialize, Serialize, Merge, PartialEq)]
@@ -196,6 +199,13 @@ pub struct Palette {
     pub path: String,
     /// Specify the row of the palette to use
     pub row: Option<u32>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(untagged)]
+pub enum Mesh {
+    Path { path: String },
+    Cuboid { cuboid: [f32; 3] },
 }
 
 pub fn update_asset(
@@ -609,5 +619,29 @@ extract_palette = true
         )
         .unwrap();
         assert_eq!(config.sprite_sheets[0].extract_palette, true);
+    }
+
+    #[test]
+    fn test_mesh0() {
+        let config: Config = toml::from_str(
+            r#"
+[[mesh]]
+path = "teapot.glb"
+"#,
+        )
+        .unwrap();
+        assert_eq!(config.meshes[0], Mesh::Path { path: "teapot.glb".into() });
+    }
+
+    #[test]
+    fn test_mesh1() {
+        let config: Config = toml::from_str(
+            r#"
+[[mesh]]
+cuboid = [0.1, 0.2, 0.3]
+"#,
+        )
+        .unwrap();
+        assert_eq!(config.meshes[0], Mesh::Cuboid { cuboid: [0.1, 0.2, 0.3] });
     }
 }
