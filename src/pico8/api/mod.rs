@@ -13,6 +13,8 @@ pub mod input;
 use input::*;
 mod camera;
 pub use camera::{Nano9Camera};
+mod camera3d;
+pub use camera3d::{Nano9Camera3d};
 mod param;
 pub use param::*;
 mod sfx;
@@ -77,6 +79,7 @@ pub(crate) fn plugin(app: &mut App) {
             rand::plugin,
             asset::plugin,
             mesh::plugin,
+            camera3d::plugin,
         ))
         .add_plugins((
             sfx::plugin,

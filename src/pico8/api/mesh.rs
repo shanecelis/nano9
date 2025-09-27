@@ -60,7 +60,7 @@ mod lua {
         let world = app.world_mut();
 
         NamespaceBuilder::<GlobalNamespace>::new_unregistered(world)
-            // spr(n, [x,] [y,] [w,] [h,] [flip_x,] [flip_y,] [turns])
+            // mesh(n, [x,] [y,] [z,])
             .register(
                 "mesh",
                 |ctx: FunctionCallContext,
