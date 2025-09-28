@@ -260,9 +260,7 @@ async fn into_asset(
     for (i, mesh) in config.meshes.into_iter().enumerate() {
         let handle = match mesh {
             Mesh::Path { path } => {
-            //let mut asset_path = AssetPath::try_parse(&p)?.into_owned();
-                // let extension = mesh_path.extension().and_then(|s| s.to_str()).unwrap_or("");
-                todo!()
+                MeshHandle::Gltf(load_context.load::<bevy::gltf::Gltf>(path))
             }
             Mesh::Cuboid { cuboid: size } => {
                 let cuboid = Cuboid::new(size[0], size[1], size[2]);

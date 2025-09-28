@@ -4,6 +4,7 @@ use crate::pico8::Error;
 #[derive(Debug, Clone, Reflect)]
 pub enum MeshHandle {
     Mesh(Handle<Mesh>),
+    Gltf(Handle<bevy::gltf::Gltf>),
     Vox(Handle<bevy_vox_scene::VoxelModel>),
 }
 
@@ -16,8 +17,8 @@ pub(crate) fn plugin(app: &mut App) {
 }
 
 impl super::Pico8<'_, '_> {
-    // mesh(n, [x,] [y,] [z,])
-    fn mesh(&mut self, n: usize, pos: Vec3) -> Result<Entity, Error> {
+    // mesh(n, [x,] [y,] [z,] [sx,] [sy,] [sz,])
+    fn mesh(&mut self, n: usize, pos: Vec3, scale: Vec3) -> Result<Entity, Error> {
         let mesh_handle = self.pico8_asset()?.meshes.get(n).ok_or(Error::NoSuch("mesh".into()))?.clone();
         match mesh_handle {
             MeshHandle::Mesh(mesh) => {
@@ -31,10 +32,36 @@ impl super::Pico8<'_, '_> {
                         .insert((
                         Mesh3d(mesh.clone()),
                         MeshMaterial3d(material),
-                        Transform::from_translation(pos),
+                        Transform::from_translation(pos)
+                                .with_scale(scale),
                     ));
                 });
                 Ok(id)
+            }
+            MeshHandle::Gltf(gltf) => {
+                let id = self.commands.spawn_empty().id();
+                self.commands.queue(move |world: &mut World| {
+                    let scene = {
+                        let mut gltfs = world.resource::<Assets<Gltf>>();
+                        let Some(gltf) = gltfs.get(&gltf) else {
+                            error!("No gltf for handle {:?}", gltf);
+                            return;
+                        };
+                        gltf.scenes[0].clone()
+                    };
+                    // let material = {
+                    //     let mut materials = world.resource_mut::<Assets<StandardMaterial>>();
+                    //     materials.add(Color::srgb(0.8, 0.7, 0.6))
+                    // };
+                    world.entity_mut(id)
+                        .insert((SceneRoot(scene),
+                        // MeshMaterial3d(material),
+                        Transform::from_translation(pos)
+                                .with_scale(scale)
+                    ));
+                });
+                Ok(id)
+
             }
             _ => todo!()
         }
@@ -68,9 +95,13 @@ mod lua {
                  x: Option<f32>,
                  y: Option<f32>,
                  z: Option<f32>,
+                 sx: Option<f32>,
+                 sy: Option<f32>,
+                 sz: Option<f32>,
                 | {
                     let pos = Vec3::new(x.unwrap_or(0.0), y.unwrap_or(0.0), z.unwrap_or(0.0));
-                    let id = with_pico8(&ctx, move |pico8| pico8.mesh(n, pos))?;
+                    let scale = Vec3::new(sx.unwrap_or(1.0), sy.unwrap_or(1.0), sz.unwrap_or(1.0));
+                    let id = with_pico8(&ctx, move |pico8| pico8.mesh(n, pos, scale))?;
                     Ok(())
                 },
             );
