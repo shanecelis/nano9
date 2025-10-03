@@ -116,7 +116,7 @@ fn spawn_camera(mut commands: Commands, canvas: Res<N9Canvas>) {
             InheritedVisibility::default(),
         ))
         .with_children(|parent| {
-            let camera_commands = parent.spawn((
+            parent.spawn((
                 Name::new("camera"),
                 Camera2d,
                 Msaa::Off,

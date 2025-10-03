@@ -52,6 +52,7 @@ log = { version = "0.4.27", optional = true }
 env_logger = { version = "0.11.8", optional = true }
 merge2 = "0.3.2"
 bevy_framepace = "0.18"
+bevy_vox_scene = "0.18"
 
 [features]
 default = [ "cli" ]

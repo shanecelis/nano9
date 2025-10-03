@@ -1,0 +1,27 @@
+--[===[
+template = "pico8"
+[[mesh]]
+cuboid = [0.3, 0.3, 0.3]
+[[mesh]]
+path = "utah-teapot-lifesize.glb"
+[[sprite_sheet]]
+path = "BirdSprite.png"
+sprite_size = [16, 16]
+]===]
+function _init()
+    print("hello")
+    spr(0)
+    camera3d(0,0,-10, 0,0,0)
+    -- mesh(0, 0, 0, 0)
+    mesh(1, 0, 0, 0, 10,10,10)
+end
+
+t = 0
+-- function _draw()
+--     cls()
+--     -- sprite number
+--     local n = time() * 4 % 8 + 8
+--     local x, y = t % 128, t / 128
+--     spr(n, x, y, 1, 1, true --[[flip horizontal]])
+--     t = t + 1
+-- end

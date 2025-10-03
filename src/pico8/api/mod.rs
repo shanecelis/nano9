@@ -13,6 +13,8 @@ pub mod input;
 use input::*;
 mod camera;
 pub use camera::{Nano9Camera};
+mod camera3d;
+pub use camera3d::{Nano9Camera3d};
 mod param;
 pub use param::*;
 mod sfx;
@@ -34,6 +36,8 @@ mod rand;
 mod sys;
 #[cfg(feature = "level")]
 pub use level::*;
+mod mesh;
+pub use mesh::*;
 
 use bevy::{
     image::ImageSampler,
@@ -74,6 +78,8 @@ pub(crate) fn plugin(app: &mut App) {
         .add_plugins((
             rand::plugin,
             asset::plugin,
+            mesh::plugin,
+            camera3d::plugin,
         ))
         .add_plugins((
             sfx::plugin,

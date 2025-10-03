@@ -14,6 +14,7 @@ pub struct Pico8Asset {
     pub(crate) maps: Vec<SpriteMap>,
     pub(crate) font: Vec<N9Font>,
     pub(crate) audio_banks: Vec<Handle<AudioBank>>,
+    pub(crate) meshes: Vec<MeshHandle>,
 }
 
 #[derive(Clone, Debug, Reflect)]
@@ -52,6 +53,7 @@ impl FromWorld for Pico8Asset {
             audio_banks: Vec::new(),
             sprite_sheets: Vec::new(),
             maps: Vec::new(),
+            meshes: Vec::new(),
         }
     }
 }
