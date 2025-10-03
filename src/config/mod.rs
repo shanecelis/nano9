@@ -241,7 +241,7 @@ pub fn update_asset(
                             let entity = commands.spawn((Name::new("scripts"),
                                                          ScriptComponent(pico8_asset.scripts.clone()))).id();
                             info!("Add scripts to entity {}", &entity);
-                            pico8_handle.main_script = Some(Recipients::All);
+                            pico8_handle.main_script = Some(Recipients::AllContexts);
                         }
                     }
                     info!("Goto Loaded state");

@@ -1413,8 +1413,9 @@ dependencies = [
 
 [[package]]
 name = "bevy_mod_scripting"
-version = "0.13.0"
-source = "git+https://github.com/shanecelis/bevy_mod_scripting.git?branch=use-handles#b8b0ef5d2b3f15c4d325008bc00df03d5ead3f44"
+version = "0.14.0-alpha.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "44ec8c7c5f79c2fb2874a04286947e723921972f9f3c2f4c60e61ddaad6b9871"
 dependencies = [
  "bevy",
  "bevy_mod_scripting_core",
@@ -1425,8 +1426,9 @@ dependencies = [
 
 [[package]]
 name = "bevy_mod_scripting_core"
-version = "0.13.0"
-source = "git+https://github.com/shanecelis/bevy_mod_scripting.git?branch=use-handles#b8b0ef5d2b3f15c4d325008bc00df03d5ead3f44"
+version = "0.14.0-alpha.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "dcc1325a4f500a27a1305a06e8f500581a63fb41824b255fec6d15f90862ff2b"
 dependencies = [
  "bevy",
  "bevy_mod_debugdump",
@@ -1448,8 +1450,9 @@ dependencies = [
 
 [[package]]
 name = "bevy_mod_scripting_derive"
-version = "0.13.0"
-source = "git+https://github.com/shanecelis/bevy_mod_scripting.git?branch=use-handles#b8b0ef5d2b3f15c4d325008bc00df03d5ead3f44"
+version = "0.14.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "450b02c2516849d2049e42764d0d608aa529bd9bec8b1530b780cc1d49a83568"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1458,8 +1461,9 @@ dependencies = [
 
 [[package]]
 name = "bevy_mod_scripting_functions"
-version = "0.13.0"
-source = "git+https://github.com/shanecelis/bevy_mod_scripting.git?branch=use-handles#b8b0ef5d2b3f15c4d325008bc00df03d5ead3f44"
+version = "0.14.0-alpha.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5ec3e8c2807ba9774541ccec7e176d36c0bed6f8afe843492feeb57156736c3b"
 dependencies = [
  "bevy",
  "bevy_mod_scripting_core",
@@ -1473,8 +1477,9 @@ dependencies = [
 
 [[package]]
 name = "bevy_mod_scripting_lua"
-version = "0.13.0"
-source = "git+https://github.com/shanecelis/bevy_mod_scripting.git?branch=use-handles#b8b0ef5d2b3f15c4d325008bc00df03d5ead3f44"
+version = "0.14.0-alpha.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d1959186163fb0691905a18fcb83c60cccdeaa407eeab02bc7a061dfafd70070"
 dependencies = [
  "bevy",
  "bevy_mod_scripting_core",
@@ -1751,7 +1756,8 @@ dependencies = [
 [[package]]
 name = "bevy_system_reflection"
 version = "0.1.2"
-source = "git+https://github.com/shanecelis/bevy_mod_scripting.git?branch=use-handles#b8b0ef5d2b3f15c4d325008bc00df03d5ead3f44"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e356a368da5e7e46e6791d74ee5c8c7e5b1a973dc7fab5cdde6c79bc8cce2e49"
 dependencies = [
  "bevy",
  "dot-writer",

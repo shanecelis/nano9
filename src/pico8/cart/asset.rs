@@ -130,6 +130,7 @@ fn to_asset(cart: Cart, load_context: &mut LoadContext) -> Result<Pico8Asset, Ca
                 load_context.add_labeled_asset("lua".into(), ScriptAsset {
                     content: code.into_bytes().into_boxed_slice(),
                     language: Language::Lua,
+                    asset_path: default(),
                 }),
             ]
         } else {

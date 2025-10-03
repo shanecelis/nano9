@@ -18,7 +18,7 @@ repository = "https://github.com/shanecelis/nano-9"
 
 [dependencies]
 bevy = { version = "0.15", features = [ "bevy_dev_tools", "asset_processor" ] }
-bevy_mod_scripting = { version = "0.13", features = ["lua54", "core_functions"], default-features = false, optional = true }
+bevy_mod_scripting = { version = "=0.14.0-alpha.1", features = ["lua54", "core_functions"], default-features = false, optional = true }
 bytemuck = "1.16.3"
 thiserror = "1.0.63"
 bevy_minibuffer = { version = "0.3.0", optional = true }
@@ -96,7 +96,7 @@ required-features = [ "cli" ]
 # bevy_ecs = { path = "../bevy/crates/bevy_ecs" }
 # bevy_ecs_tiled = { path = "../bevy_ecs_tiled" }
 # bevy_mod_scripting = { path = "../bevy_mod_scripting" }
-bevy_mod_scripting = { git = "https://github.com/shanecelis/bevy_mod_scripting.git", branch = "use-handles" }
+# bevy_mod_scripting = { git = "https://github.com/shanecelis/bevy_mod_scripting.git", branch = "use-handles" }
 # bevy_minibuffer = { path = "../bevy_minibuffer" }
 # bevy_asky = { path = "../bevy_asky" }
 # bevy_ecs_ldtk = { path = "../bevy_ecs_ldtk" }

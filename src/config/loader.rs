@@ -143,6 +143,7 @@ impl AssetLoader for LuaLoader {
         Ok(ScriptAsset {
             content: code.into_bytes().into_boxed_slice(),
             language: Language::Lua,
+            asset_path: default(),
         })
     }
 

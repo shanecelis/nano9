@@ -17,7 +17,7 @@ use bevy_mod_scripting::{
         event::{Recipients, ScriptCallbackEvent, CallbackLabel},
         handler::event_handler,
         ConfigureScriptPlugin,
-        script::{ScriptContext, ContextKey, ContextPolicy},
+        script::{ScriptContext, ContextKey, ContextPolicy, ScriptAttachment},
     },
     lua::LuaScriptingPlugin,
     BMSPlugin,
@@ -124,10 +124,11 @@ pub fn send(label: impl Into<CallbackLabel>) -> impl Fn(EventWriter<ScriptCallba
                     label.clone(),
                     vec![],
                     recipients,
+                    None,
                 ));
             }
             None => {
-                writer.send(ScriptCallbackEvent::new_for_all(
+                writer.send(ScriptCallbackEvent::new_for_all_contexts(
                     label.clone(),
                     vec![],
                 ));
@@ -274,7 +275,7 @@ impl Plugin for Nano9Plugin {
             lua_scripting_plugin
                 .scripting_plugin
                 .add_context_initializer(
-                    |_context_key: &ContextKey, context: &mut bevy_mod_scripting::lua::mlua::Lua| {
+                    |_script_attachment: &ScriptAttachment, context: &mut bevy_mod_scripting::lua::mlua::Lua| {
                         context.globals().set(
                             "_eval_string",
                             context.create_function(|ctx, arg: String| {

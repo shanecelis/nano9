@@ -60,7 +60,7 @@ impl Pico8<'_, '_> {
                     clearable.resurrect(ttl); // Make this a parameter.
                     clearable.suggest_z()
                 });
-                assert!(maybe_z.is_some());
+                assert!(maybe_z.is_some(), "No Clearable for entity {:?}", id);
                 if let Some(mut visibility) = world.get_mut::<Visibility>(id) {
                     *visibility = Visibility::Inherited;
                 }
