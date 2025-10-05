@@ -28,6 +28,7 @@ use crate::{
     run::RunState,
     pico8::{self, input::fill_input, FillPat, Pico8Asset, Pico8Handle, canvas::N9Canvas},
     PColor,
+    schedule,
 };
 
 
@@ -355,13 +356,17 @@ impl Plugin for Nano9Plugin {
             Update,
             (
                 fill_input,
-                send(call::Init).run_if(init_when::<ScriptAsset>()),
+                (send(call::Init),
+                 schedule::run_schedule(schedule::Init),
+                ).run_if(init_when::<ScriptAsset>()),
                 event_handler::<call::Init, LuaScriptingPlugin>,
                 send(call::Update).run_if(in_state(RunState::Run)),
                 event_handler::<call::Update, LuaScriptingPlugin>,
+                schedule::run_schedule(schedule::Run).run_if(in_state(RunState::Run)),
                 event_handler::<call::Eval, LuaScriptingPlugin>,
                 send(call::Draw).run_if(in_state(RunState::Run)),
                 event_handler::<call::Draw, LuaScriptingPlugin>,
+                schedule::run_schedule(schedule::Draw).run_if(in_state(RunState::Run)),
             )
                 .chain(),
         );

@@ -37,6 +37,7 @@ pub mod action;
 pub mod condition;
 pub mod run;
 pub mod one_or_map;
+pub mod schedule;
 
 /// TODO: This plugin is weird because the `crate::plugin` module calls it.
 pub(crate) fn plugin(app: &mut App) {
@@ -45,6 +46,7 @@ pub(crate) fn plugin(app: &mut App) {
                      run::plugin,
                      error::plugin,
                      pico8::plugin));
+    app.add_plugins(crate::schedule::plugin);
     #[cfg(feature = "scripting")]
     app.add_plugins((entity::plugin, var::plugin));
     if app.is_plugin_added::<WindowPlugin>() {
