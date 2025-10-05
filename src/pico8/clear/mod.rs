@@ -50,9 +50,11 @@ pub(crate) struct ClearCache(MashMap<u64, Entity>);
 
 impl ClearCache {
     pub fn insert(&mut self, clearable: &Clearable, id: Entity) -> bool {
-        assert!(!clearable.cached);
+        // info!("CACHE INSERT {id}");
+        assert!(matches!(clearable.state, ClearState::Visible));
         match clearable.hash {
             Some(hash) => {
+                // info!("CACHE INSERTED {id}");
                 self.0.insert(hash, id);
                 true
             }
@@ -62,31 +64,56 @@ impl ClearCache {
 
     /// Must mark clearable.cached = false on returned entity.
     pub fn take(&mut self, hash: &u64) -> Option<Entity> {
-        self.0.remove_one(hash)
+        let result = self.0.remove_one(hash);
+        // info!("CACHE TAKEN {:?}", &result);
+        result
     }
 
     pub fn remove(&mut self, clearable: &Clearable, id: Entity) -> bool {
         // We're trusting clearable.cached here. Should we?
-        if clearable.cached {
-            self.0
-                .drain_key_if(&clearable.hash.unwrap(), |v| *v == id)
-                .next()
-                .is_some()
-        } else {
-            false
+        // if clearable.cached {
+        let result = self.0
+            .drain_key_if(&clearable.hash.unwrap(), |v| *v == id)
+            .next()
+            .is_some();
+
+        // info!("CACHE REMOVE {:?}", &result);
+        if matches!(clearable.state, ClearState::Visible) {
+            // warn!("Clearable {id} requested to be removed that is in state visible, was {}removed.", if result { "" } else {"not " })
         }
+        result
     }
 }
 
 #[derive(Debug, Component, Clone, Copy, Reflect)]
 // #[component(on_add = on_insert_hook)]
 // #[component(on_insert = on_insert_hook)]
-// #[component(on_remove = on_remove_hook)]
+#[component(on_remove = on_remove_hook)]
 pub struct Clearable {
     pub(crate) draw_count: usize,
     pub time_to_live: u8,
     pub hash: Option<u64>,
-    pub cached: bool,
+    pub state: ClearState,
+}
+
+#[derive(Debug, Component, Clone, Copy, Reflect)]
+pub enum ClearState {
+    Visible,
+    Hidden { time_to_live: u8 },
+}
+
+impl ClearState {
+    /// Decrements the time to live and returns its value or None.
+    pub fn decrement_ttl(&mut self) -> Option<u8> {
+        match self {
+            ClearState::Visible => None,
+            ClearState::Hidden { time_to_live } => {
+                let last_ttl = *time_to_live;
+                *time_to_live = time_to_live.saturating_sub(1);
+                Some(last_ttl)
+            }
+        }
+    }
 }
 
 // fn on_insert_hook(mut world: DeferredWorld, id: Entity, _comp_id: ComponentId) {
@@ -95,11 +122,15 @@ pub struct Clearable {
 //     cache.insert(hash, id);
 // }
 
-// fn on_remove_hook(mut world: DeferredWorld, id: Entity, _comp_id: ComponentId) {
-//     let Some(hash) = world.get::<Clearable>(id).and_then(|clearable| clearable.hash) else { return; };
-//     let Some(mut cache) = world.get_resource_mut::<ClearCache>() else { return; };
-//     cache.remove(&hash);
-// }
+fn on_remove_hook(mut world: bevy::ecs::world::DeferredWorld, id: Entity, _comp_id: bevy::ecs::component::ComponentId) {
+    let Some(mut clearable) = world.get::<Clearable>(id).map(|clearable| clearable.clone()) else { return; };
+    let Some(mut cache) = world.get_resource_mut::<ClearCache>() else { return; };
+    info!("Removing clearable {id} from cache.");
+
+    // clearable.cached = true; // We want to ensure it's removed.
+    cache.remove(&clearable, id);
+    // let _ = cache.0.remove(&hash);
+}
 
 impl Default for Clearable {
     fn default() -> Self {
@@ -107,7 +138,7 @@ impl Default for Clearable {
             draw_count: DRAW_COUNTER.increment(),
             time_to_live: 0,
             hash: None,
-            cached: false,
+            state: ClearState::Visible,
         }
     }
 }
@@ -118,7 +149,20 @@ impl Clearable {
             draw_count: DRAW_COUNTER.increment(),
             time_to_live,
             hash: None,
-            cached: false,
+            state: ClearState::Visible,
+        }
+    }
+
+    pub fn is_cached(&self) -> bool {
+        !matches!(self.state, ClearState::Visible)
+    }
+
+    pub fn mark_cached(&mut self) -> bool {
+        if !self.is_cached() {
+            self.state = ClearState::Hidden { time_to_live: self.time_to_live };
+            true
+        } else {
+            false
         }
     }
 
@@ -134,8 +178,8 @@ impl Clearable {
     }
 
     /// Update the draw count and time-to-live.
-    pub fn resurrect(&mut self, new_time_to_live: u8) {
-        self.time_to_live = new_time_to_live;
+    pub fn resurrect(&mut self) {
+        self.state = ClearState::Visible;
         self.draw_count = DRAW_COUNTER.increment();
     }
 }
@@ -186,18 +230,23 @@ fn handle_clear_event(
     }
 
     for (id, mut clearable, mut visibility) in &mut query {
-        if clearable.time_to_live == 0 {
-            // These should be removed from the cache if they were cached.
-            commands.entity(id).despawn_recursive();
-            // Remove from cache if necessary.
-            let _removed = cache.remove(&clearable, id);
-        } else {
-            // These should go into the cache.
-            clearable.time_to_live -= 1;
-            *visibility = Visibility::Hidden;
-            if !clearable.cached && clearable.hash.is_some() {
-                clearable.cached = cache.insert(&clearable, id);
-                // trace!("insert clearable with hash {} {}", clearable.hash.unwrap(), if clearable.cached { "worked" } else { "failed" });
+        match clearable.state.decrement_ttl() {
+            Some(ttl) if ttl == 0 => {
+                commands.entity(id).despawn_recursive();
+            }
+            Some(ttl) => {
+            }
+            None => {
+                if clearable.time_to_live == 0 || clearable.hash.is_none() {
+                    commands.entity(id).despawn_recursive();
+                } else {
+                    *visibility = Visibility::Hidden;
+                    if cache.insert(&clearable, id) {
+                        assert!(clearable.mark_cached());
+                    } else {
+                        panic!();
+                    }
+                }
             }
         }
     }

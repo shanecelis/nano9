@@ -34,10 +34,10 @@ pub(crate) fn plugin(app: &mut App) {
 pub(crate) fn run_schedule(label: impl ScheduleLabel + Clone) -> impl FnMut(&mut World) {
     move |world: &mut World| {
         if let Err(e) = world.try_run_schedule(label.clone()) {
-            bevy::log::error!("Cannot run schedule {:?} because {e}", &label);
+            // bevy::log::error!("Cannot run schedule {:?} because {e}", &label);
         } else {
             let frame_count = world.resource::<FrameCount>();
-            bevy::log::info!("Ran schedule {:?} in frame {}", &label, &frame_count.0);
+            // bevy::log::info!("Ran schedule {:?} in frame {}", &label, &frame_count.0);
         }
     }
 }

@@ -52,15 +52,21 @@ impl Pico8<'_, '_> {
     pub fn resurrect(&mut self, hash: u64, position: Vec2) -> Option<Entity> {
         // See if there's already an entity available.
         if let Some(id) = self.clear_cache.take(&hash) {
-            let ttl = self.defaults.time_to_live;
             self.commands.queue(move |world: &mut World| {
                 let maybe_z = world.get_mut::<Clearable>(id).map(|mut clearable| {
                     // We've extracted it from the cache, so it's no longer cached.
-                    clearable.cached = false;
-                    clearable.resurrect(ttl); // Make this a parameter.
+                    clearable.state = ClearState::Visible;
+                    clearable.resurrect(); // Make this a parameter.
                     clearable.suggest_z()
                 });
-                assert!(maybe_z.is_some(), "No Clearable for entity {:?}", id);
+                // assert!(maybe_z.is_some(), "No Clearable for entity {:?}", id);
+                if maybe_z.is_none() {
+                    // eprintln!("No Clearable for entity {:?}", id);
+                    if let Err(e) = world.get_entity(id) {
+                        // eprintln!("Get entity {:?} err {e:?}", id);
+                    }
+                    // return None;
+                }
                 if let Some(mut visibility) = world.get_mut::<Visibility>(id) {
                     *visibility = Visibility::Inherited;
                 }

@@ -21,7 +21,6 @@ fn update(mut pico8: Pico8, mut t: Local<usize>) {
 
 fn main() {
     let mut app = App::new();
-    app.add_systems(Update, update.run_if(in_state(RunState::Run)));
 
     let config = if std::env::args().next().map(|s| s == "string").unwrap_or(false) {
         println!("Loading configuration from string.");
@@ -43,8 +42,13 @@ fn main() {
         });
         config
     };
-    app.add_systems(PreUpdate, run_pico8_when_loaded);
-    app.add_plugins(Nano9Plugins::new(config))
+    app
+        .add_plugins(Nano9Plugins::new(config))
         .add_systems(PreUpdate, run_pico8_when_loaded)
+        .add_systems(nano9::schedule::Run, update);
+
+    #[cfg(feature = "minibuffer")]
+    app.add_plugins(nano9::minibuffer::quick_plugin);
+    app
         .run();
 }
