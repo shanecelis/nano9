@@ -10,14 +10,13 @@ use bevy::{
 #[cfg(feature = "scripting")]
 use bevy_mod_scripting::{
     core::{
-        ConfigureScriptAssetSettings,
-        asset::{Language, ScriptAsset},
+        asset::ScriptAsset,
         bindings::{function::namespace::NamespaceBuilder},
         callback_labels,
-        event::{Recipients, ScriptCallbackEvent, CallbackLabel},
+        event::{ScriptCallbackEvent, CallbackLabel},
         handler::event_handler,
         ConfigureScriptPlugin,
-        script::{ScriptContext, ContextKey, ContextPolicy, ScriptAttachment},
+        script::{ScriptContext, ContextPolicy, ScriptAttachment},
     },
     lua::LuaScriptingPlugin,
     BMSPlugin,

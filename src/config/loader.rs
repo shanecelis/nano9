@@ -5,12 +5,12 @@ use crate::{
     pico8::{self, image::pixel_art_settings, Pico8Asset, MeshHandle},
 };
 use bevy::{
-    asset::{io::{AssetSourceId, Reader}, AssetLoader, AssetPath, LoadContext, ErasedLoadedAsset},
+    asset::{io::Reader, AssetLoader, AssetPath, LoadContext},
     prelude::*,
 };
 #[cfg(feature = "scripting")]
 use bevy_mod_scripting::core::asset::{Language, ScriptAsset};
-use std::{io, path::PathBuf};
+use std::io;
 
 pub(crate) fn plugin(app: &mut App) {
     app
@@ -74,7 +74,7 @@ impl AssetLoader for ConfigLoader {
         let _ = reader.read_to_end(&mut bytes).await?;
         let content = std::str::from_utf8(&bytes)?;
         let mut config: Config = toml::from_str::<Config>(content)
-            .map_err(|e| io::Error::new(io::ErrorKind::Other, format!("{e}")))?;
+            .map_err(|e| io::Error::other(format!("{e}")))?;
         config.inject_template(None)?;
         into_asset(config, load_context).await
     }
@@ -178,7 +178,7 @@ async fn into_asset(
         }
     }
     let mut sprite_sheets = vec![];
-    for (i, mut sheet) in config.sprite_sheets.into_iter().enumerate() {
+    for (i, sheet) in config.sprite_sheets.into_iter().enumerate() {
         let asset_path = AssetPath::try_parse(&sheet.path)?;
         let handle = if asset_path.path().extension().map(|ext| ext == "p8").unwrap_or(false) {
             load_context.loader()
@@ -204,7 +204,7 @@ async fn into_asset(
     #[cfg(feature = "scripting")]
     for (i, p) in config.scripts.into_iter().enumerate() {
         // Load them in order.
-        let mut asset_path = AssetPath::try_parse(&p)?;
+        let asset_path = AssetPath::try_parse(&p)?;
         let handle = load_context.load::<ScriptAsset>(&asset_path);
         scripts.push(handle);
     }
@@ -219,7 +219,7 @@ async fn into_asset(
         let mut items = vec![];
         for (j, p) in bank.paths().enumerate() {
 
-            let mut asset_path = AssetPath::try_parse(&p)?.into_owned();
+            let mut asset_path = AssetPath::try_parse(p)?.into_owned();
             let label = asset_path.take_label();
             let erased_loaded = load_context.loader()
                                             .with_unknown_type()

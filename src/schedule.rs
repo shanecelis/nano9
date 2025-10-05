@@ -1,10 +1,8 @@
 use bevy::{
-    prelude::{in_state, App, World},
-    app::MainScheduleOrder,
+    prelude::{App, World},
     ecs::schedule::{Schedule, ScheduleLabel},
     core::FrameCount,
 };
-use crate::run::RunState;
 
 #[derive(ScheduleLabel, Clone, Debug, PartialEq, Eq, Hash)]
 pub struct Init;

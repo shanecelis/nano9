@@ -14,7 +14,6 @@ use bevy_mod_scripting::core::{
     event::Recipients,
     asset::{ScriptAsset}, script::ScriptComponent};
 use serde::{Deserialize, Serialize};
-use std::path::PathBuf;
 use merge2::Merge;
 
 #[cfg(feature = "gameboy")]
@@ -115,7 +114,7 @@ impl AudioBank {
             AudioBank::Paths { paths: v } => (Some(v), None),
             AudioBank::Path { path: s } => (None, Some(s.as_str())),
         };
-        a.into_iter().flatten().map(|x| x.as_str()).chain(b.into_iter())
+        a.into_iter().flatten().map(|x| x.as_str()).chain(b)
     }
 }
 

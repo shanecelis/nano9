@@ -120,7 +120,7 @@ impl super::Pico8<'_, '_> {
         match map {
             SpriteMap::P8(handle) => {
 
-                let mut map = self.p8_maps.get_mut(&handle).ok_or_else(|| Error::NoSuch("map for handle".into()))?;
+                let map = self.p8_maps.get_mut(&handle).ok_or_else(|| Error::NoSuch("map for handle".into()))?;
                 map
                 .get_mut((pos.x as u32 + pos.y as u32 * MAP_COLUMNS) as usize)
                 .map(|value| *value = sprite_index as u8)

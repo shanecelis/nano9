@@ -98,7 +98,7 @@ enum StarterKit {
     TopDown,
 }
 
-const HELLO_WORLD: &'static str = include_str!("templates/main.lua");
+const HELLO_WORLD: &str = include_str!("templates/main.lua");
 // Secondary command line interface used as fallback.
 //
 // [source](https://stackoverflow.com/a/79564853/6454690)
@@ -354,7 +354,7 @@ fn run(cli: Cli) -> io::Result<ExitCode> {
     };
     let mut app = App::new();
     let cwd = AssetSourceId::Name("cwd".into());
-    let mut builder = AssetSourceBuilder::platform_default(
+    let builder = AssetSourceBuilder::platform_default(
         env::current_dir()?.to_str().expect("current dir"),
         None,
     );
@@ -414,7 +414,7 @@ fn run(cli: Cli) -> io::Result<ExitCode> {
             // do that at load time.
             let content = fs::read_to_string(path)?;
             let mut config: Config = toml::from_str::<Config>(&content)
-                .map_err(|e| io::Error::new(io::ErrorKind::Other, format!("{e}")))?;
+                .map_err(|e| io::Error::other(format!("{e}")))?;
 
             if let Err(e) = config.inject_template(None) {
                 eprintln!("error: {e}");
@@ -430,24 +430,22 @@ fn run(cli: Cli) -> io::Result<ExitCode> {
             let asset_path: AssetPath<'static> =
                 if fs::exists(&path).unwrap_or(false) {
                     AssetPath::from_path(&path).with_source(&cwd)
-                } else {
-                    if let Some(s) = path.to_str() {
-                        match AssetPath::try_parse(s) {
-                            Ok(p) => p,
-                            Err(e) => {
-                                eprintln!("Cannot convert {:?} to input path: {e}", &s);
-                                return Ok(ExitCode::from(9));
-                            }
+                } else if let Some(s) = path.to_str() {
+                    match AssetPath::try_parse(s) {
+                        Ok(p) => p,
+                        Err(e) => {
+                            eprintln!("Cannot convert {:?} to input path: {e}", &s);
+                            return Ok(ExitCode::from(9));
                         }
-                    } else {
-                        eprintln!("Cannot convert input path to UTF-8 string {:?}.", path.display());
-                        return Ok(ExitCode::from(10));
                     }
+                } else {
+                    eprintln!("Cannot convert input path to UTF-8 string {:?}.", path.display());
+                    return Ok(ExitCode::from(10));
                 }.clone_owned();
             app.add_systems(
                 Startup,
                 move |asset_server: Res<AssetServer>, mut commands: Commands| {
-                    let shared_data = shared_data.clone().unwrap_or_default();
+                    let shared_data = shared_data.unwrap_or_default();
                     let pico8_asset: Handle<Pico8Asset> = asset_server.load_with_settings(dbg!(&asset_path), move |settings: &mut CartLoaderSettings| {
                         settings.shared_data = shared_data;
                     });
@@ -469,10 +467,10 @@ fn run(cli: Cli) -> io::Result<ExitCode> {
             let mut config =
                 if let Some(front_matter) = front_matter::LUA.parse_in_place(&mut content) {
                     let mut config: Config = toml::from_str::<Config>(&front_matter)
-                        .map_err(|e| io::Error::new(io::ErrorKind::Other, format!("{e}")))?;
+                        .map_err(|e| io::Error::other(format!("{e}")))?;
                     config
                         .inject_template(None)
-                        .map_err(|e| io::Error::new(io::ErrorKind::Other, format!("{e}")))?;
+                        .map_err(|e| io::Error::other(format!("{e}")))?;
                     config
                 } else {
                     Config::pico8()

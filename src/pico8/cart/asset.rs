@@ -143,7 +143,7 @@ fn to_asset(cart: Cart, load_context: &mut LoadContext) -> Result<Pico8Asset, Ca
             .load(pico8::PICO8_BORDER),
         maps: vec![
             load_context
-                .add_labeled_asset(format!("map"), P8Map {
+                .add_labeled_asset("map".to_string(), P8Map {
                     entries: cart.map.clone(),
                 })
                 .into()],

@@ -25,7 +25,7 @@ pub enum Camera3dCommand {
 //
 fn update_camera3d(
     mut events: EventReader<Camera3dCommand>,
-    mut camera: Option<Single<(&mut Transform, &mut Camera), With<Nano9Camera3d>>>,
+    camera: Option<Single<(&mut Transform, &mut Camera), With<Nano9Camera3d>>>,
     mut commands: Commands) {
     if events.is_empty() {
         return;
@@ -136,7 +136,8 @@ mod lua {
                     } else {
                         None
                     };
-                    Ok(pico8.camera3d(pos, ori))
+                    let _: () = pico8.camera3d(pos, ori);
+                    Ok(())
                 })
             },
         );

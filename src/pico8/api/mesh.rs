@@ -42,7 +42,7 @@ impl super::Pico8<'_, '_> {
                 let id = self.commands.spawn_empty().id();
                 self.commands.queue(move |world: &mut World| {
                     let scene = {
-                        let mut gltfs = world.resource::<Assets<Gltf>>();
+                        let gltfs = world.resource::<Assets<Gltf>>();
                         let Some(gltf) = gltfs.get(&gltf) else {
                             error!("No gltf for handle {:?}", gltf);
                             return;
@@ -71,18 +71,12 @@ impl super::Pico8<'_, '_> {
 #[cfg(feature = "scripting")]
 mod lua {
     use super::*;
-    use crate::{pico8::lua::with_pico8, DropPolicy, N9Entity};
+    use crate::pico8::lua::with_pico8;
 
-    use bevy_mod_scripting::core::bindings::{
-        function::{
-            from::FromScript,
-            into_ref::IntoScriptRef,
+    use bevy_mod_scripting::core::bindings::function::{
             namespace::{GlobalNamespace, NamespaceBuilder},
             script_function::FunctionCallContext,
-        },
-        script_value::ScriptValue,
-        ReflectReference,
-    };
+        };
     pub(crate) fn plugin(app: &mut App) {
         let world = app.world_mut();
 

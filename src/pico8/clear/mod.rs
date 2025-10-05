@@ -64,9 +64,9 @@ impl ClearCache {
 
     /// Must mark clearable.cached = false on returned entity.
     pub fn take(&mut self, hash: &u64) -> Option<Entity> {
-        let result = self.0.remove_one(hash);
+        
         // info!("CACHE TAKEN {:?}", &result);
-        result
+        self.0.remove_one(hash)
     }
 
     pub fn remove(&mut self, clearable: &Clearable, id: Entity) -> bool {
@@ -123,7 +123,7 @@ impl ClearState {
 // }
 
 fn on_remove_hook(mut world: bevy::ecs::world::DeferredWorld, id: Entity, _comp_id: bevy::ecs::component::ComponentId) {
-    let Some(mut clearable) = world.get::<Clearable>(id).map(|clearable| clearable.clone()) else { return; };
+    let Some(clearable) = world.get::<Clearable>(id).copied() else { return; };
     let Some(mut cache) = world.get_resource_mut::<ClearCache>() else { return; };
     info!("Removing clearable {id} from cache.");
 
