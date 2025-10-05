@@ -15,7 +15,6 @@ use bevy_mod_scripting::{
         callback_labels,
         event::{ScriptCallbackEvent, CallbackLabel},
         handler::event_handler,
-        ConfigureScriptPlugin,
         script::{ScriptContext, ContextPolicy, ScriptAttachment},
     },
     lua::LuaScriptingPlugin,

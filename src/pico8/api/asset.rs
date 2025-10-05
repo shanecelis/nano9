@@ -1,6 +1,6 @@
 use super::*;
 
-pub(crate) fn plugin(app: &mut App) {
+pub(crate) fn plugin(_app: &mut App) {
 }
 
 #[derive(Clone, Asset, Debug, Reflect)]

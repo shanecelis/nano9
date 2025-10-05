@@ -61,9 +61,9 @@ impl super::Pico8<'_, '_> {
         //     SpriteMap::P8(map) => {
                 // trace!("Create map with hash {hash}");
 
-                let map_size = TilemapSize::from(size);
-                let clearable = Clearable::new(self.defaults.time_to_live).with_hash(hash);
-                let tile_storage = TileStorage::empty(map_size);
+        let map_size = TilemapSize::from(size);
+        let clearable = Clearable::new(self.defaults.time_to_live).with_hash(hash);
+        let tile_storage = TileStorage::empty(map_size);
         let gfx_material = self.gfx_material().clone();
         let sprite_sheet = self.pico8_asset()?.sprite_sheets.get(self.state.sprite_sheet_index)
                                                        .ok_or(Error::NoSuch("Sprite sheet for map".into()))?;

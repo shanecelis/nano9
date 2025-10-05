@@ -234,7 +234,8 @@ fn handle_clear_event(
             Some(ttl) if ttl == 0 => {
                 commands.entity(id).despawn_recursive();
             }
-            Some(ttl) => {
+            Some(_ttl) => {
+                // It still has time.
             }
             None => {
                 if clearable.time_to_live == 0 || clearable.hash.is_none() {

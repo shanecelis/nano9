@@ -63,7 +63,7 @@ impl Pico8<'_, '_> {
                 if maybe_z.is_none() {
                     // eprintln!("No Clearable for entity {:?}", id);
                     if let Err(e) = world.get_entity(id) {
-                        // eprintln!("Get entity {:?} err {e:?}", id);
+                        warn!("Get entity {:?} err {e:?}", id);
                     }
                     // return None;
                 }

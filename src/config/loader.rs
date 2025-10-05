@@ -178,7 +178,7 @@ async fn into_asset(
         }
     }
     let mut sprite_sheets = vec![];
-    for (i, sheet) in config.sprite_sheets.into_iter().enumerate() {
+    for sheet in config.sprite_sheets.into_iter() {
         let asset_path = AssetPath::try_parse(&sheet.path)?;
         let handle = if asset_path.path().extension().map(|ext| ext == "p8").unwrap_or(false) {
             load_context.loader()
@@ -202,7 +202,7 @@ async fn into_asset(
     }
     let mut scripts = vec![];
     #[cfg(feature = "scripting")]
-    for (i, p) in config.scripts.into_iter().enumerate() {
+    for p in config.scripts.into_iter() {
         // Load them in order.
         let asset_path = AssetPath::try_parse(&p)?;
         let handle = load_context.load::<ScriptAsset>(&asset_path);
@@ -210,7 +210,7 @@ async fn into_asset(
     }
 
     let mut maps: Vec<pico8::SpriteMap> = Vec::with_capacity(config.maps.len());
-    for (i, map) in config.maps.into_iter().enumerate() {
+    for map in config.maps.into_iter() {
         let p8map: Handle<pico8::P8Map> = load_context.load::<pico8::P8Map>(map.path);
         maps.push(p8map.into());
     }

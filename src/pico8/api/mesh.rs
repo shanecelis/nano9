@@ -95,7 +95,7 @@ mod lua {
                 | {
                     let pos = Vec3::new(x.unwrap_or(0.0), y.unwrap_or(0.0), z.unwrap_or(0.0));
                     let scale = Vec3::new(sx.unwrap_or(1.0), sy.unwrap_or(1.0), sz.unwrap_or(1.0));
-                    let id = with_pico8(&ctx, move |pico8| pico8.mesh(n, pos, scale))?;
+                    let _id = with_pico8(&ctx, move |pico8| pico8.mesh(n, pos, scale))?;
                     Ok(())
                 },
             );

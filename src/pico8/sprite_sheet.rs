@@ -130,7 +130,7 @@ impl AssetLoader for SpriteSheetLoader {
                     )
                 }
                 x => {
-                    panic!("Can't load {:?} as sprite sheet.", load_context.path().display());
+                    panic!("Can't load {:?} with extension {x:?} as sprite sheet.", load_context.path().display());
                 }
             }
         } else {

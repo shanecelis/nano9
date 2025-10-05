@@ -4,7 +4,6 @@ use bevy::asset::{io::Reader, AssetLoader, LoadContext};
 use super::*;
 #[cfg(feature = "scripting")]
 use bevy_mod_scripting::core::asset::{Language, ScriptAsset};
-use std::path::PathBuf;
 
 pub(crate) fn plugin(app: &mut App) {
     app
@@ -122,7 +121,7 @@ fn to_asset(cart: Cart, load_context: &mut LoadContext) -> Result<Pico8Asset, Ca
         .into_iter()
         .collect();
     let code = cart.lua;
-    let code_path: PathBuf = load_context.path().into();
+    // let code_path: PathBuf = load_context.path().into();
     let asset = Pico8Asset {
         #[cfg(feature = "scripting")]
         scripts: if cfg!(feature = "scripting") {
