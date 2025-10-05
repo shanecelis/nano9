@@ -358,8 +358,12 @@ fn run(cli: Cli) -> io::Result<ExitCode> {
         env::current_dir()?.to_str().expect("current dir"),
         None,
     );
-    builder.watcher = None;
-    builder.processed_watcher = None;
+    // The problem here is that if you are in a "noisy" directory, like a the
+    // source tree, where there are ".git/*" file events, these will be
+    // reported.
+    //
+    // builder.watcher = None;
+    // builder.processed_watcher = None;
     app.register_asset_source(&cwd, builder);
 
     let set_default_source = if let Some(dir_name) = env::var_os("NANO9_ASSETS_DIR") {
