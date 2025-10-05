@@ -130,7 +130,7 @@ pub fn lua_eval(mut minibuffer: Minibuffer) {
          mut writer: EventWriter<ScriptCallbackEvent>,
          mut commands: Commands| {
             if let Ok(input) = trigger.event_mut().take_result() {
-                writer.send(ScriptCallbackEvent::new_for_all(
+                writer.send(ScriptCallbackEvent::new_for_all_contexts(
                     call::Eval,
                     vec![ScriptValue::String(input.into()), ScriptValue::Bool(true)],
                 ));
