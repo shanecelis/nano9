@@ -4708,6 +4708,7 @@ dependencies = [
  "bevy_framepace",
  "bevy_minibuffer",
  "bevy_minibuffer_inspector",
+ "bevy_mod_debugdump",
  "bevy_mod_scripting",
  "bevy_prng",
  "bevy_rand",

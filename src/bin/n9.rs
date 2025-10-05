@@ -504,6 +504,8 @@ fn run(cli: Cli) -> io::Result<ExitCode> {
     #[cfg(feature = "minibuffer")]
     app
         .add_plugins(nano9::minibuffer::quick_plugin);
+    #[cfg(feature = "debugdump")]
+    bevy_mod_debugdump::print_schedule_graph(&mut app, Update);
 
     #[cfg(all(feature = "level", feature = "user_properties"))]
     app.add_systems(Startup, |reg: Res<AppTypeRegistry>| {
