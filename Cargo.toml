@@ -15,6 +15,10 @@ categories = [
 readme = "README.md"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/shanecelis/nano-9"
+exclude = [
+    "assets/*.glb",
+    "potato",
+]
 
 [dependencies]
 bevy = { version = "0.15", features = [ "bevy_dev_tools", "asset_processor" ] }
