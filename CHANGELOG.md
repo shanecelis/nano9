@@ -3,6 +3,8 @@
 All notable changes to this project will be documented in this file.
 
 ## [unreleased]
+
+## [0.1.0-alpha.3] - 2025-10-05
 - Recycle print, sprite, and map entities.
 - Add '--shared-data=<map|sprite>' option to n9 CLI.
 - Add '--pause' option to n9 CLI.
