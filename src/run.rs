@@ -29,7 +29,7 @@ fn pause_after_steps(run_state: Res<State<RunState>>,
                      mut steps: ResMut<Steps>) {
     if **run_state == RunState::Run {
         if let Some(ref mut count) = &mut steps.0 {
-            if *count == 0 {
+            if *count <= 1 {
                 steps.0 = None;
                 next_run_state.set(RunState::Pause);
             } else {
