@@ -37,7 +37,7 @@ impl super::Pico8<'_, '_> {
         let text = text.into();
 
         let hash = {
-            let mut hasher = FixedHasher::default().build_hasher();
+            let mut hasher = FixedHasher.build_hasher();
             "print".hash(&mut hasher);
             text.hash(&mut hasher);
             // TODO: Color could be amended.
@@ -254,7 +254,7 @@ mod lua {
                         let pos_p8 = pixel_snap(pico8.state.draw_state.apply_camera_delta(pos_p8));
 
                         let hash = {
-                            let mut hasher = FixedHasher::default().build_hasher();
+                            let mut hasher = FixedHasher.build_hasher();
                             "print".hash(&mut hasher);
                             text.hash(&mut hasher);
                             // TODO: Color could be amended.

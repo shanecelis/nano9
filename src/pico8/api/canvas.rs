@@ -1,7 +1,5 @@
 use bevy::{
-    render::{
-        camera::{ScalingMode, Viewport},
-    },
+    render::camera::Viewport,
     window::{PrimaryWindow, WindowResized},
 };
 use super::*;

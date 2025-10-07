@@ -52,7 +52,7 @@ impl Pico8State {
     pub(crate) fn gfx_material(&mut self, gfx_materials: &mut Assets<GfxMaterial>) -> Handle<GfxMaterial> {
         self.gfx_material.get_or_insert_with(|| {
             let hash = {
-                let mut hasher = FixedHasher::default().build_hasher();
+                let mut hasher = FixedHasher.build_hasher();
                 self.palette.hash(&mut hasher);
                 self.pal_map.hash(&mut hasher);
                 hasher.finish()

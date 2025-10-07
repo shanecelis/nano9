@@ -4,7 +4,7 @@ use bevy::{ecs::system::SystemParam, prelude::*};
 use bevy_mod_scripting::{bindings::ScriptValue};
 use bevy_mod_scripting::bindings::InteropError;
 use bevy_prng::WyRand;
-use bevy_rand::prelude::{Entropy, EntropyPlugin, RngSeed, SeedSource};
+use bevy_rand::prelude::{Entropy, EntropyPlugin, RngSeed};
 use rand::RngCore;
 
 #[derive(Debug, Component)]
@@ -19,7 +19,7 @@ impl Rand8<'_> {
     #[cfg(feature = "scripting")]
     pub fn rnd(&mut self, value: Option<ScriptValue>) -> ScriptValue {
         let value = value.unwrap_or(ScriptValue::Unit);
-        let (ref mut rng, ref _seed) = *self.rand;
+        let (ref mut rng, _seed) = *self.rand;
         match value {
             ScriptValue::Integer(x) => {
                 ScriptValue::from(

@@ -144,7 +144,7 @@ impl super::Pico8<'_, '_> {
         // let sheet_index = sheet_index.unwrap_or(0);
 
         let hash = {
-            let mut hasher = FixedHasher::default().build_hasher();
+            let mut hasher = FixedHasher.build_hasher();
             "sspr".hash(&mut hasher);
             sprite_rect.as_irect().hash(&mut hasher);
             // Need to hash the palette choice and
@@ -223,7 +223,7 @@ impl super::Pico8<'_, '_> {
         let spr = spr.into();
         let mut index = 0;
         let hash = {
-            let mut hasher = FixedHasher::default().build_hasher();
+            let mut hasher = FixedHasher.build_hasher();
             "spr".hash(&mut hasher);
             let sheet = match spr {
                 Spr::Cur { sprite } => {

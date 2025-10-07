@@ -3,7 +3,7 @@ use bevy::{
     asset::AssetPath,
     prelude::*,
     reflect::Reflect,
-    window::{PresentMode, PrimaryWindow, WindowMode},
+    window::PresentMode,
 };
 use std::time::Duration;
 
@@ -14,8 +14,7 @@ use bevy_mod_scripting::{
         core::{callback_labels,
                event::{ScriptCallbackEvent, CallbackLabel},
                handler::event_handler,
-               script::{ScriptContext, ContextPolicy, ScriptAttachment},
-               error::ScriptError},
+               script::{ScriptContext, ContextPolicy, ScriptAttachment}},
     lua::LuaScriptingPlugin,
     BMSPlugin,
 };

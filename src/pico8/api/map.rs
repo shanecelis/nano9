@@ -39,7 +39,7 @@ impl super::Pico8<'_, '_> {
             screen_start.y = -screen_start.y;
         }
         let hash = {
-            let mut hasher = FixedHasher::default().build_hasher();
+            let mut hasher = FixedHasher.build_hasher();
             "map".hash(&mut hasher);
             map_pos.hash(&mut hasher);
             self.state.palette.hash(&mut hasher);
