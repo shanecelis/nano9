@@ -1,7 +1,7 @@
 use super::*;
 
 #[cfg(feature = "scripting")]
-use bevy_mod_scripting::core::bindings::script_value::ScriptValue;
+use bevy_mod_scripting::bindings::script_value::ScriptValue;
 
 pub(crate) fn plugin(app: &mut App) {
     #[cfg(feature = "scripting")]
@@ -49,7 +49,7 @@ mod lua {
     use super::*;
     use crate::pico8::lua::with_pico8;
 
-    use bevy_mod_scripting::core::bindings::function::{
+    use bevy_mod_scripting::bindings::function::{
         namespace::{GlobalNamespace, NamespaceBuilder},
         script_function::FunctionCallContext,
     };

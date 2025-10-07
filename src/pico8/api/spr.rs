@@ -1,13 +1,12 @@
 use super::*;
 
 #[cfg(feature = "scripting")]
-use bevy_mod_scripting::core::{
-    bindings::{function::from::FromScript, script_value::ScriptValue, WorldAccessGuard},
-    error::InteropError,
+use bevy_mod_scripting::{
+    bindings::{function::from::FromScript, script_value::ScriptValue, WorldAccessGuard, InteropError},
 };
+use bevy::platform::hash::FixedHasher;
 
 use crate::{hash::hash_f32, pico8::Gfx};
-use bevy::utils::hashbrown::hash_map::DefaultHashBuilder;
 use std::{
     any::TypeId,
     hash::{BuildHasher, Hash, Hasher},
@@ -50,7 +49,7 @@ impl FromScript for Spr {
                 assert_eq!(list.len(), 2, "Expect two elements for spr.");
                 let mut iter = list.into_iter().map(|v| match v {
                     ScriptValue::Integer(n) => Ok(n as usize),
-                    x => Err(InteropError::external_error(Box::new(
+                    x => Err(InteropError::external_boxed(Box::new(
                         Error::InvalidArgument(format!("{x:?}").into()),
                     ))),
                 });
@@ -58,7 +57,7 @@ impl FromScript for Spr {
                 let sheet = iter.next().expect("sheet index")?;
                 Ok(Spr::From { sprite, sheet })
             }
-            _ => Err(InteropError::impossible_conversion(TypeId::of::<Spr>())),
+            x => Err(InteropError::value_mismatch(TypeId::of::<Spr>(), x)),
         }
     }
 }
@@ -145,7 +144,7 @@ impl super::Pico8<'_, '_> {
         // let sheet_index = sheet_index.unwrap_or(0);
 
         let hash = {
-            let mut hasher = DefaultHashBuilder::default().build_hasher();
+            let mut hasher = FixedHasher::default().build_hasher();
             "sspr".hash(&mut hasher);
             sprite_rect.as_irect().hash(&mut hasher);
             // Need to hash the palette choice and
@@ -224,7 +223,7 @@ impl super::Pico8<'_, '_> {
         let spr = spr.into();
         let mut index = 0;
         let hash = {
-            let mut hasher = DefaultHashBuilder::default().build_hasher();
+            let mut hasher = FixedHasher::default().build_hasher();
             "spr".hash(&mut hasher);
             let sheet = match spr {
                 Spr::Cur { sprite } => {
@@ -444,7 +443,7 @@ mod lua {
     use super::*;
     use crate::{pico8::lua::with_pico8, DropPolicy, N9Entity};
 
-    use bevy_mod_scripting::core::bindings::{
+    use bevy_mod_scripting::bindings::{
         function::{
             from::FromScript,
             into_ref::IntoScriptRef,

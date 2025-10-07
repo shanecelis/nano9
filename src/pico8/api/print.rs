@@ -1,7 +1,7 @@
 use super::*;
 use crate::hash::hash_f32;
-use bevy::utils::hashbrown::hash_map::DefaultHashBuilder;
 use std::hash::{BuildHasher, Hash, Hasher};
+use bevy::platform::hash::FixedHasher;
 
 pub(crate) fn plugin(app: &mut App) {
     #[cfg(feature = "scripting")]
@@ -37,7 +37,7 @@ impl super::Pico8<'_, '_> {
         let text = text.into();
 
         let hash = {
-            let mut hasher = DefaultHashBuilder::default().build_hasher();
+            let mut hasher = FixedHasher::default().build_hasher();
             "print".hash(&mut hasher);
             text.hash(&mut hasher);
             // TODO: Color could be amended.
@@ -175,6 +175,7 @@ impl super::Pico8<'_, '_> {
                 font,
                 font_smoothing: bevy::text::FontSmoothing::None,
                 font_size,
+                ..default()
             },
             Anchor::TopLeft,
             clearable,
@@ -214,7 +215,7 @@ mod lua {
     use super::*;
     use crate::pico8::lua::with_pico8;
 
-    use bevy_mod_scripting::core::{
+    use bevy_mod_scripting::{
         bindings::{
             access_map::ReflectAccessId,
             function::{
@@ -224,7 +225,7 @@ mod lua {
             script_value::ScriptValue,
             IntoScript,
         },
-        error::InteropError,
+        bindings::InteropError,
     };
     pub(crate) fn plugin(app: &mut App) {
         let world = app.world_mut();
@@ -253,7 +254,7 @@ mod lua {
                         let pos_p8 = pixel_snap(pico8.state.draw_state.apply_camera_delta(pos_p8));
 
                         let hash = {
-                            let mut hasher = DefaultHashBuilder::default().build_hasher();
+                            let mut hasher = FixedHasher::default().build_hasher();
                             "print".hash(&mut hasher);
                             text.hash(&mut hasher);
                             // TODO: Color could be amended.
@@ -308,7 +309,7 @@ mod lua {
                             Some(clearable),
                         );
                         unsafe { world_guard.release_global_access() };
-                        r.map_err(|e| InteropError::external_error(Box::new(e)))
+                        r.map_err(|e| InteropError::external(Box::new(e)))
                     } else {
                         Err(InteropError::cannot_claim_access(
                             raid,

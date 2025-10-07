@@ -6,7 +6,7 @@ pub(crate) fn plugin(_app: &mut App) {
 #[derive(Clone, Asset, Debug, Reflect)]
 pub struct Pico8Asset {
     #[cfg(feature = "scripting")]
-    pub scripts: Vec<Handle<bevy_mod_scripting::core::asset::ScriptAsset>>,
+    pub scripts: Vec<Handle<bevy_mod_scripting::asset::ScriptAsset>>,
     // this palette is given away and not actually used here.
     pub(crate) palettes: Vec<Palette>,
     pub(crate) border: Handle<Image>,

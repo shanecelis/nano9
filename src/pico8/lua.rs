@@ -1,9 +1,9 @@
 use bevy::ecs::system::{SystemParam, SystemState};
 
-use bevy_mod_scripting::core::{
+use bevy_mod_scripting::{
     bindings::{access_map::ReflectAccessId, function::script_function::FunctionCallContext},
-    error::InteropError,
 };
+use bevy_mod_scripting::bindings::InteropError;
 
 use crate::pico8::{Error, Pico8};
 
@@ -27,7 +27,7 @@ pub(crate) fn with_system_param<
         };
         system_state.apply(world);
         unsafe { world_guard.release_global_access() };
-        r.map_err(|e| InteropError::external_error(Box::new(e)))
+        r.map_err(|e| InteropError::external(Box::new(e)))
     } else {
         Err(InteropError::cannot_claim_access(
             raid,

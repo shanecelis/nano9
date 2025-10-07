@@ -46,7 +46,7 @@ mod fixed_point {
 mod lua {
     use super::*;
 
-    use bevy_mod_scripting::core::bindings::function::{
+    use bevy_mod_scripting::bindings::function::{
         namespace::{GlobalNamespace, NamespaceBuilder},
         script_function::FunctionCallContext,
     };

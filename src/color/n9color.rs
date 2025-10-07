@@ -4,17 +4,15 @@ use std::any::TypeId;
 
 #[cfg(feature = "scripting")]
 use bevy_mod_scripting::{
-    core::docgen::typed_through::{ThroughTypeInfo, TypedThrough},
-    core::{
-        bindings::{function::from::FromScript, script_value::ScriptValue, WorldAccessGuard},
-        error::InteropError,
-    },
+    bindings::{function::from::FromScript, script_value::ScriptValue, WorldAccessGuard,
+               docgen::typed_through::{ThroughTypeInfo, TypedThrough}},
     GetTypeDependencies,
 };
+use bevy_mod_scripting::bindings::InteropError;
+use bevy::reflect::TypeRegistry;
 
-#[derive(Debug, Clone, Copy, Reflect, Hash)]
+#[derive(Debug, Clone, Copy, Reflect, Hash, Default)]
 #[cfg_attr(feature = "scripting", derive(GetTypeDependencies))]
-#[derive(Default)]
 pub enum N9Color {
     #[default]
     Pen,
@@ -60,7 +58,10 @@ impl FromScript for N9Color {
             ScriptValue::Integer(n) => Ok(N9Color::PColor((n as usize).into())),
             ScriptValue::Float(f) => Ok(N9Color::PColor((f as usize).into())),
             ScriptValue::Unit => Ok(N9Color::Pen),
-            _ => Err(InteropError::impossible_conversion(TypeId::of::<N9Color>())),
+            _ => Err(InteropError::type_mismatch(
+                TypeId::of::<i64>(),
+                None
+            )),
         }
     }
 }

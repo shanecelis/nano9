@@ -16,9 +16,9 @@ fn fill_mouse_position(
     windows: Query<&Window>,
     camera_q: Query<(&Camera, &GlobalTransform), With<Nano9Camera>>,
     mut mouse_input: ResMut<MouseInput>,
-) {
-    let window = windows.single();
-    let (camera, camera_transform) = camera_q.single();
+) -> Result<(), BevyError> {
+    let window = windows.single()?;
+    let (camera, camera_transform) = camera_q.single()?;
 
     if let Some(world_position) = window
         .cursor_position()
@@ -27,6 +27,7 @@ fn fill_mouse_position(
         mouse_input.position.x = world_position.x;
         mouse_input.position.y = world_position.y;
     }
+    Ok(())
 }
 
 fn fill_buttons(

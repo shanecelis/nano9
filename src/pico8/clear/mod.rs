@@ -122,7 +122,8 @@ impl ClearState {
 //     cache.insert(hash, id);
 // }
 
-fn on_remove_hook(mut world: bevy::ecs::world::DeferredWorld, id: Entity, _comp_id: bevy::ecs::component::ComponentId) {
+fn on_remove_hook(mut world: bevy::ecs::world::DeferredWorld, hook: bevy::ecs::component::HookContext) {
+    let id = hook.entity;
     let Some(clearable) = world.get::<Clearable>(id).copied() else { return; };
     let Some(mut cache) = world.get_resource_mut::<ClearCache>() else { return; };
     info!("Removing clearable {id} from cache.");

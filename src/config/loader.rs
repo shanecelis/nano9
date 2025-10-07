@@ -9,7 +9,7 @@ use bevy::{
     prelude::*,
 };
 #[cfg(feature = "scripting")]
-use bevy_mod_scripting::core::asset::{Language, ScriptAsset};
+use bevy_mod_scripting::asset::{Language, ScriptAsset};
 use std::io;
 
 pub(crate) fn plugin(app: &mut App) {
@@ -143,7 +143,6 @@ impl AssetLoader for LuaLoader {
         Ok(ScriptAsset {
             content: code.into_bytes().into_boxed_slice(),
             language: Language::Lua,
-            asset_path: default(),
         })
     }
 

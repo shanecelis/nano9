@@ -4,8 +4,8 @@ use crate::pico8::cart::{to_byte, to_nybble};
 use bevy::{
     audio::{AddAudioSource, Source},
     prelude::*,
-    utils::Duration,
 };
+use std::time::Duration;
 use dasp::{
     signal::{self, noise, Noise, Phase, Step},
     Signal,

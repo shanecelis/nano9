@@ -4,18 +4,16 @@ use std::any::TypeId;
 use crate::pico8::{Error, PalMap};
 #[cfg(feature = "scripting")]
 use bevy_mod_scripting::{
-    core::docgen::typed_through::{ThroughTypeInfo, TypedThrough},
-    core::{
-        bindings::{
-            function::from::FromScript, script_value::ScriptValue, IntoScript, WorldAccessGuard,
-        },
-        error::InteropError,
-    },
+    bindings::{
+        function::from::FromScript, script_value::ScriptValue, IntoScript, WorldAccessGuard,
+        docgen::typed_through::{ThroughTypeInfo, TypedThrough}},
     GetTypeDependencies,
 };
+use bevy_mod_scripting::bindings::InteropError;
+use bevy::reflect::TypeRegistry;
 
-#[derive(Debug, Clone, Copy, Reflect)]
-#[cfg_attr(feature = "scripting", derive(GetTypeDependencies))]
+#[derive(Debug, Clone, Copy, Reflect, GetTypeDependencies)]
+// #[cfg_attr(feature = "scripting", derive(GetTypeDependencies))]
 pub enum PColor {
     Palette(usize),
     Color(Srgba),
@@ -77,7 +75,10 @@ impl FromScript for PColor {
         match value {
             ScriptValue::Integer(n) => Ok(PColor::Palette(n as usize)),
             ScriptValue::Float(n) => Ok(PColor::Palette(n as usize)),
-            _ => Err(InteropError::impossible_conversion(TypeId::of::<PColor>())),
+            x => Err(InteropError::value_mismatch(
+                TypeId::of::<i64>(),
+                x
+            )),
         }
     }
 }

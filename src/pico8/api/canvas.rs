@@ -103,8 +103,6 @@ pub fn setup_canvas(mut canvas: Option<ResMut<N9Canvas>>,
 }
 
 fn spawn_camera(mut commands: Commands, canvas: Res<N9Canvas>) {
-    let mut projection = OrthographicProjection::default_2d();
-    projection.scaling_mode = ScalingMode::WindowSize;
     commands
         .spawn((
             Name::new("dolly"),
@@ -119,8 +117,7 @@ fn spawn_camera(mut commands: Commands, canvas: Res<N9Canvas>) {
             parent.spawn((
                 Name::new("camera"),
                 Camera2d,
-                Msaa::Off,
-                projection,
+                Projection::Orthographic(OrthographicProjection::default_2d()),
                 IsDefaultUiCamera,
                 InheritedVisibility::default(),
                 Nano9Camera,
@@ -132,7 +129,8 @@ pub fn sync_window_size(
     mut resize_event: EventReader<WindowResized>,
     canvas: Res<N9Canvas>,
     primary_windows: Query<&Window, With<PrimaryWindow>>,
-    orthographic_camera: Single<(&mut OrthographicProjection, &mut Camera), With<Nano9Camera>>,
+    mut projection_query: Query<&mut Projection, With<Nano9Camera>>,
+    mut camera_query: Query<&mut Camera, With<Nano9Camera>>,
 ) {
     if let Some(e) = resize_event
         .read()
@@ -153,20 +151,29 @@ pub fn sync_window_size(
                 // Canvas is longer than it is tall. Fit the width first.
                 (window_size.y / canvas_size.y).min(window_size.x / canvas_size.x);
 
-        let (mut orthographic, mut camera) = orthographic_camera.into_inner();
-        trace!(
-            "oldscale {} new_scale {new_scale} window_scale {window_scale}",
-            &orthographic.scale
-        );
-        orthographic.scale = 1.0 / new_scale;
+        for mut projection in projection_query.iter_mut() {
+            match &mut *projection {
+                Projection::Orthographic(ref mut orthographic) => {
+                    trace!(
+                        "oldscale {} new_scale {new_scale} window_scale {window_scale}",
+                        &orthographic.scale);
+                    orthographic.scale = 1.0 / new_scale;
+                }
+                x => warn_once!("Nano9Camera is not an orthographic camera")
+            }
+        }
+        
         let viewport_size = canvas_size * new_scale * window_scale;
         let start = (window_size * window_scale - viewport_size) / 2.0;
         trace!("viewport size {} start {}", &viewport_size, &start);
-        camera.viewport = Some(Viewport {
-            physical_position: UVec2::new(start.x as u32, start.y as u32),
-            physical_size: UVec2::new(viewport_size.x as u32, viewport_size.y as u32),
-            ..default()
-        });
+        
+        for mut camera in camera_query.iter_mut() {
+            camera.viewport = Some(Viewport {
+                physical_position: UVec2::new(start.x as u32, start.y as u32),
+                physical_size: UVec2::new(viewport_size.x as u32, viewport_size.y as u32),
+                ..default()
+            });
+        }
 
     }
 }
@@ -240,7 +247,7 @@ mod lua {
     use super::*;
     use crate::pico8::lua::with_pico8;
 
-    use bevy_mod_scripting::core::bindings::function::{
+    use bevy_mod_scripting::bindings::function::{
         namespace::{GlobalNamespace, NamespaceBuilder},
         script_function::FunctionCallContext,
     };

@@ -8,7 +8,7 @@ use bevy::{
 use crate::pico8::lua::with_system_param;
 use crate::pico8::{negate_y, Error};
 #[cfg(feature = "scripting")]
-use bevy_mod_scripting::core::{
+use bevy_mod_scripting::{
     bindings::{
         function::{
             from::FromScript,
@@ -17,8 +17,8 @@ use bevy_mod_scripting::core::{
         },
         script_value::ScriptValue,
     },
-    error::InteropError,
 };
+use bevy_mod_scripting::bindings::InteropError;
 
 #[cfg(feature = "scripting")]
 use crate::conversions::RectValue;

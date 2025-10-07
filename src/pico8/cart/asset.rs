@@ -3,7 +3,7 @@ use bevy::asset::{io::Reader, AssetLoader, LoadContext};
 
 use super::*;
 #[cfg(feature = "scripting")]
-use bevy_mod_scripting::core::asset::{Language, ScriptAsset};
+use bevy_mod_scripting::asset::{Language, ScriptAsset};
 
 pub(crate) fn plugin(app: &mut App) {
     app
@@ -129,7 +129,6 @@ fn to_asset(cart: Cart, load_context: &mut LoadContext) -> Result<Pico8Asset, Ca
                 load_context.add_labeled_asset("lua".into(), ScriptAsset {
                     content: code.into_bytes().into_boxed_slice(),
                     language: Language::Lua,
-                    asset_path: default(),
                 }),
             ]
         } else {

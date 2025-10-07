@@ -36,9 +36,12 @@ pub fn one_step(
 pub fn toggle_fullscreen(
     mut primary_windows: Query<&mut Window, With<PrimaryWindow>>,
 ) {
-    let mut primary_window = primary_windows.single_mut();
+    let Ok(mut primary_window) = primary_windows.single_mut() else {
+        warn!("Unable to find primary window to toggle full screen.");
+        return;
+    };
     primary_window.mode = match primary_window.mode {
-        WindowMode::Windowed => WindowMode::Fullscreen(MonitorSelection::Current),
+        WindowMode::Windowed => WindowMode::Fullscreen(MonitorSelection::Current, VideoModeSelection::Current),
         _ => WindowMode::Windowed,
     }
 }

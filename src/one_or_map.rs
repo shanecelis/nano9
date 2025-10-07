@@ -1,6 +1,6 @@
 use bevy::{
-    utils::{HashMap, hashbrown::Equivalent},
     prelude::*,
+    platform::collections::{Equivalent, HashMap},
 };
 use std::hash::Hash;
 

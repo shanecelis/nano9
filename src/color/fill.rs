@@ -4,13 +4,12 @@ use std::any::TypeId;
 use super::PColor;
 #[cfg(feature = "scripting")]
 use bevy_mod_scripting::{
-    core::docgen::typed_through::{ThroughTypeInfo, TypedThrough},
-    core::{
-        bindings::{function::from::FromScript, script_value::ScriptValue, WorldAccessGuard},
-        error::InteropError,
-    },
+    bindings::{function::from::FromScript, script_value::ScriptValue, WorldAccessGuard,
+               docgen::typed_through::{ThroughTypeInfo, TypedThrough}},
     GetTypeDependencies,
 };
+use bevy_mod_scripting::bindings::InteropError;
+use bevy::reflect::TypeRegistry;
 
 /// This is a fill color that specifies what color to use for the "off" bit (default) and "on" bit.
 #[derive(Debug, Clone, Copy, Reflect)]
@@ -99,8 +98,9 @@ impl FromScript for FillColor {
                 }
             }
             // ScriptValue::Unit => Ok(N9Color::Pen),
-            _ => Err(InteropError::impossible_conversion(
-                TypeId::of::<FillColor>(),
+            _ => Err(InteropError::type_mismatch(
+                TypeId::of::<i64>(),
+                None
             )),
         }
     }

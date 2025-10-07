@@ -145,7 +145,7 @@ mod lua {
     use super::*;
     use crate::{pico8::lua::with_pico8, DropPolicy, N9Entity};
 
-    use bevy_mod_scripting::core::bindings::{
+    use bevy_mod_scripting::bindings::{
         function::{
             into_ref::IntoScriptRef,
             namespace::{GlobalNamespace, NamespaceBuilder},

@@ -1,7 +1,8 @@
 use crate::pico8::Error;
 use bevy::{ecs::system::SystemParam, prelude::*};
 #[cfg(feature = "scripting")]
-use bevy_mod_scripting::core::{bindings::ScriptValue, error::InteropError};
+use bevy_mod_scripting::{bindings::ScriptValue};
+use bevy_mod_scripting::bindings::InteropError;
 use bevy_prng::WyRand;
 use bevy_rand::prelude::{Entropy, EntropyPlugin, RngSeed, SeedSource};
 use rand::RngCore;
@@ -11,14 +12,14 @@ struct Source;
 
 #[derive(SystemParam)]
 pub struct Rand8<'w> {
-    rand: Single<'w, (&'static mut Entropy<WyRand>, &'static mut RngSeed<WyRand>), With<Source>>,
+    rand: Single<'w, (&'static mut Entropy<WyRand>, &'static RngSeed<WyRand>), With<Source>>,
 }
 
 impl Rand8<'_> {
     #[cfg(feature = "scripting")]
     pub fn rnd(&mut self, value: Option<ScriptValue>) -> ScriptValue {
         let value = value.unwrap_or(ScriptValue::Unit);
-        let (ref mut rng, ref mut _seed) = *self.rand;
+        let (ref mut rng, ref _seed) = *self.rand;
         match value {
             ScriptValue::Integer(x) => {
                 ScriptValue::from(
@@ -40,17 +41,19 @@ impl Rand8<'_> {
                     x.swap_remove(index)
                 }
             }
-            _ => ScriptValue::Error(InteropError::external_error(Box::new(
+            _ => ScriptValue::Error(InteropError::external(Box::new(
                 Error::InvalidArgument("rng expects integer, float, or list".into()),
             ))),
         }
     }
 
-    #[allow(deprecated)]
+    // #[allow(deprecated)]
     pub fn srand(&mut self, new_seed: u64) {
         let (ref mut rng, ref mut seed) = *self.rand;
         rng.reseed(new_seed.to_ne_bytes());
-        **seed = RngSeed::<WyRand>::from_seed(new_seed.to_ne_bytes());
+        // Commands does do it
+        // commands.reseed(new_seed);
+        //**seed = RngSeed::<WyRand>::from_seed(new_seed.to_ne_bytes());
     }
 }
 

@@ -5,7 +5,7 @@ use crate::{
 use bevy::{
     asset::AssetPath,
     app::{PluginGroup, PluginGroupBuilder},
-    audio::AudioPlugin,
+    audio::{Volume, AudioPlugin},
     prelude::*,
 };
 
@@ -42,7 +42,7 @@ impl PluginGroup for Nano9Plugins {
                 //     ..default()
                 // })
                 .set(AudioPlugin {
-                    global_volume: GlobalVolume::new(0.4),
+                    global_volume: GlobalVolume { volume: Volume::Linear(0.4) },
                     ..default()
                 })
                 .set(nano9_plugin.window_plugin()),

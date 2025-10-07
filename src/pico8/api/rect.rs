@@ -144,7 +144,7 @@ impl super::Pico8<'_, '_> {
                     anchor: Anchor::TopLeft,
                     custom_size: Some(size),
                     image_mode: SpriteImageMode::Sliced(TextureSlicer {
-                        border: BorderRect::square(1.0),
+                        border: BorderRect::all(1.0),
                         center_scale_mode: SliceScaleMode::Stretch,
                         sides_scale_mode: SliceScaleMode::Tile { stretch_value: 1.0 },
                         ..default()
@@ -182,7 +182,7 @@ mod lua {
     use super::*;
     use crate::pico8::lua::with_pico8;
 
-    use bevy_mod_scripting::core::bindings::function::{
+    use bevy_mod_scripting::bindings::function::{
         namespace::{GlobalNamespace, NamespaceBuilder},
         script_function::FunctionCallContext,
     };

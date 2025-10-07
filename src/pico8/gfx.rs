@@ -8,7 +8,7 @@ use bevy::{
         render_asset::RenderAssetUsages,
         render_resource::{Extent3d, TextureDimension, TextureFormat},
     },
-    utils::HashMap,
+    platform::collections::{HashMap, HashSet},
 };
 use std::{
     collections::VecDeque,
@@ -59,7 +59,7 @@ fn check_dirty(
     mut events: EventReader<AssetEvent<Gfx>>,
     mut query: Query<(&mut GfxDirty, &GfxSprite)>) {
 
-    let mut modified_handles: Option<bevy::utils::HashSet<_>> = None;
+    let mut modified_handles: Option<HashSet<_>> = None;
     for (mut gfx_dirty, gfx_sprite) in &mut query {
         if gfx_dirty.0 {
             continue;
@@ -130,11 +130,15 @@ pub(crate) fn compute_image(gfx_handle: &Handle<Gfx>,
                 // Update existing image.
                 if let Some((gfx, image)) = gfx.zip(images.get_mut(*handle)) {
                     trace!("updating image for gfx {}", gfx_id);
+                    if let Some(ref mut data) = image.data {
                     gfx.write_bytes(
-                        &mut image.data,
+                        data,
                         |i, _, bytes| {
                             gfx_material.pal_map.write_color(&palette.data, i, bytes);
                         });
+                    } else {
+                        warn_once!("No data for image {}", gfx_id);
+                    }
                 }
             }
         }).cloned()
@@ -173,7 +177,7 @@ fn compute_image_on_asset_event(
     // mut update_images: Local<Vec<(Entity, Handle<Image>)>>,
 ) {
     // We store the asset ids of added/modified image assets.
-    let added_handles: bevy::utils::HashSet<_> = events
+    let added_handles: HashSet<_> = events
         .read()
         .filter_map(|e| match e {
             AssetEvent::Added { id } | AssetEvent::Modified { id } => Some(*id),

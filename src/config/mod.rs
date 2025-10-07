@@ -10,9 +10,9 @@ use crate::{
 };
 use bevy::prelude::*;
 #[cfg(feature = "scripting")]
-use bevy_mod_scripting::core::{
-    event::Recipients,
-    asset::{ScriptAsset}, script::ScriptComponent};
+use bevy_mod_scripting::{
+    core::{event::Recipients, script::ScriptComponent},
+    asset::{ScriptAsset}};
 use serde::{Deserialize, Serialize};
 use merge2::Merge;
 

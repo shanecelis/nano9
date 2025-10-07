@@ -1,7 +1,7 @@
 use super::*;
-use bevy::utils::hashbrown::hash_map::DefaultHashBuilder;
 use std::hash::{BuildHasher, Hash, Hasher};
 use bevy_ecs_tilemap::prelude::*;
+use bevy::platform::hash::FixedHasher;
 
 pub(crate) fn plugin(app: &mut App) {
     #[cfg(feature = "scripting")]
@@ -39,7 +39,7 @@ impl super::Pico8<'_, '_> {
             screen_start.y = -screen_start.y;
         }
         let hash = {
-            let mut hasher = DefaultHashBuilder::default().build_hasher();
+            let mut hasher = FixedHasher::default().build_hasher();
             "map".hash(&mut hasher);
             map_pos.hash(&mut hasher);
             self.state.palette.hash(&mut hasher);
@@ -141,7 +141,7 @@ mod lua {
     use super::*;
     use crate::{pico8::lua::with_pico8, DropPolicy, N9Entity};
 
-    use bevy_mod_scripting::core::bindings::{
+    use bevy_mod_scripting::bindings::{
         function::{
             into_ref::IntoScriptRef,
             namespace::{GlobalNamespace, NamespaceBuilder},

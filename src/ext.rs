@@ -1,5 +1,5 @@
 #[cfg(feature = "scripting")]
-use bevy_mod_scripting::{core::bindings::ScriptValue, lua::mlua::Value};
+use bevy_mod_scripting::{bindings::ScriptValue, lua::mlua::Value};
 
 pub trait ValueExt {
     fn to_f32(&self) -> Option<f32>;

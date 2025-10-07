@@ -1,10 +1,11 @@
-use bevy_mod_scripting::core::{
+use bevy_mod_scripting::{
     bindings::{function::from::FromScript, script_value::ScriptValue, WorldAccessGuard},
-    error::InteropError,
 };
+use bevy_mod_scripting::bindings::InteropError;
 
 use bevy::prelude::*;
-use std::{any::TypeId, borrow::Borrow, collections::HashMap, fmt::Display, hash::Hash};
+use bevy::platform::collections::hash_map::HashMap;
+use std::{any::TypeId, borrow::Borrow, fmt::Display, hash::Hash};
 
 #[allow(non_camel_case_types)]
 pub struct f32Value;
@@ -46,7 +47,7 @@ impl FromScript for Vec2Value {
                 let y = f32Value::from_script(remover(&mut v, "y")?, world)?;
                 Ok(Vec2::new(x, y))
             }
-            _ => Err(InteropError::impossible_conversion(TypeId::of::<Vec2>())),
+            x => Err(InteropError::value_mismatch(TypeId::of::<Vec2>(), x)),
         }
     }
 }
@@ -92,7 +93,7 @@ impl FromScript for RectValue {
                     let y1 = f32Value::from_script(i.next().unwrap(), world)?;
                     Ok(Rect::from_corners(Vec2::new(x0, y0), Vec2::new(x1, y1)))
                 } else {
-                    Err(InteropError::impossible_conversion(TypeId::of::<Rect>()))
+                    Err(InteropError::length_mismatch(4, n))
                 }
             }
             ScriptValue::Map(mut v) => {
@@ -100,7 +101,7 @@ impl FromScript for RectValue {
                 let max = Vec2Value::from_script(remover(&mut v, "max")?, world)?;
                 Ok(Rect { min, max })
             }
-            _ => Err(InteropError::impossible_conversion(TypeId::of::<Rect>())),
+            _ => Err(InteropError::value_mismatch(TypeId::of::<Rect>(),value)),
         }
     }
 }

@@ -3,20 +3,19 @@ use bevy::{
     asset::AssetPath,
     prelude::*,
     reflect::Reflect,
-    utils::Duration,
     window::{PresentMode, PrimaryWindow, WindowMode},
 };
+use std::time::Duration;
 
 #[cfg(feature = "scripting")]
 use bevy_mod_scripting::{
-    core::{
         asset::ScriptAsset,
-        bindings::{function::namespace::NamespaceBuilder},
-        callback_labels,
-        event::{ScriptCallbackEvent, CallbackLabel},
-        handler::event_handler,
-        script::{ScriptContext, ContextPolicy, ScriptAttachment},
-    },
+        bindings::{function::namespace::NamespaceBuilder, InteropError},
+        core::{callback_labels,
+               event::{ScriptCallbackEvent, CallbackLabel},
+               handler::event_handler,
+               script::{ScriptContext, ContextPolicy, ScriptAttachment},
+               error::ScriptError},
     lua::LuaScriptingPlugin,
     BMSPlugin,
 };
@@ -91,23 +90,6 @@ pub mod call {
     Eval => "_eval",
     Draw => "_draw");
 }
-
-pub fn fullscreen_key(
-    input: Res<ButtonInput<KeyCode>>,
-    mut primary_windows: Query<&mut Window, With<PrimaryWindow>>,
-) {
-    if input.just_pressed(KeyCode::Enter)
-        && input.any_pressed([KeyCode::AltLeft, KeyCode::AltRight])
-    {
-        use WindowMode::*;
-        let mut primary_window = primary_windows.single_mut();
-        primary_window.mode = match primary_window.mode {
-            Windowed => Fullscreen(MonitorSelection::Current),
-            _ => Windowed,
-        }
-    }
-}
-
 
 #[cfg(feature = "scripting")]
 pub fn send(label: impl Into<CallbackLabel>) -> impl Fn(EventWriter<ScriptCallbackEvent>,
@@ -199,9 +181,9 @@ fn add_logging(app: &mut App) {
             bevy::log::trace!("{}", s);
         });
 }
-// use bevy_mod_scripting::core::error::InteropError;
-// use bevy_mod_scripting::core::bindings::ReflectAccessId;
-// use bevy_mod_scripting::core::bindings::FunctionCallContext;
+// use bevy_mod_scripting::bindings::InteropError;
+// use bevy_mod_scripting::bindings::ReflectAccessId;
+// use bevy_mod_scripting::bindings::FunctionCallContext;
 
 // #[derive(Event)]
 // pub struct MyTrigger(usize);
@@ -230,6 +212,20 @@ fn add_logging(app: &mut App) {
 //                      }
 //                  });
 // }
+fn context_initializer(_script_attachment: &ScriptAttachment, context: &mut bevy_mod_scripting::lua::LuaContext) -> Result<(), InteropError> {
+    use bevy_mod_scripting::lua::IntoInteropError;
+    context.globals().set(
+        "_eval_string",
+        context.create_function(|ctx, arg: String| {
+            ctx.load(format!("tostring({arg})")).eval::<String>()
+        }).map_err(IntoInteropError::to_bms_error)?,
+    ).map_err(IntoInteropError::to_bms_error)?;
+    context
+        .load(include_str!("builtin.lua"))
+        .exec()
+        .expect("Problem in builtin.lua");
+    Ok(())
+}
 
 impl Plugin for Nano9Plugin {
     fn build(&self, app: &mut App) {
@@ -273,21 +269,7 @@ impl Plugin for Nano9Plugin {
             let mut lua_scripting_plugin = LuaScriptingPlugin::default();
             lua_scripting_plugin
                 .scripting_plugin
-                .add_context_initializer(
-                    |_script_attachment: &ScriptAttachment, context: &mut bevy_mod_scripting::lua::mlua::Lua| {
-                        context.globals().set(
-                            "_eval_string",
-                            context.create_function(|ctx, arg: String| {
-                                ctx.load(format!("tostring({arg})")).eval::<String>()
-                            })?,
-                        )?;
-                        context
-                            .load(include_str!("builtin.lua"))
-                            .exec()
-                            .expect("Problem in builtin.lua");
-                        Ok(())
-                    },
-                );
+                .add_context_initializer(context_initializer);
 
             // TODO: Add this another day.
             //

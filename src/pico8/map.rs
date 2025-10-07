@@ -1,5 +1,6 @@
 use crate::pico8::{self, Error, Gfx, GfxMaterial, SprHandle, SpriteSheet};
 use bevy::prelude::*;
+use bevy::platform::collections::HashSet;
 use std::collections::VecDeque;
 
 #[cfg(feature = "level")]
@@ -72,7 +73,7 @@ fn compute_gfx_tilemap_texture_on_asset_event(
     mut update_images: Local<VecDeque<Handle<Image>>>,
 ) {
     // We store the asset ids of added/modified image assets.
-    let added_handles: bevy::utils::HashSet<_> = events
+    let added_handles: HashSet<_> = events
         .read()
         .filter_map(|e| match e {
             AssetEvent::Added { id } | AssetEvent::Modified { id } => Some(*id),
