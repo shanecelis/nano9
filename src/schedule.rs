@@ -1,6 +1,6 @@
 use bevy::{
-    prelude::{App, World},
     ecs::schedule::{Schedule, ScheduleLabel},
+    prelude::{App, World},
 };
 
 #[derive(ScheduleLabel, Clone, Debug, PartialEq, Eq, Hash)]

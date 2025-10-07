@@ -4,20 +4,19 @@ use super::*;
 pub struct Nano9Camera;
 
 pub(crate) fn plugin(app: &mut App) {
-    app
-        .add_observer(
-            |trigger: Trigger<UpdateCameraPos>,
-             camera: Single<&mut Transform, With<Nano9Camera>>,
-             mut state: ResMut<Pico8State>| {
-                 let mut pos = trigger.event().0;
-                 let mut camera = camera.into_inner();
-                 pos.y = negate_y(pos.y);
-                 trace!("UpdateCameraPos({:.2}, {:.2})", pos.x, pos.y);
-                 camera.translation.x = pos.x;
-                 camera.translation.y = pos.y;
-                 state.draw_state.camera_position_delta = None;
-            },
-        );
+    app.add_observer(
+        |trigger: Trigger<UpdateCameraPos>,
+         camera: Single<&mut Transform, With<Nano9Camera>>,
+         mut state: ResMut<Pico8State>| {
+            let mut pos = trigger.event().0;
+            let mut camera = camera.into_inner();
+            pos.y = negate_y(pos.y);
+            trace!("UpdateCameraPos({:.2}, {:.2})", pos.x, pos.y);
+            camera.translation.x = pos.x;
+            camera.translation.y = pos.y;
+            state.draw_state.camera_position_delta = None;
+        },
+    );
     #[cfg(feature = "scripting")]
     lua::plugin(app);
 }

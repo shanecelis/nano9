@@ -1,11 +1,10 @@
+use crate::run::RunState;
 use bevy::{color::palettes::css, diagnostic::FrameCount, prelude::*, window::RequestRedraw};
 #[cfg(feature = "scripting")]
 use bevy_mod_scripting::{asset::ScriptAsset, core::event::ScriptErrorEvent};
-use crate::run::RunState;
 
 pub(crate) fn plugin(app: &mut App) {
-    app
-        .add_systems(Startup, spawn_error_message_layout);
+    app.add_systems(Startup, spawn_error_message_layout);
     #[cfg(feature = "scripting")]
     app.add_systems(Update, add_messages);
 
@@ -105,7 +104,10 @@ pub fn add_messages(
     if r.is_empty() {
         return;
     }
-    let Ok(id) = query.single().inspect_err(|e| warn!("Problem showing error messages: {e}")) else {
+    let Ok(id) = query
+        .single()
+        .inspect_err(|e| warn!("Problem showing error messages: {e}"))
+    else {
         return;
     };
     commands.entity(id).with_children(|parent| {
@@ -129,7 +131,10 @@ pub fn add_messages(
 
 /// Clear any error messages.
 pub fn clear_messages(query: Query<Entity, With<ErrorMessages>>, mut commands: Commands) {
-    let Ok(id) = query.single().inspect_err(|e| warn!("Problem clearing error messages: {e}")) else {
+    let Ok(id) = query
+        .single()
+        .inspect_err(|e| warn!("Problem clearing error messages: {e}"))
+    else {
         return;
     };
     commands.entity(id).despawn();

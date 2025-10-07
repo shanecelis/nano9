@@ -1,5 +1,5 @@
-use bevy::prelude::Reflect;
 use crate::pico8::Error;
+use bevy::prelude::Reflect;
 use bitvec::prelude::*;
 use std::hash::Hash;
 

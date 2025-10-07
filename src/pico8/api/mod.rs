@@ -12,9 +12,9 @@ pub use handle::*;
 pub mod input;
 use input::*;
 mod camera;
-pub use camera::{Nano9Camera};
+pub use camera::Nano9Camera;
 mod camera3d;
-pub use camera3d::{Nano9Camera3d};
+pub use camera3d::Nano9Camera3d;
 mod param;
 pub use param::*;
 mod sfx;
@@ -53,8 +53,8 @@ use tiny_skia::{self, FillRule, Paint, PathBuilder, Pixmap, Stroke};
 
 use crate::{
     pico8::{
-        self, audio::AudioBank, image::pixel_art_settings, ClearEvent, Clearable, SpriteMap, PalMap,
-        Palette,
+        self, audio::AudioBank, image::pixel_art_settings, ClearEvent, Clearable, PalMap, Palette,
+        SpriteMap,
     },
     DrawState, FillColor, N9Color, PColor,
 };
@@ -75,12 +75,7 @@ pub(crate) fn plugin(app: &mut App) {
         .init_asset::<Pico8Asset>()
         .init_resource::<Pico8State>()
         .init_resource::<PlayerInputs>()
-        .add_plugins((
-            rand::plugin,
-            asset::plugin,
-            mesh::plugin,
-            camera3d::plugin,
-        ))
+        .add_plugins((rand::plugin, asset::plugin, mesh::plugin, camera3d::plugin))
         .add_plugins((
             sfx::plugin,
             spr::plugin,

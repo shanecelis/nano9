@@ -1,7 +1,7 @@
 use super::*;
-use std::hash::{BuildHasher, Hash, Hasher};
-use bevy_ecs_tilemap::prelude::*;
 use bevy::platform::hash::FixedHasher;
+use bevy_ecs_tilemap::prelude::*;
+use std::hash::{BuildHasher, Hash, Hasher};
 
 pub(crate) fn plugin(app: &mut App) {
     #[cfg(feature = "scripting")]
@@ -49,8 +49,10 @@ impl super::Pico8<'_, '_> {
             map_index.hash(&mut hasher);
             hasher.finish()
         };
-        let rect = URect { min: map_pos,
-                           max: map_pos + size };
+        let rect = URect {
+            min: map_pos,
+            max: map_pos + size,
+        };
         self.state.draw_state.mark_drawn();
         // See if there's already an entity available.
         if let Some(id) = self.resurrect(hash, screen_start) {
@@ -59,34 +61,38 @@ impl super::Pico8<'_, '_> {
         }
         // match self.sprite_map(map_index)?.clone() {
         //     SpriteMap::P8(map) => {
-                // trace!("Create map with hash {hash}");
+        // trace!("Create map with hash {hash}");
 
         let map_size = TilemapSize::from(size);
         let clearable = Clearable::new(self.defaults.time_to_live).with_hash(hash);
         let tile_storage = TileStorage::empty(map_size);
         let gfx_material = self.gfx_material().clone();
-        let sprite_sheet = self.pico8_asset()?.sprite_sheets.get(self.state.sprite_sheet_index)
-                                                       .ok_or(Error::NoSuch("Sprite sheet for map".into()))?;
+        let sprite_sheet = self
+            .pico8_asset()?
+            .sprite_sheets
+            .get(self.state.sprite_sheet_index)
+            .ok_or(Error::NoSuch("Sprite sheet for map".into()))?;
 
-                let map_entity = self.commands
-                    .spawn((
-                        Name::new("map"),
-                        Transform::from_translation(screen_start.extend(clearable.suggest_z())),
-                        Visibility::Inherited,
-                        clearable,
-                        P8SpriteMap {
-                            map_index,
-                            sprite_sheet: sprite_sheet.clone(),
-                            gfx_material,
-                            rect,
-                            mask,
-                        },
-                    ))
-                    .id();
-                Ok(map_entity)
-            // }
-            // #[cfg(feature = "level")]
-            // SpriteMap::Level(map) => Ok(map.map(screen_start, 0, &mut self.commands)),
+        let map_entity = self
+            .commands
+            .spawn((
+                Name::new("map"),
+                Transform::from_translation(screen_start.extend(clearable.suggest_z())),
+                Visibility::Inherited,
+                clearable,
+                P8SpriteMap {
+                    map_index,
+                    sprite_sheet: sprite_sheet.clone(),
+                    gfx_material,
+                    rect,
+                    mask,
+                },
+            ))
+            .id();
+        Ok(map_entity)
+        // }
+        // #[cfg(feature = "level")]
+        // SpriteMap::Level(map) => Ok(map.map(screen_start, 0, &mut self.commands)),
         // }
     }
 
@@ -99,9 +105,25 @@ impl super::Pico8<'_, '_> {
         let map: &SpriteMap = self.sprite_map(map_index)?;
         match *map {
             SpriteMap::P8(ref handle) => {
-                let map = self.p8_maps.get(handle).ok_or_else(|| Error::NoSuch("map for handle".into()))?;
+                let map = self
+                    .p8_maps
+                    .get(handle)
+                    .ok_or_else(|| Error::NoSuch("map for handle".into()))?;
                 let i = (pos.x as u32 + pos.y as u32 * MAP_COLUMNS) as usize;
-                Ok(*map.get(i).ok_or_else(|| Error::NoSuch(format!("map index {i} with length {} {}", map.len(), if i > 0x1000 { "; consider using the '--shared-data=map' argument." } else { "" }).into()))? as usize)
+                Ok(*map.get(i).ok_or_else(|| {
+                    Error::NoSuch(
+                        format!(
+                            "map index {i} with length {} {}",
+                            map.len(),
+                            if i > 0x1000 {
+                                "; consider using the '--shared-data=map' argument."
+                            } else {
+                                ""
+                            }
+                        )
+                        .into(),
+                    )
+                })? as usize)
             }
 
             #[cfg(feature = "level")]
@@ -119,12 +141,13 @@ impl super::Pico8<'_, '_> {
         let map = self.sprite_map(map_index)?.clone();
         match map {
             SpriteMap::P8(handle) => {
-
-                let map = self.p8_maps.get_mut(&handle).ok_or_else(|| Error::NoSuch("map for handle".into()))?;
-                map
-                .get_mut((pos.x as u32 + pos.y as u32 * MAP_COLUMNS) as usize)
-                .map(|value| *value = sprite_index as u8)
-                .ok_or_else(|| Error::NoSuch("map entry".into()))
+                let map = self
+                    .p8_maps
+                    .get_mut(&handle)
+                    .ok_or_else(|| Error::NoSuch("map for handle".into()))?;
+                map.get_mut((pos.x as u32 + pos.y as u32 * MAP_COLUMNS) as usize)
+                    .map(|value| *value = sprite_index as u8)
+                    .ok_or_else(|| Error::NoSuch("map entry".into()))
             }
             #[cfg(feature = "level")]
             SpriteMap::Level(ref mut map) => {

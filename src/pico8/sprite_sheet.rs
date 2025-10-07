@@ -1,11 +1,11 @@
+use crate::pico8::{self, image::image_sampler, Gfx, Palette, SprHandle};
 use bevy::{
-    asset::{io::{Reader, VecReader}, AssetLoader, LoadContext},
-
+    asset::{
+        io::{Reader, VecReader},
+        AssetLoader, LoadContext,
+    },
     image::{ImageLoaderSettings, ImageSampler},
     prelude::*,
-};
-use crate::{
-    pico8::{self, SprHandle, Palette, Gfx, image::image_sampler}
 };
 
 #[derive(Debug, Clone, Reflect, Asset)]
@@ -32,8 +32,7 @@ pub struct SpriteSheetSettings {
 }
 
 pub(crate) fn plugin(app: &mut App) {
-    app
-        .init_asset::<SpriteSheet>()
+    app.init_asset::<SpriteSheet>()
         .init_asset_loader::<SpriteSheetLoader>();
 }
 
@@ -76,7 +75,11 @@ impl AssetLoader for SpriteSheetLoader {
     ) -> Result<Self::Asset, Self::Error> {
         let mut bytes = Vec::new();
         let _ = reader.read_to_end(&mut bytes).await?;
-        let extension = load_context.path().extension().and_then(|x| x.to_str()).unwrap_or_default();
+        let extension = load_context
+            .path()
+            .extension()
+            .and_then(|x| x.to_str())
+            .unwrap_or_default();
         let index_color = settings.index_color.unwrap_or_else(|| extension == "p8");
         let mut extract_palette = None;
         let mut sprite_size = settings.sprite_size;
@@ -88,20 +91,14 @@ impl AssetLoader for SpriteSheetLoader {
                     let gfx = parts.gfx.expect("no gfx in cart");
                     let image_size = UVec2::new(gfx.width as u32, gfx.height as u32);
                     sprite_size = Some(UVec2::splat(8));
-                    let layout = get_layout(
-                        image_size,
-                        &mut sprite_size,
-                        None,
-                        None,
-                        None,
-                    )?
+                    let layout = get_layout(image_size, &mut sprite_size, None, None, None)?
                         .map(|layout| load_context.add_labeled_asset("atlas".to_string(), layout));
                     (
                         pico8::SprHandle::Gfx(
                             load_context.add_labeled_asset("gfx".to_string(), gfx),
                         ),
                         layout,
-                        Some(parts.flags)
+                        Some(parts.flags),
                     )
                 }
                 "png" => {
@@ -120,17 +117,20 @@ impl AssetLoader for SpriteSheetLoader {
                         settings.padding,
                         settings.offset,
                     )?
-                        .map(|layout| load_context.add_labeled_asset("atlas".to_string(), layout));
+                    .map(|layout| load_context.add_labeled_asset("atlas".to_string(), layout));
                     (
                         pico8::SprHandle::Gfx(
                             load_context.add_labeled_asset("gfx".to_string(), gfx),
                         ),
                         layout,
-                        None
+                        None,
                     )
                 }
                 x => {
-                    panic!("Can't load {:?} with extension {x:?} as sprite sheet.", load_context.path().display());
+                    panic!(
+                        "Can't load {:?} with extension {x:?} as sprite sheet.",
+                        load_context.path().display()
+                    );
                 }
             }
         } else {

@@ -32,20 +32,17 @@ pub mod conversions;
 pub mod cursor;
 pub mod raycast;
 pub use plugins::*;
-pub mod pvec;
 pub mod action;
 pub mod condition;
-pub mod run;
 pub mod one_or_map;
+pub mod pvec;
+pub mod run;
 pub mod schedule;
 
 /// TODO: This plugin is weird because the `crate::plugin` module calls it.
 pub(crate) fn plugin(app: &mut App) {
     // Add other plugins.
-    app.add_plugins((config::plugin,
-                     run::plugin,
-                     error::plugin,
-                     pico8::plugin));
+    app.add_plugins((config::plugin, run::plugin, error::plugin, pico8::plugin));
     app.add_plugins(crate::schedule::plugin);
     #[cfg(feature = "scripting")]
     app.add_plugins((entity::plugin, var::plugin));
@@ -54,4 +51,3 @@ pub(crate) fn plugin(app: &mut App) {
         app.add_plugins(level::plugin);
     }
 }
-

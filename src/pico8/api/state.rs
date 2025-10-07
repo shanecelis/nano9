@@ -1,11 +1,6 @@
-use std::{
-    hash::{BuildHasher, Hash, Hasher},
-};
-use bevy::platform::{
-    hash::FixedHasher,
-    collections::HashMap,
-};
 use super::*;
+use bevy::platform::{collections::HashMap, hash::FixedHasher};
+use std::hash::{BuildHasher, Hash, Hasher};
 
 /// Pico8State's state.
 #[derive(Resource, Clone, Debug, Reflect)]
@@ -49,22 +44,29 @@ impl Pico8State {
         self.gfx_material = None;
     }
 
-    pub(crate) fn gfx_material(&mut self, gfx_materials: &mut Assets<GfxMaterial>) -> Handle<GfxMaterial> {
-        self.gfx_material.get_or_insert_with(|| {
-            let hash = {
-                let mut hasher = FixedHasher.build_hasher();
-                self.palette.hash(&mut hasher);
-                self.pal_map.hash(&mut hasher);
-                hasher.finish()
-            };
-            self.gfx_materials.entry(hash)
-                         .or_insert_with(|| {
-                             let gfx_material = GfxMaterial {
-                                 palette: self.palette,
-                                 pal_map: self.pal_map.clone()
-                             };
-                             gfx_materials.add(gfx_material)
-                         }).clone()
-        }).clone()
+    pub(crate) fn gfx_material(
+        &mut self,
+        gfx_materials: &mut Assets<GfxMaterial>,
+    ) -> Handle<GfxMaterial> {
+        self.gfx_material
+            .get_or_insert_with(|| {
+                let hash = {
+                    let mut hasher = FixedHasher.build_hasher();
+                    self.palette.hash(&mut hasher);
+                    self.pal_map.hash(&mut hasher);
+                    hasher.finish()
+                };
+                self.gfx_materials
+                    .entry(hash)
+                    .or_insert_with(|| {
+                        let gfx_material = GfxMaterial {
+                            palette: self.palette,
+                            pal_map: self.pal_map.clone(),
+                        };
+                        gfx_materials.add(gfx_material)
+                    })
+                    .clone()
+            })
+            .clone()
     }
 }

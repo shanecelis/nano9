@@ -1,10 +1,10 @@
-use bevy_mod_scripting::{
-    bindings::{function::from::FromScript, script_value::ScriptValue, WorldAccessGuard},
-};
 use bevy_mod_scripting::bindings::InteropError;
+use bevy_mod_scripting::bindings::{
+    function::from::FromScript, script_value::ScriptValue, WorldAccessGuard,
+};
 
-use bevy::prelude::*;
 use bevy::platform::collections::hash_map::HashMap;
+use bevy::prelude::*;
 use std::{any::TypeId, borrow::Borrow, fmt::Display, hash::Hash};
 
 #[allow(non_camel_case_types)]
@@ -101,7 +101,7 @@ impl FromScript for RectValue {
                 let max = Vec2Value::from_script(remover(&mut v, "max")?, world)?;
                 Ok(Rect { min, max })
             }
-            _ => Err(InteropError::value_mismatch(TypeId::of::<Rect>(),value)),
+            _ => Err(InteropError::value_mismatch(TypeId::of::<Rect>(), value)),
         }
     }
 }

@@ -26,7 +26,8 @@ pub enum Camera3dCommand {
 fn update_camera3d(
     mut events: EventReader<Camera3dCommand>,
     camera: Option<Single<(&mut Transform, &mut Camera), With<Nano9Camera3d>>>,
-    mut commands: Commands) {
+    mut commands: Commands,
+) {
     if events.is_empty() {
         return;
     }
@@ -52,11 +53,15 @@ fn update_camera3d(
         }
     } else {
         // Make a camera if there isn't one. Handle events next frame.
-        commands.spawn((Nano9Camera3d,
-                        Name::new("camera3d"),
-                        Camera3d::default(),
-                        Camera { order: 1, ..default() }));
-
+        commands.spawn((
+            Nano9Camera3d,
+            Name::new("camera3d"),
+            Camera3d::default(),
+            Camera {
+                order: 1,
+                ..default()
+            },
+        ));
     }
 }
 
@@ -74,8 +79,7 @@ fn update_camera3d(
 // }
 
 pub(crate) fn plugin(app: &mut App) {
-    app
-        .register_type::<Nano9Camera3d>()
+    app.register_type::<Nano9Camera3d>()
         .add_event::<Camera3dCommand>()
         .add_systems(Update, update_camera3d);
     #[cfg(feature = "scripting")]
@@ -83,14 +87,14 @@ pub(crate) fn plugin(app: &mut App) {
 }
 
 impl super::Pico8<'_, '_> {
-
     // camera3d([x,] [y,] [z,] [lx,] [ly,] [lz,]
     pub fn camera3d(&mut self, position: Option<Vec3>, look: Option<Vec3>) {
         if let Some(position) = position {
             self.commands.send_event(Camera3dCommand::Goto { position });
         }
         if let Some(position) = look {
-            self.commands.send_event(Camera3dCommand::LookAt { position });
+            self.commands
+                .send_event(Camera3dCommand::LookAt { position });
         }
     }
 
@@ -114,16 +118,19 @@ mod lua {
         NamespaceBuilder::<GlobalNamespace>::new_unregistered(world).register(
             "camera3d",
             |ctx: FunctionCallContext,
-            x: Option<f32>, y: Option<f32>, z: Option<f32>,
-            lx: Option<f32>, ly: Option<f32>, lz: Option<f32>,
-            | {
+             x: Option<f32>,
+             y: Option<f32>,
+             z: Option<f32>,
+             lx: Option<f32>,
+             ly: Option<f32>,
+             lz: Option<f32>| {
                 with_pico8(&ctx, move |pico8| {
                     let pos = if x.is_some() || y.is_some() || z.is_some() {
                         Some(Vec3::new(
                             x.unwrap_or(0.0),
                             y.unwrap_or(0.0),
                             z.unwrap_or(0.0),
-                            ))
+                        ))
                     } else {
                         None
                     };
@@ -132,7 +139,7 @@ mod lua {
                             lx.unwrap_or(0.0),
                             ly.unwrap_or(0.0),
                             lz.unwrap_or(0.0),
-                            ))
+                        ))
                     } else {
                         None
                     };

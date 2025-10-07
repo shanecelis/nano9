@@ -1,7 +1,7 @@
 use super::*;
 use crate::hash::hash_f32;
-use std::hash::{BuildHasher, Hash, Hasher};
 use bevy::platform::hash::FixedHasher;
+use std::hash::{BuildHasher, Hash, Hasher};
 
 pub(crate) fn plugin(app: &mut App) {
     #[cfg(feature = "scripting")]
@@ -139,8 +139,8 @@ impl super::Pico8<'_, '_> {
             .handle
             .clone();
         let pcolor = color
-                .unwrap_or(N9Color::Pen)
-                .into_pcolor(&state.draw_state.pen);
+            .unwrap_or(N9Color::Pen)
+            .into_pcolor(&state.draw_state.pen);
         let c: Color = {
             let palettes = world.resource::<Palettes>();
             palettes.get_color(pcolor, state.palette)
@@ -216,6 +216,7 @@ mod lua {
     use crate::pico8::lua::with_pico8;
 
     use bevy_mod_scripting::{
+        bindings::InteropError,
         bindings::{
             access_map::ReflectAccessId,
             function::{
@@ -225,7 +226,6 @@ mod lua {
             script_value::ScriptValue,
             IntoScript,
         },
-        bindings::InteropError,
     };
     pub(crate) fn plugin(app: &mut App) {
         let world = app.world_mut();
@@ -249,8 +249,10 @@ mod lua {
                         _ => " ".into(),
                     };
                     let (pos, hash, cached_id, ttl) = with_pico8(&ctx, |pico8| {
-                        let pos_p8 = Vec2::new(x.unwrap_or(pico8.state.draw_state.print_cursor.x),
-                                               y.unwrap_or(pico8.state.draw_state.print_cursor.y));
+                        let pos_p8 = Vec2::new(
+                            x.unwrap_or(pico8.state.draw_state.print_cursor.x),
+                            y.unwrap_or(pico8.state.draw_state.print_cursor.y),
+                        );
                         let pos_p8 = pixel_snap(pico8.state.draw_state.apply_camera_delta(pos_p8));
 
                         let hash = {
@@ -267,8 +269,7 @@ mod lua {
                             hasher.finish()
                         };
                         // See if there's already an entity available.
-                        let cached_id =
-                            pico8.resurrect(hash, negate_vy(pos_p8));
+                        let cached_id = pico8.resurrect(hash, negate_vy(pos_p8));
                         if let Some(id) = cached_id {
                             let pcolor = c
                                 .unwrap_or(N9Color::Pen)
@@ -281,7 +282,6 @@ mod lua {
                                 });
                             } else {
                                 warn!("Could not get textcolor");
-
                             }
                         }
                         pico8.state.draw_state.mark_drawn();

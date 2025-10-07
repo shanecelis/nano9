@@ -42,10 +42,7 @@ impl Palette {
     }
 
     pub fn write_color(&self, index: usize, pixel_bytes: &mut [u8]) -> Result<(), PalError> {
-        let data = self
-            .data
-            .get(index)
-            .ok_or(PalError::NoSuchColor(index))?;
+        let data = self.data.get(index).ok_or(PalError::NoSuchColor(index))?;
         pixel_bytes.copy_from_slice(&data[0..pixel_bytes.len()]);
         Ok(())
     }

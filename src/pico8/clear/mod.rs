@@ -1,8 +1,8 @@
-use crate::{
-    PColor,
-    pico8::{Pico8State, Palettes, GfxSprite, Gfx, GfxDirty},
-};
 use super::canvas;
+use crate::{
+    pico8::{Gfx, GfxDirty, GfxSprite, Palettes, Pico8State},
+    PColor,
+};
 use bevy::prelude::*;
 use mashmap::MashMap;
 
@@ -13,8 +13,7 @@ static DRAW_COUNTER: DrawCounter = DrawCounter::new(1);
 const MAX_EXPECTED_CLEARABLES: f32 = 1000.0;
 
 pub(crate) fn plugin(app: &mut App) {
-    app
-        .register_type::<Clearable>()
+    app.register_type::<Clearable>()
         .add_event::<ClearEvent>()
         .init_resource::<ClearCache>()
         .add_systems(Last, (handle_overflow).chain())
@@ -23,14 +22,12 @@ pub(crate) fn plugin(app: &mut App) {
 
 #[derive(Debug, Event, Clone, Copy)]
 pub struct ClearEvent {
-    color: PColor
+    color: PColor,
 }
 
 impl ClearEvent {
     pub fn new(color: PColor) -> Self {
-        Self {
-            color
-        }
+        Self { color }
     }
 }
 
@@ -64,7 +61,6 @@ impl ClearCache {
 
     /// Must mark clearable.cached = false on returned entity.
     pub fn take(&mut self, hash: &u64) -> Option<Entity> {
-        
         // info!("CACHE TAKEN {:?}", &result);
         self.0.remove_one(hash)
     }
@@ -72,7 +68,8 @@ impl ClearCache {
     pub fn remove(&mut self, clearable: &Clearable, id: Entity) -> bool {
         // We're trusting clearable.cached here. Should we?
         // if clearable.cached {
-        let result = self.0
+        let result = self
+            .0
             .drain_key_if(&clearable.hash.unwrap(), |v| *v == id)
             .next()
             .is_some();
@@ -122,10 +119,17 @@ impl ClearState {
 //     cache.insert(hash, id);
 // }
 
-fn on_remove_hook(mut world: bevy::ecs::world::DeferredWorld, hook: bevy::ecs::component::HookContext) {
+fn on_remove_hook(
+    mut world: bevy::ecs::world::DeferredWorld,
+    hook: bevy::ecs::component::HookContext,
+) {
     let id = hook.entity;
-    let Some(clearable) = world.get::<Clearable>(id).copied() else { return; };
-    let Some(mut cache) = world.get_resource_mut::<ClearCache>() else { return; };
+    let Some(clearable) = world.get::<Clearable>(id).copied() else {
+        return;
+    };
+    let Some(mut cache) = world.get_resource_mut::<ClearCache>() else {
+        return;
+    };
     info!("Removing clearable {id} from cache.");
 
     // clearable.cached = true; // We want to ensure it's removed.
@@ -160,7 +164,9 @@ impl Clearable {
 
     pub fn mark_cached(&mut self) -> bool {
         if !self.is_cached() {
-            self.state = ClearState::Hidden { time_to_live: self.time_to_live };
+            self.state = ClearState::Hidden {
+                time_to_live: self.time_to_live,
+            };
             true
         } else {
             false
@@ -203,7 +209,10 @@ fn handle_clear_event(
     mut cache: ResMut<ClearCache>,
     mut gfxs: ResMut<Assets<Gfx>>,
     one_color: Single<&mut Sprite, With<canvas::OneColorBackground>>,
-    background: Single<(Entity, &GfxSprite, &mut GfxDirty, &mut canvas::Background), With<canvas::Background>>,
+    background: Single<
+        (Entity, &GfxSprite, &mut GfxDirty, &mut canvas::Background),
+        With<canvas::Background>,
+    >,
     palettes: Res<Palettes>,
     background_dirty: Local<bool>,
 ) {

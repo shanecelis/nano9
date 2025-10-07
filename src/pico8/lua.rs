@@ -1,9 +1,9 @@
 use bevy::ecs::system::{SystemParam, SystemState};
 
-use bevy_mod_scripting::{
-    bindings::{access_map::ReflectAccessId, function::script_function::FunctionCallContext},
-};
 use bevy_mod_scripting::bindings::InteropError;
+use bevy_mod_scripting::bindings::{
+    access_map::ReflectAccessId, function::script_function::FunctionCallContext,
+};
 
 use crate::pico8::{Error, Pico8};
 

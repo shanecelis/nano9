@@ -3,14 +3,14 @@ use crate::ValueExt;
 
 #[cfg(feature = "scripting")]
 use bevy_mod_scripting::core::{
-    docgen::{TypedThrough, ThroughTypeInfo},
     bindings::{function::from::FromScript, script_value::ScriptValue, WorldAccessGuard},
+    docgen::{ThroughTypeInfo, TypedThrough},
     error::InteropError,
 };
 
 use crate::pico8::Gfx;
 
-use std::{collections::HashMap, any::TypeId};
+use std::{any::TypeId, collections::HashMap};
 
 pub(crate) fn plugin(app: &mut App) {
     #[cfg(feature = "scripting")]

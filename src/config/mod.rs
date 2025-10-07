@@ -5,16 +5,17 @@ mod loader;
 pub use loader::*;
 pub mod front_matter;
 use crate::{
+    pico8::{self, Palettes, Pico8Handle},
     run::RunState,
-    pico8::{self, Pico8Handle, Palettes},
 };
 use bevy::prelude::*;
 #[cfg(feature = "scripting")]
 use bevy_mod_scripting::{
+    asset::ScriptAsset,
     core::{event::Recipients, script::ScriptComponent},
-    asset::{ScriptAsset}};
-use serde::{Deserialize, Serialize};
+};
 use merge2::Merge;
+use serde::{Deserialize, Serialize};
 
 #[cfg(feature = "gameboy")]
 pub mod gameboy;
@@ -23,12 +24,10 @@ pub const DEFAULT_CANVAS_SIZE: UVec2 = UVec2::splat(128);
 pub const DEFAULT_SCREEN_SIZE: UVec2 = UVec2::splat(512);
 
 pub(crate) fn plugin(app: &mut App) {
-    app
-        .add_systems(Update, update_asset)
+    app.add_systems(Update, update_asset)
         .add_plugins(loader::plugin);
     #[cfg(feature = "gameboy")]
-    app
-        .add_plugins(gameboy::plugin);
+    app.add_plugins(gameboy::plugin);
 }
 
 // #[derive(Default, Debug, Clone, Deserialize, Serialize)]
@@ -144,7 +143,6 @@ pub struct SpriteSheet {
     pub index_color: Option<bool>,
     #[serde(default)]
     pub extract_palette: bool,
-
     // #[merge(skip)]
     // #[serde(default)]
     // pub palette: ImagePalette,
@@ -152,7 +150,6 @@ pub struct SpriteSheet {
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
 pub enum ImagePalette {
-
     #[serde(rename = "no-index")]
     #[default]
     /// This image is not to use an indexed color palette.
@@ -237,8 +234,12 @@ pub fn update_asset(
                         if !pico8_asset.scripts.is_empty() && pico8_handle.main_script.is_none() {
                             // pico8_handle.main_script = Some(Recipients::All);
                             // Spawn another script component for the libraries.
-                            let entity = commands.spawn((Name::new("scripts"),
-                                                         ScriptComponent(pico8_asset.scripts.clone()))).id();
+                            let entity = commands
+                                .spawn((
+                                    Name::new("scripts"),
+                                    ScriptComponent(pico8_asset.scripts.clone()),
+                                ))
+                                .id();
                             info!("Add scripts to entity {}", &entity);
                             pico8_handle.main_script = Some(Recipients::AllContexts);
                         }
@@ -629,7 +630,12 @@ path = "teapot.glb"
 "#,
         )
         .unwrap();
-        assert_eq!(config.meshes[0], Mesh::Path { path: "teapot.glb".into() });
+        assert_eq!(
+            config.meshes[0],
+            Mesh::Path {
+                path: "teapot.glb".into()
+            }
+        );
     }
 
     #[test]
@@ -641,6 +647,11 @@ cuboid = [0.1, 0.2, 0.3]
 "#,
         )
         .unwrap();
-        assert_eq!(config.meshes[0], Mesh::Cuboid { cuboid: [0.1, 0.2, 0.3] });
+        assert_eq!(
+            config.meshes[0],
+            Mesh::Cuboid {
+                cuboid: [0.1, 0.2, 0.3]
+            }
+        );
     }
 }

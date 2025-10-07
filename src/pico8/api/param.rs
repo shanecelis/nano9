@@ -1,12 +1,9 @@
 use super::*;
 use bevy::ecs::system::SystemParam;
 
-use crate::{
-    pico8::{
-        self, audio::SfxChannels, keyboard::KeyInput, mouse::MouseInput, rand::Rand8, Gfx,
-    api::canvas::N9Canvas,
-        Palettes,
-    },
+use crate::pico8::{
+    self, api::canvas::N9Canvas, audio::SfxChannels, keyboard::KeyInput, mouse::MouseInput,
+    rand::Rand8, Gfx, Palettes,
 };
 
 #[derive(SystemParam)]
@@ -42,7 +39,6 @@ pub struct Pico8<'w, 's> {
 }
 
 impl Pico8<'_, '_> {
-
     /// Returns the current GfxMaterial. It is cached.
     pub(crate) fn gfx_material(&mut self) -> Handle<GfxMaterial> {
         self.state.gfx_material(&mut self.gfx_materials)

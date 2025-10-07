@@ -18,15 +18,16 @@ pub enum RunState {
 pub struct Steps(Option<u32>);
 
 pub(crate) fn plugin(app: &mut App) {
-    app
-        .init_state::<RunState>()
+    app.init_state::<RunState>()
         .init_resource::<Steps>()
         .add_systems(Last, pause_after_steps);
 }
 
-fn pause_after_steps(run_state: Res<State<RunState>>,
-                     mut next_run_state: ResMut<NextState<RunState>>,
-                     mut steps: ResMut<Steps>) {
+fn pause_after_steps(
+    run_state: Res<State<RunState>>,
+    mut next_run_state: ResMut<NextState<RunState>>,
+    mut steps: ResMut<Steps>,
+) {
     if **run_state == RunState::Run {
         if let Some(ref mut count) = &mut steps.0 {
             if *count <= 1 {

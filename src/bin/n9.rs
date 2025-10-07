@@ -9,11 +9,15 @@ use bevy::{
 use bevy_minibuffer::prelude::*;
 use clap::{Parser, Subcommand};
 use nano9::{
-    config::{front_matter, run_pico8_when_loaded, pause_pico8_when_loaded, Config},
-    pico8::{Pico8Asset, Pico8Handle, SharedData, CartLoaderSettings},
+    config::{front_matter, pause_pico8_when_loaded, run_pico8_when_loaded, Config},
+    pico8::{CartLoaderSettings, Pico8Asset, Pico8Handle, SharedData},
     *,
 };
-use std::{env, fs, io, path::{Path, PathBuf}, process::ExitCode};
+use std::{
+    env, fs, io,
+    path::{Path, PathBuf},
+    process::ExitCode,
+};
 
 #[derive(Parser)]
 #[command(version, about, long_about, disable_help_subcommand = true,
@@ -172,7 +176,11 @@ fn info(_cli: Cli) -> io::Result<ExitCode> {
     feature_info!("negate-y", "uses Pico-8's positive-y is downward", true);
     feature_info!("pixel-snap", "applies floor to pixel locations", true);
     feature_info!("pico8-to-lua", "converts Pico-8's dialect to Lua", true);
-    feature_info!("fixed-point", "uses fixed-point numbers for bit operations", true);
+    feature_info!(
+        "fixed-point",
+        "uses fixed-point numbers for bit operations",
+        true
+    );
     feature_info!("web-asset", "allows URLs for asset locations", false);
     feature_info!("minibuffer", "embeds a gamedev console", false);
     feature_info!("inspector", "adds inspector commands to console", false);
@@ -192,8 +200,8 @@ fn new(cli: Cli) -> io::Result<ExitCode> {
             env_logger::Builder::from_env(
                 env_logger::Env::default().default_filter_or("info,n9=info"),
             )
-                .format_timestamp(None)
-                .init();
+            .format_timestamp(None)
+            .init();
             if let Some(extension) = path.extension().and_then(|s| s.to_str()) {
                 match extension {
                     "lua" => {
@@ -301,23 +309,54 @@ fn new(cli: Cli) -> io::Result<ExitCode> {
                     _ => None,
                 };
                 if starter.is_some() && assets_path.is_none() {
-                    error!("No assets path to copy template to for starter kit {:?}", starter);
+                    error!(
+                        "No assets path to copy template to for starter kit {:?}",
+                        starter
+                    );
                     return Ok(ExitCode::from(9));
                 }
                 match starter {
                     Some(StarterKit::Platformer) => {
                         if let Some(assets_path) = assets_path {
-                            copy_template!("templates/platformer/Nano9.toml", assets_path, "Nano9.toml");
-                            copy_template!("templates/platformer/actor.p8", assets_path, "actor.p8");
-                            copy_template!("templates/platformer/dolly.p8", assets_path, "dolly.p8");
-                            copy_template!("templates/platformer/main.lua", assets_path, "main.lua");
-                            copy_template!("templates/platformer/micro-platformer.p8", assets_path, "micro-platformer.p8");
-                            copy_template!("templates/platformer/platformer.p8", assets_path, "platformer.p8");
-                            copy_template!("templates/platformer/vector.p8", assets_path, "vector.p8");
+                            copy_template!(
+                                "templates/platformer/Nano9.toml",
+                                assets_path,
+                                "Nano9.toml"
+                            );
+                            copy_template!(
+                                "templates/platformer/actor.p8",
+                                assets_path,
+                                "actor.p8"
+                            );
+                            copy_template!(
+                                "templates/platformer/dolly.p8",
+                                assets_path,
+                                "dolly.p8"
+                            );
+                            copy_template!(
+                                "templates/platformer/main.lua",
+                                assets_path,
+                                "main.lua"
+                            );
+                            copy_template!(
+                                "templates/platformer/micro-platformer.p8",
+                                assets_path,
+                                "micro-platformer.p8"
+                            );
+                            copy_template!(
+                                "templates/platformer/platformer.p8",
+                                assets_path,
+                                "platformer.p8"
+                            );
+                            copy_template!(
+                                "templates/platformer/vector.p8",
+                                assets_path,
+                                "vector.p8"
+                            );
                         }
                     }
                     None => (),
-                    _ => todo!()
+                    _ => todo!(),
                 }
 
                 Ok(ExitCode::from(0))
@@ -339,10 +378,13 @@ macro_rules! copy_template {
     }};
 }
 
-
 fn run(cli: Cli) -> io::Result<ExitCode> {
     let (script, shared_data, pause) = match cli.command {
-        Command::Run { path, shared_data, pause } => (path, shared_data, pause),
+        Command::Run {
+            path,
+            shared_data,
+            pause,
+        } => (path, shared_data, pause),
         _ => unreachable!(),
     };
     let script_path = {
@@ -413,46 +455,58 @@ fn run(cli: Cli) -> io::Result<ExitCode> {
             // NEW SHANE: No. We use part of Config to configure the App and can't
             // do that at load time.
             let content = fs::read_to_string(path)?;
-            let mut config: Config = toml::from_str::<Config>(&content)
-                .map_err(|e| io::Error::other(format!("{e}")))?;
+            let mut config: Config =
+                toml::from_str::<Config>(&content).map_err(|e| io::Error::other(format!("{e}")))?;
 
             if let Err(e) = config.inject_template(None) {
                 eprintln!("error: {e}");
                 return Ok(ExitCode::from(2));
             }
-            nano9_plugin = Nano9Plugin { config, config_path };
+            nano9_plugin = Nano9Plugin {
+                config,
+                config_path,
+            };
         }
         "p8" | "png" => {
             eprintln!("loading cart");
             let config = Config::pico8();
 
             let path = script_path;
-            let asset_path: AssetPath<'static> =
-                if fs::exists(&path).unwrap_or(false) {
-                    AssetPath::from_path(&path).with_source(&cwd)
-                } else if let Some(s) = path.to_str() {
-                    match AssetPath::try_parse(s) {
-                        Ok(p) => p,
-                        Err(e) => {
-                            eprintln!("Cannot convert {:?} to input path: {e}", &s);
-                            return Ok(ExitCode::from(9));
-                        }
+            let asset_path: AssetPath<'static> = if fs::exists(&path).unwrap_or(false) {
+                AssetPath::from_path(&path).with_source(&cwd)
+            } else if let Some(s) = path.to_str() {
+                match AssetPath::try_parse(s) {
+                    Ok(p) => p,
+                    Err(e) => {
+                        eprintln!("Cannot convert {:?} to input path: {e}", &s);
+                        return Ok(ExitCode::from(9));
                     }
-                } else {
-                    eprintln!("Cannot convert input path to UTF-8 string {:?}.", path.display());
-                    return Ok(ExitCode::from(10));
-                }.clone_owned();
+                }
+            } else {
+                eprintln!(
+                    "Cannot convert input path to UTF-8 string {:?}.",
+                    path.display()
+                );
+                return Ok(ExitCode::from(10));
+            }
+            .clone_owned();
             app.add_systems(
                 Startup,
                 move |asset_server: Res<AssetServer>, mut commands: Commands| {
                     let shared_data = shared_data.unwrap_or_default();
-                    let pico8_asset: Handle<Pico8Asset> = asset_server.load_with_settings(dbg!(&asset_path), move |settings: &mut CartLoaderSettings| {
-                        settings.shared_data = shared_data;
-                    });
+                    let pico8_asset: Handle<Pico8Asset> = asset_server.load_with_settings(
+                        dbg!(&asset_path),
+                        move |settings: &mut CartLoaderSettings| {
+                            settings.shared_data = shared_data;
+                        },
+                    );
                     commands.insert_resource(Pico8Handle::from(pico8_asset));
                 },
             );
-            nano9_plugin = Nano9Plugin { config, ..default() };
+            nano9_plugin = Nano9Plugin {
+                config,
+                ..default()
+            };
         }
         "lua" | "p8lua" => {
             if cfg!(not(feature = "pico8-to-lua")) && extension == "p8lua" {
@@ -478,7 +532,10 @@ fn run(cli: Cli) -> io::Result<ExitCode> {
             config.scripts = vec![AssetPath::from_path(&script_path)
                 .with_source(&cwd)
                 .to_string()];
-            nano9_plugin = Nano9Plugin { config, ..default() };
+            nano9_plugin = Nano9Plugin {
+                config,
+                ..default()
+            };
         }
         ext => {
             eprintln!("error: File has {ext:?} extension but only accepts extensions: .p8, .png, .lua, .p8lua, and .toml.");
@@ -486,26 +543,28 @@ fn run(cli: Cli) -> io::Result<ExitCode> {
         }
     }
 
-    app
-        .add_plugins(Nano9Plugins {
-            config: nano9_plugin.config,
-            ..default()
-        });
+    app.add_plugins(Nano9Plugins {
+        config: nano9_plugin.config,
+        ..default()
+    });
 
     if pause {
-        app
-            .add_systems(PreUpdate, pause_pico8_when_loaded);
+        app.add_systems(PreUpdate, pause_pico8_when_loaded);
     } else {
-        app
-            .add_systems(PreUpdate, run_pico8_when_loaded);
+        app.add_systems(PreUpdate, run_pico8_when_loaded);
     }
 
     if app.is_plugin_added::<WindowPlugin>() {
-        app.add_systems(Update, action::toggle_fullscreen.run_if(condition::on_just_pressed_with(KeyCode::Enter, vec![KeyCode::AltLeft, KeyCode::AltRight])));
+        app.add_systems(
+            Update,
+            action::toggle_fullscreen.run_if(condition::on_just_pressed_with(
+                KeyCode::Enter,
+                vec![KeyCode::AltLeft, KeyCode::AltRight],
+            )),
+        );
     }
     #[cfg(feature = "minibuffer")]
-    app
-        .add_plugins(nano9::minibuffer::quick_plugin);
+    app.add_plugins(nano9::minibuffer::quick_plugin);
     #[cfg(feature = "debugdump")]
     bevy_mod_debugdump::print_schedule_graph(&mut app, Update);
 
@@ -520,4 +579,3 @@ fn run(cli: Cli) -> io::Result<ExitCode> {
 
     Ok(ExitCode::from(0))
 }
-

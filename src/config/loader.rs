@@ -1,8 +1,8 @@
 #[cfg(feature = "level")]
 use crate::level::{self};
 use crate::{
-    config::{self, *, Mesh},
-    pico8::{self, image::pixel_art_settings, Pico8Asset, MeshHandle},
+    config::{self, Mesh, *},
+    pico8::{self, image::pixel_art_settings, MeshHandle, Pico8Asset},
 };
 use bevy::{
     asset::{io::Reader, AssetLoader, AssetPath, LoadContext},
@@ -13,8 +13,7 @@ use bevy_mod_scripting::asset::{Language, ScriptAsset};
 use std::io;
 
 pub(crate) fn plugin(app: &mut App) {
-    app
-        .init_asset_loader::<ConfigLoader>()
+    app.init_asset_loader::<ConfigLoader>()
         .init_asset_loader::<LuaLoader>();
 }
 
@@ -73,8 +72,8 @@ impl AssetLoader for ConfigLoader {
         let mut bytes = Vec::new();
         let _ = reader.read_to_end(&mut bytes).await?;
         let content = std::str::from_utf8(&bytes)?;
-        let mut config: Config = toml::from_str::<Config>(content)
-            .map_err(|e| io::Error::other(format!("{e}")))?;
+        let mut config: Config =
+            toml::from_str::<Config>(content).map_err(|e| io::Error::other(format!("{e}")))?;
         config.inject_template(None)?;
         into_asset(config, load_context).await
     }
@@ -160,7 +159,6 @@ async fn into_asset(
     config: Config,
     load_context: &mut LoadContext<'_>,
 ) -> Result<Pico8Asset, ConfigError> {
-
     let mut palettes = Vec::new();
     if config.palettes.is_empty() {
         warn!("No palettes were provided.");
@@ -179,23 +177,29 @@ async fn into_asset(
     let mut sprite_sheets = vec![];
     for sheet in config.sprite_sheets.into_iter() {
         let asset_path = AssetPath::try_parse(&sheet.path)?;
-        let handle = if asset_path.path().extension().map(|ext| ext == "p8").unwrap_or(false) {
-            load_context.loader()
-                        .load::<pico8::SpriteSheet>(&asset_path)
+        let handle = if asset_path
+            .path()
+            .extension()
+            .map(|ext| ext == "p8")
+            .unwrap_or(false)
+        {
+            load_context
+                .loader()
+                .load::<pico8::SpriteSheet>(&asset_path)
         } else {
-            load_context.loader()
-                        .with_settings(
-                            move |settings: &mut pico8::SpriteSheetSettings| {
-                                settings.index_color = sheet.index_color;
-                                settings.extract_palette = sheet.extract_palette;
-                                settings.sprite_size = sheet.sprite_size;
-                                settings.sprite_counts = sheet.sprite_counts;
-                                settings.padding = sheet.padding;
-                                settings.offset = sheet.offset;
-                                settings.offset = sheet.offset;
-                                // TODO: Provide sampler sampler?
-                            })
-                        .load::<pico8::SpriteSheet>(&asset_path)
+            load_context
+                .loader()
+                .with_settings(move |settings: &mut pico8::SpriteSheetSettings| {
+                    settings.index_color = sheet.index_color;
+                    settings.extract_palette = sheet.extract_palette;
+                    settings.sprite_size = sheet.sprite_size;
+                    settings.sprite_counts = sheet.sprite_counts;
+                    settings.padding = sheet.padding;
+                    settings.offset = sheet.offset;
+                    settings.offset = sheet.offset;
+                    // TODO: Provide sampler sampler?
+                })
+                .load::<pico8::SpriteSheet>(&asset_path)
         };
         sprite_sheets.push(handle);
     }
@@ -217,51 +221,64 @@ async fn into_asset(
     for (i, bank) in config.audio_banks.into_iter().enumerate() {
         let mut items = vec![];
         for (j, p) in bank.paths().enumerate() {
-
             let mut asset_path = AssetPath::try_parse(p)?.into_owned();
             let label = asset_path.take_label();
-            let erased_loaded = load_context.loader()
-                                            .with_unknown_type()
-                                            .immediate()
-                                            .load(&asset_path)
-                                            .await?;
+            let erased_loaded = load_context
+                .loader()
+                .with_unknown_type()
+                .immediate()
+                .load(&asset_path)
+                .await?;
             match erased_loaded.downcast::<pico8::audio::AudioBank>() {
                 Ok(loaded) => {
                     let audio_bank = loaded.take();
                     items.extend(audio_bank.0);
                 }
-                Err(erased_loaded) => {
-                    match erased_loaded.downcast::<AudioSource>() {
-                        Ok(loaded) => {
-                            items.push(pico8::audio::Audio::AudioSource(load_context.add_loaded_labeled_asset(format!("audio_bank{}sfx{}", i, j), loaded)));
-                        }
-                        Err(erased_loaded) => {
-                            if let Some(erased_asset) = label.and_then(|label| {
-                                info!("getting label {}", &label);
-                                erased_loaded.get_labeled(label)
-                            }) {
-                                if let Some(audio_bank) = erased_asset.get::<pico8::audio::AudioBank>() {
-                                    items.extend(audio_bank.clone().0);
-                                } else {
-                                    error!("unable to add {:?} to audio bank, label had asset type {}", p, erased_asset.asset_type_name());
-                                }
+                Err(erased_loaded) => match erased_loaded.downcast::<AudioSource>() {
+                    Ok(loaded) => {
+                        items.push(pico8::audio::Audio::AudioSource(
+                            load_context.add_loaded_labeled_asset(
+                                format!("audio_bank{}sfx{}", i, j),
+                                loaded,
+                            ),
+                        ));
+                    }
+                    Err(erased_loaded) => {
+                        if let Some(erased_asset) = label.and_then(|label| {
+                            info!("getting label {}", &label);
+                            erased_loaded.get_labeled(label)
+                        }) {
+                            if let Some(audio_bank) = erased_asset.get::<pico8::audio::AudioBank>()
+                            {
+                                items.extend(audio_bank.clone().0);
                             } else {
-                                error!("unable to add {:?} to audio bank, has asset type {}", p, erased_loaded.asset_type_name());
+                                error!(
+                                    "unable to add {:?} to audio bank, label had asset type {}",
+                                    p,
+                                    erased_asset.asset_type_name()
+                                );
                             }
+                        } else {
+                            error!(
+                                "unable to add {:?} to audio bank, has asset type {}",
+                                p,
+                                erased_loaded.asset_type_name()
+                            );
                         }
                     }
-                }
+                },
             }
         }
-        audio_banks.push(load_context.add_labeled_asset(format!("audio_bank{}", i), pico8::audio::AudioBank(items)));
+        audio_banks.push(
+            load_context
+                .add_labeled_asset(format!("audio_bank{}", i), pico8::audio::AudioBank(items)),
+        );
     }
 
     let mut meshes = vec![];
     for (i, mesh) in config.meshes.into_iter().enumerate() {
         let handle = match mesh {
-            Mesh::Path { path } => {
-                MeshHandle::Gltf(load_context.load::<bevy::gltf::Gltf>(path))
-            }
+            Mesh::Path { path } => MeshHandle::Gltf(load_context.load::<bevy::gltf::Gltf>(path)),
             Mesh::Cuboid { cuboid: size } => {
                 let cuboid = Cuboid::new(size[0], size[1], size[2]);
                 let mesh = cuboid.mesh().build();
@@ -273,31 +290,31 @@ async fn into_asset(
 
     let state = pico8::Pico8Asset {
         #[cfg(feature = "scripting")]
-                scripts,
-                palettes,
-                border: load_context.loader()
-                                    .with_settings(pixel_art_settings)
-                                    .load(pico8::PICO8_BORDER),
-                maps,
-                audio_banks,
-                sprite_sheets,
-                font: config.fonts.into_iter().map(|font|
-                                                     match font {
-                                                         config::Font::Default { default: yes } if yes => {
-                                                             pico8::N9Font {
-                                                                 handle: TextFont::default().font,
-                                                             }
-                                                         },
-                                                         config::Font::Path { path, height: _ } => {
-                                                             pico8::N9Font {
-                                                                 handle: load_context.load(path),
-                                                             }
-                                                         }
-                                                         config::Font::Default { .. } => { panic!("Must use a path if not default font.") }
-                                                     }).collect::<Vec<_>>(),
-                meshes,
-
-            };
+        scripts,
+        palettes,
+        border: load_context
+            .loader()
+            .with_settings(pixel_art_settings)
+            .load(pico8::PICO8_BORDER),
+        maps,
+        audio_banks,
+        sprite_sheets,
+        font: config
+            .fonts
+            .into_iter()
+            .map(|font| match font {
+                config::Font::Default { default: yes } if yes => pico8::N9Font {
+                    handle: TextFont::default().font,
+                },
+                config::Font::Path { path, height: _ } => pico8::N9Font {
+                    handle: load_context.load(path),
+                },
+                config::Font::Default { .. } => {
+                    panic!("Must use a path if not default font.")
+                }
+            })
+            .collect::<Vec<_>>(),
+        meshes,
+    };
     Ok(state)
 }
-

@@ -2,15 +2,18 @@ use bevy::prelude::*;
 use std::any::TypeId;
 
 use crate::pico8::{Error, PalMap};
+use bevy::reflect::TypeRegistry;
+use bevy_mod_scripting::bindings::InteropError;
 #[cfg(feature = "scripting")]
 use bevy_mod_scripting::{
     bindings::{
-        function::from::FromScript, script_value::ScriptValue, IntoScript, WorldAccessGuard,
-        docgen::typed_through::{ThroughTypeInfo, TypedThrough}},
+        docgen::typed_through::{ThroughTypeInfo, TypedThrough},
+        function::from::FromScript,
+        script_value::ScriptValue,
+        IntoScript, WorldAccessGuard,
+    },
     GetTypeDependencies,
 };
-use bevy_mod_scripting::bindings::InteropError;
-use bevy::reflect::TypeRegistry;
 
 #[derive(Debug, Clone, Copy, Reflect, GetTypeDependencies)]
 // #[cfg_attr(feature = "scripting", derive(GetTypeDependencies))]
@@ -75,10 +78,7 @@ impl FromScript for PColor {
         match value {
             ScriptValue::Integer(n) => Ok(PColor::Palette(n as usize)),
             ScriptValue::Float(n) => Ok(PColor::Palette(n as usize)),
-            x => Err(InteropError::value_mismatch(
-                TypeId::of::<i64>(),
-                x
-            )),
+            x => Err(InteropError::value_mismatch(TypeId::of::<i64>(), x)),
         }
     }
 }
@@ -123,4 +123,3 @@ impl From<i32> for PColor {
         PColor::Palette(n as usize)
     }
 }
-

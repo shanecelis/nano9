@@ -81,7 +81,6 @@ pub(crate) const PALETTE: [[u8; 4]; 16] = [
     [0xff, 0xcc, 0xaa, 0xff], //light-peach
 ];
 
-
 impl std::str::FromStr for Cart {
     type Err = CartLoaderError;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
@@ -90,8 +89,10 @@ impl std::str::FromStr for Cart {
 }
 
 impl Cart {
-
-    pub fn from_bytes(bytes: &[u8], settings: &CartLoaderSettings) -> Result<Cart, CartLoaderError> {
+    pub fn from_bytes(
+        bytes: &[u8],
+        settings: &CartLoaderSettings,
+    ) -> Result<Cart, CartLoaderError> {
         let content = std::str::from_utf8(bytes)?;
         Cart::from_str(content, settings)
     }
@@ -336,12 +337,10 @@ pub enum SharedData {
     Map,
 }
 
-
 #[derive(Clone, Serialize, Deserialize, Default)]
 pub struct CartLoaderSettings {
     pub shared_data: SharedData,
 }
-
 
 /// Convert Pico-8 dialect to Lua.
 #[cfg(feature = "pico8-to-lua")]
@@ -365,15 +364,21 @@ pub(crate) async fn translate_pico8_to_lua<'a>(
             let extension = cart_path.extension().and_then(|s| s.to_str()).unwrap_or("");
             match extension {
                 "p8" | "png" => {
-                    let include_path = AssetPath::from(cart_path).with_source(source);//.with_label("lua");
+                    let include_path = AssetPath::from(cart_path).with_source(source); //.with_label("lua");
                     let pico8_asset = load_context
                         .loader()
                         .immediate()
                         // .load::<bevy_mod_scripting::prelude::ScriptAsset>(include_path)
                         .load::<Pico8Asset>(include_path)
                         .await?;
-                    let script = pico8_asset.get_labeled("lua").and_then(|erased_asset| erased_asset.get::<bevy_mod_scripting::prelude::ScriptAsset>()).expect("lua script");
-                    path_contents.insert(path, String::from_utf8(script.content.clone().into_vec())?);
+                    let script = pico8_asset
+                        .get_labeled("lua")
+                        .and_then(|erased_asset| {
+                            erased_asset.get::<bevy_mod_scripting::prelude::ScriptAsset>()
+                        })
+                        .expect("lua script");
+                    path_contents
+                        .insert(path, String::from_utf8(script.content.clone().into_vec())?);
                 }
                 "lua" => {
                     // Lua or some other code.

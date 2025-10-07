@@ -1,8 +1,8 @@
 use crate::pico8::Error;
 use bevy::{ecs::system::SystemParam, prelude::*};
-#[cfg(feature = "scripting")]
-use bevy_mod_scripting::{bindings::ScriptValue};
 use bevy_mod_scripting::bindings::InteropError;
+#[cfg(feature = "scripting")]
+use bevy_mod_scripting::bindings::ScriptValue;
 use bevy_prng::WyRand;
 use bevy_rand::prelude::{Entropy, EntropyPlugin, RngSeed};
 use rand::RngCore;
@@ -41,9 +41,9 @@ impl Rand8<'_> {
                     x.swap_remove(index)
                 }
             }
-            _ => ScriptValue::Error(InteropError::external(Box::new(
-                Error::InvalidArgument("rng expects integer, float, or list".into()),
-            ))),
+            _ => ScriptValue::Error(InteropError::external(Box::new(Error::InvalidArgument(
+                "rng expects integer, float, or list".into(),
+            )))),
         }
     }
 

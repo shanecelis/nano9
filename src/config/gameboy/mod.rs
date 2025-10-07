@@ -1,7 +1,4 @@
-use bevy::{
-    prelude::*,
-    asset::embedded_asset,
-};
+use bevy::{asset::embedded_asset, prelude::*};
 
 pub const PALETTES: &str = "embedded://nano9/config/gameboy/palettes.png";
 pub const FONT: &str = "embedded://nano9/config/gameboy/font.ttf";

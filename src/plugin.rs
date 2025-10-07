@@ -1,32 +1,27 @@
 #![allow(deprecated)]
-use bevy::{
-    asset::AssetPath,
-    prelude::*,
-    reflect::Reflect,
-    window::PresentMode,
-};
+use bevy::{asset::AssetPath, prelude::*, reflect::Reflect, window::PresentMode};
 use std::time::Duration;
 
 #[cfg(feature = "scripting")]
 use bevy_mod_scripting::{
-        asset::ScriptAsset,
-        bindings::{function::namespace::NamespaceBuilder, InteropError},
-        core::{callback_labels,
-               event::{ScriptCallbackEvent, CallbackLabel},
-               handler::event_handler,
-               script::{ScriptContext, ContextPolicy, ScriptAttachment}},
+    asset::ScriptAsset,
+    bindings::{function::namespace::NamespaceBuilder, InteropError},
+    core::{
+        callback_labels,
+        event::{CallbackLabel, ScriptCallbackEvent},
+        handler::event_handler,
+        script::{ContextPolicy, ScriptAttachment, ScriptContext},
+    },
     lua::LuaScriptingPlugin,
     BMSPlugin,
 };
 
 use crate::{
     config::*,
+    pico8::{self, canvas::N9Canvas, input::fill_input, FillPat, Pico8Asset, Pico8Handle},
     run::RunState,
-    pico8::{self, input::fill_input, FillPat, Pico8Asset, Pico8Handle, canvas::N9Canvas},
-    PColor,
-    schedule,
+    schedule, PColor,
 };
-
 
 #[derive(Clone, Debug, Reflect)]
 pub struct DrawState {
@@ -91,12 +86,14 @@ pub mod call {
 }
 
 #[cfg(feature = "scripting")]
-pub fn send(label: impl Into<CallbackLabel>) -> impl Fn(EventWriter<ScriptCallbackEvent>,
-                                                        Option<Res<Pico8Handle>>) {
+pub fn send(
+    label: impl Into<CallbackLabel>,
+) -> impl Fn(EventWriter<ScriptCallbackEvent>, Option<Res<Pico8Handle>>) {
     let label = label.into();
     move |mut writer: EventWriter<ScriptCallbackEvent>,
-    maybe_pico8_handle: Option<Res<Pico8Handle>>| {
-        let maybe_recipients = maybe_pico8_handle.and_then(|pico8_handle| pico8_handle.main_script.clone());
+          maybe_pico8_handle: Option<Res<Pico8Handle>>| {
+        let maybe_recipients =
+            maybe_pico8_handle.and_then(|pico8_handle| pico8_handle.main_script.clone());
 
         match maybe_recipients {
             Some(recipients) => {
@@ -125,11 +122,10 @@ pub struct Nano9Plugin {
 }
 
 impl Nano9Plugin {
-
     pub fn new(config: Config) -> Self {
         Nano9Plugin {
             config,
-            config_path: None
+            config_path: None,
         }
     }
 
@@ -211,14 +207,22 @@ fn add_logging(app: &mut App) {
 //                      }
 //                  });
 // }
-fn context_initializer(_script_attachment: &ScriptAttachment, context: &mut bevy_mod_scripting::lua::LuaContext) -> Result<(), InteropError> {
+fn context_initializer(
+    _script_attachment: &ScriptAttachment,
+    context: &mut bevy_mod_scripting::lua::LuaContext,
+) -> Result<(), InteropError> {
     use bevy_mod_scripting::lua::IntoInteropError;
-    context.globals().set(
-        "_eval_string",
-        context.create_function(|ctx, arg: String| {
-            ctx.load(format!("tostring({arg})")).eval::<String>()
-        }).map_err(IntoInteropError::to_bms_error)?,
-    ).map_err(IntoInteropError::to_bms_error)?;
+    context
+        .globals()
+        .set(
+            "_eval_string",
+            context
+                .create_function(|ctx, arg: String| {
+                    ctx.load(format!("tostring({arg})")).eval::<String>()
+                })
+                .map_err(IntoInteropError::to_bms_error)?,
+        )
+        .map_err(IntoInteropError::to_bms_error)?;
     context
         .load(include_str!("builtin.lua"))
         .exec()
@@ -257,14 +261,15 @@ impl Plugin for Nano9Plugin {
         app.add_systems(
             Startup,
             move |asset_server: Res<AssetServer>, mut commands: Commands| {
-                let pico8_asset: Handle<Pico8Asset> =
-                    asset_server.load(&asset_path);
+                let pico8_asset: Handle<Pico8Asset> = asset_server.load(&asset_path);
                 commands.insert_resource(Pico8Handle::from(pico8_asset));
             },
         );
         #[cfg(feature = "scripting")]
         {
-            app.insert_resource(ScriptContext::<LuaScriptingPlugin>::new(ContextPolicy::shared()));
+            app.insert_resource(ScriptContext::<LuaScriptingPlugin>::new(
+                ContextPolicy::shared(),
+            ));
             let mut lua_scripting_plugin = LuaScriptingPlugin::default();
             lua_scripting_plugin
                 .scripting_plugin
@@ -322,7 +327,9 @@ impl Plugin for Nano9Plugin {
             info!("Set FPS {}", &fps);
             let limiter = bevy_framepace::Limiter::from_framerate(fps as f64);
             app.add_plugins(bevy_framepace::FramepacePlugin)
-               .insert_resource(bevy_framepace::FramepaceSettings::default().with_limiter(limiter));
+                .insert_resource(
+                    bevy_framepace::FramepaceSettings::default().with_limiter(limiter),
+                );
             // app.insert_resource(Time::<Fixed>::from_seconds(
             //     1.0 / fps as f64,
             // ));
@@ -335,9 +342,8 @@ impl Plugin for Nano9Plugin {
             Update,
             (
                 fill_input,
-                (send(call::Init),
-                 schedule::run_schedule(schedule::Init),
-                ).run_if(init_when::<ScriptAsset>()),
+                (send(call::Init), schedule::run_schedule(schedule::Init))
+                    .run_if(init_when::<ScriptAsset>()),
                 event_handler::<call::Init, LuaScriptingPlugin>,
                 send(call::Update).run_if(in_state(RunState::Run)),
                 event_handler::<call::Update, LuaScriptingPlugin>,
@@ -356,7 +362,6 @@ impl Plugin for Nano9Plugin {
         // present.
         #[cfg(not(feature = "level"))]
         app.add_plugins(bevy_ecs_tilemap::TilemapPlugin);
-
     }
 }
 

@@ -30,9 +30,14 @@ impl super::Pico8<'_, '_> {
         if upper_left.x <= camera.x
             && upper_left.y <= camera.y
             && lower_right.x >= camera.x + canvas.x
-            && lower_right.y >= camera.y + canvas.y {
+            && lower_right.y >= camera.y + canvas.y
+        {
             // We clear the screen.
-            trace!("Clearing the screen on rectfill {:?} {:?}", upper_left, lower_right);
+            trace!(
+                "Clearing the screen on rectfill {:?} {:?}",
+                upper_left,
+                lower_right
+            );
             self.cls(Some(color.off()));
 
             // We must manually set the draw count because the trigger
@@ -106,8 +111,7 @@ impl super::Pico8<'_, '_> {
                         ..default()
                     }
                 } else {
-                    let c =
-                        self.get_color(color.off())?;
+                    let c = self.get_color(color.off())?;
                     Sprite {
                         color: c,
                         anchor: Anchor::TopLeft,

@@ -6,8 +6,7 @@ use super::*;
 use bevy_mod_scripting::asset::{Language, ScriptAsset};
 
 pub(crate) fn plugin(app: &mut App) {
-    app
-        .init_asset_loader::<P8AssetLoader>()
+    app.init_asset_loader::<P8AssetLoader>()
         .init_asset_loader::<PngAssetLoader>();
 
     // #[cfg(feature = "scripting")]
@@ -47,7 +46,6 @@ impl AssetLoader for P8AssetLoader {
         &["p8"]
     }
 }
-
 
 // #[cfg(feature = "scripting")]
 // #[derive(Default)]
@@ -100,24 +98,31 @@ impl AssetLoader for PngAssetLoader {
 }
 
 fn to_asset(cart: Cart, load_context: &mut LoadContext) -> Result<Pico8Asset, CartLoaderError> {
-    let layout = load_context.add_labeled_asset("atlas".into(),
+    let layout = load_context.add_labeled_asset(
+        "atlas".into(),
         TextureAtlasLayout::from_grid(
             PICO8_SPRITE_SIZE,
             PICO8_TILE_COUNT.x,
             PICO8_TILE_COUNT.y,
             None,
             None,
-        ));
+        ),
+    );
     let sprite_sheets: Vec<_> = cart
         .gfx
         .map(|gfx| load_context.add_labeled_asset("gfx".into(), gfx))
-        .map(|gfx_handle| load_context.add_labeled_asset("sprite_sheet".into(), SpriteSheet {
-            handle: SprHandle::Gfx(gfx_handle),
-            palette: None,
-            sprite_size: UVec2::splat(8),
-            flags: cart.flags,
-            layout,
-        }))
+        .map(|gfx_handle| {
+            load_context.add_labeled_asset(
+                "sprite_sheet".into(),
+                SpriteSheet {
+                    handle: SprHandle::Gfx(gfx_handle),
+                    palette: None,
+                    sprite_size: UVec2::splat(8),
+                    flags: cart.flags,
+                    layout,
+                },
+            )
+        })
         .into_iter()
         .collect();
     let code = cart.lua;
@@ -125,12 +130,13 @@ fn to_asset(cart: Cart, load_context: &mut LoadContext) -> Result<Pico8Asset, Ca
     let asset = Pico8Asset {
         #[cfg(feature = "scripting")]
         scripts: if cfg!(feature = "scripting") {
-            vec![
-                load_context.add_labeled_asset("lua".into(), ScriptAsset {
+            vec![load_context.add_labeled_asset(
+                "lua".into(),
+                ScriptAsset {
                     content: code.into_bytes().into_boxed_slice(),
                     language: Language::Lua,
-                }),
-            ]
+                },
+            )]
         } else {
             vec![]
         },
@@ -139,25 +145,24 @@ fn to_asset(cart: Cart, load_context: &mut LoadContext) -> Result<Pico8Asset, Ca
             .loader()
             .with_settings(pixel_art_settings)
             .load(pico8::PICO8_BORDER),
-        maps: vec![
-            load_context
-                .add_labeled_asset("map".to_string(), P8Map {
+        maps: vec![load_context
+            .add_labeled_asset(
+                "map".to_string(),
+                P8Map {
                     entries: cart.map.clone(),
-                })
-                .into()],
+                },
+            )
+            .into()],
         audio_banks: vec![{
             let bank = AudioBank(
-            cart.sfx
-                .into_iter()
-                .enumerate()
-                .map(|(n, sfx)| {
-                    Audio::Sfx(
-                        load_context
-                            .add_labeled_asset(format!("sfx{n}"), sfx),
-                    )
-                })
-                .collect(),
-        );
+                cart.sfx
+                    .into_iter()
+                    .enumerate()
+                    .map(|(n, sfx)| {
+                        Audio::Sfx(load_context.add_labeled_asset(format!("sfx{n}"), sfx))
+                    })
+                    .collect(),
+            );
             load_context.add_labeled_asset("audio_bank".into(), bank)
         }],
         sprite_sheets,

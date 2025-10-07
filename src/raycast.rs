@@ -7,18 +7,16 @@ use bevy::{
 #[cfg(feature = "scripting")]
 use crate::pico8::lua::with_system_param;
 use crate::pico8::{negate_y, Error};
-#[cfg(feature = "scripting")]
-use bevy_mod_scripting::{
-    bindings::{
-        function::{
-            from::FromScript,
-            namespace::{GlobalNamespace, NamespaceBuilder},
-            script_function::FunctionCallContext,
-        },
-        script_value::ScriptValue,
-    },
-};
 use bevy_mod_scripting::bindings::InteropError;
+#[cfg(feature = "scripting")]
+use bevy_mod_scripting::bindings::{
+    function::{
+        from::FromScript,
+        namespace::{GlobalNamespace, NamespaceBuilder},
+        script_function::FunctionCallContext,
+    },
+    script_value::ScriptValue,
+};
 
 #[cfg(feature = "scripting")]
 use crate::conversions::RectValue;

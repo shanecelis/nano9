@@ -10,8 +10,7 @@ use std::sync::{
 };
 
 pub(crate) fn plugin(app: &mut App) {
-    app
-        .register_type::<Audio>()
+    app.register_type::<Audio>()
         .register_type::<AudioBank>()
         .init_asset::<AudioBank>();
 }
@@ -48,7 +47,7 @@ fn mode_eq(a: PlaybackMode, b: PlaybackMode) -> bool {
 
 #[cfg(feature = "mute")]
 impl Command for AudioCommand {
-    fn apply(self, world: &mut World) { }
+    fn apply(self, world: &mut World) {}
 }
 
 #[cfg(not(feature = "mute"))]

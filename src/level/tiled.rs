@@ -39,38 +39,39 @@ impl Level<'_, '_> {
         layer_index: Option<usize>,
     ) -> Option<usize> {
         match map {
-            level::Tiled::SpriteMap { handle } => self.tiled_maps.get(handle).and_then(|tiled_map| {
-                tiled_map
-                    .map
-                    .get_layer(layer_index.unwrap_or(0))
-                    .and_then(|layer| {
-                        let tile_size =
-                            UVec2::new(tiled_map.map.tile_width, tiled_map.map.tile_width);
-                        match layer.layer_type() {
-                            tiled::LayerType::Tiles(tile_layer) => tile_layer
-                                .get_tile(pos.x as i32, pos.y as i32)
-                                .map(|layer_tile| layer_tile.id() as usize),
-                            tiled::LayerType::Objects(object_layer) => {
-                                let mut result = None;
-                                let posf = pos * tile_size.as_vec2();
-                                for object in object_layer.objects() {
-                                    if shape_contains(&object, tile_size, posf) {
-                                        result =
-                                            object.properties.get("p8flags").and_then(|value| {
-                                                match value {
+            level::Tiled::SpriteMap { handle } => {
+                self.tiled_maps.get(handle).and_then(|tiled_map| {
+                    tiled_map
+                        .map
+                        .get_layer(layer_index.unwrap_or(0))
+                        .and_then(|layer| {
+                            let tile_size =
+                                UVec2::new(tiled_map.map.tile_width, tiled_map.map.tile_width);
+                            match layer.layer_type() {
+                                tiled::LayerType::Tiles(tile_layer) => tile_layer
+                                    .get_tile(pos.x as i32, pos.y as i32)
+                                    .map(|layer_tile| layer_tile.id() as usize),
+                                tiled::LayerType::Objects(object_layer) => {
+                                    let mut result = None;
+                                    let posf = pos * tile_size.as_vec2();
+                                    for object in object_layer.objects() {
+                                        if shape_contains(&object, tile_size, posf) {
+                                            result = object.properties.get("p8flags").and_then(
+                                                |value| match value {
                                                     PropertyValue::IntValue(i) => Some(*i as usize),
                                                     _ => None,
-                                                }
-                                            });
-                                        break;
+                                                },
+                                            );
+                                            break;
+                                        }
                                     }
+                                    result
                                 }
-                                result
+                                _ => None,
                             }
-                            _ => None,
-                        }
-                    })
-            }),
+                        })
+                })
+            }
             level::Tiled::World { handle: _ } => {
                 todo!()
             }
@@ -85,65 +86,67 @@ impl Level<'_, '_> {
         layer_index: Option<usize>,
     ) -> Option<tiled::Properties> {
         match map {
-            level::Tiled::SpriteMap { handle } => self.tiled_maps.get(handle).and_then(|tiled_map| {
-                let tile_size = UVec2::new(tiled_map.map.tile_width, tiled_map.map.tile_width);
-                tiled_map
-                    .map
-                    .get_layer(layer_index.unwrap_or(0))
-                    .and_then(|layer| match layer.layer_type() {
-                        tiled::LayerType::Tiles(tile_layer) => match prop_by {
-                            PropBy::Pos(pos) => tile_layer
-                                .get_tile(pos.x as i32, pos.y as i32)
-                                .and_then(|layer_tile| {
-                                    layer_tile.get_tile().map(|tile| tile.properties.clone())
-                                }),
-                            PropBy::Name(name) => {
-                                warn!("Cannot look up by name {name:?} on a tile layer.");
-                                None
-                            }
-                            PropBy::Rect(_) => {
-                                warn!("Cannot look up by rect");
-                                None
-                            }
-                        },
-                        tiled::LayerType::Objects(object_layer) => match prop_by {
-                            PropBy::Pos(pos) => {
-                                let posf = pos * tile_size.as_vec2();
-                                for object in object_layer.objects() {
-                                    if shape_contains(&object, tile_size, posf) {
-                                        let mut properties = object.properties.clone();
+            level::Tiled::SpriteMap { handle } => {
+                self.tiled_maps.get(handle).and_then(|tiled_map| {
+                    let tile_size = UVec2::new(tiled_map.map.tile_width, tiled_map.map.tile_width);
+                    tiled_map
+                        .map
+                        .get_layer(layer_index.unwrap_or(0))
+                        .and_then(|layer| match layer.layer_type() {
+                            tiled::LayerType::Tiles(tile_layer) => match prop_by {
+                                PropBy::Pos(pos) => tile_layer
+                                    .get_tile(pos.x as i32, pos.y as i32)
+                                    .and_then(|layer_tile| {
+                                        layer_tile.get_tile().map(|tile| tile.properties.clone())
+                                    }),
+                                PropBy::Name(name) => {
+                                    warn!("Cannot look up by name {name:?} on a tile layer.");
+                                    None
+                                }
+                                PropBy::Rect(_) => {
+                                    warn!("Cannot look up by rect");
+                                    None
+                                }
+                            },
+                            tiled::LayerType::Objects(object_layer) => match prop_by {
+                                PropBy::Pos(pos) => {
+                                    let posf = pos * tile_size.as_vec2();
+                                    for object in object_layer.objects() {
+                                        if shape_contains(&object, tile_size, posf) {
+                                            let mut properties = object.properties.clone();
 
-                                        insert_object_fields(&mut properties, &object);
-                                        return Some(properties);
+                                            insert_object_fields(&mut properties, &object);
+                                            return Some(properties);
+                                        }
                                     }
+                                    None
                                 }
-                                None
-                            }
-                            PropBy::Rect(rect) => {
-                                for object in object_layer.objects() {
-                                    if shape_intersects(&object, tile_size, rect) {
-                                        let mut properties = object.properties.clone();
+                                PropBy::Rect(rect) => {
+                                    for object in object_layer.objects() {
+                                        if shape_intersects(&object, tile_size, rect) {
+                                            let mut properties = object.properties.clone();
 
-                                        insert_object_fields(&mut properties, &object);
-                                        return Some(properties);
+                                            insert_object_fields(&mut properties, &object);
+                                            return Some(properties);
+                                        }
                                     }
+                                    None
                                 }
-                                None
-                            }
-                            PropBy::Name(name) => {
-                                for object in object_layer.objects() {
-                                    if object.name == name {
-                                        let mut properties = object.properties.clone();
-                                        insert_object_fields(&mut properties, &object);
-                                        return Some(properties);
+                                PropBy::Name(name) => {
+                                    for object in object_layer.objects() {
+                                        if object.name == name {
+                                            let mut properties = object.properties.clone();
+                                            insert_object_fields(&mut properties, &object);
+                                            return Some(properties);
+                                        }
                                     }
+                                    None
                                 }
-                                None
-                            }
-                        },
-                        _ => None,
-                    })
-            }),
+                            },
+                            _ => None,
+                        })
+                })
+            }
             level::Tiled::World { handle: _ } => {
                 // todo!()
                 None

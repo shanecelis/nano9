@@ -1,9 +1,8 @@
+use super::*;
 use bevy::{
     render::camera::Viewport,
     window::{PrimaryWindow, WindowResized},
 };
-use super::*;
-
 
 #[derive(Debug, Clone, Resource, Default, Reflect)]
 pub struct N9Canvas {
@@ -20,8 +19,7 @@ pub struct Background;
 pub struct OneColorBackground;
 
 pub(crate) fn plugin(app: &mut App) {
-    app
-        .register_type::<OneColorBackground>()
+    app.register_type::<OneColorBackground>()
         .register_type::<Background>()
         .register_type::<N9Canvas>()
         .add_systems(PreStartup, (spawn_camera, setup_canvas).chain());
@@ -33,11 +31,13 @@ pub(crate) fn plugin(app: &mut App) {
     lua::plugin(app);
 }
 
-pub fn setup_canvas(mut canvas: Option<ResMut<N9Canvas>>,
-                    mut assets: ResMut<Assets<Image>>,
-                    mut gfxs: ResMut<Assets<Gfx>>,
-                    camera: Single<Entity, With<Nano9Camera>>,
-                    mut commands: Commands) {
+pub fn setup_canvas(
+    mut canvas: Option<ResMut<N9Canvas>>,
+    mut assets: ResMut<Assets<Image>>,
+    mut gfxs: ResMut<Assets<Gfx>>,
+    camera: Single<Entity, With<Nano9Camera>>,
+    mut commands: Commands,
+) {
     trace!("setup_canvas");
     if let Some(ref mut canvas) = canvas {
         let camera_id = camera.into_inner();
@@ -65,7 +65,8 @@ pub fn setup_canvas(mut canvas: Option<ResMut<N9Canvas>>,
                 },
                 Transform::from_xyz(0.0, 0.0, -101.0),
                 OneColorBackground,
-            )).set_parent(camera_id);
+            ))
+            .set_parent(camera_id);
 
         // let mut image = Image::new_fill(
         //     Extent3d {
@@ -83,20 +84,22 @@ pub fn setup_canvas(mut canvas: Option<ResMut<N9Canvas>>,
         let gfx_image = Gfx::new(canvas.size.x as usize, canvas.size.y as usize);
         let gfx_handle = gfxs.add(gfx_image);
         canvas.gfx_handle = gfx_handle.clone();
-        canvas.background = Some(commands
-            .spawn((
-                Name::new("canvas"),
-                GfxSprite {
-                    image: gfx_handle,
-                    ..default()
-                },
-                GfxDirty::default(),
-                // Sprite::from_image(canvas.handle.clone()),
-                Transform::from_xyz(0.0, 0.0, -100.0),
-                Background,
-            ))
-            .set_parent(camera_id)
-            .id());
+        canvas.background = Some(
+            commands
+                .spawn((
+                    Name::new("canvas"),
+                    GfxSprite {
+                        image: gfx_handle,
+                        ..default()
+                    },
+                    GfxDirty::default(),
+                    // Sprite::from_image(canvas.handle.clone()),
+                    Transform::from_xyz(0.0, 0.0, -100.0),
+                    Background,
+                ))
+                .set_parent(camera_id)
+                .id(),
+        );
     }
 }
 
@@ -154,17 +157,18 @@ pub fn sync_window_size(
                 Projection::Orthographic(ref mut orthographic) => {
                     trace!(
                         "oldscale {} new_scale {new_scale} window_scale {window_scale}",
-                        &orthographic.scale);
+                        &orthographic.scale
+                    );
                     orthographic.scale = 1.0 / new_scale;
                 }
-                x => warn_once!("Nano9Camera is not an orthographic camera")
+                x => warn_once!("Nano9Camera is not an orthographic camera"),
             }
         }
-        
+
         let viewport_size = canvas_size * new_scale * window_scale;
         let start = (window_size * window_scale - viewport_size) / 2.0;
         trace!("viewport size {} start {}", &viewport_size, &start);
-        
+
         for mut camera in camera_query.iter_mut() {
             camera.viewport = Some(Viewport {
                 physical_position: UVec2::new(start.x as u32, start.y as u32),
@@ -172,7 +176,6 @@ pub fn sync_window_size(
                 ..default()
             });
         }
-
     }
 }
 
@@ -199,7 +202,10 @@ impl super::Pico8<'_, '_> {
 
         match color.into_pcolor(&self.state.draw_state.pen) {
             PColor::Palette(p) => {
-                let gfx = self.gfxs.get_mut(&self.canvas.gfx_handle).ok_or(Error::NoAsset("gfx".into()))?;
+                let gfx = self
+                    .gfxs
+                    .get_mut(&self.canvas.gfx_handle)
+                    .ok_or(Error::NoAsset("gfx".into()))?;
                 if gfx.set(pos.x as usize, pos.y as usize, p as u8) {
                     // if let Some(background) = self.canvas.background {
                     //     self.commands
@@ -208,13 +214,18 @@ impl super::Pico8<'_, '_> {
                     // }
                     Ok(())
                 } else {
-                    Err(Error::InvalidArgument(format!("Could not set gfx color {} at ({:.1}, {:.1}).", p, pos.x, pos.y).into()))
+                    Err(Error::InvalidArgument(
+                        format!(
+                            "Could not set gfx color {} at ({:.1}, {:.1}).",
+                            p, pos.x, pos.y
+                        )
+                        .into(),
+                    ))
                 }
             }
             _ => {
                 todo!()
             }
-
         }
         // todo!()
         // let c = self.get_color(color.into())?;

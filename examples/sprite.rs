@@ -22,15 +22,22 @@ fn update(mut pico8: Pico8, mut t: Local<usize>) {
 fn main() {
     let mut app = App::new();
 
-    let config = if std::env::args().next().map(|s| s == "string").unwrap_or(false) {
+    let config = if std::env::args()
+        .next()
+        .map(|s| s == "string")
+        .unwrap_or(false)
+    {
         println!("Loading configuration from string.");
         // OR provide configuration string.
-        Config::from_str(r#"
+        Config::from_str(
+            r#"
             template = "pico8"
             [[sprite_sheet]]
             path = "BirdSprite.png"
             sprite_size = [16, 16]
-        "#).expect("invalid config")
+        "#,
+        )
+        .expect("invalid config")
     } else {
         println!("Constructing configuration manually.");
         // Construct a configuration.
@@ -42,13 +49,11 @@ fn main() {
         });
         config
     };
-    app
-        .add_plugins(Nano9Plugins::new(config))
+    app.add_plugins(Nano9Plugins::new(config))
         .add_systems(PreUpdate, run_pico8_when_loaded)
         .add_systems(nano9::schedule::Run, update);
 
     #[cfg(feature = "minibuffer")]
     app.add_plugins(nano9::minibuffer::quick_plugin);
-    app
-        .run();
+    app.run();
 }

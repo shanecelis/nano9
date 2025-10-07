@@ -1,10 +1,10 @@
 use super::*;
 
-#[cfg(feature = "scripting")]
-use bevy_mod_scripting::{
-    bindings::{function::from::FromScript, script_value::ScriptValue, WorldAccessGuard, InteropError},
-};
 use bevy::platform::hash::FixedHasher;
+#[cfg(feature = "scripting")]
+use bevy_mod_scripting::bindings::{
+    function::from::FromScript, script_value::ScriptValue, InteropError, WorldAccessGuard,
+};
 
 use crate::{hash::hash_f32, pico8::Gfx};
 use std::{
@@ -105,14 +105,30 @@ pub enum SprHandle {
 impl super::Pico8<'_, '_> {
     pub fn sprite_sheet(&self, sheet_index: Option<usize>) -> Result<&SpriteSheet, Error> {
         let sheet_index = sheet_index.unwrap_or(0);
-        let handle = self.pico8_asset()?.sprite_sheets.get(sheet_index).ok_or_else(|| Error::NoSuch("sprite sheet handle".into()))?;
-        self.sprite_sheets.get(handle).ok_or_else(|| Error::NoSuch("sprite sheet asset".into()))
+        let handle = self
+            .pico8_asset()?
+            .sprite_sheets
+            .get(sheet_index)
+            .ok_or_else(|| Error::NoSuch("sprite sheet handle".into()))?;
+        self.sprite_sheets
+            .get(handle)
+            .ok_or_else(|| Error::NoSuch("sprite sheet asset".into()))
     }
 
-    pub fn sprite_sheet_mut(&mut self, sheet_index: Option<usize>) -> Result<&mut SpriteSheet, Error> {
+    pub fn sprite_sheet_mut(
+        &mut self,
+        sheet_index: Option<usize>,
+    ) -> Result<&mut SpriteSheet, Error> {
         let sheet_index = sheet_index.unwrap_or(0);
-        let handle = self.pico8_asset()?.sprite_sheets.get(sheet_index).ok_or_else(|| Error::NoSuch("sprite sheet handle".into()))?.clone_weak();
-        self.sprite_sheets.get_mut(&handle).ok_or_else(|| Error::NoSuch("sprite sheet asset".into()))
+        let handle = self
+            .pico8_asset()?
+            .sprite_sheets
+            .get(sheet_index)
+            .ok_or_else(|| Error::NoSuch("sprite sheet handle".into()))?
+            .clone_weak();
+        self.sprite_sheets
+            .get_mut(&handle)
+            .ok_or_else(|| Error::NoSuch("sprite sheet asset".into()))
     }
 
     // fn sprite_sheet(&self, sheet_index: Option<usize>) -> Result<&SpriteSheet, Error> {
@@ -180,19 +196,19 @@ impl super::Pico8<'_, '_> {
         };
         let clearable = Clearable::new(self.defaults.time_to_live).with_hash(hash);
         let material = self.gfx_material();
-        let mut ecommands = self
-            .commands
-            .spawn((
-                Name::new("sspr"),
-                sprite,
-                Transform::from_xyz(screen_pos.x, screen_pos.y, clearable.suggest_z()),
-                clearable,
-            ));
+        let mut ecommands = self.commands.spawn((
+            Name::new("sspr"),
+            sprite,
+            Transform::from_xyz(screen_pos.x, screen_pos.y, clearable.suggest_z()),
+            clearable,
+        ));
         if let Some(gfx_handle) = gfx_handle {
-            ecommands.insert(GfxSprite { image: gfx_handle, material });
+            ecommands.insert(GfxSprite {
+                image: gfx_handle,
+                material,
+            });
         }
-        Ok(ecommands
-            .id())
+        Ok(ecommands.id())
     }
 
     pub(crate) fn pico8_asset(&self) -> Result<&Pico8Asset, Error> {
@@ -207,7 +223,6 @@ impl super::Pico8<'_, '_> {
             .get_mut(&self.pico8_handle.handle)
             .ok_or(Error::NoSuch("Pico8Asset".into()))
     }
-
 
     /// spr(n, [x,] [y,] [w,] [h,] [flip_x,] [flip_y])
     pub fn spr(
@@ -233,8 +248,8 @@ impl super::Pico8<'_, '_> {
                 Spr::From { sheet, sprite } => {
                     index = sprite;
                     sheet
-                },
-                _ => todo!()
+                }
+                _ => todo!(),
             };
             sheet.hash(&mut hasher);
             // Need to hash the palette choice and
@@ -256,7 +271,6 @@ impl super::Pico8<'_, '_> {
                     }
                     sprite.flip_x = flip.x;
                     sprite.flip_y = flip.y;
-
                 }
             });
             return Ok(id);
@@ -280,7 +294,6 @@ impl super::Pico8<'_, '_> {
             max: sprites.sprite_size.as_vec2() * v,
         });
         let pixel_size = sprites.sprite_size.as_vec2() * size.unwrap_or(Vec2::ONE) / 2.0;
-
 
         let mut gfx_handle = None;
         let image = match sprites.handle.clone() {
@@ -323,10 +336,12 @@ impl super::Pico8<'_, '_> {
             .spawn((Name::new("spr"), sprite, transform, clearable));
 
         if let Some(handle) = gfx_handle {
-            ecommands.insert(GfxSprite { image: handle, material });
+            ecommands.insert(GfxSprite {
+                image: handle,
+                material,
+            });
         }
-        Ok(ecommands
-            .id())
+        Ok(ecommands.id())
     }
 
     pub fn sset(

@@ -2,14 +2,18 @@ use super::PColor;
 use bevy::prelude::*;
 use std::any::TypeId;
 
+use bevy::reflect::TypeRegistry;
+use bevy_mod_scripting::bindings::InteropError;
 #[cfg(feature = "scripting")]
 use bevy_mod_scripting::{
-    bindings::{function::from::FromScript, script_value::ScriptValue, WorldAccessGuard,
-               docgen::typed_through::{ThroughTypeInfo, TypedThrough}},
+    bindings::{
+        docgen::typed_through::{ThroughTypeInfo, TypedThrough},
+        function::from::FromScript,
+        script_value::ScriptValue,
+        WorldAccessGuard,
+    },
     GetTypeDependencies,
 };
-use bevy_mod_scripting::bindings::InteropError;
-use bevy::reflect::TypeRegistry;
 
 #[derive(Debug, Clone, Copy, Reflect, Hash, Default)]
 #[cfg_attr(feature = "scripting", derive(GetTypeDependencies))]
@@ -58,10 +62,7 @@ impl FromScript for N9Color {
             ScriptValue::Integer(n) => Ok(N9Color::PColor((n as usize).into())),
             ScriptValue::Float(f) => Ok(N9Color::PColor((f as usize).into())),
             ScriptValue::Unit => Ok(N9Color::Pen),
-            _ => Err(InteropError::type_mismatch(
-                TypeId::of::<i64>(),
-                None
-            )),
+            _ => Err(InteropError::type_mismatch(TypeId::of::<i64>(), None)),
         }
     }
 }

@@ -5,11 +5,11 @@ use bevy::{
     audio::{AddAudioSource, Source},
     prelude::*,
 };
-use std::time::Duration;
 use dasp::{
     signal::{self, noise, Noise, Phase, Step},
     Signal,
 };
+use std::time::Duration;
 use std::{
     borrow::Cow,
     f32,
