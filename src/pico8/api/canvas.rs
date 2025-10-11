@@ -70,19 +70,6 @@ pub fn setup_canvas(
             ))
             .insert(ChildOf(camera_id));
 
-        // let mut image = Image::new_fill(
-        //     Extent3d {
-        //         width: canvas.size.x,
-        //         height: canvas.size.y,
-        //         depth_or_array_layers: 1,
-        //     },
-        //     TextureDimension::D2,
-        //     &[0u8, 0u8, 0u8, 0u8],
-        //     TextureFormat::Rgba8UnormSrgb,
-        //     RenderAssetUsages::RENDER_WORLD | RenderAssetUsages::MAIN_WORLD,
-        // );
-        // image.sampler = ImageSampler::nearest();
-        // canvas.handle = assets.add(image);
         let mut gfx_image = Gfx::new(canvas.size.x as usize, canvas.size.y as usize);
         gfx_image.set(0,0,1);
         let gfx_handle = gfxs.add(gfx_image);

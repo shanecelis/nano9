@@ -6,10 +6,10 @@ pub(crate) fn plugin(app: &mut App) {
 }
 
 impl super::Pico8<'_, '_> {
-    pub fn line(&mut self, a: IVec2, b: IVec2, color: Option<N9Color>) -> Result<Entity, Error> {
+    pub fn line(&mut self, a: IVec2, b: IVec2, color: impl Into<N9Color>) -> Result<Entity, Error> {
+        let color = self.get_color(color)?;
         let a = self.state.draw_state.apply_camera_delta_ivec2(a);
         let b = self.state.draw_state.apply_camera_delta_ivec2(b);
-        let color = self.get_color(color.unwrap_or(N9Color::Pen))?;
         let min = a.min(b);
         let delta = b - a;
         let size = UVec2::new(delta.x.unsigned_abs(), delta.y.unsigned_abs()) + UVec2::ONE;

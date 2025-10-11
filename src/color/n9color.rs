@@ -67,6 +67,24 @@ impl FromScript for N9Color {
     }
 }
 
+impl From<Option<PColor>> for N9Color {
+    fn from(c: Option<PColor>) -> Self {
+        match c {
+            Some(c) => N9Color::PColor(c),
+            None => N9Color::Pen,
+        }
+    }
+}
+
+impl From<Option<N9Color>> for N9Color {
+    fn from(c: Option<N9Color>) -> Self {
+        match c {
+            Some(c) => c,
+            None => N9Color::Pen,
+        }
+    }
+}
+
 impl From<Option<usize>> for N9Color {
     fn from(c: Option<usize>) -> Self {
         match c {

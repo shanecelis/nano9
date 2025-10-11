@@ -66,19 +66,23 @@ impl ClearCache {
     }
 
     pub fn remove(&mut self, clearable: &Clearable, id: Entity) -> bool {
-        // We're trusting clearable.cached here. Should we?
+        // We're trusting clearable.cached here. Should we? No.
         // if clearable.cached {
-        let result = self
-            .0
-            .drain_key_if(&clearable.hash.unwrap(), |v| *v == id)
-            .next()
-            .is_some();
-
-        // info!("CACHE REMOVE {:?}", &result);
-        if matches!(clearable.state, ClearState::Visible) {
-            // warn!("Clearable {id} requested to be removed that is in state visible, was {}removed.", if result { "" } else {"not " })
+        if let Some(hash) = clearable.hash {
+            let result = self
+                .0
+                .drain_key_if(&hash, |v| *v == id)
+                .next()
+                .is_some();
+            // info!("CACHE REMOVE {:?}", &result);
+            if matches!(clearable.state, ClearState::Visible) {
+                // warn!("Clearable {id} requested to be removed that is in state visible, was {}removed.", if result { "" } else {"not " })
+            }
+            result
+        } else {
+            false
         }
-        result
+
     }
 }
 

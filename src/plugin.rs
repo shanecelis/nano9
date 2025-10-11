@@ -345,19 +345,26 @@ impl Plugin for Nano9Plugin {
                 (send(call::Init), schedule::run_schedule(schedule::Init))
                     .run_if(init_when::<ScriptAsset>()),
                 event_handler::<call::Init, LuaScriptingPlugin>,
-                send(call::Update).run_if(in_state(RunState::Run)),
+                (send(call::Update), schedule::run_schedule(schedule::Update)).run_if(in_state(RunState::Run)),
                 event_handler::<call::Update, LuaScriptingPlugin>,
-                schedule::run_schedule(schedule::Run).run_if(in_state(RunState::Run)),
                 event_handler::<call::Eval, LuaScriptingPlugin>,
-                send(call::Draw).run_if(in_state(RunState::Run)),
+                (send(call::Draw), schedule::run_schedule(schedule::Draw)).run_if(in_state(RunState::Run)),
                 event_handler::<call::Draw, LuaScriptingPlugin>,
-                schedule::run_schedule(schedule::Draw).run_if(in_state(RunState::Run)),
             )
                 .chain(),
         );
-
+        app.add_systems(OnEnter(RunState::Init),
+                        schedule::run_schedule(schedule::Init));
         #[cfg(not(feature = "scripting"))]
-        app.add_systems(Update, fill_input);
+        {
+            app
+                .add_systems(Update,
+                             (fill_input,
+                              schedule::run_schedule(schedule::Run),
+                              schedule::run_schedule(schedule::Draw),
+                             ).chain()
+                             .run_if(in_state(RunState::Run)));
+        }
         // bevy_ecs_ldtk will add this plugin, so let's not add that if it's
         // present.
         #[cfg(not(feature = "level"))]
