@@ -66,7 +66,7 @@ pub fn setup_canvas(
                 Transform::from_xyz(0.0, 0.0, -101.0),
                 OneColorBackground,
             ))
-            .set_parent(camera_id);
+            .insert(ChildOf(camera_id));
 
         // let mut image = Image::new_fill(
         //     Extent3d {
@@ -98,7 +98,7 @@ pub fn setup_canvas(
                     Transform::from_xyz(0.0, 0.0, -100.0),
                     Background,
                 ))
-                .set_parent(camera_id)
+                .insert(ChildOf(camera_id))
                 .id(),
         );
     }
@@ -162,7 +162,7 @@ pub fn sync_window_size(
                     );
                     orthographic.scale = 1.0 / new_scale;
                 }
-                x => warn_once!("Nano9Camera is not an orthographic camera"),
+                x => warn_once!("Nano9Camera is not an orthographic camera: {:?}", x),
             }
         }
 

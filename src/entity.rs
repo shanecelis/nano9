@@ -145,7 +145,7 @@ pub(crate) fn plugin(app: &mut App) {
                 let world = ctx.world()?;
                 world.with_global_access(|world| {
                     let mut commands = world.commands();
-                    commands.entity(this.entity).despawn_recursive();
+                    commands.entity(this.entity).despawn();
                 })?;
                 Ok(())
             },

@@ -211,7 +211,7 @@ pub fn update_asset(
     mut palettes: ResMut<Palettes>,
     mut pico8_handle: Option<ResMut<Pico8Handle>>,
     #[cfg(feature = "scripting")] mut commands: Commands,
-    #[cfg(feature = "scripting")] scripts: ResMut<Assets<ScriptAsset>>,
+    #[cfg(feature = "scripting")] _scripts: ResMut<Assets<ScriptAsset>>,
 ) {
     for e in reader.read() {
         // TODO: This next line is a bit noisy but reveals a lot of asset

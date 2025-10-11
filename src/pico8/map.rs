@@ -278,7 +278,7 @@ fn add_tilemaps(
                     }
                 }
             })
-            .set_parent(id);
+            .insert(ChildOf(id));
 
         let tile_size: TilemapTileSize = sprite_sheet.sprite_size.as_vec2().into();
         let grid_size = tile_size.into();

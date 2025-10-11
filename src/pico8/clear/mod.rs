@@ -210,11 +210,10 @@ fn handle_clear_event(
     mut gfxs: ResMut<Assets<Gfx>>,
     one_color: Single<&mut Sprite, With<canvas::OneColorBackground>>,
     background: Single<
-        (Entity, &GfxSprite, &mut GfxDirty, &mut canvas::Background),
+        (Entity, &GfxSprite, &mut GfxDirty),
         With<canvas::Background>,
     >,
     palettes: Res<Palettes>,
-    background_dirty: Local<bool>,
 ) {
     state.draw_state.clear_screen();
     // Clear the 1x1 background.
@@ -228,7 +227,7 @@ fn handle_clear_event(
             sprite.color = Srgba::rgb(1.0, 0.0, 1.0).into(); // Ugly pink
         }
     }
-    let (background_id, gfx_sprite, mut gfx_dirty, background) = background.into_inner();
+    let (_background_id, gfx_sprite, mut gfx_dirty) = background.into_inner();
 
     // Clear the background if needed.
     if gfx_dirty.0 {
@@ -242,14 +241,14 @@ fn handle_clear_event(
     for (id, mut clearable, mut visibility) in &mut query {
         match clearable.state.decrement_ttl() {
             Some(ttl) if ttl == 0 => {
-                commands.entity(id).despawn_recursive();
+                commands.entity(id).despawn();
             }
             Some(_ttl) => {
                 // It still has time.
             }
             None => {
                 if clearable.time_to_live == 0 || clearable.hash.is_none() {
-                    commands.entity(id).despawn_recursive();
+                    commands.entity(id).despawn();
                 } else {
                     *visibility = Visibility::Hidden;
                     if cache.insert(&clearable, id) {

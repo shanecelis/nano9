@@ -47,9 +47,10 @@ impl Rand8<'_> {
         }
     }
 
-    // #[allow(deprecated)]
+    // XXX: For now.
+    #[allow(deprecated)]
     pub fn srand(&mut self, new_seed: u64) {
-        let (ref mut rng, ref mut seed) = *self.rand;
+        let (ref mut rng, ref mut _seed) = *self.rand;
         rng.reseed(new_seed.to_ne_bytes());
         // Commands does do it
         // commands.reseed(new_seed);

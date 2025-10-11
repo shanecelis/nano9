@@ -31,9 +31,9 @@ pub fn show<T: Component>(
     mut redraw: EventWriter<RequestRedraw>,
     mut query: Query<&mut Visibility, With<T>>,
 ) {
-    if let Ok(mut visibility) = query.get_single_mut() {
+    if let Ok(mut visibility) = query.single_mut() {
         *visibility = Visibility::Visible;
-        redraw.send(RequestRedraw);
+        redraw.write(RequestRedraw);
     }
 }
 
@@ -42,9 +42,9 @@ pub fn hide<T: Component>(
     mut redraw: EventWriter<RequestRedraw>,
     mut query: Query<&mut Visibility, With<T>>,
 ) {
-    if let Ok(mut visibility) = query.get_single_mut() {
+    if let Ok(mut visibility) = query.single_mut() {
         *visibility = Visibility::Hidden;
-        redraw.send(RequestRedraw);
+        redraw.write(RequestRedraw);
     }
 }
 

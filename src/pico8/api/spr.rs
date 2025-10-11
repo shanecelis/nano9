@@ -236,7 +236,7 @@ impl super::Pico8<'_, '_> {
         let mut pos = pixel_snap(self.state.draw_state.apply_camera_delta(pos));
         pos.y = negate_y(pos.y);
         let spr = spr.into();
-        let mut index = 0;
+        let index;
         let hash = {
             let mut hasher = FixedHasher.build_hasher();
             "spr".hash(&mut hasher);

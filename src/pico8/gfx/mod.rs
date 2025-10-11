@@ -2,14 +2,7 @@ pub mod const_bitdepth;
 mod var_bitdepth;
 pub use var_bitdepth::Gfx;
 use crate::{one_or_map::OneOrMap, pico8::*};
-use bevy::{
-    image::ImageSampler,
-    platform::collections::{HashMap, HashSet},
-    render::{
-        render_asset::RenderAssetUsages,
-        render_resource::{Extent3d, TextureDimension, TextureFormat},
-    },
-};
+use bevy::platform::collections::{HashMap, HashSet};
 use bitvec::{prelude::*, view::BitView};
 use std::{
     collections::VecDeque,
@@ -35,7 +28,7 @@ pub(crate) fn plugin(app: &mut App) {
 
 type GfxImage = OneOrMap<u64, Handle<Image>>;
 
-#[derive(Component, Default, Reflect)]
+#[derive(Component, Reflect)]
 pub struct GfxSprite {
     pub image: Handle<Gfx>,
     pub material: Handle<GfxMaterial>,
@@ -92,14 +85,14 @@ fn check_dirty(
 
 pub(crate) fn compute_image_sys(
     In(gfx_sprite): In<GfxSprite>,
-    state: Res<Pico8State>,
+    _state: Res<Pico8State>,
     gfxs: Res<Assets<Gfx>>,
     gfx_materials: Res<Assets<GfxMaterial>>,
     mut images: ResMut<Assets<Image>>,
     palettes: Res<Palettes>,
     mut pairs: ResMut<GfxImageMap>,
 ) -> Result<Handle<Image>, Error> {
-    let my_span = info_span!("gfx::compute_image", name = "system").entered();
+    let _my_span = info_span!("gfx::compute_image", name = "system").entered();
     compute_image(
         &gfx_sprite.image,
         false,
@@ -122,7 +115,7 @@ pub(crate) fn compute_image(
     palettes: &Palettes,
     pairs: &mut GfxImageMap,
 ) -> Result<Handle<Image>, Error> {
-    let my_span = info_span!("gfx::compute_image", name = "function").entered();
+    let _my_span = info_span!("gfx::compute_image", name = "function").entered();
 
     if gfx_material.palette >= palettes.len() {
         return Err(Error::NoSuch("palette".into()));
@@ -142,7 +135,7 @@ pub(crate) fn compute_image(
             .get(&hash)
             .inspect(|handle| {
                 if gfx_changed {
-                    let my_span = info_span!("gfx::compute_image", name = "update image").entered();
+                    let _my_span = info_span!("gfx::compute_image", name = "update image").entered();
                     let gfx = gfxs.get(gfx_id);
                     // Update existing image.
                     if let Some((gfx, image)) = gfx.zip(images.get_mut(*handle)) {
@@ -160,13 +153,13 @@ pub(crate) fn compute_image(
             .cloned()
     });
     let image_handle: Result<Handle<Image>, Error> = image_handle.map(Ok).unwrap_or_else(|| {
-        let my_span = info_span!("gfx::compute_image", name = "create image").entered();
+        let _my_span = info_span!("gfx::compute_image", name = "create image").entered();
         let gfx = gfxs
             .get(gfx_handle)
             .ok_or(Error::NoSuch("gfx image".into()))?;
         trace!("creating image for gfx {}", gfx_id);
         let image = images.add(gfx.try_to_image(|i, n, bytes| {
-            // trace!("pixel {} writing color {}", n, i);
+            trace!("pixel {} writing color {}", n, i);
             gfx_material.pal_map.write_color(&palette.data, i, bytes)
         })?);
         // Update or add image to the map.
@@ -188,7 +181,7 @@ fn compute_image_on_asset_event(
     mut images: ResMut<Assets<Image>>,
     gfxs: Res<Assets<Gfx>>,
     gfx_materials: Res<Assets<GfxMaterial>>,
-    state: Res<Pico8State>,
+    _state: Res<Pico8State>,
     palettes: Res<Palettes>,
     mut sprites: Query<(Entity, &GfxSprite, Option<&mut Sprite>)>,
     mut pairs: ResMut<GfxImageMap>,
@@ -267,13 +260,15 @@ fn compute_image_on_gfx_sprite_change(
     mut images: ResMut<Assets<Image>>,
     gfxs: Res<Assets<Gfx>>,
     gfx_materials: Res<Assets<GfxMaterial>>,
-    state: Res<Pico8State>,
+    _state: Res<Pico8State>,
     palettes: Res<Palettes>,
     mut sprites: Query<(Entity, &GfxSprite, Option<&mut Sprite>), Changed<GfxSprite>>,
     mut pairs: ResMut<GfxImageMap>,
 ) {
     for (id, gfx_sprite, sprite) in &mut sprites {
         let Some(gfx_material) = gfx_materials.get(&gfx_sprite.material) else {
+
+            trace!("No gfx material for gfx sprite {}", id);
             continue;
         };
         let image_handle = compute_image(

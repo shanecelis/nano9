@@ -38,7 +38,7 @@ impl super::Pico8<'_, '_> {
                 upper_left,
                 lower_right
             );
-            self.cls(Some(color.off()));
+            self.cls(Some(color.off()))?;
 
             // We must manually set the draw count because the trigger
             // execution is queued.
