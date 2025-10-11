@@ -32,8 +32,17 @@ impl PalMap {
         self.remap[original_index] = new_index as u8;
     }
 
-    pub fn map(&self, index: usize) -> usize {
-        self.remap[index] as usize
+    pub fn map(&self, index: usize) -> Option<usize> {
+        self.remap.get(index).map(|x| *x as usize)
+    }
+
+    pub fn map_or_mod(&self, index: usize) -> usize {
+        self.map(index)
+            .unwrap_or_else(|| {
+                // Find the highest bit.
+                // Create a mask 0b0000h1111
+                self.remap[index % self.remap.len()] as usize
+            })
     }
 
     pub fn reset(&mut self) {
