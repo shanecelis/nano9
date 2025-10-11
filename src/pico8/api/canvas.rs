@@ -81,7 +81,8 @@ pub fn setup_canvas(
         // );
         // image.sampler = ImageSampler::nearest();
         // canvas.handle = assets.add(image);
-        let gfx_image = Gfx::new(canvas.size.x as usize, canvas.size.y as usize);
+        let mut gfx_image = Gfx::new(canvas.size.x as usize, canvas.size.y as usize);
+        gfx_image.set(0,0,1);
         let gfx_handle = gfxs.add(gfx_image);
         canvas.gfx_handle = gfx_handle.clone();
         canvas.background = Some(

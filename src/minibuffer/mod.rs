@@ -94,6 +94,7 @@ pub fn quick_plugin(app: &mut App) {
         app.add_acts((
             bevy_minibuffer_inspector::WorldActs::default(),
             bevy_minibuffer_inspector::StateActs::default().add::<crate::run::RunState>(),
+            bevy_minibuffer_inspector::AssetActs::default().add::<crate::pico8::Gfx>(),
         ));
     }
 }
