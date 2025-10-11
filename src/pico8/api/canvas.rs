@@ -36,6 +36,8 @@ pub fn setup_canvas(
     mut assets: ResMut<Assets<Image>>,
     mut gfxs: ResMut<Assets<Gfx>>,
     camera: Single<Entity, With<Nano9Camera>>,
+    mut state: ResMut<Pico8State>,
+    mut gfx_materials: ResMut<Assets<GfxMaterial>>,
     mut commands: Commands,
 ) {
     trace!("setup_canvas");
@@ -84,6 +86,7 @@ pub fn setup_canvas(
         let mut gfx_image = Gfx::new(canvas.size.x as usize, canvas.size.y as usize);
         gfx_image.set(0,0,1);
         let gfx_handle = gfxs.add(gfx_image);
+        let material = state.gfx_material(&mut gfx_materials);
         canvas.gfx_handle = gfx_handle.clone();
         canvas.background = Some(
             commands
@@ -91,10 +94,9 @@ pub fn setup_canvas(
                     Name::new("canvas"),
                     GfxSprite {
                         image: gfx_handle,
-                        ..default()
+                        material,
                     },
                     GfxDirty::default(),
-                    // Sprite::from_image(canvas.handle.clone()),
                     Transform::from_xyz(0.0, 0.0, -100.0),
                     Background,
                 ))
