@@ -7,7 +7,8 @@ fn init(mut pico8: Pico8) {
 
 fn main() {
     let mut app = App::new();
-    app.add_systems(OnEnter(RunState::Init), init);
+    app
+        .add_systems(nano9::schedule::Init, init);
 
     let config = Config::pico8();
     // let config = Config::gameboy();

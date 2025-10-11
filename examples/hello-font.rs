@@ -1,10 +1,6 @@
 use bevy::prelude::*;
 use nano9::prelude::*;
 
-fn init(mut _pico8: Pico8) {
-    // pico8.print("hello world", None, None, Some(10.0), Some(1)).unwrap();
-}
-
 fn draw(mut pico8: Pico8) {
     pico8.cls(None).unwrap();
     let t = pico8.time();
@@ -28,6 +24,9 @@ fn draw(mut pico8: Pico8) {
 
 fn main() {
     let mut app = App::new();
+    // Set up your call backs.
+    app
+        .add_systems(nano9::schedule::Draw, draw);
 
     let mut config = Config::pico8();
     // Add Bevy's default font.
@@ -36,8 +35,6 @@ fn main() {
         .push(nano9::config::Font::Default { default: true });
     app.add_plugins(Nano9Plugins::new(config))
         .add_systems(PreUpdate, run_pico8_when_loaded)
-        .add_systems(nano9::schedule::Init, init)
-        .add_systems(nano9::schedule::Draw, draw)
         .add_systems(
             Update,
             nano9::action::toggle_pause.run_if(nano9::condition::on_just_pressed(KeyCode::KeyP)),

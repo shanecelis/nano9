@@ -25,6 +25,10 @@ fn init(mut pico8: Pico8) {
 }
 
 fn main() -> io::Result<ExitCode> {
+    let mut app = App::new();
+    app
+        .add_systems(nano9::schedule::Init, init);
+
     let mut args = std::env::args();
     if let Some(template) = args.nth(1) {
         let mut config = Config::default();
@@ -32,9 +36,6 @@ fn main() -> io::Result<ExitCode> {
             eprintln!("error: {e}");
             return Ok(ExitCode::from(2));
         }
-        let mut app = App::new();
-        app.add_systems(OnEnter(RunState::Init), init);
-
         app.add_plugins(Nano9Plugins::new(config))
             .add_systems(PreUpdate, run_pico8_when_loaded)
             .run();
