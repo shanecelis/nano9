@@ -1,8 +1,6 @@
-use crate::run::RunState;
 #[cfg(feature = "scripting")]
 use crate::{call, pico8::lua::with_system_param};
 use bevy::{
-    diagnostic::FrameCount,
     dev_tools::fps_overlay::{FpsOverlayConfig, FpsOverlayPlugin},
     prelude::*,
     text::FontSmoothing,
@@ -94,7 +92,9 @@ pub fn quick_plugin(app: &mut App) {
         app.add_acts((
             bevy_minibuffer_inspector::WorldActs::default(),
             bevy_minibuffer_inspector::StateActs::default().add::<crate::run::RunState>(),
-            bevy_minibuffer_inspector::AssetActs::default().add::<crate::pico8::Gfx>(),
+            bevy_minibuffer_inspector::AssetActs::default()
+                .add::<bevy::prelude::Image>()
+                .add::<crate::pico8::Gfx>(),
         ));
     }
 }
@@ -140,7 +140,7 @@ pub fn lua_eval(mut minibuffer: Minibuffer) {
          mut writer: EventWriter<ScriptCallbackEvent>,
          mut commands: Commands| {
             if let Ok(input) = trigger.event_mut().take_result() {
-                writer.send(ScriptCallbackEvent::new_for_all_contexts(
+                writer.write(ScriptCallbackEvent::new_for_all_contexts(
                     call::Eval,
                     vec![ScriptValue::String(input.into()), ScriptValue::Bool(true)],
                 ));
