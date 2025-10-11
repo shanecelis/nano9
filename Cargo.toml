@@ -27,6 +27,7 @@ bytemuck = "1.16.3"
 thiserror = "1.0.63"
 bevy_minibuffer = { version = "0.4.1", optional = true }
 bevy_minibuffer_inspector = { version = "0.2.0", optional = true }
+bevy_egui = { version = "0.34.0", optional = true }
 serde = { version = "1.0.217", features = ["derive"] }
 bevy_ecs_tilemap = "0.16.0"
 keyseq = { version = "0.6.0", features = ["bevy"], optional = true }
@@ -65,7 +66,7 @@ cli = [ "lua-lib", "dep:clap", "dep:cmd_lib", "gameboy", "dep:log", "dep:env_log
 lua-lib = [ "rust-lib", "pico8-to-lua", "scripting" ]
 rust-lib = [ "negate-y", "fixed-point", "pixel-snap" ]
 negate-y = []
-inspector = [ "minibuffer", "dep:bevy_minibuffer_inspector" ]
+inspector = [ "minibuffer", "dep:bevy_minibuffer_inspector", "dep:bevy_egui" ]
 minibuffer = [ "dep:bevy_minibuffer", "dep:keyseq" ]
 debugdump = [ "dep:bevy_mod_debugdump" ]
 pico8-to-lua = [ "dep:pico8-to-lua" ]
@@ -105,6 +106,7 @@ required-features = [ "cli" ]
 # bevy_mod_scripting = { path = "../bevy_mod_scripting" }
 # bevy_mod_scripting = { git = "https://github.com/shanecelis/bevy_mod_scripting.git", branch = "use-handles" }
 # bevy_minibuffer = { path = "../bevy_minibuffer" }
+# bevy_minibuffer_inspector = { path = "../bevy_minibuffer_inspector" }
 # bevy_asky = { path = "../bevy_asky" }
 # bevy_ecs_ldtk = { path = "../bevy_ecs_ldtk" }
 # bevy_ecs_tilemap = { path = "../bevy_ecs_tilemap" }

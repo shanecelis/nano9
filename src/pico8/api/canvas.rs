@@ -246,8 +246,7 @@ impl super::Pico8<'_, '_> {
     /// is the number of "logical" pixels, which may be comprised of many
     /// physical pixels.
     pub fn canvas_size(&self) -> UVec2 {
-        todo!()
-        // self.canvas.size
+        self.canvas.size
     }
 }
 

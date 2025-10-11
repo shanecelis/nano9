@@ -1308,6 +1308,7 @@ dependencies = [
  "bevy_input 0.16.1",
  "bevy_log 0.16.1",
  "bevy_math 0.16.1",
+ "bevy_picking",
  "bevy_platform",
  "bevy_reflect 0.16.1",
  "bevy_render 0.16.1",
@@ -1324,6 +1325,7 @@ dependencies = [
  "wasm-bindgen",
  "wasm-bindgen-futures",
  "web-sys",
+ "webbrowser",
  "wgpu-types 24.0.0",
  "winit",
 ]
@@ -5848,6 +5850,7 @@ dependencies = [
  "bevy 0.16.1",
  "bevy_ecs_tiled",
  "bevy_ecs_tilemap",
+ "bevy_egui",
  "bevy_framepace",
  "bevy_minibuffer",
  "bevy_minibuffer_inspector",
@@ -8847,6 +8850,22 @@ checksum = "5a6580f308b1fad9207618087a65c04e7a10bc77e02c8e84e9b00dd4b12fa0bb"
 dependencies = [
  "js-sys",
  "wasm-bindgen",
+]
+
+[[package]]
+name = "webbrowser"
+version = "1.0.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "aaf4f3c0ba838e82b4e5ccc4157003fb8c324ee24c058470ffb82820becbde98"
+dependencies = [
+ "core-foundation 0.10.1",
+ "jni",
+ "log",
+ "ndk-context",
+ "objc2 0.6.1",
+ "objc2-foundation 0.3.1",
+ "url",
+ "web-sys",
 ]
 
 [[package]]

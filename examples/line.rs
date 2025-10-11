@@ -7,7 +7,7 @@ fn init(mut pico8: Pico8) {
 }
 
 fn update(mut pico8: Pico8, mut x: Local<u32>) {
-    let _ = pico8.pset(UVec2::new(*x, *x), None);
+    let _ = pico8.pset(UVec2::new(*x, *x), PColor::Palette(1));
     *x += 1;
 }
 
@@ -19,6 +19,9 @@ fn main() {
     let config = Config::pico8();
     // let config = Config::gameboy();
     app.add_plugins(Nano9Plugins::new(config))
-        .add_systems(PreUpdate, run_pico8_when_loaded)
-        .run();
+        .add_systems(PreUpdate, run_pico8_when_loaded);
+
+    #[cfg(feature = "minibuffer")]
+    app.add_plugins(nano9::minibuffer::quick_plugin);
+    app.run();
 }

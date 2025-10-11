@@ -130,7 +130,7 @@ fn on_remove_hook(
     let Some(mut cache) = world.get_resource_mut::<ClearCache>() else {
         return;
     };
-    info!("Removing clearable {id} from cache.");
+    // info!("Removing clearable {id} from cache.");
 
     // clearable.cached = true; // We want to ensure it's removed.
     cache.remove(&clearable, id);

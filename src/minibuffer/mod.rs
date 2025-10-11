@@ -2,7 +2,7 @@ use crate::run::RunState;
 #[cfg(feature = "scripting")]
 use crate::{call, pico8::lua::with_system_param};
 use bevy::{
-    core::FrameCount,
+    diagnostic::FrameCount,
     dev_tools::fps_overlay::{FpsOverlayConfig, FpsOverlayPlugin},
     prelude::*,
     text::FontSmoothing,
@@ -10,13 +10,14 @@ use bevy::{
 use bevy_minibuffer::prelude::*;
 
 #[cfg(feature = "scripting")]
-use bevy_mod_scripting::core::{
+use bevy_mod_scripting::{
     bindings::{
         function::{namespace::NamespaceBuilder, script_function::FunctionCallContext},
-        script_value::ScriptValue,
+        script_value::ScriptValue, InteropError,
     },
-    error::InteropError,
-    event::ScriptCallbackEvent,
+    core::{
+        event::ScriptCallbackEvent,
+    },
 };
 // mod count;
 // pub use count::*;
@@ -62,10 +63,12 @@ pub fn quick_plugin(app: &mut App) {
                 font,
                 // We could also disable font smoothing,
                 font_smoothing: FontSmoothing::None,
+                ..default()
             },
             // We can also change color of the overlay
             text_color: Color::WHITE,
             enabled: false,
+            ..default()
         },
     });
     app.add_plugins(MinibufferPlugins).add_acts((
@@ -83,10 +86,16 @@ pub fn quick_plugin(app: &mut App) {
     ));
 
     #[cfg(feature = "inspector")]
-    app.add_acts((
-        bevy_minibuffer_inspector::WorldActs::default(),
-        bevy_minibuffer_inspector::StateActs::default().add::<crate::run::RunState>(),
-    ));
+    {
+        if !app.is_plugin_added::<bevy_egui::EguiPlugin>() {
+            info!("bevy_minibuffer_inspector requires EguiPlugin, adding it.");
+            app.add_plugins(bevy_egui::EguiPlugin { enable_multipass_for_primary_context: false });
+        }
+        app.add_acts((
+            bevy_minibuffer_inspector::WorldActs::default(),
+            bevy_minibuffer_inspector::StateActs::default().add::<crate::run::RunState>(),
+        ));
+    }
 }
 
 impl ActsPlugin for Nano9Acts {
@@ -135,7 +144,7 @@ pub fn lua_eval(mut minibuffer: Minibuffer) {
                     vec![ScriptValue::String(input.into()), ScriptValue::Bool(true)],
                 ));
             } else {
-                commands.entity(trigger.entity()).despawn_recursive();
+                commands.entity(trigger.target()).despawn();
             }
         },
     );

@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use nano9::prelude::*;
 
 fn update(mut pico8: Pico8, mut t: Local<usize>) {
-    pico8.cls(None).unwrap();
+    pico8.cls(Some(PColor::Palette(2))).unwrap();
     let n = ((pico8.time() * 4.0) % 8.0) + 8.0;
     let x = *t % 128;
     let y = *t / 128;
