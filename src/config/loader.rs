@@ -13,8 +13,9 @@ use bevy_mod_scripting::asset::{Language, ScriptAsset};
 use std::io;
 
 pub(crate) fn plugin(app: &mut App) {
-    app.init_asset_loader::<ConfigLoader>()
-        .init_asset_loader::<LuaLoader>();
+    app.init_asset_loader::<ConfigLoader>();
+    #[cfg(feature = "scripting")]
+    app.init_asset_loader::<LuaLoader>();
 }
 
 #[derive(Debug, thiserror::Error)]
@@ -92,6 +93,7 @@ pub struct LuaLoaderSettings {
     pub translate_pico8: Option<bool>,
 }
 
+#[cfg(feature = "scripting")]
 impl AssetLoader for LuaLoader {
     type Asset = ScriptAsset;
     type Settings = LuaLoaderSettings;
@@ -203,6 +205,7 @@ async fn into_asset(
         };
         sprite_sheets.push(handle);
     }
+    #[cfg(feature = "scripting")]
     let mut scripts = vec![];
     #[cfg(feature = "scripting")]
     for p in config.scripts.into_iter() {

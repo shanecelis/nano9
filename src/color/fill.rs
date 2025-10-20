@@ -3,10 +3,10 @@ use std::any::TypeId;
 
 use super::PColor;
 use bevy::reflect::TypeRegistry;
-use bevy_mod_scripting::bindings::InteropError;
 #[cfg(feature = "scripting")]
 use bevy_mod_scripting::{
     bindings::{
+        InteropError,
         docgen::typed_through::{ThroughTypeInfo, TypedThrough},
         function::from::FromScript,
         script_value::ScriptValue,

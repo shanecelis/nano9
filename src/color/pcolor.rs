@@ -3,10 +3,10 @@ use std::any::TypeId;
 
 use crate::pico8::{Error, PalMap};
 use bevy::reflect::TypeRegistry;
-use bevy_mod_scripting::bindings::InteropError;
 #[cfg(feature = "scripting")]
 use bevy_mod_scripting::{
     bindings::{
+        InteropError,
         docgen::typed_through::{ThroughTypeInfo, TypedThrough},
         function::from::FromScript,
         script_value::ScriptValue,
@@ -15,8 +15,8 @@ use bevy_mod_scripting::{
     GetTypeDependencies,
 };
 
-#[derive(Debug, Clone, Copy, Reflect, GetTypeDependencies)]
-// #[cfg_attr(feature = "scripting", derive(GetTypeDependencies))]
+#[derive(Debug, Clone, Copy, Reflect)]
+#[cfg_attr(feature = "scripting", derive(GetTypeDependencies))]
 pub enum PColor {
     Palette(usize),
     Color(Srgba),

@@ -207,6 +207,8 @@ fn add_logging(app: &mut App) {
 //                      }
 //                  });
 // }
+//
+#[cfg(feature = "scripting")]
 fn context_initializer(
     _script_attachment: &ScriptAttachment,
     context: &mut bevy_mod_scripting::lua::LuaContext,
@@ -323,13 +325,18 @@ impl Plugin for Nano9Plugin {
         })
         .add_plugins(crate::plugin);
 
+
         if let Some(fps) = self.config.frames_per_second {
             info!("Set FPS {}", &fps);
+
+            #[cfg(feature = "framepace")]
+            {
             let limiter = bevy_framepace::Limiter::from_framerate(fps as f64);
             app.add_plugins(bevy_framepace::FramepacePlugin)
                 .insert_resource(
                     bevy_framepace::FramepaceSettings::default().with_limiter(limiter),
                 );
+            }
             // app.insert_resource(Time::<Fixed>::from_seconds(
             //     1.0 / fps as f64,
             // ));
@@ -360,7 +367,7 @@ impl Plugin for Nano9Plugin {
             app
                 .add_systems(Update,
                              (fill_input,
-                              schedule::run_schedule(schedule::Run),
+                              schedule::run_schedule(schedule::Update),
                               schedule::run_schedule(schedule::Draw),
                              ).chain()
                              .run_if(in_state(RunState::Run)));

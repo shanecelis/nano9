@@ -16,6 +16,7 @@ pub(crate) use pal_map::*;
 mod pal;
 pub(crate) use pal::*;
 mod gfx;
+#[cfg(feature = "rand")]
 pub(crate) mod rand;
 pub use gfx::*;
 mod fillp;
@@ -42,7 +43,6 @@ pub(crate) fn plugin(app: &mut App) {
     app.add_plugins(api::plugin)
         .add_plugins(clear::plugin)
         .add_plugins(audio::plugin)
-        .add_plugins(rand::plugin)
         .add_plugins(gfx::plugin)
         .add_plugins(palettes::plugin)
         .add_plugins(keyboard::plugin)
@@ -50,4 +50,8 @@ pub(crate) fn plugin(app: &mut App) {
         .add_plugins(sprite_sheet::plugin)
         .add_plugins(map::plugin)
         .add_plugins(cart::plugin);
+
+    #[cfg(feature = "rand")]
+    app
+        .add_plugins(rand::plugin);
 }

@@ -298,7 +298,7 @@ fn compute_image_on_gfx_sprite_change(
     }
 }
 
-impl<T: TypePath + Send + Sync + Default + BitView<Store = T> + BitStore + Copy> Gfx<1, T> {
+impl<T: TypePath + Send + Sync + Default + BitView<Store = T> + BitStore + Copy> const_bitdepth::Gfx<1, T> {
     pub fn mirror_horizontal(mut self) -> Self {
         for elem in self.data.chunks_mut(self.width) {
             elem.reverse();

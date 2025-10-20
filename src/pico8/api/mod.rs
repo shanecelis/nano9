@@ -32,6 +32,7 @@ pub mod canvas;
 mod level;
 mod line;
 mod poke;
+#[cfg(feature = "rand")]
 mod rand;
 mod sys;
 #[cfg(feature = "level")]
@@ -75,7 +76,9 @@ pub(crate) fn plugin(app: &mut App) {
         .init_asset::<Pico8Asset>()
         .init_resource::<Pico8State>()
         .init_resource::<PlayerInputs>()
-        .add_plugins((rand::plugin, asset::plugin, mesh::plugin, camera3d::plugin))
+        .add_plugins((
+            #[cfg(feature = "rand")]
+            rand::plugin, asset::plugin, mesh::plugin, camera3d::plugin))
         .add_plugins((
             sfx::plugin,
             spr::plugin,

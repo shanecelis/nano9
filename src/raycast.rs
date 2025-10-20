@@ -7,10 +7,10 @@ use bevy::{
 #[cfg(feature = "scripting")]
 use crate::pico8::lua::with_system_param;
 use crate::pico8::{negate_y, Error};
-use bevy_mod_scripting::bindings::InteropError;
 #[cfg(feature = "scripting")]
 use bevy_mod_scripting::bindings::{
     function::{
+        InteropError,
         from::FromScript,
         namespace::{GlobalNamespace, NamespaceBuilder},
         script_function::FunctionCallContext,

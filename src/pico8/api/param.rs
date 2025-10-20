@@ -3,7 +3,7 @@ use bevy::ecs::system::SystemParam;
 
 use crate::pico8::{
     self, api::canvas::N9Canvas, audio::SfxChannels, keyboard::KeyInput, mouse::MouseInput,
-    rand::Rand8, Gfx, Palettes,
+    Gfx, Palettes,
 };
 
 #[derive(SystemParam)]
@@ -24,7 +24,8 @@ pub struct Pico8<'w, 's> {
     pub(crate) tiled: crate::level::tiled::Level<'w, 's>,
     pub(crate) gfxs: ResMut<'w, Assets<Gfx>>,
     pub(crate) palettes: ResMut<'w, Palettes>,
-    pub(crate) rand8: Rand8<'w>,
+    #[cfg(feature = "rand")]
+    pub(crate) rand8: pico8::rand::Rand8<'w>,
     pub(crate) key_input: ResMut<'w, KeyInput>,
     pub(crate) mouse_input: ResMut<'w, MouseInput>,
     pub(crate) pico8_assets: ResMut<'w, Assets<Pico8Asset>>,

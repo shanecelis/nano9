@@ -10,14 +10,15 @@ use bitvec::{prelude::*, view::BitView};
 
 /// An indexed image using `N`-bit palette with color index `T`.
 #[derive(Asset, Debug, Reflect, Clone)]
-pub struct Gfx<const N: usize = 4, T: TypePath + Send + Sync + BitStore = u8> {
+pub struct Gfx<T: TypePath + Send + Sync + BitStore = u8> {
     #[reflect(ignore)]
     pub data: BitVec<T, Lsb0>,
+    pub bitdepth: usize,
     pub width: usize,
     pub height: usize,
 }
 
-impl<const N: usize> Gfx<N, u8> {
+impl Gfx<u8> {
     pub fn from_png(
         bytes: &[u8],
         mut palette: Option<&mut Palette>,
@@ -36,7 +37,7 @@ impl<const N: usize> Gfx<N, u8> {
                 palette.data = data;
             });
         }
-        let dest_bit_depth = N;
+        let dest_bit_depth: usize = todo!("Find highest power of 2 in the length of colors.");
         if info.color_type == png::ColorType::Indexed {
             let mut buf = vec![0; reader.output_buffer_size()];
             let info = reader.next_frame(&mut buf).unwrap();
@@ -75,6 +76,7 @@ impl<const N: usize> Gfx<N, u8> {
                 todo!("Convert to a bigger bit depth");
             }
             Ok(Gfx {
+                bitdepth: dest_bit_depth,
                 data,
                 width,
                 height,
@@ -87,32 +89,33 @@ impl<const N: usize> Gfx<N, u8> {
     }
 }
 
-impl<
-        const N: usize,
-        T: TypePath + Send + Sync + Default + BitView<Store = T> + BitStore + Copy,
-    > Gfx<N, T>
+impl<T: TypePath + Send + Sync + Default + BitView<Store = T> + BitStore + Copy,
+    > Gfx<T>
 {
     /// Create an indexed image.
-    pub fn new(width: usize, height: usize) -> Self {
+    pub fn new(bitdepth: usize, width: usize, height: usize) -> Self {
         Gfx {
-            data: BitVec::<T, Lsb0>::repeat(false, width * height * N),
+            data: BitVec::<T, Lsb0>::repeat(false, width * height * bitdepth),
+            bitdepth,
             width,
             height,
         }
     }
 
-    pub fn from_vec(width: usize, height: usize, vec: Vec<T>) -> Self {
+    pub fn from_vec(bitdepth: usize, width: usize, height: usize, vec: Vec<T>) -> Self {
         let gfx = Gfx {
             data: BitVec::<T, Lsb0>::from_vec(vec),
+            bitdepth,
             width,
             height,
         };
-        assert!(width * height * N <= gfx.data.len());
+        assert!(width * height * bitdepth <= gfx.data.len());
         gfx
     }
 
     /// Get a color index.
     pub fn get(&self, x: usize, y: usize) -> Option<T> {
+        let N = self.bitdepth;
         let start = x * N + y * N * self.width;
         self.data.get(start..start + N).map(|slice| {
             let mut result = T::default();
@@ -124,6 +127,7 @@ impl<
 
     /// Set a color index. Returns true if set.
     pub fn set(&mut self, x: usize, y: usize, color_index: T) -> bool {
+        let N = self.bitdepth;
         let bits = color_index.view_bits::<Lsb0>();
         let start = x * N + y * N * self.width;
         self.data
@@ -144,6 +148,7 @@ impl<
         pixel_bytes: &mut [u8],
         mut write_color: impl FnMut(T, usize, &mut [u8]),
     ) {
+        let N = self.bitdepth;
         // let mut pixel_bytes = vec![0x00; self.width * self.height * 4];
         let mut color_index = T::default();
         let chunks = self.data.chunks_exact(N);
@@ -168,6 +173,7 @@ impl<
         &self,
         mut write_color: impl FnMut(T, usize, &mut [u8]) -> Result<(), E>,
     ) -> Result<Image, E> {
+        let N = self.bitdepth;
         let mut pixel_bytes = vec![0x00; self.width * self.height * 4];
         let mut color_index = T::default();
         for (i, pixel) in self.data.chunks_exact(N).enumerate() {

@@ -1,9 +1,9 @@
 # TODO
 ## Bevy 0.16 fixes
-- [ ] line eg
-- [ ] line.p8lua eg
+- [x] line eg
+- [x] line.p8lua eg
 - [x] show-palette
-- [ ] sprite/
+- [x] sprite/
 ## Pico-8
 - [x] fix z-fighting, use frameCount + some increment
 - [x] fix sub char splitting

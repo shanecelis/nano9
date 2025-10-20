@@ -33,7 +33,7 @@ bevy_ecs_tilemap = "0.16.0"
 keyseq = { version = "0.6.0", features = ["bevy"], optional = true }
 dasp = { version = "0.11.0", features = ["all"] }
 bresenham = "0.1.1"
-rand = "0.8.5"
+rand = { version = "0.8.5", optional = true }
 tiny-skia = "0.11.4"
 toml = "0.8.19"
 # ldtk_rust = { version = "0.6.1", optional = true }
@@ -43,8 +43,8 @@ tiled = { version = "0.14.0", optional = true }
 bitflags = "2.8.0"
 bitvec = "1.0.1"
 futures-lite = { version = "2.6.0", optional = true }
-bevy_rand = { version = "0.11.0", features = ["wyrand"] }
-bevy_prng = "0.11.0"
+bevy_rand = { version = "0.11.0", features = ["wyrand"], optional = true }
+bevy_prng = { version = "0.11.0", optional = true }
 pico8_decompress = { version = "0.1.0" }
 png = "0.17.16"
 pico8-to-lua = { version = "0.1.1", optional = true }
@@ -56,15 +56,15 @@ cmd_lib = { version = "1.9.5", optional = true }
 log = { version = "0.4.27", optional = true }
 env_logger = { version = "0.11.8", optional = true }
 merge2 = "0.3.2"
-bevy_framepace = "0.19.0"
+bevy_framepace = { version = "0.19.0", optional = true }
 bevy_vox_scene = "0.19.0"
 bevy_mod_debugdump = { version = "0.12.0", optional = true }
 
 [features]
 default = [ "cli" ]
 cli = [ "lua-lib", "dep:clap", "dep:cmd_lib", "gameboy", "dep:log", "dep:env_logger", "dep:cmd_lib" ]
-lua-lib = [ "rust-lib", "pico8-to-lua", "scripting" ]
-rust-lib = [ "negate-y", "fixed-point", "pixel-snap" ]
+lua-lib = [ "rust-lib", "pico8-to-lua", "scripting", "rand", "framepace" ]
+rust-lib = [ "negate-y", "fixed-point", "pixel-snap", "rand", "framepace" ]
 negate-y = []
 inspector = [ "minibuffer", "dep:bevy_minibuffer_inspector", "dep:bevy_egui" ]
 minibuffer = [ "dep:bevy_minibuffer", "dep:keyseq" ]
@@ -74,10 +74,12 @@ fixed-point = [ "dep:fixed" ]
 scripting = [ "dep:bevy_mod_scripting" ]
 web-asset = [ "dep:bevy_web_asset" ]
 watcher = [ "bevy/file_watcher" ]
+framepace = [ "dep:bevy_framepace" ]
 pixel-snap = []
 gameboy = []
 tiled = [ "dep:tiled" ]
 mute = []
+rand = [ "dep:rand", "dep:bevy_rand", "dep:bevy_prng" ]
 # Features after this line are not supported yet.
 # -----------------------------------------------
 # level = [ "dep:bevy_ecs_ldtk", "dep:ldtk_rust", "dep:serde_json"]
@@ -100,7 +102,10 @@ required-features = [ "cli" ]
 [patch.crates-io]
 # mashmap = { git = "https://github.com/shanecelis/mashmap.git", branch = "drain_key_if" }
 # pico8-to-lua = { path = "../pico8-to-lua" }
-# bevy = { path = "../bevy" }
+bevy = { path = "../bevy" }
+# bevy_app = { path = "../bevy/crates/bevy_app" }
+# bevy_ecs = { path = "../bevy/crates/bevy_ecs" }
+
 # bevy_ecs = { path = "../bevy/crates/bevy_ecs" }
 # bevy_ecs_tiled = { path = "../bevy_ecs_tiled" }
 # bevy_mod_scripting = { path = "../bevy_mod_scripting" }

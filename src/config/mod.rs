@@ -25,7 +25,7 @@ pub const DEFAULT_SCREEN_SIZE: UVec2 = UVec2::splat(512);
 
 pub(crate) fn plugin(app: &mut App) {
     app.add_systems(Update, update_asset)
-        .add_plugins(loader::plugin);
+       .add_plugins(loader::plugin);
     #[cfg(feature = "gameboy")]
     app.add_plugins(gameboy::plugin);
 }
@@ -56,6 +56,8 @@ pub struct Config {
     pub screen: Option<Screen>,
     /// Defaults
     pub defaults: Option<Defaults>,
+    /// Bit depth
+    pub bit_depth: Option<u8>,
     /// Palettes
     #[serde(default, rename = "palette")]
     pub palettes: Vec<Palette>,

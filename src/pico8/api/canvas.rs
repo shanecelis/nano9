@@ -10,6 +10,7 @@ pub struct N9Canvas {
     pub background: Option<Entity>,
     pub handle: Handle<Image>,
     pub gfx_handle: Handle<Gfx>,
+    pub bit_depth: u8,
 }
 
 #[derive(Component, Debug, Reflect)]
@@ -70,7 +71,9 @@ pub fn setup_canvas(
             ))
             .insert(ChildOf(camera_id));
 
-        let mut gfx_image = Gfx::new(canvas.size.x as usize, canvas.size.y as usize);
+        // What should the bitdepth be configurable?
+        // XXX: It should be configured.
+        let mut gfx_image = Gfx::new(canvas.bit_depth as usize, canvas.size.x as usize, canvas.size.y as usize);
         gfx_image.set(0,0,1);
         let gfx_handle = gfxs.add(gfx_image);
         let material = state.gfx_material(&mut gfx_materials);
