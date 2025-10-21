@@ -73,7 +73,8 @@ pub fn setup_canvas(
 
         // What should the bitdepth be configurable?
         // XXX: It should be configured.
-        let mut gfx_image = Gfx::new(canvas.bit_depth as usize, canvas.size.x as usize, canvas.size.y as usize);
+        // let mut gfx_image = Gfx::new(canvas.bit_depth as usize, canvas.size.x as usize, canvas.size.y as usize);
+        let mut gfx_image = Gfx::new(4, canvas.size.x as usize, canvas.size.y as usize);
         gfx_image.set(0,0,1);
         let gfx_handle = gfxs.add(gfx_image);
         let material = state.gfx_material(&mut gfx_materials);

@@ -741,6 +741,7 @@ dependencies = [
 [[package]]
 name = "bevy"
 version = "0.16.1"
+source = "git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b#cc28d3f90222073fb8e9658fd3c34c4d5fa94e2d"
 dependencies = [
  "bevy_internal 0.16.1",
 ]
@@ -817,17 +818,6 @@ dependencies = [
 [[package]]
 name = "bevy_a11y"
 version = "0.16.1"
-dependencies = [
- "accesskit 0.18.0",
- "bevy_app 0.16.1",
- "bevy_derive 0.16.1",
- "bevy_ecs 0.16.1",
- "bevy_reflect 0.16.1",
-]
-
-[[package]]
-name = "bevy_a11y"
-version = "0.16.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ed3561712cf49074d89e9989bfc2e6c6add5d33288f689db9a0c333300d2d004"
 dependencies = [
@@ -839,23 +829,36 @@ dependencies = [
 ]
 
 [[package]]
+name = "bevy_a11y"
+version = "0.16.1"
+source = "git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b#cc28d3f90222073fb8e9658fd3c34c4d5fa94e2d"
+dependencies = [
+ "accesskit 0.18.0",
+ "bevy_app 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_derive 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_ecs 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_reflect 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+]
+
+[[package]]
 name = "bevy_animation"
 version = "0.16.1"
+source = "git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b#cc28d3f90222073fb8e9658fd3c34c4d5fa94e2d"
 dependencies = [
- "bevy_app 0.16.1",
- "bevy_asset 0.16.1",
- "bevy_color 0.16.2",
- "bevy_derive 0.16.1",
- "bevy_ecs 0.16.1",
- "bevy_log 0.16.1",
- "bevy_math 0.16.1",
- "bevy_mesh 0.16.1",
- "bevy_platform 0.16.1",
- "bevy_reflect 0.16.1",
- "bevy_render 0.16.1",
- "bevy_time 0.16.1",
- "bevy_transform 0.16.1",
- "bevy_utils 0.16.1",
+ "bevy_app 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_asset 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_color 0.16.2 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_derive 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_ecs 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_log 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_math 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_mesh 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_platform 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_reflect 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_render 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_time 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_transform 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_utils 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
  "blake3",
  "derive_more",
  "downcast-rs 2.0.2",
@@ -892,13 +895,15 @@ dependencies = [
 [[package]]
 name = "bevy_app"
 version = "0.16.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4491cc4c718ae76b4c6883df58b94cc88b32dcd894ea8d5b603c7c7da72ca967"
 dependencies = [
- "bevy_derive 0.16.1",
- "bevy_ecs 0.16.1",
- "bevy_platform 0.16.1",
- "bevy_reflect 0.16.1",
- "bevy_tasks 0.16.1",
- "bevy_utils 0.16.1",
+ "bevy_derive 0.16.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "bevy_ecs 0.16.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "bevy_platform 0.16.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "bevy_reflect 0.16.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "bevy_tasks 0.16.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "bevy_utils 0.16.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "cfg-if",
  "console_error_panic_hook",
  "ctrlc",
@@ -913,15 +918,14 @@ dependencies = [
 [[package]]
 name = "bevy_app"
 version = "0.16.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4491cc4c718ae76b4c6883df58b94cc88b32dcd894ea8d5b603c7c7da72ca967"
+source = "git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b#cc28d3f90222073fb8e9658fd3c34c4d5fa94e2d"
 dependencies = [
- "bevy_derive 0.16.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "bevy_ecs 0.16.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "bevy_platform 0.16.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "bevy_reflect 0.16.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "bevy_tasks 0.16.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "bevy_utils 0.16.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "bevy_derive 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_ecs 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_platform 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_reflect 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_tasks 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_utils 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
  "cfg-if",
  "console_error_panic_hook",
  "ctrlc",
@@ -985,45 +989,6 @@ dependencies = [
 [[package]]
 name = "bevy_asset"
 version = "0.16.1"
-dependencies = [
- "async-broadcast 0.7.2",
- "async-fs",
- "async-lock 3.4.0",
- "atomicow",
- "bevy_app 0.16.1",
- "bevy_asset_macros 0.16.1",
- "bevy_ecs 0.16.1",
- "bevy_platform 0.16.1",
- "bevy_reflect 0.16.1",
- "bevy_tasks 0.16.1",
- "bevy_utils 0.16.1",
- "bevy_window 0.16.1",
- "bitflags 2.9.1",
- "blake3",
- "crossbeam-channel",
- "derive_more",
- "disqualified",
- "downcast-rs 2.0.2",
- "either",
- "futures-io",
- "futures-lite 2.6.0",
- "js-sys",
- "notify-debouncer-full",
- "parking_lot",
- "ron",
- "serde",
- "stackfuture",
- "thiserror 2.0.12",
- "tracing",
- "uuid",
- "wasm-bindgen",
- "wasm-bindgen-futures",
- "web-sys",
-]
-
-[[package]]
-name = "bevy_asset"
-version = "0.16.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f56111d9b88d8649f331a667d9d72163fb26bd09518ca16476d238653823db1e"
 dependencies = [
@@ -1062,22 +1027,52 @@ dependencies = [
 ]
 
 [[package]]
+name = "bevy_asset"
+version = "0.16.1"
+source = "git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b#cc28d3f90222073fb8e9658fd3c34c4d5fa94e2d"
+dependencies = [
+ "async-broadcast 0.7.2",
+ "async-fs",
+ "async-lock 3.4.0",
+ "atomicow",
+ "bevy_app 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_asset_macros 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_ecs 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_platform 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_reflect 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_tasks 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_utils 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_window 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bitflags 2.9.1",
+ "blake3",
+ "crossbeam-channel",
+ "derive_more",
+ "disqualified",
+ "downcast-rs 2.0.2",
+ "either",
+ "futures-io",
+ "futures-lite 2.6.0",
+ "js-sys",
+ "notify-debouncer-full",
+ "parking_lot",
+ "ron",
+ "serde",
+ "stackfuture",
+ "thiserror 2.0.12",
+ "tracing",
+ "uuid",
+ "wasm-bindgen",
+ "wasm-bindgen-futures",
+ "web-sys",
+]
+
+[[package]]
 name = "bevy_asset_macros"
 version = "0.15.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6725a785789ece8d8c73bba25fdac5e50494d959530e89565bbcea9f808b7181"
 dependencies = [
  "bevy_macro_utils 0.15.3",
- "proc-macro2",
- "quote",
- "syn 2.0.104",
-]
-
-[[package]]
-name = "bevy_asset_macros"
-version = "0.16.1"
-dependencies = [
- "bevy_macro_utils 0.16.1",
  "proc-macro2",
  "quote",
  "syn 2.0.104",
@@ -1096,16 +1091,28 @@ dependencies = [
 ]
 
 [[package]]
+name = "bevy_asset_macros"
+version = "0.16.1"
+source = "git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b#cc28d3f90222073fb8e9658fd3c34c4d5fa94e2d"
+dependencies = [
+ "bevy_macro_utils 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "proc-macro2",
+ "quote",
+ "syn 2.0.104",
+]
+
+[[package]]
 name = "bevy_audio"
 version = "0.16.1"
+source = "git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b#cc28d3f90222073fb8e9658fd3c34c4d5fa94e2d"
 dependencies = [
- "bevy_app 0.16.1",
- "bevy_asset 0.16.1",
- "bevy_derive 0.16.1",
- "bevy_ecs 0.16.1",
- "bevy_math 0.16.1",
- "bevy_reflect 0.16.1",
- "bevy_transform 0.16.1",
+ "bevy_app 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_asset 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_derive 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_ecs 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_math 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_reflect 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_transform 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
  "cpal",
  "rodio",
  "tracing",
@@ -1129,9 +1136,11 @@ dependencies = [
 [[package]]
 name = "bevy_color"
 version = "0.16.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5c101cbe1e26b8d701eb77263b14346e2e0cbbd2a6e254b9b1aead814e5ca8d3"
 dependencies = [
- "bevy_math 0.16.1",
- "bevy_reflect 0.16.1",
+ "bevy_math 0.16.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "bevy_reflect 0.16.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "bytemuck",
  "derive_more",
  "encase",
@@ -1143,11 +1152,10 @@ dependencies = [
 [[package]]
 name = "bevy_color"
 version = "0.16.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5c101cbe1e26b8d701eb77263b14346e2e0cbbd2a6e254b9b1aead814e5ca8d3"
+source = "git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b#cc28d3f90222073fb8e9658fd3c34c4d5fa94e2d"
 dependencies = [
- "bevy_math 0.16.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "bevy_reflect 0.16.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "bevy_math 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_reflect 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
  "bytemuck",
  "derive_more",
  "encase",
@@ -1168,34 +1176,6 @@ dependencies = [
  "bevy_tasks 0.15.3",
  "bevy_utils 0.15.3",
  "uuid",
-]
-
-[[package]]
-name = "bevy_core_pipeline"
-version = "0.16.1"
-dependencies = [
- "bevy_app 0.16.1",
- "bevy_asset 0.16.1",
- "bevy_color 0.16.2",
- "bevy_derive 0.16.1",
- "bevy_diagnostic 0.16.1",
- "bevy_ecs 0.16.1",
- "bevy_image 0.16.1",
- "bevy_math 0.16.1",
- "bevy_platform 0.16.1",
- "bevy_reflect 0.16.1",
- "bevy_render 0.16.1",
- "bevy_transform 0.16.1",
- "bevy_utils 0.16.1",
- "bevy_window 0.16.1",
- "bitflags 2.9.1",
- "bytemuck",
- "nonmax",
- "radsort",
- "serde",
- "smallvec",
- "thiserror 2.0.12",
- "tracing",
 ]
 
 [[package]]
@@ -1229,21 +1209,41 @@ dependencies = [
 ]
 
 [[package]]
+name = "bevy_core_pipeline"
+version = "0.16.1"
+source = "git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b#cc28d3f90222073fb8e9658fd3c34c4d5fa94e2d"
+dependencies = [
+ "bevy_app 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_asset 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_color 0.16.2 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_derive 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_diagnostic 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_ecs 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_image 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_math 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_platform 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_reflect 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_render 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_transform 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_utils 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_window 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bitflags 2.9.1",
+ "bytemuck",
+ "nonmax",
+ "radsort",
+ "serde",
+ "smallvec",
+ "thiserror 2.0.12",
+ "tracing",
+]
+
+[[package]]
 name = "bevy_derive"
 version = "0.15.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "57d94761ce947b0a2402fd949fe1e7a5b1535293130ba4cd9893be6295d4680a"
 dependencies = [
  "bevy_macro_utils 0.15.3",
- "quote",
- "syn 2.0.104",
-]
-
-[[package]]
-name = "bevy_derive"
-version = "0.16.1"
-dependencies = [
- "bevy_macro_utils 0.16.1",
  "quote",
  "syn 2.0.104",
 ]
@@ -1260,24 +1260,35 @@ dependencies = [
 ]
 
 [[package]]
+name = "bevy_derive"
+version = "0.16.1"
+source = "git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b#cc28d3f90222073fb8e9658fd3c34c4d5fa94e2d"
+dependencies = [
+ "bevy_macro_utils 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "quote",
+ "syn 2.0.104",
+]
+
+[[package]]
 name = "bevy_dev_tools"
 version = "0.16.1"
+source = "git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b#cc28d3f90222073fb8e9658fd3c34c4d5fa94e2d"
 dependencies = [
- "bevy_app 0.16.1",
- "bevy_asset 0.16.1",
- "bevy_color 0.16.2",
- "bevy_diagnostic 0.16.1",
- "bevy_ecs 0.16.1",
- "bevy_input 0.16.1",
- "bevy_picking 0.16.1",
- "bevy_reflect 0.16.1",
- "bevy_render 0.16.1",
- "bevy_state 0.16.1",
+ "bevy_app 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_asset 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_color 0.16.2 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_diagnostic 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_ecs 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_input 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_picking 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_reflect 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_render 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_state 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
  "bevy_text",
- "bevy_time 0.16.1",
+ "bevy_time 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
  "bevy_ui",
- "bevy_utils 0.16.1",
- "bevy_window 0.16.1",
+ "bevy_utils 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_window 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
  "tracing",
 ]
 
@@ -1299,22 +1310,6 @@ dependencies = [
 [[package]]
 name = "bevy_diagnostic"
 version = "0.16.1"
-dependencies = [
- "bevy_app 0.16.1",
- "bevy_ecs 0.16.1",
- "bevy_platform 0.16.1",
- "bevy_tasks 0.16.1",
- "bevy_time 0.16.1",
- "bevy_utils 0.16.1",
- "const-fnv1a-hash",
- "log",
- "serde",
- "sysinfo",
-]
-
-[[package]]
-name = "bevy_diagnostic"
-version = "0.16.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "48797366f312a8f31e237d08ce3ee70162591282d2bfe7c5ad8be196fb263e55"
 dependencies = [
@@ -1327,6 +1322,23 @@ dependencies = [
  "const-fnv1a-hash",
  "log",
  "serde",
+]
+
+[[package]]
+name = "bevy_diagnostic"
+version = "0.16.1"
+source = "git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b#cc28d3f90222073fb8e9658fd3c34c4d5fa94e2d"
+dependencies = [
+ "bevy_app 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_ecs 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_platform 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_tasks 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_time 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_utils 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "const-fnv1a-hash",
+ "log",
+ "serde",
+ "sysinfo",
 ]
 
 [[package]]
@@ -1349,32 +1361,6 @@ dependencies = [
  "petgraph 0.6.5",
  "serde",
  "smallvec",
-]
-
-[[package]]
-name = "bevy_ecs"
-version = "0.16.1"
-dependencies = [
- "arrayvec 0.7.6",
- "bevy_ecs_macros 0.16.1",
- "bevy_platform 0.16.1",
- "bevy_ptr 0.16.1",
- "bevy_reflect 0.16.1",
- "bevy_tasks 0.16.1",
- "bevy_utils 0.16.1",
- "bitflags 2.9.1",
- "bumpalo",
- "concurrent-queue",
- "derive_more",
- "disqualified",
- "fixedbitset 0.5.7",
- "indexmap",
- "log",
- "nonmax",
- "serde",
- "smallvec",
- "thiserror 2.0.12",
- "variadics_please",
 ]
 
 [[package]]
@@ -1406,6 +1392,33 @@ dependencies = [
 ]
 
 [[package]]
+name = "bevy_ecs"
+version = "0.16.1"
+source = "git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b#cc28d3f90222073fb8e9658fd3c34c4d5fa94e2d"
+dependencies = [
+ "arrayvec 0.7.6",
+ "bevy_ecs_macros 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_platform 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_ptr 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_reflect 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_tasks 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_utils 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bitflags 2.9.1",
+ "bumpalo",
+ "concurrent-queue",
+ "derive_more",
+ "disqualified",
+ "fixedbitset 0.5.7",
+ "indexmap",
+ "log",
+ "nonmax",
+ "serde",
+ "smallvec",
+ "thiserror 2.0.12",
+ "variadics_please",
+]
+
+[[package]]
 name = "bevy_ecs_macros"
 version = "0.15.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1420,8 +1433,10 @@ dependencies = [
 [[package]]
 name = "bevy_ecs_macros"
 version = "0.16.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "38748d6f3339175c582d751f410fb60a93baf2286c3deb7efebb0878dce7f413"
 dependencies = [
- "bevy_macro_utils 0.16.1",
+ "bevy_macro_utils 0.16.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "proc-macro2",
  "quote",
  "syn 2.0.104",
@@ -1430,10 +1445,9 @@ dependencies = [
 [[package]]
 name = "bevy_ecs_macros"
 version = "0.16.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "38748d6f3339175c582d751f410fb60a93baf2286c3deb7efebb0878dce7f413"
+source = "git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b#cc28d3f90222073fb8e9658fd3c34c4d5fa94e2d"
 dependencies = [
- "bevy_macro_utils 0.16.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "bevy_macro_utils 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
  "proc-macro2",
  "quote",
  "syn 2.0.104",
@@ -1517,18 +1531,19 @@ dependencies = [
 [[package]]
 name = "bevy_encase_derive"
 version = "0.16.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8148f4edee470a2ea5cad010184c492a4c94c36d7a7158ea28e134ea87f274ab"
 dependencies = [
- "bevy_macro_utils 0.16.1",
+ "bevy_macro_utils 0.16.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "encase_derive_impl",
 ]
 
 [[package]]
 name = "bevy_encase_derive"
 version = "0.16.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8148f4edee470a2ea5cad010184c492a4c94c36d7a7158ea28e134ea87f274ab"
+source = "git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b#cc28d3f90222073fb8e9658fd3c34c4d5fa94e2d"
 dependencies = [
- "bevy_macro_utils 0.16.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "bevy_macro_utils 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
  "encase_derive_impl",
 ]
 
@@ -1554,13 +1569,14 @@ dependencies = [
 [[package]]
 name = "bevy_gilrs"
 version = "0.16.1"
+source = "git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b#cc28d3f90222073fb8e9658fd3c34c4d5fa94e2d"
 dependencies = [
- "bevy_app 0.16.1",
- "bevy_ecs 0.16.1",
- "bevy_input 0.16.1",
- "bevy_platform 0.16.1",
- "bevy_time 0.16.1",
- "bevy_utils 0.16.1",
+ "bevy_app 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_ecs 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_input 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_platform 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_time 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_utils 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
  "gilrs",
  "thiserror 2.0.12",
  "tracing",
@@ -1569,22 +1585,23 @@ dependencies = [
 [[package]]
 name = "bevy_gizmos"
 version = "0.16.1"
+source = "git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b#cc28d3f90222073fb8e9658fd3c34c4d5fa94e2d"
 dependencies = [
- "bevy_app 0.16.1",
- "bevy_asset 0.16.1",
- "bevy_color 0.16.2",
- "bevy_core_pipeline 0.16.1",
- "bevy_ecs 0.16.1",
+ "bevy_app 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_asset 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_color 0.16.2 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_core_pipeline 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_ecs 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
  "bevy_gizmos_macros",
- "bevy_image 0.16.1",
- "bevy_math 0.16.1",
- "bevy_pbr 0.16.1",
- "bevy_reflect 0.16.1",
- "bevy_render 0.16.1",
+ "bevy_image 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_math 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_pbr 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_reflect 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_render 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
  "bevy_sprite",
- "bevy_time 0.16.1",
- "bevy_transform 0.16.1",
- "bevy_utils 0.16.1",
+ "bevy_time 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_transform 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_utils 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
  "bytemuck",
  "tracing",
 ]
@@ -1592,8 +1609,9 @@ dependencies = [
 [[package]]
 name = "bevy_gizmos_macros"
 version = "0.16.1"
+source = "git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b#cc28d3f90222073fb8e9658fd3c34c4d5fa94e2d"
 dependencies = [
- "bevy_macro_utils 0.16.1",
+ "bevy_macro_utils 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
  "proc-macro2",
  "quote",
  "syn 2.0.104",
@@ -1602,25 +1620,26 @@ dependencies = [
 [[package]]
 name = "bevy_gltf"
 version = "0.16.1"
+source = "git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b#cc28d3f90222073fb8e9658fd3c34c4d5fa94e2d"
 dependencies = [
  "base64 0.22.1",
  "bevy_animation",
- "bevy_app 0.16.1",
- "bevy_asset 0.16.1",
- "bevy_color 0.16.2",
- "bevy_core_pipeline 0.16.1",
- "bevy_ecs 0.16.1",
- "bevy_image 0.16.1",
- "bevy_math 0.16.1",
- "bevy_mesh 0.16.1",
- "bevy_pbr 0.16.1",
- "bevy_platform 0.16.1",
- "bevy_reflect 0.16.1",
- "bevy_render 0.16.1",
+ "bevy_app 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_asset 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_color 0.16.2 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_core_pipeline 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_ecs 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_image 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_math 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_mesh 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_pbr 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_platform 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_reflect 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_render 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
  "bevy_scene",
- "bevy_tasks 0.16.1",
- "bevy_transform 0.16.1",
- "bevy_utils 0.16.1",
+ "bevy_tasks 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_transform 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_utils 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
  "fixedbitset 0.5.7",
  "gltf",
  "itertools 0.14.0",
@@ -1670,32 +1689,6 @@ dependencies = [
 [[package]]
 name = "bevy_image"
 version = "0.16.1"
-dependencies = [
- "bevy_app 0.16.1",
- "bevy_asset 0.16.1",
- "bevy_color 0.16.2",
- "bevy_math 0.16.1",
- "bevy_platform 0.16.1",
- "bevy_reflect 0.16.1",
- "bevy_utils 0.16.1",
- "bitflags 2.9.1",
- "bytemuck",
- "futures-lite 2.6.0",
- "guillotiere",
- "half",
- "image",
- "ktx2",
- "rectangle-pack",
- "ruzstd",
- "serde",
- "thiserror 2.0.12",
- "tracing",
- "wgpu-types 24.0.0",
-]
-
-[[package]]
-name = "bevy_image"
-version = "0.16.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "65e6e900cfecadbc3149953169e36b9e26f922ed8b002d62339d8a9dc6129328"
 dependencies = [
@@ -1713,6 +1706,33 @@ dependencies = [
  "half",
  "image",
  "rectangle-pack",
+ "serde",
+ "thiserror 2.0.12",
+ "tracing",
+ "wgpu-types 24.0.0",
+]
+
+[[package]]
+name = "bevy_image"
+version = "0.16.1"
+source = "git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b#cc28d3f90222073fb8e9658fd3c34c4d5fa94e2d"
+dependencies = [
+ "bevy_app 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_asset 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_color 0.16.2 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_math 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_platform 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_reflect 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_utils 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bitflags 2.9.1",
+ "bytemuck",
+ "futures-lite 2.6.0",
+ "guillotiere",
+ "half",
+ "image",
+ "ktx2",
+ "rectangle-pack",
+ "ruzstd",
  "serde",
  "thiserror 2.0.12",
  "tracing",
@@ -1738,22 +1758,6 @@ dependencies = [
 [[package]]
 name = "bevy_input"
 version = "0.16.1"
-dependencies = [
- "bevy_app 0.16.1",
- "bevy_ecs 0.16.1",
- "bevy_math 0.16.1",
- "bevy_platform 0.16.1",
- "bevy_reflect 0.16.1",
- "bevy_utils 0.16.1",
- "derive_more",
- "log",
- "smol_str",
- "thiserror 2.0.12",
-]
-
-[[package]]
-name = "bevy_input"
-version = "0.16.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "18d6b6516433f6f7d680f648d04eb1866bb3927a1782d52f74831b62042f3cd1"
 dependencies = [
@@ -1770,16 +1774,19 @@ dependencies = [
 ]
 
 [[package]]
-name = "bevy_input_focus"
+name = "bevy_input"
 version = "0.16.1"
+source = "git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b#cc28d3f90222073fb8e9658fd3c34c4d5fa94e2d"
 dependencies = [
- "bevy_app 0.16.1",
- "bevy_ecs 0.16.1",
- "bevy_input 0.16.1",
- "bevy_math 0.16.1",
- "bevy_reflect 0.16.1",
- "bevy_window 0.16.1",
+ "bevy_app 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_ecs 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_math 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_platform 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_reflect 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_utils 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "derive_more",
  "log",
+ "smol_str",
  "thiserror 2.0.12",
 ]
 
@@ -1795,6 +1802,21 @@ dependencies = [
  "bevy_math 0.16.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "bevy_reflect 0.16.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "bevy_window 0.16.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "log",
+ "thiserror 2.0.12",
+]
+
+[[package]]
+name = "bevy_input_focus"
+version = "0.16.1"
+source = "git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b#cc28d3f90222073fb8e9658fd3c34c4d5fa94e2d"
+dependencies = [
+ "bevy_app 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_ecs 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_input 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_math 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_reflect 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_window 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
  "log",
  "thiserror 2.0.12",
 ]
@@ -1826,43 +1848,44 @@ dependencies = [
 [[package]]
 name = "bevy_internal"
 version = "0.16.1"
+source = "git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b#cc28d3f90222073fb8e9658fd3c34c4d5fa94e2d"
 dependencies = [
- "bevy_a11y 0.16.1",
+ "bevy_a11y 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
  "bevy_animation",
- "bevy_app 0.16.1",
- "bevy_asset 0.16.1",
+ "bevy_app 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_asset 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
  "bevy_audio",
- "bevy_color 0.16.2",
- "bevy_core_pipeline 0.16.1",
- "bevy_derive 0.16.1",
+ "bevy_color 0.16.2 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_core_pipeline 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_derive 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
  "bevy_dev_tools",
- "bevy_diagnostic 0.16.1",
- "bevy_ecs 0.16.1",
+ "bevy_diagnostic 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_ecs 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
  "bevy_gilrs",
  "bevy_gizmos",
  "bevy_gltf",
- "bevy_image 0.16.1",
- "bevy_input 0.16.1",
- "bevy_input_focus 0.16.1",
- "bevy_log 0.16.1",
- "bevy_math 0.16.1",
- "bevy_pbr 0.16.1",
- "bevy_picking 0.16.1",
- "bevy_platform 0.16.1",
- "bevy_ptr 0.16.1",
- "bevy_reflect 0.16.1",
- "bevy_render 0.16.1",
+ "bevy_image 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_input 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_input_focus 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_log 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_math 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_pbr 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_picking 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_platform 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_ptr 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_reflect 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_render 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
  "bevy_scene",
  "bevy_sprite",
- "bevy_state 0.16.1",
- "bevy_tasks 0.16.1",
+ "bevy_state 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_tasks 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
  "bevy_text",
- "bevy_time 0.16.1",
- "bevy_transform 0.16.1",
+ "bevy_time 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_transform 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
  "bevy_ui",
- "bevy_utils 0.16.1",
- "bevy_window 0.16.1",
- "bevy_winit 0.16.1",
+ "bevy_utils 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_window 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_winit 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
 ]
 
 [[package]]
@@ -1875,21 +1898,6 @@ dependencies = [
  "bevy_app 0.15.1",
  "bevy_ecs 0.15.1",
  "bevy_utils 0.15.3",
- "tracing-log",
- "tracing-oslog",
- "tracing-subscriber",
- "tracing-wasm",
-]
-
-[[package]]
-name = "bevy_log"
-version = "0.16.1"
-dependencies = [
- "android_log-sys",
- "bevy_app 0.16.1",
- "bevy_ecs 0.16.1",
- "bevy_utils 0.16.1",
- "tracing",
  "tracing-log",
  "tracing-oslog",
  "tracing-subscriber",
@@ -1914,6 +1922,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "bevy_log"
+version = "0.16.1"
+source = "git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b#cc28d3f90222073fb8e9658fd3c34c4d5fa94e2d"
+dependencies = [
+ "android_log-sys",
+ "bevy_app 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_ecs 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_utils 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "tracing",
+ "tracing-log",
+ "tracing-oslog",
+ "tracing-subscriber",
+ "tracing-wasm",
+]
+
+[[package]]
 name = "bevy_macro_utils"
 version = "0.15.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1928,6 +1952,8 @@ dependencies = [
 [[package]]
 name = "bevy_macro_utils"
 version = "0.16.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "052eeebcb8e7e072beea5031b227d9a290f8a7fbbb947573ab6ec81df0fb94be"
 dependencies = [
  "parking_lot",
  "proc-macro2",
@@ -1939,8 +1965,7 @@ dependencies = [
 [[package]]
 name = "bevy_macro_utils"
 version = "0.16.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "052eeebcb8e7e072beea5031b227d9a290f8a7fbbb947573ab6ec81df0fb94be"
+source = "git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b#cc28d3f90222073fb8e9658fd3c34c4d5fa94e2d"
 dependencies = [
  "parking_lot",
  "proc-macro2",
@@ -1968,13 +1993,14 @@ dependencies = [
 [[package]]
 name = "bevy_math"
 version = "0.16.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "68553e0090fe9c3ba066c65629f636bd58e4ebd9444fdba097b91af6cd3e243f"
 dependencies = [
  "approx",
- "bevy_reflect 0.16.1",
+ "bevy_reflect 0.16.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "derive_more",
  "glam 0.29.3",
  "itertools 0.14.0",
- "libm",
  "rand 0.8.5",
  "rand_distr",
  "serde",
@@ -1986,14 +2012,14 @@ dependencies = [
 [[package]]
 name = "bevy_math"
 version = "0.16.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "68553e0090fe9c3ba066c65629f636bd58e4ebd9444fdba097b91af6cd3e243f"
+source = "git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b#cc28d3f90222073fb8e9658fd3c34c4d5fa94e2d"
 dependencies = [
  "approx",
- "bevy_reflect 0.16.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "bevy_reflect 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
  "derive_more",
  "glam 0.29.3",
  "itertools 0.14.0",
+ "libm",
  "rand 0.8.5",
  "rand_distr",
  "serde",
@@ -2028,29 +2054,6 @@ dependencies = [
 [[package]]
 name = "bevy_mesh"
 version = "0.16.1"
-dependencies = [
- "bevy_asset 0.16.1",
- "bevy_derive 0.16.1",
- "bevy_ecs 0.16.1",
- "bevy_image 0.16.1",
- "bevy_math 0.16.1",
- "bevy_mikktspace 0.16.1",
- "bevy_platform 0.16.1",
- "bevy_reflect 0.16.1",
- "bevy_transform 0.16.1",
- "bevy_utils 0.16.1",
- "bitflags 2.9.1",
- "bytemuck",
- "hexasphere",
- "serde",
- "thiserror 2.0.12",
- "tracing",
- "wgpu-types 24.0.0",
-]
-
-[[package]]
-name = "bevy_mesh"
-version = "0.16.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b10399c7027001edbc0406d7d0198596b1f07206c1aae715274106ba5bdcac40"
 dependencies = [
@@ -2074,6 +2077,30 @@ dependencies = [
 ]
 
 [[package]]
+name = "bevy_mesh"
+version = "0.16.1"
+source = "git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b#cc28d3f90222073fb8e9658fd3c34c4d5fa94e2d"
+dependencies = [
+ "bevy_asset 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_derive 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_ecs 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_image 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_math 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_mikktspace 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_platform 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_reflect 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_transform 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_utils 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bitflags 2.9.1",
+ "bytemuck",
+ "hexasphere",
+ "serde",
+ "thiserror 2.0.12",
+ "tracing",
+ "wgpu-types 24.0.0",
+]
+
+[[package]]
 name = "bevy_mikktspace"
 version = "0.15.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2085,6 +2112,8 @@ dependencies = [
 [[package]]
 name = "bevy_mikktspace"
 version = "0.16.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8bb60c753b968a2de0fd279b76a3d19517695e771edb4c23575c7f92156315de"
 dependencies = [
  "glam 0.29.3",
 ]
@@ -2092,8 +2121,7 @@ dependencies = [
 [[package]]
 name = "bevy_mikktspace"
 version = "0.16.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8bb60c753b968a2de0fd279b76a3d19517695e771edb4c23575c7f92156315de"
+source = "git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b#cc28d3f90222073fb8e9658fd3c34c4d5fa94e2d"
 dependencies = [
  "glam 0.29.3",
 ]
@@ -2299,38 +2327,6 @@ dependencies = [
 [[package]]
 name = "bevy_pbr"
 version = "0.16.1"
-dependencies = [
- "bevy_app 0.16.1",
- "bevy_asset 0.16.1",
- "bevy_color 0.16.2",
- "bevy_core_pipeline 0.16.1",
- "bevy_derive 0.16.1",
- "bevy_diagnostic 0.16.1",
- "bevy_ecs 0.16.1",
- "bevy_image 0.16.1",
- "bevy_math 0.16.1",
- "bevy_platform 0.16.1",
- "bevy_reflect 0.16.1",
- "bevy_render 0.16.1",
- "bevy_transform 0.16.1",
- "bevy_utils 0.16.1",
- "bevy_window 0.16.1",
- "bitflags 2.9.1",
- "bytemuck",
- "derive_more",
- "fixedbitset 0.5.7",
- "nonmax",
- "offset-allocator",
- "radsort",
- "smallvec",
- "static_assertions",
- "thiserror 2.0.12",
- "tracing",
-]
-
-[[package]]
-name = "bevy_pbr"
-version = "0.16.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d5e0b4eb871f364a0d217f70f6c41d7fdc6f9f931fa1abbf222180c03d0ae410"
 dependencies = [
@@ -2363,26 +2359,36 @@ dependencies = [
 ]
 
 [[package]]
-name = "bevy_picking"
+name = "bevy_pbr"
 version = "0.16.1"
+source = "git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b#cc28d3f90222073fb8e9658fd3c34c4d5fa94e2d"
 dependencies = [
- "bevy_app 0.16.1",
- "bevy_asset 0.16.1",
- "bevy_derive 0.16.1",
- "bevy_ecs 0.16.1",
- "bevy_input 0.16.1",
- "bevy_math 0.16.1",
- "bevy_mesh 0.16.1",
- "bevy_platform 0.16.1",
- "bevy_reflect 0.16.1",
- "bevy_render 0.16.1",
- "bevy_time 0.16.1",
- "bevy_transform 0.16.1",
- "bevy_utils 0.16.1",
- "bevy_window 0.16.1",
- "crossbeam-channel",
+ "bevy_app 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_asset 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_color 0.16.2 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_core_pipeline 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_derive 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_diagnostic 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_ecs 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_image 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_math 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_platform 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_reflect 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_render 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_transform 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_utils 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_window 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bitflags 2.9.1",
+ "bytemuck",
+ "derive_more",
+ "fixedbitset 0.5.7",
+ "nonmax",
+ "offset-allocator",
+ "radsort",
+ "smallvec",
+ "static_assertions",
+ "thiserror 2.0.12",
  "tracing",
- "uuid",
 ]
 
 [[package]]
@@ -2409,8 +2415,34 @@ dependencies = [
 ]
 
 [[package]]
+name = "bevy_picking"
+version = "0.16.1"
+source = "git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b#cc28d3f90222073fb8e9658fd3c34c4d5fa94e2d"
+dependencies = [
+ "bevy_app 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_asset 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_derive 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_ecs 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_input 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_math 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_mesh 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_platform 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_reflect 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_render 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_time 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_transform 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_utils 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_window 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "crossbeam-channel",
+ "tracing",
+ "uuid",
+]
+
+[[package]]
 name = "bevy_platform"
 version = "0.16.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f7573dc824a1b08b4c93fdbe421c53e1e8188e9ca1dd74a414455fe571facb47"
 dependencies = [
  "cfg-if",
  "critical-section",
@@ -2427,8 +2459,7 @@ dependencies = [
 [[package]]
 name = "bevy_platform"
 version = "0.16.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f7573dc824a1b08b4c93fdbe421c53e1e8188e9ca1dd74a414455fe571facb47"
+source = "git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b#cc28d3f90222073fb8e9658fd3c34c4d5fa94e2d"
 dependencies = [
  "cfg-if",
  "critical-section",
@@ -2467,12 +2498,13 @@ checksum = "89fe0b0b919146939481a3a7c38864face2c6d0fd2c73ab3d430dc693ecd9b11"
 [[package]]
 name = "bevy_ptr"
 version = "0.16.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "df7370d0e46b60e071917711d0860721f5347bc958bf325975ae6913a5dfcf01"
 
 [[package]]
 name = "bevy_ptr"
 version = "0.16.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "df7370d0e46b60e071917711d0860721f5347bc958bf325975ae6913a5dfcf01"
+source = "git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b#cc28d3f90222073fb8e9658fd3c34c4d5fa94e2d"
 
 [[package]]
 name = "bevy_rand"
@@ -2515,31 +2547,6 @@ dependencies = [
 [[package]]
 name = "bevy_reflect"
 version = "0.16.1"
-dependencies = [
- "assert_type_match",
- "bevy_platform 0.16.1",
- "bevy_ptr 0.16.1",
- "bevy_reflect_derive 0.16.1",
- "bevy_utils 0.16.1",
- "derive_more",
- "disqualified",
- "downcast-rs 2.0.2",
- "erased-serde",
- "foldhash",
- "glam 0.29.3",
- "petgraph 0.7.1",
- "serde",
- "smallvec",
- "smol_str",
- "thiserror 2.0.12",
- "uuid",
- "variadics_please",
- "wgpu-types 24.0.0",
-]
-
-[[package]]
-name = "bevy_reflect"
-version = "0.16.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "daeb91a63a1a4df00aa58da8cc4ddbd4b9f16ab8bb647c5553eb156ce36fa8c2"
 dependencies = [
@@ -2554,6 +2561,32 @@ dependencies = [
  "erased-serde",
  "foldhash",
  "glam 0.29.3",
+ "serde",
+ "smallvec",
+ "smol_str",
+ "thiserror 2.0.12",
+ "uuid",
+ "variadics_please",
+ "wgpu-types 24.0.0",
+]
+
+[[package]]
+name = "bevy_reflect"
+version = "0.16.1"
+source = "git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b#cc28d3f90222073fb8e9658fd3c34c4d5fa94e2d"
+dependencies = [
+ "assert_type_match",
+ "bevy_platform 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_ptr 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_reflect_derive 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_utils 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "derive_more",
+ "disqualified",
+ "downcast-rs 2.0.2",
+ "erased-serde",
+ "foldhash",
+ "glam 0.29.3",
+ "petgraph 0.7.1",
  "serde",
  "smallvec",
  "smol_str",
@@ -2579,8 +2612,10 @@ dependencies = [
 [[package]]
 name = "bevy_reflect_derive"
 version = "0.16.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "40ddadc55fe16b45faaa54ab2f9cb00548013c74812e8b018aa172387103cce6"
 dependencies = [
- "bevy_macro_utils 0.16.1",
+ "bevy_macro_utils 0.16.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "proc-macro2",
  "quote",
  "syn 2.0.104",
@@ -2590,10 +2625,9 @@ dependencies = [
 [[package]]
 name = "bevy_reflect_derive"
 version = "0.16.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "40ddadc55fe16b45faaa54ab2f9cb00548013c74812e8b018aa172387103cce6"
+source = "git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b#cc28d3f90222073fb8e9658fd3c34c4d5fa94e2d"
 dependencies = [
- "bevy_macro_utils 0.16.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "bevy_macro_utils 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
  "proc-macro2",
  "quote",
  "syn 2.0.104",
@@ -2649,56 +2683,6 @@ dependencies = [
 [[package]]
 name = "bevy_render"
 version = "0.16.1"
-dependencies = [
- "async-channel 2.3.1",
- "bevy_app 0.16.1",
- "bevy_asset 0.16.1",
- "bevy_color 0.16.2",
- "bevy_derive 0.16.1",
- "bevy_diagnostic 0.16.1",
- "bevy_ecs 0.16.1",
- "bevy_encase_derive 0.16.1",
- "bevy_image 0.16.1",
- "bevy_math 0.16.1",
- "bevy_mesh 0.16.1",
- "bevy_platform 0.16.1",
- "bevy_reflect 0.16.1",
- "bevy_render_macros 0.16.1",
- "bevy_tasks 0.16.1",
- "bevy_time 0.16.1",
- "bevy_transform 0.16.1",
- "bevy_utils 0.16.1",
- "bevy_window 0.16.1",
- "bitflags 2.9.1",
- "bytemuck",
- "codespan-reporting",
- "derive_more",
- "downcast-rs 2.0.2",
- "encase",
- "fixedbitset 0.5.7",
- "futures-lite 2.6.0",
- "image",
- "indexmap",
- "js-sys",
- "ktx2",
- "naga 24.0.0",
- "naga_oil 0.17.1",
- "nonmax",
- "offset-allocator",
- "send_wrapper",
- "serde",
- "smallvec",
- "thiserror 2.0.12",
- "tracing",
- "variadics_please",
- "wasm-bindgen",
- "web-sys",
- "wgpu 24.0.5",
-]
-
-[[package]]
-name = "bevy_render"
-version = "0.16.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ef91fed1f09405769214b99ebe4390d69c1af5cdd27967deae9135c550eb1667"
 dependencies = [
@@ -2748,22 +2732,63 @@ dependencies = [
 ]
 
 [[package]]
+name = "bevy_render"
+version = "0.16.1"
+source = "git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b#cc28d3f90222073fb8e9658fd3c34c4d5fa94e2d"
+dependencies = [
+ "async-channel 2.3.1",
+ "bevy_app 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_asset 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_color 0.16.2 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_derive 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_diagnostic 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_ecs 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_encase_derive 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_image 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_math 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_mesh 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_platform 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_reflect 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_render_macros 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_tasks 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_time 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_transform 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_utils 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_window 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bitflags 2.9.1",
+ "bytemuck",
+ "codespan-reporting",
+ "derive_more",
+ "downcast-rs 2.0.2",
+ "encase",
+ "fixedbitset 0.5.7",
+ "futures-lite 2.6.0",
+ "image",
+ "indexmap",
+ "js-sys",
+ "ktx2",
+ "naga 24.0.0",
+ "naga_oil 0.17.1",
+ "nonmax",
+ "offset-allocator",
+ "send_wrapper",
+ "serde",
+ "smallvec",
+ "thiserror 2.0.12",
+ "tracing",
+ "variadics_please",
+ "wasm-bindgen",
+ "web-sys",
+ "wgpu 24.0.5",
+]
+
+[[package]]
 name = "bevy_render_macros"
 version = "0.15.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3469307d1b5ca5c37b7f9269be033845357412ebad33eace46826e59da592f66"
 dependencies = [
  "bevy_macro_utils 0.15.3",
- "proc-macro2",
- "quote",
- "syn 2.0.104",
-]
-
-[[package]]
-name = "bevy_render_macros"
-version = "0.16.1"
-dependencies = [
- "bevy_macro_utils 0.16.1",
  "proc-macro2",
  "quote",
  "syn 2.0.104",
@@ -2782,18 +2807,30 @@ dependencies = [
 ]
 
 [[package]]
+name = "bevy_render_macros"
+version = "0.16.1"
+source = "git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b#cc28d3f90222073fb8e9658fd3c34c4d5fa94e2d"
+dependencies = [
+ "bevy_macro_utils 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "proc-macro2",
+ "quote",
+ "syn 2.0.104",
+]
+
+[[package]]
 name = "bevy_scene"
 version = "0.16.1"
+source = "git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b#cc28d3f90222073fb8e9658fd3c34c4d5fa94e2d"
 dependencies = [
- "bevy_app 0.16.1",
- "bevy_asset 0.16.1",
- "bevy_derive 0.16.1",
- "bevy_ecs 0.16.1",
- "bevy_platform 0.16.1",
- "bevy_reflect 0.16.1",
- "bevy_render 0.16.1",
- "bevy_transform 0.16.1",
- "bevy_utils 0.16.1",
+ "bevy_app 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_asset 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_derive 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_ecs 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_platform 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_reflect 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_render 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_transform 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_utils 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
  "derive_more",
  "serde",
  "thiserror 2.0.12",
@@ -2803,22 +2840,23 @@ dependencies = [
 [[package]]
 name = "bevy_sprite"
 version = "0.16.1"
+source = "git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b#cc28d3f90222073fb8e9658fd3c34c4d5fa94e2d"
 dependencies = [
- "bevy_app 0.16.1",
- "bevy_asset 0.16.1",
- "bevy_color 0.16.2",
- "bevy_core_pipeline 0.16.1",
- "bevy_derive 0.16.1",
- "bevy_ecs 0.16.1",
- "bevy_image 0.16.1",
- "bevy_math 0.16.1",
- "bevy_picking 0.16.1",
- "bevy_platform 0.16.1",
- "bevy_reflect 0.16.1",
- "bevy_render 0.16.1",
- "bevy_transform 0.16.1",
- "bevy_utils 0.16.1",
- "bevy_window 0.16.1",
+ "bevy_app 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_asset 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_color 0.16.2 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_core_pipeline 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_derive 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_ecs 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_image 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_math 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_picking 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_platform 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_reflect 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_render 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_transform 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_utils 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_window 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
  "bitflags 2.9.1",
  "bytemuck",
  "derive_more",
@@ -2826,20 +2864,6 @@ dependencies = [
  "nonmax",
  "radsort",
  "tracing",
-]
-
-[[package]]
-name = "bevy_state"
-version = "0.16.1"
-dependencies = [
- "bevy_app 0.16.1",
- "bevy_ecs 0.16.1",
- "bevy_platform 0.16.1",
- "bevy_reflect 0.16.1",
- "bevy_state_macros 0.16.1",
- "bevy_utils 0.16.1",
- "log",
- "variadics_please",
 ]
 
 [[package]]
@@ -2859,13 +2883,18 @@ dependencies = [
 ]
 
 [[package]]
-name = "bevy_state_macros"
+name = "bevy_state"
 version = "0.16.1"
+source = "git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b#cc28d3f90222073fb8e9658fd3c34c4d5fa94e2d"
 dependencies = [
- "bevy_macro_utils 0.16.1",
- "proc-macro2",
- "quote",
- "syn 2.0.104",
+ "bevy_app 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_ecs 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_platform 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_reflect 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_state_macros 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_utils 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "log",
+ "variadics_please",
 ]
 
 [[package]]
@@ -2875,6 +2904,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2481c1304fd2a1851a0d4cb63a1ce6421ae40f3f0117cbc9882963ee4c9bb609"
 dependencies = [
  "bevy_macro_utils 0.16.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "proc-macro2",
+ "quote",
+ "syn 2.0.104",
+]
+
+[[package]]
+name = "bevy_state_macros"
+version = "0.16.1"
+source = "git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b#cc28d3f90222073fb8e9658fd3c34c4d5fa94e2d"
+dependencies = [
+ "bevy_macro_utils 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
  "proc-macro2",
  "quote",
  "syn 2.0.104",
@@ -2909,26 +2949,6 @@ dependencies = [
 [[package]]
 name = "bevy_tasks"
 version = "0.16.1"
-dependencies = [
- "async-channel 2.3.1",
- "async-executor",
- "async-task",
- "atomic-waker",
- "bevy_platform 0.16.1",
- "cfg-if",
- "concurrent-queue",
- "crossbeam-queue",
- "derive_more",
- "futures-channel",
- "futures-lite 2.6.0",
- "heapless",
- "pin-project",
- "wasm-bindgen-futures",
-]
-
-[[package]]
-name = "bevy_tasks"
-version = "0.16.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5b674242641cab680688fc3b850243b351c1af49d4f3417a576debd6cca8dcf5"
 dependencies = [
@@ -2947,24 +2967,46 @@ dependencies = [
 ]
 
 [[package]]
+name = "bevy_tasks"
+version = "0.16.1"
+source = "git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b#cc28d3f90222073fb8e9658fd3c34c4d5fa94e2d"
+dependencies = [
+ "async-channel 2.3.1",
+ "async-executor",
+ "async-task",
+ "atomic-waker",
+ "bevy_platform 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "cfg-if",
+ "concurrent-queue",
+ "crossbeam-queue",
+ "derive_more",
+ "futures-channel",
+ "futures-lite 2.6.0",
+ "heapless",
+ "pin-project",
+ "wasm-bindgen-futures",
+]
+
+[[package]]
 name = "bevy_text"
 version = "0.16.1"
+source = "git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b#cc28d3f90222073fb8e9658fd3c34c4d5fa94e2d"
 dependencies = [
- "bevy_app 0.16.1",
- "bevy_asset 0.16.1",
- "bevy_color 0.16.2",
- "bevy_derive 0.16.1",
- "bevy_ecs 0.16.1",
- "bevy_image 0.16.1",
- "bevy_log 0.16.1",
- "bevy_math 0.16.1",
- "bevy_platform 0.16.1",
- "bevy_reflect 0.16.1",
- "bevy_render 0.16.1",
+ "bevy_app 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_asset 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_color 0.16.2 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_derive 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_ecs 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_image 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_log 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_math 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_platform 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_reflect 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_render 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
  "bevy_sprite",
- "bevy_transform 0.16.1",
- "bevy_utils 0.16.1",
- "bevy_window 0.16.1",
+ "bevy_transform 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_utils 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_window 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
  "cosmic-text",
  "serde",
  "smallvec",
@@ -2990,11 +3032,13 @@ dependencies = [
 [[package]]
 name = "bevy_time"
 version = "0.16.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bc98eb356c75be04fbbc77bb3d8ffa24c8bacd99f76111cee23d444be6ac8c9c"
 dependencies = [
- "bevy_app 0.16.1",
- "bevy_ecs 0.16.1",
- "bevy_platform 0.16.1",
- "bevy_reflect 0.16.1",
+ "bevy_app 0.16.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "bevy_ecs 0.16.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "bevy_platform 0.16.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "bevy_reflect 0.16.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "crossbeam-channel",
  "log",
  "serde",
@@ -3003,13 +3047,12 @@ dependencies = [
 [[package]]
 name = "bevy_time"
 version = "0.16.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bc98eb356c75be04fbbc77bb3d8ffa24c8bacd99f76111cee23d444be6ac8c9c"
+source = "git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b#cc28d3f90222073fb8e9658fd3c34c4d5fa94e2d"
 dependencies = [
- "bevy_app 0.16.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "bevy_ecs 0.16.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "bevy_platform 0.16.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "bevy_reflect 0.16.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "bevy_app 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_ecs 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_platform 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_reflect 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
  "crossbeam-channel",
  "log",
  "serde",
@@ -3032,22 +3075,6 @@ dependencies = [
 [[package]]
 name = "bevy_transform"
 version = "0.16.1"
-dependencies = [
- "bevy_app 0.16.1",
- "bevy_ecs 0.16.1",
- "bevy_log 0.16.1",
- "bevy_math 0.16.1",
- "bevy_reflect 0.16.1",
- "bevy_tasks 0.16.1",
- "bevy_utils 0.16.1",
- "derive_more",
- "serde",
- "thiserror 2.0.12",
-]
-
-[[package]]
-name = "bevy_transform"
-version = "0.16.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "df218e440bb9a19058e1b80a68a031c887bcf7bd3a145b55f361359a2fa3100d"
 dependencies = [
@@ -3064,29 +3091,47 @@ dependencies = [
 ]
 
 [[package]]
+name = "bevy_transform"
+version = "0.16.1"
+source = "git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b#cc28d3f90222073fb8e9658fd3c34c4d5fa94e2d"
+dependencies = [
+ "bevy_app 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_ecs 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_log 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_math 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_reflect 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_tasks 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_utils 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "derive_more",
+ "serde",
+ "thiserror 2.0.12",
+]
+
+[[package]]
 name = "bevy_ui"
 version = "0.16.1"
+source = "git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b#cc28d3f90222073fb8e9658fd3c34c4d5fa94e2d"
 dependencies = [
  "accesskit 0.18.0",
- "bevy_a11y 0.16.1",
- "bevy_app 0.16.1",
- "bevy_asset 0.16.1",
- "bevy_color 0.16.2",
- "bevy_core_pipeline 0.16.1",
- "bevy_derive 0.16.1",
- "bevy_ecs 0.16.1",
- "bevy_image 0.16.1",
- "bevy_input 0.16.1",
- "bevy_math 0.16.1",
- "bevy_picking 0.16.1",
- "bevy_platform 0.16.1",
- "bevy_reflect 0.16.1",
- "bevy_render 0.16.1",
+ "bevy_a11y 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_app 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_asset 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_color 0.16.2 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_core_pipeline 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_derive 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_ecs 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_image 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_input 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_math 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_picking 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_platform 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_reflect 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_render 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
  "bevy_sprite",
  "bevy_text",
- "bevy_transform 0.16.1",
- "bevy_utils 0.16.1",
- "bevy_window 0.16.1",
+ "bevy_transform 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_utils 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_window 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
  "bytemuck",
  "derive_more",
  "nonmax",
@@ -3114,18 +3159,19 @@ dependencies = [
 [[package]]
 name = "bevy_utils"
 version = "0.16.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "94f7a8905a125d2017e8561beefb7f2f5e67e93ff6324f072ad87c5fd6ec3b99"
 dependencies = [
- "bevy_platform 0.16.1",
+ "bevy_platform 0.16.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "thread_local",
 ]
 
 [[package]]
 name = "bevy_utils"
 version = "0.16.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "94f7a8905a125d2017e8561beefb7f2f5e67e93ff6324f072ad87c5fd6ec3b99"
+source = "git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b#cc28d3f90222073fb8e9658fd3c34c4d5fa94e2d"
 dependencies = [
- "bevy_platform 0.16.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "bevy_platform 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
  "thread_local",
 ]
 
@@ -3192,24 +3238,6 @@ dependencies = [
 [[package]]
 name = "bevy_window"
 version = "0.16.1"
-dependencies = [
- "android-activity",
- "bevy_app 0.16.1",
- "bevy_ecs 0.16.1",
- "bevy_input 0.16.1",
- "bevy_math 0.16.1",
- "bevy_platform 0.16.1",
- "bevy_reflect 0.16.1",
- "bevy_utils 0.16.1",
- "log",
- "raw-window-handle",
- "serde",
- "smol_str",
-]
-
-[[package]]
-name = "bevy_window"
-version = "0.16.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "df7e8ad0c17c3cc23ff5566ae2905c255e6986037fb041f74c446216f5c38431"
 dependencies = [
@@ -3228,36 +3256,22 @@ dependencies = [
 ]
 
 [[package]]
-name = "bevy_winit"
+name = "bevy_window"
 version = "0.16.1"
+source = "git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b#cc28d3f90222073fb8e9658fd3c34c4d5fa94e2d"
 dependencies = [
- "accesskit 0.18.0",
- "accesskit_winit",
- "approx",
- "bevy_a11y 0.16.1",
- "bevy_app 0.16.1",
- "bevy_asset 0.16.1",
- "bevy_derive 0.16.1",
- "bevy_ecs 0.16.1",
- "bevy_image 0.16.1",
- "bevy_input 0.16.1",
- "bevy_input_focus 0.16.1",
- "bevy_log 0.16.1",
- "bevy_math 0.16.1",
- "bevy_platform 0.16.1",
- "bevy_reflect 0.16.1",
- "bevy_tasks 0.16.1",
- "bevy_utils 0.16.1",
- "bevy_window 0.16.1",
- "bytemuck",
- "cfg-if",
- "crossbeam-channel",
+ "android-activity",
+ "bevy_app 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_ecs 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_input 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_math 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_platform 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_reflect 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_utils 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "log",
  "raw-window-handle",
- "tracing",
- "wasm-bindgen",
- "web-sys",
- "wgpu-types 24.0.0",
- "winit",
+ "serde",
+ "smol_str",
 ]
 
 [[package]]
@@ -3288,6 +3302,40 @@ dependencies = [
  "tracing",
  "wasm-bindgen",
  "web-sys",
+ "winit",
+]
+
+[[package]]
+name = "bevy_winit"
+version = "0.16.1"
+source = "git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b#cc28d3f90222073fb8e9658fd3c34c4d5fa94e2d"
+dependencies = [
+ "accesskit 0.18.0",
+ "accesskit_winit",
+ "approx",
+ "bevy_a11y 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_app 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_asset 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_derive 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_ecs 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_image 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_input 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_input_focus 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_log 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_math 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_platform 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_reflect 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_tasks 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_utils 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bevy_window 0.16.1 (git+https://github.com/shanecelis/bevy.git?tag=v0.16.1b)",
+ "bytemuck",
+ "cfg-if",
+ "crossbeam-channel",
+ "raw-window-handle",
+ "tracing",
+ "wasm-bindgen",
+ "web-sys",
+ "wgpu-types 24.0.0",
  "winit",
 ]
 

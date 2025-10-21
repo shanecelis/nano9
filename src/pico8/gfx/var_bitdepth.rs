@@ -174,6 +174,7 @@ impl<T: TypePath + Send + Sync + Default + BitView<Store = T> + BitStore + Copy,
         mut write_color: impl FnMut(T, usize, &mut [u8]) -> Result<(), E>,
     ) -> Result<Image, E> {
         let N = self.bitdepth;
+        assert!(N > 0);
         let mut pixel_bytes = vec![0x00; self.width * self.height * 4];
         let mut color_index = T::default();
         for (i, pixel) in self.data.chunks_exact(N).enumerate() {
