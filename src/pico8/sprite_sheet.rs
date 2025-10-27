@@ -60,6 +60,8 @@ pub enum SpriteSheetError {
     Load(#[from] bevy::asset::LoadDirectError),
     #[error("Could not load cart: {0}")]
     Cart(#[from] Box<pico8::CartLoaderError>),
+    #[error("Could not load image: {0}")]
+    Image(#[from] bevy::image::ImageLoaderError),
 }
 
 impl AssetLoader for SpriteSheetLoader {
@@ -73,8 +75,6 @@ impl AssetLoader for SpriteSheetLoader {
         settings: &Self::Settings,
         load_context: &mut LoadContext<'_>,
     ) -> Result<Self::Asset, Self::Error> {
-        let mut bytes = Vec::new();
-        let _ = reader.read_to_end(&mut bytes).await?;
         let extension = load_context
             .path()
             .extension()
@@ -84,6 +84,8 @@ impl AssetLoader for SpriteSheetLoader {
         let mut extract_palette = None;
         let mut sprite_size = settings.sprite_size;
         let (handle, layout_maybe, flags_maybe) = if index_color {
+            let mut bytes = Vec::new();
+            let _ = reader.read_to_end(&mut bytes).await?;
             match extension {
                 "p8" => {
                     let settings = pico8::CartLoaderSettings::default();
@@ -135,21 +137,16 @@ impl AssetLoader for SpriteSheetLoader {
             }
         } else {
             let sampler = settings.sampler.clone().or_else(image_sampler);
-
-            let mut reader = VecReader::new(bytes);
-            let path = load_context.asset_path().clone_owned();
-            let loaded = load_context
-                .loader()
-                .immediate()
-                .with_reader(&mut reader)
-                .with_settings(move |settings: &mut ImageLoaderSettings| {
-                    if let Some(sampler) = &sampler {
-                        settings.sampler = sampler.clone();
-                    }
-                })
-                .load::<Image>(path)
-                .await?;
-            let image_size = loaded.get().size();
+            let loader = bevy::image::ImageLoader::new(bevy::image::CompressedImageFormats::all());
+            let mut image_settings = ImageLoaderSettings::default();
+            if let Some(sampler) = &sampler {
+                image_settings.sampler = sampler.clone();
+            }
+            let mut image_context = load_context.begin_labeled_asset();
+            let image = loader.load(reader, &image_settings, &mut image_context)
+                              .await?;
+            let image_size = image.size();
+            let loaded = image_context.finish(image);
             let layout = get_layout(
                 image_size,
                 &mut sprite_size,
