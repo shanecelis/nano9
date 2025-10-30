@@ -8,7 +8,7 @@ use bevy::{
 };
 use bitvec::{prelude::*, view::BitView};
 
-/// An indexed image using `N`-bit palette with color index `T`.
+/// An indexed image using `n`-bit palette with color index `T`.
 #[derive(Asset, Debug, Reflect, Clone)]
 pub struct Gfx<T: TypePath + Send + Sync + BitStore = u8> {
     #[reflect(ignore)]
@@ -18,6 +18,14 @@ pub struct Gfx<T: TypePath + Send + Sync + BitStore = u8> {
     pub height: usize,
 }
 
+// Find the number of bits required to describe the number of colors given.
+fn bits_required(color_count: usize) -> Option<u32> {
+    if color_count == 0 {
+        return None;
+    }
+    Some(usize::BITS - (color_count - 1).leading_zeros())
+}
+
 impl Gfx<u8> {
     pub fn from_png(
         bytes: &[u8],
@@ -25,7 +33,7 @@ impl Gfx<u8> {
     ) -> Result<Self, png::DecodingError> {
         let cursor = std::io::Cursor::new(bytes);
         let decoder = png::Decoder::new(cursor);
-        let reader = decoder.read_info()?;
+        let mut reader = decoder.read_info()?;
         let info = reader.info();
         if let Some(ref mut palette) = &mut palette {
             info.palette.as_ref().inspect(|png_palette| {
@@ -37,7 +45,8 @@ impl Gfx<u8> {
                 palette.data = data;
             });
         }
-        let dest_bit_depth: usize = todo!("Find highest power of 2 in the length of colors.");
+        // Find highest power of 2 in the length of colors.
+        let dest_bit_depth: usize = info.bit_depth as u8 as usize;
         if info.color_type == png::ColorType::Indexed {
             let mut buf = vec![0; reader.output_buffer_size()];
             let info = reader.next_frame(&mut buf).unwrap();
@@ -115,25 +124,25 @@ impl<T: TypePath + Send + Sync + Default + BitView<Store = T> + BitStore + Copy,
 
     /// Get a color index.
     pub fn get(&self, x: usize, y: usize) -> Option<T> {
-        let N = self.bitdepth;
-        let start = x * N + y * N * self.width;
-        self.data.get(start..start + N).map(|slice| {
+        let n = self.bitdepth;
+        let start = x * n + y * n * self.width;
+        self.data.get(start..start + n).map(|slice| {
             let mut result = T::default();
             let bits = result.view_bits_mut::<Lsb0>();
-            bits[0..N].copy_from_bitslice(slice);
+            bits[0..n].copy_from_bitslice(slice);
             result
         })
     }
 
     /// Set a color index. Returns true if set.
     pub fn set(&mut self, x: usize, y: usize, color_index: T) -> bool {
-        let N = self.bitdepth;
+        let n = self.bitdepth;
         let bits = color_index.view_bits::<Lsb0>();
-        let start = x * N + y * N * self.width;
+        let start = x * n + y * n * self.width;
         self.data
-            .get_mut(start..start + N)
+            .get_mut(start..start + n)
             .map(|slice| {
-                slice.copy_from_bitslice(&bits[0..N]);
+                slice.copy_from_bitslice(&bits[0..n]);
                 true
             })
             .unwrap_or(false)
@@ -148,10 +157,10 @@ impl<T: TypePath + Send + Sync + Default + BitView<Store = T> + BitStore + Copy,
         pixel_bytes: &mut [u8],
         mut write_color: impl FnMut(T, usize, &mut [u8]),
     ) {
-        let N = self.bitdepth;
+        let n = self.bitdepth;
         // let mut pixel_bytes = vec![0x00; self.width * self.height * 4];
         let mut color_index = T::default();
-        let chunks = self.data.chunks_exact(N);
+        let chunks = self.data.chunks_exact(n);
         assert!(
             chunks.len() >= self.width * self.height,
             "cannot write full {}x{} gfx to image only has {} pixels",
@@ -160,7 +169,7 @@ impl<T: TypePath + Send + Sync + Default + BitView<Store = T> + BitStore + Copy,
             chunks.len()
         );
         for (i, pixel) in chunks.enumerate() {
-            color_index.view_bits_mut::<Lsb0>()[0..N].copy_from_bitslice(pixel);
+            color_index.view_bits_mut::<Lsb0>()[0..n].copy_from_bitslice(pixel);
             write_color(color_index, i, &mut pixel_bytes[i * 4..(i + 1) * 4]);
         }
     }
@@ -173,12 +182,12 @@ impl<T: TypePath + Send + Sync + Default + BitView<Store = T> + BitStore + Copy,
         &self,
         mut write_color: impl FnMut(T, usize, &mut [u8]) -> Result<(), E>,
     ) -> Result<Image, E> {
-        let N = self.bitdepth;
-        assert!(N > 0);
+        let n = self.bitdepth;
+        assert!(n > 0);
         let mut pixel_bytes = vec![0x00; self.width * self.height * 4];
         let mut color_index = T::default();
-        for (i, pixel) in self.data.chunks_exact(N).enumerate() {
-            color_index.view_bits_mut::<Lsb0>()[0..N].copy_from_bitslice(pixel);
+        for (i, pixel) in self.data.chunks_exact(n).enumerate() {
+            color_index.view_bits_mut::<Lsb0>()[0..n].copy_from_bitslice(pixel);
             write_color(color_index, i, &mut pixel_bytes[i * 4..(i + 1) * 4])?;
         }
         let mut image = Image::new(
@@ -204,4 +213,22 @@ impl<T: TypePath + Send + Sync + Default + BitView<Store = T> + BitStore + Copy,
         })
         .unwrap()
     }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    #[test]
+    fn test_highest_bit_index() {
+        assert_eq!(bits_required(16), Some(4));
+        assert_eq!(bits_required(17), Some(5));
+        assert_eq!(bits_required(4), Some(2));
+        assert_eq!(bits_required(5), Some(3));
+        assert_eq!(bits_required(6), Some(3));
+        assert_eq!(bits_required(7), Some(3));
+        assert_eq!(bits_required(8), Some(3));
+        assert_eq!(bits_required(9), Some(4));
+        assert_eq!(bits_required(2), Some(1));
+    }
+
 }

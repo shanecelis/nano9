@@ -1,4 +1,5 @@
 use nano9::pico8::*;
+use nano9::pico8::const_bitdepth::Gfx;
 use std::fs;
 
 #[test]

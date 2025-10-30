@@ -199,3 +199,53 @@ impl<
         .unwrap()
     }
 }
+
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    const BIT1_PALETTE: [[u8; 4]; 2] = [[0x00, 0x00, 0x00, 0xff], [0xff, 0xff, 0xff, 0xff]];
+
+    #[test]
+    fn ex0() {
+        let mut a = Gfx::<4>::new(8, 8);
+        assert_eq!(0, a.get(0, 0).unwrap());
+        a.set(0, 0, 15);
+        assert_eq!(15, a.get(0, 0).unwrap());
+    }
+
+    #[test]
+    fn create_image() {
+        let mut a = Gfx::<4>::new(8, 8);
+        assert_eq!(0, a.get(0, 0).unwrap());
+        a.set(0, 0, 15);
+        let _ = a.to_image(|_, _, _| {});
+    }
+
+    #[rustfmt::skip]
+    #[test]
+    fn create_1bit_image() {
+        let a = Gfx::<1>::from_vec(
+            8,
+            8,
+            vec![
+                0b00000001,
+                0b00000010,
+                0b00000100,
+                0b00001000,
+                0b00010000,
+                0b00100000,
+                0b01000000,
+                0b10000000,
+            ],
+        );
+        let image = a.to_image(|i, _, pixel_bytes| {
+            pixel_bytes.copy_from_slice(&BIT1_PALETTE[i as usize]);
+        });
+        let color: Srgba = image.get_color_at(0, 0).unwrap().into();
+        assert_eq!(color, Srgba::WHITE);
+        let color: Srgba = image.get_color_at(0, 7).unwrap().into();
+        assert_eq!(color, Srgba::BLACK);
+    }
+}
