@@ -1,7 +1,7 @@
 use crate::pico8::{self, image::image_sampler, Gfx, Palette, SprHandle};
 use bevy::{
     asset::{
-        io::{Reader, VecReader},
+        io::Reader,
         AssetLoader, LoadContext,
     },
     image::{ImageLoaderSettings, ImageSampler},

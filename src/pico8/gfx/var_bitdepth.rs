@@ -25,7 +25,7 @@ impl Gfx<u8> {
     ) -> Result<Self, png::DecodingError> {
         let cursor = std::io::Cursor::new(bytes);
         let decoder = png::Decoder::new(cursor);
-        let mut reader = decoder.read_info()?;
+        let reader = decoder.read_info()?;
         let info = reader.info();
         if let Some(ref mut palette) = &mut palette {
             info.palette.as_ref().inspect(|png_palette| {

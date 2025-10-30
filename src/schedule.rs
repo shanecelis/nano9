@@ -1,5 +1,5 @@
 use bevy::{
-    ecs::schedule::{Schedule, ScheduleLabel},
+    ecs::schedule::ScheduleLabel,
     prelude::{App, World},
 };
 
