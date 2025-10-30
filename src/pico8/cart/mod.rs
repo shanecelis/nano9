@@ -36,7 +36,7 @@ pub enum CartLoaderError {
     #[error("Sfx error: {0}")]
     Sfx(#[from] SfxError),
     #[error("Load error: {0}")]
-    LoadDirect(#[from] bevy::asset::LoadDirectError),
+    LoadDirect(#[from] Box<bevy::asset::LoadDirectError>),
     #[error("Decompression error: {0}")]
     Decompression(String),
     #[error("Read bytes error: {0}")]
@@ -371,7 +371,7 @@ pub(crate) async fn translate_pico8_to_lua<'a>(
                         .immediate()
                         // .load::<bevy_mod_scripting::prelude::ScriptAsset>(include_path)
                         .load::<Pico8Asset>(include_path)
-                        .await?;
+                        .await.map_err(Box::new)?;
                     let script = pico8_asset
                         .get_labeled("lua")
                         .and_then(|erased_asset| {

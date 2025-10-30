@@ -29,7 +29,7 @@ pub enum ConfigError {
     #[error("{0}")]
     Message(String),
     #[error("Could not load dependency: {0}")]
-    Load(#[from] bevy::asset::LoadDirectError),
+    Load(#[from] Box<bevy::asset::LoadDirectError>),
     #[error("Could not read asset: {0}")]
     AssetBytes(#[from] bevy::asset::ReadAssetBytesError),
     #[error("Decoding error: {0}")]
@@ -172,7 +172,7 @@ async fn into_asset(
                 .immediate()
                 .with_settings(pixel_art_settings)
                 .load(&palette.path)
-                .await?;
+                .await.map_err(Box::new)?;
             palettes.push(pico8::Palette::from_image(image.get(), palette.row));
         }
     }
@@ -231,7 +231,7 @@ async fn into_asset(
                 .with_unknown_type()
                 .immediate()
                 .load(&asset_path)
-                .await?;
+                .await.map_err(Box::new)?;
             match erased_loaded.downcast::<pico8::audio::AudioBank>() {
                 Ok(loaded) => {
                     let audio_bank = loaded.take();
