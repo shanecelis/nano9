@@ -83,29 +83,6 @@ fn check_dirty(
     }
 }
 
-pub(crate) fn compute_image_sys(
-    In(gfx_sprite): In<GfxSprite>,
-    _state: Res<Pico8State>,
-    gfxs: Res<Assets<Gfx>>,
-    gfx_materials: Res<Assets<GfxMaterial>>,
-    mut images: ResMut<Assets<Image>>,
-    palettes: Res<Palettes>,
-    mut pairs: ResMut<GfxImageMap>,
-) -> Result<Handle<Image>, Error> {
-    let _my_span = info_span!("gfx::compute_image", name = "system").entered();
-    compute_image(
-        &gfx_sprite.image,
-        false,
-        gfx_materials
-            .get(&gfx_sprite.material)
-            .ok_or_else(|| Error::NoSuch("gfx material".into()))?,
-        &gfxs,
-        &mut images,
-        &palettes,
-        &mut pairs,
-    )
-}
-
 pub(crate) fn compute_image(
     gfx_handle: &Handle<Gfx>,
     gfx_changed: bool,
@@ -141,9 +118,12 @@ pub(crate) fn compute_image(
                     if let Some((gfx, image)) = gfx.zip(images.get_mut(*handle)) {
                         trace!("updating image for gfx {}", gfx_id);
                         if let Some(ref mut data) = image.data {
-                            gfx.write_bytes(data, |i, _, bytes| {
-                                gfx_material.pal_map.write_color(&palette.data, i, bytes);
-                            });
+                            if let Err(e) = gfx.try_write_bytes(data, |i, _, bytes| {
+                                gfx_material.pal_map.write_color(&palette.data, i, bytes)
+                            }) {
+                                warn!("Unable to write color to handle {:?}: {e}", &handle);
+
+                            }
                         } else {
                             warn_once!("No data for image {}", gfx_id);
                         }

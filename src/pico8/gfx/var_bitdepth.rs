@@ -18,7 +18,8 @@ pub struct Gfx<T: TypePath + Send + Sync + BitStore = u8> {
     pub height: usize,
 }
 
-// Find the number of bits required to describe the number of colors given.
+/// Find the number of bits required to describe the number of colors given.
+#[allow(dead_code)]
 fn bits_required(color_count: usize) -> Option<u32> {
     if color_count == 0 {
         return None;
@@ -46,7 +47,10 @@ impl Gfx<u8> {
             });
         }
         // Find highest power of 2 in the length of colors.
-        let dest_bit_depth: usize = info.bit_depth as u8 as usize;
+        let png_bit_depth: usize = info.bit_depth as u8 as usize;
+        // let required_bit_depth: usize = bits_required(todo!("color count"));
+        // let dest_bit_depth = png_bit_depth.min(required_bit_depth);
+        let dest_bit_depth = png_bit_depth;
         if info.color_type == png::ColorType::Indexed {
             let mut buf = vec![0; reader.output_buffer_size()];
             let info = reader.next_frame(&mut buf).unwrap();
@@ -172,6 +176,33 @@ impl<T: TypePath + Send + Sync + Default + BitView<Store = T> + BitStore + Copy,
             color_index.view_bits_mut::<Lsb0>()[0..n].copy_from_bitslice(pixel);
             write_color(color_index, i, &mut pixel_bytes[i * 4..(i + 1) * 4]);
         }
+    }
+
+    /// Try to write pixel data.
+    ///
+    /// The `write_color` function accepts a color_index and the pixel_index and
+    /// writes a Srgba set of u8 pixels.
+    pub fn try_write_bytes<E>(
+        &self,
+        pixel_bytes: &mut [u8],
+        mut write_color: impl FnMut(T, usize, &mut [u8]) -> Result<(), E>,
+    ) -> Result<(), E> {
+        let n = self.bitdepth;
+        // let mut pixel_bytes = vec![0x00; self.width * self.height * 4];
+        let mut color_index = T::default();
+        let chunks = self.data.chunks_exact(n);
+        assert!(
+            chunks.len() >= self.width * self.height,
+            "cannot write full {}x{} gfx to image only has {} pixels",
+            self.width,
+            self.height,
+            chunks.len()
+        );
+        for (i, pixel) in chunks.enumerate() {
+            color_index.view_bits_mut::<Lsb0>()[0..n].copy_from_bitslice(pixel);
+            write_color(color_index, i, &mut pixel_bytes[i * 4..(i + 1) * 4])?;
+        }
+        Ok(())
     }
 
     /// Create an image.

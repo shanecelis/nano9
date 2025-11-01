@@ -8,6 +8,7 @@ pub struct Nano9Camera3d;
 //     command: Option<Look>,
 // }
 
+#[allow(dead_code)]
 #[derive(Event, Debug)]
 pub enum Camera3dCommand {
     Set { active: bool },

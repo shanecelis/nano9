@@ -16,13 +16,13 @@ impl super::Pico8<'_, '_> {
             .ok_or(Error::NoSuch(format!("map index {index}").into()))
     }
 
-    fn sprite_map_mut(&mut self, map_index: Option<usize>) -> Result<&mut SpriteMap, Error> {
-        let index = map_index.unwrap_or(0);
-        self.pico8_asset_mut()?
-            .maps
-            .get_mut(index)
-            .ok_or(Error::NoSuch(format!("map index {index}").into()))
-    }
+    // fn sprite_map_mut(&mut self, map_index: Option<usize>) -> Result<&mut SpriteMap, Error> {
+    //     let index = map_index.unwrap_or(0);
+    //     self.pico8_asset_mut()?
+    //         .maps
+    //         .get_mut(index)
+    //         .ok_or(Error::NoSuch(format!("map index {index}").into()))
+    // }
 
     pub fn map(
         &mut self,

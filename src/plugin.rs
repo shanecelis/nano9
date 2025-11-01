@@ -113,7 +113,6 @@ pub fn send(
         }
     }
 }
-const DEFAULT_FRAMES_PER_SECOND: u8 = 60;
 
 #[derive(Default)]
 pub struct Nano9Plugin {

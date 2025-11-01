@@ -306,7 +306,6 @@ fn new(cli: Cli) -> io::Result<ExitCode> {
                         // fs::write(&code_path, code)?;
                         Some(path.to_path_buf())
                     }
-                    _ => None,
                 };
                 if starter.is_some() && assets_path.is_none() {
                     error!(

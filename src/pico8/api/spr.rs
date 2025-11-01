@@ -217,12 +217,12 @@ impl super::Pico8<'_, '_> {
             .ok_or(Error::NoSuch("Pico8Asset".into()))
     }
 
-    /// TODO: Seriously reconsider this. Causes a log of asset modified events.
-    pub(crate) fn pico8_asset_mut(&mut self) -> Result<&mut Pico8Asset, Error> {
-        self.pico8_assets
-            .get_mut(&self.pico8_handle.handle)
-            .ok_or(Error::NoSuch("Pico8Asset".into()))
-    }
+    // /// TODO: Seriously reconsider this. Causes a log of asset modified events.
+    // pub(crate) fn pico8_asset_mut(&mut self) -> Result<&mut Pico8Asset, Error> {
+    //     self.pico8_assets
+    //         .get_mut(&self.pico8_handle.handle)
+    //         .ok_or(Error::NoSuch("Pico8Asset".into()))
+    // }
 
     /// spr(n, [x,] [y,] [w,] [h,] [flip_x,] [flip_y])
     pub fn spr(
