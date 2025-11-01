@@ -53,11 +53,33 @@ impl super::Pico8<'_, '_> {
         }
     }
 
-    /// Return the number of colors in the current palette.
+    /// Set the palette if index is given and return last palette.
+    pub fn palm(&mut self, palette_index: Option<usize>) -> Result<usize, PalError> {
+        let last = self.state.palette;
+        Ok(match palette_index {
+            Some(index) => {
+                if index < self.palettes.0.len() {
+                    self.state.palette = index;
+                } else {
+                    return Err(PalError::NoSuchPalette(index));
+                }
+                last
+            }
+            None => last,
+        })
+    }
+
+    /// Return the number of palettes if no argument is given.
+    /// Return the number of colors for the given palette.
     pub fn paln(&self, palette_index: Option<usize>) -> Result<usize, PalError> {
-        self.palettes
-            .get_pal(palette_index.unwrap_or(self.state.palette))
-            .map(|pal| pal.data.len())
+        match palette_index {
+            Some(index) =>
+                self.palettes
+                    .get_pal(index)
+                    .map(|pal| pal.data.len()),
+            None =>
+                Ok(self.palettes.0.len())
+        }
     }
 
     pub fn palt(&mut self, color_index: Option<usize>, transparent: Option<bool>) {
@@ -119,6 +141,22 @@ mod lua {
                     with_pico8(&ctx, move |pico8| {
                         pico8.palt(color, transparency);
                         Ok(())
+                    })
+                },
+            )
+            .register(
+                "paln",
+                |ctx: FunctionCallContext, index: Option<usize>| {
+                    with_pico8(&ctx, move |pico8| {
+                        pico8.paln(index).map_err(Error::from)
+                    })
+                },
+            )
+            .register(
+                "palm",
+                |ctx: FunctionCallContext, index: Option<usize>| {
+                    with_pico8(&ctx, move |pico8| {
+                        pico8.palm(index).map_err(Error::from)
                     })
                 },
             )

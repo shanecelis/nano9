@@ -203,6 +203,7 @@ async fn into_asset(
                 })
                 .load::<pico8::SpriteSheet>(&asset_path)
         };
+        // We don't account for palettes here.
         sprite_sheets.push(handle);
     }
     #[cfg(feature = "scripting")]

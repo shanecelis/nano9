@@ -1,9 +1,8 @@
-pub mod const_bitdepth;
+// pub mod const_bitdepth;
 mod var_bitdepth;
 pub use var_bitdepth::Gfx;
 use crate::{one_or_map::OneOrMap, pico8::*};
 use bevy::platform::collections::{HashMap, HashSet};
-use bitvec::{prelude::*, view::BitView};
 use std::{
     collections::VecDeque,
     hash::{DefaultHasher, Hash, Hasher},
@@ -275,15 +274,6 @@ fn compute_image_on_gfx_sprite_change(
                 warn!("Unable to update gfx {}: {e}", gfx_sprite.image.id());
             }
         }
-    }
-}
-
-impl<T: TypePath + Send + Sync + Default + BitView<Store = T> + BitStore + Copy> const_bitdepth::Gfx<1, T> {
-    pub fn mirror_horizontal(mut self) -> Self {
-        for elem in self.data.chunks_mut(self.width) {
-            elem.reverse();
-        }
-        self
     }
 }
 

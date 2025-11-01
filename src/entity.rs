@@ -8,6 +8,9 @@ use bevy_mod_scripting::{
     lua::mlua::{self, FromLua, Lua, UserData, Value},
 };
 
+#[cfg(feature = "scripting")]
+use bevy_mod_scripting::{prelude::ScriptValue, bindings::{WorldAccessGuard, ReflectReference, IntoScriptRef, InteropError}};
+
 #[derive(Debug, Clone, Copy, Reflect)]
 pub enum DropPolicy {
     Nothing,
@@ -37,6 +40,18 @@ impl Drop for N9Entity {
 pub struct N9Entity {
     pub entity: Entity,
     pub drop: DropPolicy,
+}
+
+impl N9Entity {
+    #[cfg(feature = "scripting")]
+    pub fn into_script_ref(self, world: WorldAccessGuard) -> Result<ScriptValue, InteropError> {
+        let reference = {
+            let allocator = world.allocator();
+            let mut allocator = allocator.write();
+            ReflectReference::new_allocated(self, &mut allocator)
+        };
+        ReflectReference::into_script_ref(reference, world)
+    }
 }
 
 pub(crate) fn plugin(app: &mut App) {
@@ -95,6 +110,47 @@ pub(crate) fn plugin(app: &mut App) {
                 })?;
                 if let Some(pos) = pos {
                     Ok(Some(vec![pos.x, negate_y(pos.y), pos.z]))
+                } else {
+                    Ok(None)
+                }
+            },
+        )
+        .register(
+            "rot",
+            |ctx: FunctionCallContext,
+             this: Val<N9Entity>,
+             z: Option<f32>,
+             y: Option<f32>,
+             x: Option<f32>| {
+                 use std::f32::consts::PI;
+                let world = ctx.world()?;
+                let rot = world.with_global_access(|world| {
+                    if x.is_some() || y.is_some() || z.is_some() {
+                        world
+                            .get_mut::<Transform>(this.entity)
+                            .map(|mut transform| {
+                                let last = transform.rotation.to_euler(EulerRot::ZYX);
+                                let mut euler = last;
+                                if let Some(x) = x {
+                                    euler.2 = x * 2.0 * PI;
+                                }
+                                if let Some(y) = y {
+                                    euler.1 = y * 2.0 * PI;
+                                }
+                                if let Some(z) = z {
+                                    euler.0 = z * 2.0 * PI;
+                                }
+                                transform.rotation = Quat::from_euler(EulerRot::ZYX, euler.0, euler.1, euler.2);
+                                last
+                            })
+                    } else {
+                        world
+                            .get::<Transform>(this.entity)
+                            .map(|transform| transform.rotation.to_euler(EulerRot::ZYX))
+                    }
+                })?;
+                if let Some(rot) = rot {
+                    Ok(Some(vec![rot.0, rot.1, rot.2]))
                 } else {
                     Ok(None)
                 }

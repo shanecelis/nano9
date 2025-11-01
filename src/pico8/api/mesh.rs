@@ -1,4 +1,4 @@
-use crate::pico8::Error;
+use crate::{N9Entity, DropPolicy, pico8::{Clearable, Error}};
 use bevy::prelude::*;
 
 #[derive(Debug, Clone, Reflect)]
@@ -24,6 +24,8 @@ impl super::Pico8<'_, '_> {
             .get(n)
             .ok_or(Error::NoSuch("mesh".into()))?
             .clone();
+
+        let clearable = Clearable::default();
         match mesh_handle {
             MeshHandle::Mesh(mesh) => {
                 let id = self.commands.spawn_empty().id();
@@ -35,6 +37,7 @@ impl super::Pico8<'_, '_> {
                     world.entity_mut(id).insert((
                         Mesh3d(mesh.clone()),
                         MeshMaterial3d(material),
+                        clearable,
                         Transform::from_translation(pos).with_scale(scale),
                     ));
                 });
@@ -57,6 +60,7 @@ impl super::Pico8<'_, '_> {
                     // };
                     world.entity_mut(id).insert((
                         SceneRoot(scene),
+                        clearable,
                         // MeshMaterial3d(material),
                         Transform::from_translation(pos).with_scale(scale),
                     ));
@@ -94,8 +98,13 @@ mod lua {
                  sz: Option<f32>| {
                     let pos = Vec3::new(x.unwrap_or(0.0), y.unwrap_or(0.0), z.unwrap_or(0.0));
                     let scale = Vec3::new(sx.unwrap_or(1.0), sy.unwrap_or(1.0), sz.unwrap_or(1.0));
-                    let _id = with_pico8(&ctx, move |pico8| pico8.mesh(n, pos, scale))?;
-                    Ok(())
+                    let id = with_pico8(&ctx, move |pico8| pico8.mesh(n, pos, scale))?;
+
+                    let entity = N9Entity {
+                        entity: id,
+                        drop: DropPolicy::Nothing,
+                    };
+                    entity.into_script_ref(ctx.world()?)
                 },
             );
     }

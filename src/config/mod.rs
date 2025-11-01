@@ -86,6 +86,8 @@ pub struct Config {
 
 #[derive(Default, Debug, Clone, Deserialize, Serialize, Merge, PartialEq)]
 pub struct Defaults {
+    /// Initial palette
+    pub initial_palette: Option<usize>,
     /// Initial pen color
     pub initial_pen_color: Option<usize>,
     /// Initial transparent color
@@ -320,6 +322,7 @@ impl Config {
                 clear_color: Some(0),
                 initial_transparent_color: Some(0),
                 time_to_live: Some(1),
+                initial_palette: None,
             }),
             ..default()
         }
@@ -348,6 +351,7 @@ impl Config {
                 clear_color: Some(3),
                 initial_transparent_color: None,
                 time_to_live: Some(1),
+                initial_palette: None,
             }),
             ..default()
         }

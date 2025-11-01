@@ -1,4 +1,5 @@
 # TODO
+- [ ] Decimate the teapot. Make the file way smaller.
 ## Bevy 0.16 fixes
 - [x] line eg
 - [x] line.p8lua eg

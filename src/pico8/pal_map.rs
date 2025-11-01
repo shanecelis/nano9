@@ -28,7 +28,10 @@ impl PalMap {
         }
     }
 
-    pub fn remap(&mut self, original_index: usize, new_index: usize) {
+    pub fn remap(&mut self, mut original_index: usize, new_index: usize) {
+        if original_index >= self.remap.len() {
+            original_index = original_index % self.remap.len();
+        }
         self.remap[original_index] = new_index as u8;
     }
 

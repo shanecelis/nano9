@@ -88,6 +88,15 @@ impl<const N: usize> Gfx<N, u8> {
     }
 }
 
+impl<T: TypePath + Send + Sync + Default + BitView<Store = T> + BitStore + Copy> const_bitdepth::Gfx<1, T> {
+    pub fn mirror_horizontal(mut self) -> Self {
+        for elem in self.data.chunks_mut(self.width) {
+            elem.reverse();
+        }
+        self
+    }
+}
+
 impl<
         const N: usize,
         T: TypePath + Send + Sync + Default + BitView<Store = T> + BitStore + Copy,

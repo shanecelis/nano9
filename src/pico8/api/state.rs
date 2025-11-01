@@ -26,7 +26,7 @@ impl FromWorld for Pico8State {
             pal_map.transparency.set(trans, true);
         }
         Pico8State {
-            palette: 0,
+            palette: defaults.initial_palette,
             sprite_sheet_index: 0,
             pal_map,
             draw_state: DrawState {
