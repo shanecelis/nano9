@@ -7,25 +7,19 @@ path = "bird-sprite-indexed.png"
 index_color = true
 extract_palette = true
 sprite_size = [16, 16]
+[[palette]]
+path = "bird-sprite-palette.png"
 ]===]
 
 function _init()
-    -- palm(1)
+    -- Replace a blue with black.
+    pal(6, 1)
 end
 t = 0
 function _draw()
     cls()
-    -- print("palm "..palm())
-    print("paln "..paln())
-    -- sprite number
     local n = time() * 4 % 8 + 8
     local x, y = t % 128, t / 128
-    -- if t % 2 == 0 then
-    --     pal(t, t-1)
-    --     pal(t-1, t)
-    -- else
-    --     pal()
-    -- end
     spr(n, x, y, 1, 1, true --[[flip horizontal]])
     t = t + 1
 end

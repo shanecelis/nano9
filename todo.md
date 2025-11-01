@@ -14,6 +14,7 @@
 - [ ] Fix tiled import for lilly's house inside
 
 ## Nano-9
+- [ ] Remove extract palette (too messy)
 - [ ] Make Gfx Handles work with Maps.
 - [ ] Remove the other .p8 loader?
 - [x] cls() should be a trigger

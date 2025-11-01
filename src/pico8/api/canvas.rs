@@ -38,6 +38,7 @@ pub fn setup_canvas(
     mut gfxs: ResMut<Assets<Gfx>>,
     camera: Single<Entity, With<Nano9Camera>>,
     mut state: ResMut<Pico8State>,
+    defaults: Res<Defaults>,
     mut gfx_materials: ResMut<Assets<GfxMaterial>>,
     mut commands: Commands,
 ) {
@@ -74,8 +75,9 @@ pub fn setup_canvas(
         // What should the bitdepth be configurable?
         // XXX: It should be configured.
         // let mut gfx_image = Gfx::new(canvas.bit_depth as usize, canvas.size.x as usize, canvas.size.y as usize);
-        let mut gfx_image = Gfx::new(4, canvas.size.x as usize, canvas.size.y as usize);
-        gfx_image.set(0,0,1);
+        let gfx_image = Gfx::new(defaults.canvas_bit_depth.into(), canvas.size.x as usize, canvas.size.y as usize);
+        // Just setting an errant pixel. Why?
+        // gfx_image.set(0,0,1);
         let gfx_handle = gfxs.add(gfx_image);
         let material = state.gfx_material(&mut gfx_materials);
         canvas.gfx_handle = gfx_handle.clone();

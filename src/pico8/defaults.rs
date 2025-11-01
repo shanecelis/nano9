@@ -9,6 +9,7 @@ pub struct Defaults {
     pub initial_transparent_color: Option<usize>,
     pub time_to_live: u8,
     pub initial_palette: usize,
+    pub canvas_bit_depth: u8,
 }
 
 impl Default for Defaults {
@@ -20,6 +21,7 @@ impl Default for Defaults {
             initial_transparent_color: Some(0),
             time_to_live: 1,
             initial_palette: 0,
+            canvas_bit_depth: 4,
         }
     }
 }
@@ -33,6 +35,7 @@ impl Defaults {
             clear_color: config_defaults.clear_color.unwrap_or(0),
             time_to_live: config_defaults.time_to_live.unwrap_or(1),
             initial_palette: config_defaults.initial_palette.unwrap_or(0),
+            canvas_bit_depth: config_defaults.canvas_bit_depth.unwrap_or(4),
         }
     }
 }

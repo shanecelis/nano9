@@ -98,6 +98,8 @@ pub struct Defaults {
     pub font_size: Option<f32>,
     /// Time to live, an entity caching system
     pub time_to_live: Option<u8>,
+    /// Bit depth of canvas
+    pub canvas_bit_depth: Option<u8>,
 }
 
 /// Audio bank
@@ -197,8 +199,12 @@ pub enum Font {
 pub struct Palette {
     /// Path to palette
     pub path: String,
-    /// Specify the row of the palette to use
+    /// Specify the row of the palette to use.
     pub row: Option<u32>,
+    /// Specify the column of the palette to use.
+    pub column: Option<u32>,
+    /// Extract palette from an indexed image.
+    pub extract: Option<bool>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -311,6 +317,8 @@ impl Config {
             palettes: vec![Palette {
                 path: pico8::PICO8_PALETTE.into(),
                 row: None,
+                column: None,
+                extract: None,
             }],
             fonts: vec![Font::Path {
                 path: pico8::PICO8_FONT.into(),
@@ -322,7 +330,7 @@ impl Config {
                 clear_color: Some(0),
                 initial_transparent_color: Some(0),
                 time_to_live: Some(1),
-                initial_palette: None,
+                ..default()
             }),
             ..default()
         }
@@ -340,6 +348,8 @@ impl Config {
             palettes: vec![Palette {
                 path: gameboy::PALETTES.into(),
                 row: Some(15),
+                column: None,
+                extract: None,
             }],
             fonts: vec![Font::Path {
                 path: gameboy::FONT.into(),
@@ -351,7 +361,7 @@ impl Config {
                 clear_color: Some(3),
                 initial_transparent_color: None,
                 time_to_live: Some(1),
-                initial_palette: None,
+                ..default()
             }),
             ..default()
         }
