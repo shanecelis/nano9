@@ -198,7 +198,6 @@ async fn into_asset(
                 .loader()
                 .with_settings(move |settings: &mut pico8::SpriteSheetSettings| {
                     settings.index_color = sheet.index_color;
-                    settings.extract_palette = sheet.extract_palette;
                     settings.sprite_size = sheet.sprite_size;
                     settings.sprite_counts = sheet.sprite_counts;
                     settings.padding = sheet.padding;

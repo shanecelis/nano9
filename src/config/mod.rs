@@ -147,27 +147,9 @@ pub struct SpriteSheet {
     /// Indexed sprite, if true it reads in the palette colors from the image
     /// and uses the current palette when the image is drawn
     pub index_color: Option<bool>,
-    #[serde(default)]
-    pub extract_palette: bool,
     // #[merge(skip)]
     // #[serde(default)]
     // pub palette: ImagePalette,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
-pub enum ImagePalette {
-    #[serde(rename = "no-index")]
-    #[default]
-    /// This image is not to use an indexed color palette.
-    NoIndex,
-    #[serde(rename = "index")]
-    /// This image uses an indexed color palette.
-    Index,
-    #[serde(rename = "extract")]
-    /// Extract the palette and add it to the end of the existing palettes.
-    Extract,
-    // /// This image uses a particular color palette already specified.
-    // Palette { index: usize },
 }
 
 /// Sprite map
