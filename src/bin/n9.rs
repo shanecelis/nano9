@@ -5,8 +5,6 @@ use bevy::{
     },
     prelude::*,
 };
-#[cfg(feature = "minibuffer")]
-use bevy_minibuffer::prelude::*;
 use clap::{Parser, Subcommand};
 use nano9::{
     config::{front_matter, pause_pico8_when_loaded, run_pico8_when_loaded, Config},
