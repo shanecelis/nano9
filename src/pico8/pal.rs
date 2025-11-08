@@ -161,11 +161,6 @@ impl AssetLoader for PaletteLoader {
     }
 
     fn extensions(&self) -> &[&str] {
-        // This can load "lua" files, but bevy_mod_scripting has a loader as
-        // well, so having it here generates a warning. We don't need to load
-        // .lua files ourselves, so we're dropping it.
-
-        // static EXTENSIONS: &[&str] = &["lua", "p8lua"];
         static EXTENSIONS: &[&str] = &["png"];
         EXTENSIONS
     }

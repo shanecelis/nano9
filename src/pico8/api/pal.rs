@@ -61,6 +61,7 @@ impl super::Pico8<'_, '_> {
                 let count = self.palettes.0.len();
                 if index < count {
                     self.state.palette = index;
+                    self.state.mark_palette_dirty();
                 } else {
                     return Err(PalError::NoSuchPalette { index, count });
                 }

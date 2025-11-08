@@ -23,10 +23,6 @@ pub enum Spr {
     Cur { sprite: usize },
     /// Sprite from given spritesheet.
     From { sprite: usize, sheet: usize },
-    /// Set spritesheet.
-    ///
-    /// XXX: Not sure I like this.
-    Set { sheet: usize },
 }
 
 #[cfg(feature = "scripting")]
@@ -38,13 +34,7 @@ impl FromScript for Spr {
     ) -> Result<Self::This<'_>, InteropError> {
         match value {
             ScriptValue::Float(f) => Ok(Spr::Cur { sprite: f as usize }),
-            ScriptValue::Integer(n) => Ok(if n >= 0 {
-                Spr::Cur { sprite: n as usize }
-            } else {
-                Spr::Set {
-                    sheet: n.unsigned_abs() as usize,
-                }
-            }),
+            ScriptValue::Integer(n) => Ok(Spr::Cur { sprite: n as usize }),
             ScriptValue::List(list) => {
                 assert_eq!(list.len(), 2, "Expect two elements for spr.");
                 let mut iter = list.into_iter().map(|v| match v {
@@ -64,14 +54,8 @@ impl FromScript for Spr {
 
 impl From<i64> for Spr {
     fn from(index: i64) -> Self {
-        if index >= 0 {
-            Spr::Cur {
-                sprite: index as usize,
-            }
-        } else {
-            Spr::Set {
-                sheet: index.abs().saturating_sub(1) as usize,
-            }
+        Spr::Cur {
+            sprite: index as usize,
         }
     }
 }
@@ -243,13 +227,12 @@ impl super::Pico8<'_, '_> {
             let sheet = match spr {
                 Spr::Cur { sprite } => {
                     index = sprite;
-                    0
+                    self.state.sprite_sheet_index
                 }
                 Spr::From { sheet, sprite } => {
                     index = sprite;
                     sheet
                 }
-                _ => todo!(),
             };
             sheet.hash(&mut hasher);
             // Need to hash the palette choice and
@@ -279,11 +262,6 @@ impl super::Pico8<'_, '_> {
         let (sprites, index): (&SpriteSheet, usize) = match spr {
             Spr::Cur { sprite } => (self.sprite_sheet(None)?, sprite),
             Spr::From { sheet, sprite } => (self.sprite_sheet(Some(sheet))?, sprite),
-            Spr::Set { sheet: _ } => {
-                todo!("sheet set not implemented and maybe shouldn't be");
-                // self.state.sprite_sheets.pos = sheet;
-                // return Ok(Entity::PLACEHOLDER);
-            }
         };
         let atlas = TextureAtlas {
             layout: sprites.layout.clone(),

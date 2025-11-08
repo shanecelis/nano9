@@ -56,6 +56,7 @@ impl Pico8State {
                     self.pal_map.hash(&mut hasher);
                     hasher.finish()
                 };
+                // dbg!(hash, self.palette);
                 self.gfx_materials
                     .entry(hash)
                     .or_insert_with(|| {
