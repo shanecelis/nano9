@@ -5845,7 +5845,7 @@ dependencies = [
 
 [[package]]
 name = "nano9"
-version = "0.1.0-alpha.3"
+version = "0.1.0-alpha.4"
 dependencies = [
  "bevy 0.16.1",
  "bevy_ecs_tiled",
