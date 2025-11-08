@@ -49,6 +49,7 @@ pub(crate) fn plugin(app: &mut App) {
         .add_plugins(mouse::plugin)
         .add_plugins(sprite_sheet::plugin)
         .add_plugins(map::plugin)
+        .add_plugins(pal::plugin)
         .add_plugins(cart::plugin);
 
     #[cfg(feature = "rand")]
