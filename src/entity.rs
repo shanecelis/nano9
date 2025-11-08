@@ -9,7 +9,10 @@ use bevy_mod_scripting::{
 };
 
 #[cfg(feature = "scripting")]
-use bevy_mod_scripting::{prelude::ScriptValue, bindings::{WorldAccessGuard, ReflectReference, IntoScriptRef, InteropError}};
+use bevy_mod_scripting::{
+    bindings::{InteropError, IntoScriptRef, ReflectReference, WorldAccessGuard},
+    prelude::ScriptValue,
+};
 
 #[derive(Debug, Clone, Copy, Reflect)]
 pub enum DropPolicy {
@@ -122,7 +125,7 @@ pub(crate) fn plugin(app: &mut App) {
              z: Option<f32>,
              y: Option<f32>,
              x: Option<f32>| {
-                 use std::f32::consts::PI;
+                use std::f32::consts::PI;
                 let world = ctx.world()?;
                 let rot = world.with_global_access(|world| {
                     if x.is_some() || y.is_some() || z.is_some() {
@@ -140,7 +143,8 @@ pub(crate) fn plugin(app: &mut App) {
                                 if let Some(z) = z {
                                     euler.0 = z * 2.0 * PI;
                                 }
-                                transform.rotation = Quat::from_euler(EulerRot::ZYX, euler.0, euler.1, euler.2);
+                                transform.rotation =
+                                    Quat::from_euler(EulerRot::ZYX, euler.0, euler.1, euler.2);
                                 last
                             })
                     } else {

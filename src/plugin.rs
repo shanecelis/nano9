@@ -324,17 +324,16 @@ impl Plugin for Nano9Plugin {
         })
         .add_plugins(crate::plugin);
 
-
         if let Some(fps) = self.config.frames_per_second {
             info!("Set FPS {}", &fps);
 
             #[cfg(feature = "framepace")]
             {
-            let limiter = bevy_framepace::Limiter::from_framerate(fps as f64);
-            app.add_plugins(bevy_framepace::FramepacePlugin)
-                .insert_resource(
-                    bevy_framepace::FramepaceSettings::default().with_limiter(limiter),
-                );
+                let limiter = bevy_framepace::Limiter::from_framerate(fps as f64);
+                app.add_plugins(bevy_framepace::FramepacePlugin)
+                    .insert_resource(
+                        bevy_framepace::FramepaceSettings::default().with_limiter(limiter),
+                    );
             }
             // app.insert_resource(Time::<Fixed>::from_seconds(
             //     1.0 / fps as f64,
@@ -351,25 +350,32 @@ impl Plugin for Nano9Plugin {
                 (send(call::Init), schedule::run_schedule(schedule::Init))
                     .run_if(init_when::<ScriptAsset>()),
                 event_handler::<call::Init, LuaScriptingPlugin>,
-                (send(call::Update), schedule::run_schedule(schedule::Update)).run_if(in_state(RunState::Run)),
+                (send(call::Update), schedule::run_schedule(schedule::Update))
+                    .run_if(in_state(RunState::Run)),
                 event_handler::<call::Update, LuaScriptingPlugin>,
                 event_handler::<call::Eval, LuaScriptingPlugin>,
-                (send(call::Draw), schedule::run_schedule(schedule::Draw)).run_if(in_state(RunState::Run)),
+                (send(call::Draw), schedule::run_schedule(schedule::Draw))
+                    .run_if(in_state(RunState::Run)),
                 event_handler::<call::Draw, LuaScriptingPlugin>,
             )
                 .chain(),
         );
-        app.add_systems(OnEnter(RunState::Init),
-                        schedule::run_schedule(schedule::Init));
+        app.add_systems(
+            OnEnter(RunState::Init),
+            schedule::run_schedule(schedule::Init),
+        );
         #[cfg(not(feature = "scripting"))]
         {
-            app
-                .add_systems(Update,
-                             (fill_input,
-                              schedule::run_schedule(schedule::Update),
-                              schedule::run_schedule(schedule::Draw),
-                             ).chain()
-                             .run_if(in_state(RunState::Run)));
+            app.add_systems(
+                Update,
+                (
+                    fill_input,
+                    schedule::run_schedule(schedule::Update),
+                    schedule::run_schedule(schedule::Draw),
+                )
+                    .chain()
+                    .run_if(in_state(RunState::Run)),
+            );
         }
         // bevy_ecs_ldtk will add this plugin, so let's not add that if it's
         // present.

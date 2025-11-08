@@ -17,9 +17,10 @@ pub struct Palettes(pub(crate) Vec<Palette>);
 
 impl Palettes {
     pub fn get_pal(&self, palette_index: usize) -> Result<&Palette, PalError> {
-        self.0
-            .get(palette_index)
-            .ok_or(PalError::NoSuchPalette { index: palette_index, count: self.0.len() })
+        self.0.get(palette_index).ok_or(PalError::NoSuchPalette {
+            index: palette_index,
+            count: self.0.len(),
+        })
     }
 
     // Resolve a PColor into a Color.

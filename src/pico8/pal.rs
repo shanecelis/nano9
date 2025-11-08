@@ -1,6 +1,6 @@
 use bevy::{
-    prelude::*,
     asset::{io::Reader, AssetLoader, LoadContext},
+    prelude::*,
 };
 
 #[derive(Asset, Debug, Clone, Reflect, Default)]
@@ -19,15 +19,11 @@ pub enum PalError {
 }
 
 pub(crate) fn plugin(app: &mut App) {
-
-    app
-        .init_asset::<Palette>()
+    app.init_asset::<Palette>()
         .init_asset_loader::<PaletteLoader>();
-
 }
 
 impl Palette {
-
     pub fn from_png_palette(bytes: &[u8]) -> Result<Option<Self>, png::DecodingError> {
         let cursor = std::io::Cursor::new(bytes);
         let decoder = png::Decoder::new(cursor);
@@ -49,7 +45,7 @@ impl Palette {
 
     pub fn from_image_column(image: &Image, column: u32) -> Self {
         let size = image.size();
-        let mut data = vec![[0;4]; size.y as usize];
+        let mut data = vec![[0; 4]; size.y as usize];
         for j in 0..size.y {
             let color: Srgba = image.get_color_at(column, j).unwrap().into();
             data[j as usize] = color.to_u8_array();
@@ -59,7 +55,7 @@ impl Palette {
 
     pub fn from_image_row(image: &Image, row: u32) -> Self {
         let size = image.size();
-        let mut data = vec![[0;4]; size.x as usize];
+        let mut data = vec![[0; 4]; size.x as usize];
         for i in 0..size.x {
             let color: Srgba = image.get_color_at(i, row).unwrap().into();
             data[i as usize] = color.to_u8_array();
@@ -69,7 +65,7 @@ impl Palette {
 
     pub fn from_image(image: &Image) -> Self {
         let size = image.size();
-        let mut data = vec![[0;4]; (size.x * size.y) as usize];
+        let mut data = vec![[0; 4]; (size.x * size.y) as usize];
         for j in 0..size.y {
             for i in 0..size.x {
                 let color: Srgba = image.get_color_at(i, j).unwrap().into();
@@ -153,8 +149,9 @@ impl AssetLoader for PaletteLoader {
             image_settings.sampler = sampler;
         }
         let mut image_context = load_context.begin_labeled_asset();
-        let image = loader.load(reader, &image_settings, &mut image_context)
-                            .await?;
+        let image = loader
+            .load(reader, &image_settings, &mut image_context)
+            .await?;
         Ok(match settings {
             PaletteSettings::FromIndex => unreachable!(),
             PaletteSettings::FromImage => Palette::from_image(&image),

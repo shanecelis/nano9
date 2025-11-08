@@ -53,6 +53,5 @@ pub(crate) fn plugin(app: &mut App) {
         .add_plugins(cart::plugin);
 
     #[cfg(feature = "rand")]
-    app
-        .add_plugins(rand::plugin);
+    app.add_plugins(rand::plugin);
 }

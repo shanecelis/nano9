@@ -26,8 +26,7 @@ fn init(mut pico8: Pico8) {
 
 fn main() -> io::Result<ExitCode> {
     let mut app = App::new();
-    app
-        .add_systems(nano9::schedule::Init, init);
+    app.add_systems(nano9::schedule::Init, init);
 
     let mut args = std::env::args();
     if let Some(template) = args.nth(1) {

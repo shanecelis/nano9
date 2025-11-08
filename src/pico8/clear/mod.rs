@@ -69,11 +69,7 @@ impl ClearCache {
         // We're trusting clearable.cached here. Should we? No.
         // if clearable.cached {
         if let Some(hash) = clearable.hash {
-            let result = self
-                .0
-                .drain_key_if(&hash, |v| *v == id)
-                .next()
-                .is_some();
+            let result = self.0.drain_key_if(&hash, |v| *v == id).next().is_some();
             // info!("CACHE REMOVE {:?}", &result);
             if matches!(clearable.state, ClearState::Visible) {
                 // warn!("Clearable {id} requested to be removed that is in state visible, was {}removed.", if result { "" } else {"not " })
@@ -82,7 +78,6 @@ impl ClearCache {
         } else {
             false
         }
-
     }
 }
 
@@ -213,10 +208,7 @@ fn handle_clear_event(
     mut cache: ResMut<ClearCache>,
     mut gfxs: ResMut<Assets<Gfx>>,
     one_color: Single<&mut Sprite, With<canvas::OneColorBackground>>,
-    background: Single<
-        (Entity, &GfxSprite, &mut GfxDirty),
-        With<canvas::Background>,
-    >,
+    background: Single<(Entity, &GfxSprite, &mut GfxDirty), With<canvas::Background>>,
     palettes: Res<Palettes>,
 ) {
     state.draw_state.clear_screen();

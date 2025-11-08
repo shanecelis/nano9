@@ -1,4 +1,7 @@
-use crate::{N9Entity, DropPolicy, pico8::{Clearable, Error}};
+use crate::{
+    pico8::{Clearable, Error},
+    DropPolicy, N9Entity,
+};
 use bevy::prelude::*;
 
 #[derive(Debug, Clone, Reflect)]

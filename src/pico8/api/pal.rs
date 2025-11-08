@@ -74,12 +74,8 @@ impl super::Pico8<'_, '_> {
     /// Return the number of colors for the given palette.
     pub fn paln(&self, palette_index: Option<usize>) -> Result<usize, PalError> {
         match palette_index {
-            Some(index) =>
-                self.palettes
-                    .get_pal(index)
-                    .map(|pal| pal.data.len()),
-            None =>
-                Ok(self.palettes.0.len())
+            Some(index) => self.palettes.get_pal(index).map(|pal| pal.data.len()),
+            None => Ok(self.palettes.0.len()),
         }
     }
 
@@ -145,31 +141,23 @@ mod lua {
                     })
                 },
             )
-            .register(
-                "paln",
-                |ctx: FunctionCallContext, index: Option<usize>| {
-                    with_pico8(&ctx, move |pico8| {
-                        pico8.paln(index).map_err(Error::from)
-                    })
-                },
-            )
-            .register(
-                "palm",
-                |ctx: FunctionCallContext, index: Option<usize>| {
-                    with_pico8(&ctx, move |pico8| {
-                        match pico8.palm(index) {
-                            Err(e) => {
-                                match e {
-                                    PalError::NoSuchPalette { index, count } =>
-                                        pico8.palm(Some(index % count)),
-                                    x => Err(x)
-                                }
+            .register("paln", |ctx: FunctionCallContext, index: Option<usize>| {
+                with_pico8(&ctx, move |pico8| pico8.paln(index).map_err(Error::from))
+            })
+            .register("palm", |ctx: FunctionCallContext, index: Option<usize>| {
+                with_pico8(&ctx, move |pico8| {
+                    match pico8.palm(index) {
+                        Err(e) => match e {
+                            PalError::NoSuchPalette { index, count } => {
+                                pico8.palm(Some(index % count))
                             }
-                            x => x,
-                        }.map_err(Error::from)
-                    })
-                },
-            )
+                            x => Err(x),
+                        },
+                        x => x,
+                    }
+                    .map_err(Error::from)
+                })
+            })
             .register(
                 "color",
                 |ctx: FunctionCallContext, color: Option<PColor>| {

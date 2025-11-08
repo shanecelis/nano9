@@ -75,7 +75,11 @@ pub fn setup_canvas(
         // What should the bitdepth be configurable?
         // XXX: It should be configured.
         // let mut gfx_image = Gfx::new(canvas.bit_depth as usize, canvas.size.x as usize, canvas.size.y as usize);
-        let gfx_image = Gfx::new(defaults.canvas_bit_depth.into(), canvas.size.x as usize, canvas.size.y as usize);
+        let gfx_image = Gfx::new(
+            defaults.canvas_bit_depth.into(),
+            canvas.size.x as usize,
+            canvas.size.y as usize,
+        );
         // Just setting an errant pixel. Why?
         // gfx_image.set(0,0,1);
         let gfx_handle = gfxs.add(gfx_image);

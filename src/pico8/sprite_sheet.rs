@@ -1,9 +1,6 @@
 use crate::pico8::{self, image::image_sampler, Gfx, Palette, SprHandle};
 use bevy::{
-    asset::{
-        io::Reader,
-        AssetLoader, LoadContext,
-    },
+    asset::{io::Reader, AssetLoader, LoadContext},
     image::{ImageLoaderSettings, ImageSampler},
     prelude::*,
 };
@@ -143,8 +140,9 @@ impl AssetLoader for SpriteSheetLoader {
                 image_settings.sampler = sampler.clone();
             }
             let mut image_context = load_context.begin_labeled_asset();
-            let image = loader.load(reader, &image_settings, &mut image_context)
-                              .await?;
+            let image = loader
+                .load(reader, &image_settings, &mut image_context)
+                .await?;
             let image_size = image.size();
             let loaded = image_context.finish(image);
             let layout = get_layout(

@@ -1,12 +1,12 @@
 // pub mod const_bitdepth;
 mod var_bitdepth;
-pub use var_bitdepth::Gfx;
 use crate::{one_or_map::OneOrMap, pico8::*};
 use bevy::platform::collections::{HashMap, HashSet};
 use std::{
     collections::VecDeque,
     hash::{DefaultHasher, Hash, Hasher},
 };
+pub use var_bitdepth::Gfx;
 
 pub(crate) fn plugin(app: &mut App) {
     app.register_type::<Gfx>()
@@ -113,7 +113,8 @@ pub(crate) fn compute_image(
             .get(&hash)
             .inspect(|handle| {
                 if gfx_changed {
-                    let _my_span = info_span!("gfx::compute_image", name = "update image").entered();
+                    let _my_span =
+                        info_span!("gfx::compute_image", name = "update image").entered();
                     let gfx = gfxs.get(gfx_id);
                     // Update existing image.
                     if let Some((gfx, image)) = gfx.zip(images.get_mut(*handle)) {
@@ -123,7 +124,6 @@ pub(crate) fn compute_image(
                                 gfx_material.pal_map.write_color(&palette.data, i, bytes)
                             }) {
                                 warn!("Unable to write color to handle {:?}: {e}", &handle);
-
                             }
                         } else {
                             warn_once!("No data for image {}", gfx_id);
@@ -248,7 +248,6 @@ fn compute_image_on_gfx_sprite_change(
 ) {
     for (id, gfx_sprite, sprite) in &mut sprites {
         let Some(gfx_material) = gfx_materials.get(&gfx_sprite.material) else {
-
             trace!("No gfx material for gfx sprite {}", id);
             continue;
         };
@@ -288,4 +287,3 @@ pub enum PngError {
     #[error("Cannot convert bit-depth for pixel {pixel_index} with value {pixel_value}")]
     BitDepthConversion { pixel_index: usize, pixel_value: u8 },
 }
-

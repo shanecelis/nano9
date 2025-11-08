@@ -371,7 +371,8 @@ pub(crate) async fn translate_pico8_to_lua<'a>(
                         .immediate()
                         // .load::<bevy_mod_scripting::prelude::ScriptAsset>(include_path)
                         .load::<Pico8Asset>(include_path)
-                        .await.map_err(Box::new)?;
+                        .await
+                        .map_err(Box::new)?;
                     let script = pico8_asset
                         .get_labeled("lua")
                         .and_then(|erased_asset| {

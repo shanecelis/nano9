@@ -175,7 +175,8 @@ async fn into_asset(
                     *settings = palette_settings;
                 })
                 .load(&palette.path)
-                .await.map_err(Box::new)?;
+                .await
+                .map_err(Box::new)?;
             palettes.push(palette.take());
             info!("added palette, now have {}", palettes.len());
             // palettes.push(if let Some(row) = palette.row {
@@ -240,7 +241,8 @@ async fn into_asset(
                 .with_unknown_type()
                 .immediate()
                 .load(&asset_path)
-                .await.map_err(Box::new)?;
+                .await
+                .map_err(Box::new)?;
             match erased_loaded.downcast::<pico8::audio::AudioBank>() {
                 Ok(loaded) => {
                     let audio_bank = loaded.take();

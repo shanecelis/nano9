@@ -9,13 +9,13 @@ use crate::pico8::lua::with_system_param;
 use crate::pico8::{negate_y, Error};
 #[cfg(feature = "scripting")]
 use bevy_mod_scripting::bindings::{
-    InteropError,
     function::{
         from::FromScript,
         namespace::{GlobalNamespace, NamespaceBuilder},
         script_function::FunctionCallContext,
     },
     script_value::ScriptValue,
+    InteropError,
 };
 
 #[cfg(feature = "scripting")]

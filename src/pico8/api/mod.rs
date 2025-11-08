@@ -78,7 +78,11 @@ pub(crate) fn plugin(app: &mut App) {
         .init_resource::<PlayerInputs>()
         .add_plugins((
             #[cfg(feature = "rand")]
-            rand::plugin, asset::plugin, mesh::plugin, camera3d::plugin))
+            rand::plugin,
+            asset::plugin,
+            mesh::plugin,
+            camera3d::plugin,
+        ))
         .add_plugins((
             sfx::plugin,
             spr::plugin,

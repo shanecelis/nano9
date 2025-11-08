@@ -40,12 +40,11 @@ impl PalMap {
     }
 
     pub fn map_or_mod(&self, index: usize) -> usize {
-        self.map(index)
-            .unwrap_or_else(|| {
-                // Find the highest bit.
-                // Create a mask 0b0000h1111
-                self.remap[index % self.remap.len()] as usize
-            })
+        self.map(index).unwrap_or_else(|| {
+            // Find the highest bit.
+            // Create a mask 0b0000h1111
+            self.remap[index % self.remap.len()] as usize
+        })
     }
 
     pub fn reset(&mut self) {

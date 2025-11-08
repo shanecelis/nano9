@@ -97,9 +97,7 @@ impl Gfx<u8> {
     }
 }
 
-impl<T: TypePath + Send + Sync + Default + BitView<Store = T> + BitStore + Copy,
-    > Gfx<T>
-{
+impl<T: TypePath + Send + Sync + Default + BitView<Store = T> + BitStore + Copy> Gfx<T> {
     /// Create an indexed image.
     pub fn new(bitdepth: usize, width: usize, height: usize) -> Self {
         Gfx {
@@ -256,5 +254,4 @@ mod test {
         assert_eq!(bits_required(9), Some(4));
         assert_eq!(bits_required(2), Some(1));
     }
-
 }

@@ -11,11 +11,10 @@ use bevy_minibuffer::prelude::*;
 use bevy_mod_scripting::{
     bindings::{
         function::{namespace::NamespaceBuilder, script_function::FunctionCallContext},
-        script_value::ScriptValue, InteropError,
+        script_value::ScriptValue,
+        InteropError,
     },
-    core::{
-        event::ScriptCallbackEvent,
-    },
+    core::event::ScriptCallbackEvent,
 };
 // mod count;
 // pub use count::*;
@@ -87,7 +86,9 @@ pub fn quick_plugin(app: &mut App) {
     {
         if !app.is_plugin_added::<bevy_egui::EguiPlugin>() {
             info!("bevy_minibuffer_inspector requires EguiPlugin, adding it.");
-            app.add_plugins(bevy_egui::EguiPlugin { enable_multipass_for_primary_context: false });
+            app.add_plugins(bevy_egui::EguiPlugin {
+                enable_multipass_for_primary_context: false,
+            });
         }
         app.add_acts((
             bevy_minibuffer_inspector::WorldActs::default(),

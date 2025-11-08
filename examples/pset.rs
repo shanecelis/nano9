@@ -13,8 +13,7 @@ fn update(mut pico8: Pico8, mut x: Local<u32>) {
 
 fn main() {
     let mut app = App::new();
-    app
-        .add_systems(nano9::schedule::Init, init)
+    app.add_systems(nano9::schedule::Init, init)
         .add_systems(nano9::schedule::Update, update);
 
     let config = Config::pico8();

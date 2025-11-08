@@ -25,8 +25,7 @@ fn draw(mut pico8: Pico8) {
 fn main() {
     let mut app = App::new();
     // Set up your call backs.
-    app
-        .add_systems(nano9::schedule::Draw, draw);
+    app.add_systems(nano9::schedule::Draw, draw);
 
     let mut config = Config::pico8();
     // Add Bevy's default font.

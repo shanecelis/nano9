@@ -2,8 +2,8 @@ use super::*;
 use bevy::ecs::system::SystemParam;
 
 use crate::pico8::{
-    self, api::canvas::N9Canvas, audio::SfxChannels, keyboard::KeyInput, mouse::MouseInput,
-    Gfx, Palettes,
+    self, api::canvas::N9Canvas, audio::SfxChannels, keyboard::KeyInput, mouse::MouseInput, Gfx,
+    Palettes,
 };
 
 #[derive(SystemParam)]
