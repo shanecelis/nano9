@@ -28,14 +28,9 @@ impl<const N: usize> Gfx<N, u8> {
         let mut reader = decoder.read_info()?;
         let info = reader.info();
         if let Some(ref mut palette) = &mut palette {
-            info.palette.as_ref().inspect(|png_palette| {
-                let colors = png_palette.chunks(3);
-                let mut data = vec![[0x00, 0x00, 0x00, 0xff]; colors.len()];
-                for (i, rgb) in colors.enumerate() {
-                    data[i][0..3].copy_from_slice(rgb);
-                }
-                palette.data = data;
-            });
+            if let Some(pal) = Palette::from_png_palette_info(&info) {
+                palette.data = pal.data;
+            }
         }
         let dest_bit_depth = N;
         if info.color_type == png::ColorType::Indexed {

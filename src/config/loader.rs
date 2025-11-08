@@ -173,7 +173,12 @@ async fn into_asset(
                 .with_settings(pixel_art_settings)
                 .load(&palette.path)
                 .await.map_err(Box::new)?;
-            palettes.push(pico8::Palette::from_image(image.get(), palette.row));
+            // palettes.push(pico8::Palette::from_image(image.get(), palette.row));
+            palettes.push(if let Some(row) = palette.row {
+                pico8::Palette::from_image_row(image.get(), row)
+            } else {
+                pico8::Palette::from_image(image.get())
+            });
         }
     }
     let mut sprite_sheets = vec![];
