@@ -1,4 +1,4 @@
-// pub mod const_bitdepth;
+pub mod const_bitdepth;
 mod var_bitdepth;
 use crate::{one_or_map::OneOrMap, pico8::*};
 use bevy::platform::collections::{HashMap, HashSet};
@@ -40,12 +40,6 @@ pub struct GfxMaterial {
     pub palette: usize,
     pub pal_map: PalMap,
 }
-
-// #[derive(Asset, Debug, Reflect, Clone, Hash, Eq)]
-// pub struct GfxMat<'a> {
-//     pub palette: usize,
-//     pub pal_map: &'a PalMap,
-// }
 
 #[derive(Resource, Default, Reflect, Deref, DerefMut)]
 pub struct GfxImageMap(HashMap<AssetId<Gfx>, GfxImage>);

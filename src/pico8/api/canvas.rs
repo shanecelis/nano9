@@ -197,10 +197,9 @@ impl super::Pico8<'_, '_> {
         Ok(())
     }
 
-    pub fn pset(&mut self, pos: UVec2, color: impl Into<N9Color>) -> Result<(), Error> {
-        let color = color.into();
+    pub fn pset(&mut self, pos: UVec2, color: Option<PColor>) -> Result<(), Error> {
 
-        match color.into_pcolor(&self.state.draw_state.pen) {
+        match color.unwrap_or(self.state.draw_state.pen) {
             PColor::Palette(p) => {
                 let gfx = self
                     .gfxs
@@ -268,11 +267,11 @@ mod lua {
             })
             .register(
                 "pset",
-                |ctx: FunctionCallContext, x: u32, y: u32, color: Option<N9Color>| {
+                |ctx: FunctionCallContext, x: u32, y: u32, color: Option<PColor>| {
                     with_pico8(&ctx, |pico8| {
                         // We want to ignore out of bounds errors specifically but possibly not others.
                         // Ok(pico8.pset(x, y, color)?)
-                        let _ = pico8.pset(UVec2::new(x, y), color.unwrap_or(N9Color::Pen));
+                        let _ = pico8.pset(UVec2::new(x, y), color);
                         Ok(())
                     })
                 },

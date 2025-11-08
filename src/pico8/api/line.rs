@@ -72,7 +72,7 @@ mod lua {
              y0: Option<i32>,
              x1: Option<i32>,
              y1: Option<i32>,
-             c: Option<N9Color>| {
+             c: Option<PColor>| {
                 let _ = with_pico8(&ctx, move |pico8| {
                     pico8.line(
                         IVec2::new(x0.unwrap_or(0), y0.unwrap_or(0)),

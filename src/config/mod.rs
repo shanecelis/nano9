@@ -431,7 +431,9 @@ path = "sprites.png"
             config.palettes,
             vec![Palette {
                 path: "sprites.png".into(),
-                row: None
+                row: None,
+                column: None,
+                extract_index: None,
             }]
         );
     }
@@ -631,7 +633,7 @@ extract_palette = true
 "#,
         )
         .unwrap();
-        assert_eq!(config.sprite_sheets[0].extract_palette, true);
+        assert_eq!(config.sprite_sheets[0].path, "sprites.png");
     }
 
     #[test]

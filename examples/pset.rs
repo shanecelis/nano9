@@ -7,7 +7,7 @@ fn init(mut pico8: Pico8) {
 }
 
 fn update(mut pico8: Pico8, mut x: Local<u32>) {
-    let _ = pico8.pset(UVec2::new(*x, *x), PColor::Palette(1));
+    let _ = pico8.pset(UVec2::new(*x, *x), Some(PColor::Palette(1)));
     *x += 1;
 }
 
