@@ -200,6 +200,8 @@ fn handle_overflow(mut query: Query<&mut Clearable>) {
     }
 }
 
+
+#[allow(clippy::too_many_arguments)]
 fn handle_clear_event(
     trigger: Trigger<ClearEvent>,
     mut query: Query<(Entity, &mut Clearable, &mut Visibility)>,
@@ -236,7 +238,7 @@ fn handle_clear_event(
 
     for (id, mut clearable, mut visibility) in &mut query {
         match clearable.state.decrement_ttl() {
-            Some(ttl) if ttl == 0 => {
+            Some(0) => {
                 commands.entity(id).despawn();
             }
             Some(_ttl) => {

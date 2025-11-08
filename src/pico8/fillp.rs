@@ -33,7 +33,7 @@ impl FillPat {
     ///
     /// The `write_color` function accepts a color_index and the pixel_index and
     /// writes a Srgba set of u8 pixels.
-    pub fn to_image<E>(
+    pub fn try_to_image<E>(
         &self,
         width: usize,
         height: usize,

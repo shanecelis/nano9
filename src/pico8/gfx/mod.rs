@@ -150,6 +150,7 @@ pub(crate) fn compute_image(
 }
 
 // Informed from Bevy's Sprite::compute_slices_on_asset_event.
+#[allow(clippy::too_many_arguments)]
 fn compute_image_on_asset_event(
     mut commands: Commands,
     mut events: EventReader<AssetEvent<Gfx>>,
@@ -230,6 +231,7 @@ fn compute_image_on_asset_event(
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 fn compute_image_on_gfx_sprite_change(
     mut commands: Commands,
     mut images: ResMut<Assets<Image>>,

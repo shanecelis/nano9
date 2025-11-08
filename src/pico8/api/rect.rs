@@ -73,7 +73,7 @@ impl super::Pico8<'_, '_> {
                             //         pixel_bytes.copy_from_slice(&PALETTE[i as usize]);
                             //     })
                             // }
-                            fill_pat.to_image(8, 8, |bit, _pixel_index, pixel_bytes| {
+                            fill_pat.try_to_image(8, 8, |bit, _pixel_index, pixel_bytes| {
                                 let c: Option<PColor> = if bit {
                                     color.on()
                                 } else {

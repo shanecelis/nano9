@@ -54,7 +54,7 @@ pub enum SpriteSheetError {
         sprite_counts: UVec2,
     },
     #[error("Could not load dependency: {0}")]
-    Load(#[from] bevy::asset::LoadDirectError),
+    Load(#[from] Box<bevy::asset::LoadDirectError>),
     #[error("Could not load cart: {0}")]
     Cart(#[from] Box<pico8::CartLoaderError>),
     #[error("Could not load image: {0}")]

@@ -345,8 +345,8 @@ pub struct CartLoaderSettings {
 
 /// Convert Pico-8 dialect to Lua.
 #[cfg(feature = "pico8-to-lua")]
-pub(crate) async fn translate_pico8_to_lua<'a>(
-    lua: &'a str,
+pub(crate) async fn translate_pico8_to_lua(
+    lua: &str,
     load_context: &mut LoadContext<'_>,
 ) -> Result<Option<String>, CartLoaderError> {
     // Patch the includes.

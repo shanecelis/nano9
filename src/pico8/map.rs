@@ -65,6 +65,7 @@ pub struct P8SpriteMap {
 }
 
 // Informed from Bevy's Sprite::compute_slices_on_asset_event.
+#[allow(clippy::too_many_arguments)]
 fn compute_gfx_tilemap_texture_on_asset_event(
     mut commands: Commands,
     mut events: EventReader<AssetEvent<Gfx>>,

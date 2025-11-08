@@ -190,6 +190,7 @@ pub struct Palette {
 }
 
 impl Palette {
+    #[allow(clippy::wrong_self_convention)]
     fn into_settings(&self) -> Option<pico8::PaletteSettings> {
         use pico8::PaletteSettings;
         if self.extract_index.unwrap_or(false) {
@@ -589,11 +590,16 @@ clear_color = 8
 
     #[test]
     fn test_inject1() {
-        let mut a = Config::default();
+        let mut a = Config {
+            frames_per_second: Some(60),
+            ..default()
+        };
         a.frames_per_second = Some(60);
         a.inject_template(Some("pico8")).unwrap();
-        let mut b = Config::default();
-        b.frames_per_second = Some(60);
+        let mut b = Config {
+            frames_per_second: Some(60),
+            ..default()
+        };
         b.merge(&mut Config::pico8());
         assert_eq!(a, b);
     }

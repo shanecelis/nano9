@@ -8,6 +8,7 @@ pub struct Palette {
     pub data: Vec<[u8; 4]>,
 }
 
+#[allow(clippy::enum_variant_names)]
 #[derive(thiserror::Error, Debug)]
 pub enum PalError {
     #[error("no such palette {index} only {count} palettes")]
@@ -29,7 +30,7 @@ impl Palette {
         let decoder = png::Decoder::new(cursor);
         let reader = decoder.read_info()?;
         let info = reader.info();
-        Ok(Self::from_png_palette_info(&info))
+        Ok(Self::from_png_palette_info(info))
     }
 
     pub fn from_png_palette_info(info: &png::Info<'static>) -> Option<Self> {
@@ -98,6 +99,7 @@ impl Palette {
 #[derive(Default)]
 struct PaletteLoader;
 
+#[allow(clippy::enum_variant_names)]
 #[derive(Default, serde::Serialize, serde::Deserialize, Clone, Copy)]
 pub enum PaletteSettings {
     #[default]

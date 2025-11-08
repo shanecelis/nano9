@@ -130,12 +130,10 @@ impl AssetLoader for LuaLoader {
             .or(load_context.path().extension().map(|x| x == "p8lua"))
             .unwrap_or(false);
         if cfg!(feature = "pico8-to-lua") {
-            if translate {
-                if let Some(patched_code) =
+            if translate && let Some(patched_code) =
                     pico8::translate_pico8_to_lua(&code, load_context).await?
-                {
-                    code = patched_code;
-                }
+            {
+                code = patched_code;
             }
         } else if translate {
             warn!("Pico-8 dialect translation requested but 'pico8-to-lua' feature not active.");

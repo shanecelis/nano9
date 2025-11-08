@@ -32,6 +32,7 @@ pub(crate) fn plugin(app: &mut App) {
     lua::plugin(app);
 }
 
+#[allow(clippy::too_many_arguments)]
 pub fn setup_canvas(
     canvas: Option<ResMut<N9Canvas>>,
     mut assets: ResMut<Assets<Image>>,

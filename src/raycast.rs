@@ -132,10 +132,8 @@ impl Rays<'_, '_> {
         self.covers
             .iter()
             .filter_map(|(id, cover, transform)| {
-                if let Some(mask) = mask {
-                    if cover.flags & mask == 0 {
-                        return None;
-                    }
+                if let Some(mask) = mask &&cover.flags & mask == 0 {
+                    return None;
                 }
                 let min = (*transform * cover.aabb.min.extend(0.0)).xy();
                 // let min = cover.aabb.min;
@@ -178,10 +176,8 @@ impl Rays<'_, '_> {
             self.covers
                 .iter()
                 .filter_map(|(id, cover, transform)| {
-                    if let Some(mask) = mask {
-                        if cover.flags & mask == 0 {
-                            return None;
-                        }
+                    if let Some(mask) = mask && cover.flags & mask == 0 {
+                        return None;
                     }
                     let min = (*transform * cover.aabb.min.extend(0.0)).xy();
                     let max = (*transform * cover.aabb.max.extend(0.0)).xy();
@@ -196,10 +192,10 @@ impl Rays<'_, '_> {
             self.covers
                 .iter()
                 .filter_map(|(id, cover, transform)| {
-                    if let Some(mask) = mask {
-                        if cover.flags & mask == 0 {
-                            return None;
-                        }
+                    if let Some(mask) = mask &&
+                        cover.flags & mask == 0
+                    {
+                        return None;
                     }
                     let min = (*transform * cover.aabb.min.extend(0.0)).xy();
                     let max = (*transform * cover.aabb.max.extend(0.0)).xy();

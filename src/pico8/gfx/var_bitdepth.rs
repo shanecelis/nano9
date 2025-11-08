@@ -36,10 +36,10 @@ impl Gfx<u8> {
         let decoder = png::Decoder::new(cursor);
         let mut reader = decoder.read_info()?;
         let info = reader.info();
-        if let Some(palette) = &mut palette {
-            if let Some(pal) = Palette::from_png_palette_info(&info) {
-                palette.data = pal.data;
-            }
+        if let Some(palette) = &mut palette &&
+            let Some(pal) = Palette::from_png_palette_info(info)
+        {
+            palette.data = pal.data;
         }
         // Find highest power of 2 in the length of colors.
         let png_bit_depth: usize = info.bit_depth as u8 as usize;

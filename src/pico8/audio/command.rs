@@ -60,14 +60,13 @@ impl Command for AudioCommand {
                         // TODO: Consider using smallvec for channels.
                         let channels: Vec<Entity> = (*world.resource::<SfxChannels>()).clone();
                         for chan in channels {
-                            if let Some(mode) = mode {
-                                if !world
+                            if let Some(mode) = mode &&
+                                !world
                                     .get::<PlaybackSettings>(chan)
                                     .map(|s| mode_eq(s.mode, mode))
                                     .unwrap_or(true)
-                                {
-                                    continue;
-                                }
+                            {
+                                continue;
                             }
                             if let Some(sink) = world.get_mut::<AudioSink>(chan) {
                                 sink.stop();
