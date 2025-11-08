@@ -69,7 +69,7 @@ impl Command for AudioCommand {
                                     continue;
                                 }
                             }
-                            if let Some(ref mut sink) = world.get_mut::<AudioSink>(chan) {
+                            if let Some(sink) = world.get_mut::<AudioSink>(chan) {
                                 sink.stop();
                             }
                             let mut commands = world.commands();
@@ -87,7 +87,7 @@ impl Command for AudioCommand {
                             .get_resource::<SfxChannels>()
                             .and_then(|sfx_channels| sfx_channels.get(chan as usize));
                         if let Some(id) = id {
-                            if let Some(ref mut sink) = world.get_mut::<AudioSink>(*id) {
+                            if let Some(sink) = world.get_mut::<AudioSink>(*id) {
                                 sink.stop();
                             }
                         } else {
@@ -101,7 +101,7 @@ impl Command for AudioCommand {
                                 .and_then(|sfx_channels| sfx_channels.get(i))
                                 .copied();
                             if let Some(id) = id {
-                                if let Some(ref mut sink) = world.get_mut::<AudioSink>(id) {
+                                if let Some(sink) = world.get_mut::<AudioSink>(id) {
                                     sink.stop();
                                 }
                                 let mut commands = world.commands();

@@ -113,7 +113,7 @@ pub(crate) fn compute_image(
                     // Update existing image.
                     if let Some((gfx, image)) = gfx.zip(images.get_mut(*handle)) {
                         trace!("updating image for gfx {}", gfx_id);
-                        if let Some(ref mut data) = image.data {
+                        if let Some(data) = &mut image.data {
                             if let Err(e) = gfx.try_write_bytes(data, |i, _, bytes| {
                                 gfx_material.pal_map.write_color(&palette.data, i, bytes)
                             }) {

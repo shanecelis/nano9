@@ -293,7 +293,7 @@ fn add_tilemaps(
             storage: tile_storage,
             texture: TilemapTexture::Single(match &sprite_sheet.handle {
                 SprHandle::Image(handle) => handle.clone(),
-                SprHandle::Gfx(ref handle) => {
+                SprHandle::Gfx(handle) => {
                     gfx_handle = Some(handle.clone());
                     Handle::default()
                     // gfx_to_image(handle)?,

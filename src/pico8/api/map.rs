@@ -150,7 +150,7 @@ impl super::Pico8<'_, '_> {
                     .ok_or_else(|| Error::NoSuch("map entry".into()))
             }
             #[cfg(feature = "level")]
-            SpriteMap::Level(ref mut map) => {
+            SpriteMap::Level(map) => {
                 todo!()
                 // self.tiled
                 //     .mset(map, pos, sprite_index, map_index, layer_index)

@@ -249,7 +249,7 @@ impl super::Pico8<'_, '_> {
             // TODO: Set the sprite number and flip before handing off. It may have changed.
             self.commands.queue(move |world: &mut World| {
                 if let Some(mut sprite) = world.get_mut::<Sprite>(id) {
-                    if let Some(ref mut atlas) = &mut sprite.texture_atlas {
+                    if let Some(atlas) = &mut sprite.texture_atlas {
                         atlas.index = index;
                     }
                     sprite.flip_x = flip.x;

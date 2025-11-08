@@ -208,7 +208,7 @@ impl Level<'_, '_> {
                                                             )
                                                         })
                                                         .and_then(|mut sprite| {
-                                                            if let Some(ref mut atlas) =
+                                                            if let Some(atlas) =
                                                                 &mut sprite.texture_atlas
                                                             {
                                                                 atlas.index = sprite_index;

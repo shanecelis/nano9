@@ -227,7 +227,7 @@ pub fn update_asset(
 
         // info!("update asset event {e:?}");
         if let AssetEvent::LoadedWithDependencies { id } = e {
-            if let Some(ref mut pico8_handle) = pico8_handle {
+            if let Some(pico8_handle) = &mut pico8_handle {
                 if let Some(pico8_asset) = assets.get(*id) {
                     if pico8_handle.handle.id() != *id {
                         warn!("Script loaded but does not match Pico8Handle.");

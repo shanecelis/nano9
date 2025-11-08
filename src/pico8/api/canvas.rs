@@ -33,7 +33,7 @@ pub(crate) fn plugin(app: &mut App) {
 }
 
 pub fn setup_canvas(
-    mut canvas: Option<ResMut<N9Canvas>>,
+    canvas: Option<ResMut<N9Canvas>>,
     mut assets: ResMut<Assets<Image>>,
     mut gfxs: ResMut<Assets<Gfx>>,
     camera: Single<Entity, With<Nano9Camera>>,
@@ -43,7 +43,7 @@ pub fn setup_canvas(
     mut commands: Commands,
 ) {
     trace!("setup_canvas");
-    if let Some(ref mut canvas) = canvas {
+    if let Some(mut canvas) = canvas {
         let camera_id = camera.into_inner();
 
         let mut image = Image::new_fill(
@@ -154,7 +154,7 @@ pub fn sync_window_size(
 
         for mut projection in projection_query.iter_mut() {
             match &mut *projection {
-                Projection::Orthographic(ref mut orthographic) => {
+                Projection::Orthographic(orthographic) => {
                     trace!(
                         "oldscale {} new_scale {new_scale} window_scale {window_scale}",
                         &orthographic.scale

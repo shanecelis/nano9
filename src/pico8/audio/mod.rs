@@ -608,7 +608,7 @@ impl Iterator for SfxDecoder {
 
     fn next(&mut self) -> Option<Self::Item> {
         let mut result = None;
-        if let Some(ref mut samples) = self.samples {
+        if let Some(samples) = &mut self.samples {
             result = samples.next();
             if result.is_none() {
                 self.samples = None; // Will create one for the next note.

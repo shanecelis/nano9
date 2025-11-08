@@ -19,7 +19,7 @@ impl Rand8<'_> {
     #[cfg(feature = "scripting")]
     pub fn rnd(&mut self, value: Option<ScriptValue>) -> ScriptValue {
         let value = value.unwrap_or(ScriptValue::Unit);
-        let (ref mut rng, _seed) = *self.rand;
+        let (rng, _seed) = &mut* self.rand;
         match value {
             ScriptValue::Integer(x) => {
                 ScriptValue::from(
@@ -50,7 +50,7 @@ impl Rand8<'_> {
     // XXX: For now.
     #[allow(deprecated)]
     pub fn srand(&mut self, new_seed: u64) {
-        let (ref mut rng, ref mut _seed) = *self.rand;
+        let (rng, _seed) = &mut *self.rand;
         rng.reseed(new_seed.to_ne_bytes());
         // Commands does do it
         // commands.reseed(new_seed);

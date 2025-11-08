@@ -3,7 +3,7 @@ name = "nano9"
 description = "A Pico-8 compatibility layer for Bevy"
 authors = ["Shane Celis <shane.celis@gmail.com>"]
 version = "0.1.0-alpha.4"
-edition = "2021"
+edition = "2024"
 keywords = [
     "bevy",
     "gamedev",
