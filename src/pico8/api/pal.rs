@@ -58,10 +58,11 @@ impl super::Pico8<'_, '_> {
         let last = self.state.palette;
         Ok(match palette_index {
             Some(index) => {
-                if index < self.palettes.0.len() {
+                let count = self.palettes.0.len();
+                if index < count {
                     self.state.palette = index;
                 } else {
-                    return Err(PalError::NoSuchPalette(index));
+                    return Err(PalError::NoSuchPalette { index, count });
                 }
                 last
             }
@@ -156,7 +157,16 @@ mod lua {
                 "palm",
                 |ctx: FunctionCallContext, index: Option<usize>| {
                     with_pico8(&ctx, move |pico8| {
-                        pico8.palm(index).map_err(Error::from)
+                        match pico8.palm(index) {
+                            Err(e) => {
+                                match e {
+                                    PalError::NoSuchPalette { index, count } =>
+                                        pico8.palm(Some(index % count)),
+                                    x => Err(x)
+                                }
+                            }
+                            x => x,
+                        }.map_err(Error::from)
                     })
                 },
             )

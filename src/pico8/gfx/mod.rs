@@ -12,6 +12,8 @@ pub(crate) fn plugin(app: &mut App) {
     app.register_type::<Gfx>()
         .register_asset_reflect::<Gfx>()
         .register_type::<GfxSprite>()
+        .register_type::<GfxMaterial>()
+        .register_asset_reflect::<GfxMaterial>()
         .init_resource::<GfxImageMap>()
         .init_asset::<Gfx>()
         .init_asset::<GfxMaterial>()

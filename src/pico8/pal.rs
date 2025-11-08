@@ -10,8 +10,8 @@ pub struct Palette {
 
 #[derive(thiserror::Error, Debug)]
 pub enum PalError {
-    #[error("no such palette {0}")]
-    NoSuchPalette(usize),
+    #[error("no such palette {index} only {count} palettes")]
+    NoSuchPalette { index: usize, count: usize },
     #[error("no such color {0}")]
     NoSuchColor(usize),
     #[error("no such color {color} in palette {palette}")]
@@ -102,7 +102,7 @@ impl Palette {
 #[derive(Default)]
 struct PaletteLoader;
 
-#[derive(Default, serde::Serialize, serde::Deserialize)]
+#[derive(Default, serde::Serialize, serde::Deserialize, Clone, Copy)]
 pub enum PaletteSettings {
     #[default]
     FromImage,

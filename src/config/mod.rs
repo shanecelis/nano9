@@ -186,7 +186,22 @@ pub struct Palette {
     /// Specify the column of the palette to use.
     pub column: Option<u32>,
     /// Extract palette from an indexed image.
-    pub extract: Option<bool>,
+    pub extract_index: Option<bool>,
+}
+
+impl Palette {
+    fn into_settings(&self) -> Option<pico8::PaletteSettings> {
+        use pico8::PaletteSettings;
+        if self.extract_index.unwrap_or(false) {
+            Some(PaletteSettings::FromIndex)
+        } else if let Some(row) = self.row {
+            Some(PaletteSettings::FromRow(row))
+        } else if let Some(column) = self.column {
+            Some(PaletteSettings::FromColumn(column))
+        } else {
+            Some(PaletteSettings::FromImage)
+        }
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -300,7 +315,7 @@ impl Config {
                 path: pico8::PICO8_PALETTE.into(),
                 row: None,
                 column: None,
-                extract: None,
+                extract_index: None,
             }],
             fonts: vec![Font::Path {
                 path: pico8::PICO8_FONT.into(),
@@ -331,7 +346,7 @@ impl Config {
                 path: gameboy::PALETTES.into(),
                 row: Some(15),
                 column: None,
-                extract: None,
+                extract_index: None,
             }],
             fonts: vec![Font::Path {
                 path: gameboy::FONT.into(),

@@ -167,18 +167,22 @@ async fn into_asset(
     } else {
         palettes = Vec::with_capacity(config.palettes.len());
         for palette in config.palettes.iter() {
-            let image = load_context
+            let palette_settings = palette.into_settings().expect("palette");
+            let palette = load_context
                 .loader()
                 .immediate()
-                .with_settings(pixel_art_settings)
+                .with_settings(move |settings: &mut pico8::PaletteSettings| {
+                    *settings = palette_settings;
+                })
                 .load(&palette.path)
                 .await.map_err(Box::new)?;
-            // palettes.push(pico8::Palette::from_image(image.get(), palette.row));
-            palettes.push(if let Some(row) = palette.row {
-                pico8::Palette::from_image_row(image.get(), row)
-            } else {
-                pico8::Palette::from_image(image.get())
-            });
+            palettes.push(palette.take());
+            info!("added palette, now have {}", palettes.len());
+            // palettes.push(if let Some(row) = palette.row {
+            //     pico8::Palette::from_image_row(image.get(), row)
+            // } else {
+            //     pico8::Palette::from_image(image.get())
+            // });
         }
     }
     let mut sprite_sheets = vec![];
