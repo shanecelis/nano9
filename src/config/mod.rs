@@ -38,6 +38,7 @@ pub(crate) fn plugin(app: &mut App) {
 
 /// Nano-9 config
 #[derive(Debug, Clone, Deserialize, Serialize, Default, Merge, PartialEq)]
+#[serde(deny_unknown_fields)]
 pub struct Config {
     /// Name of the game
     pub name: Option<String>,
@@ -85,6 +86,7 @@ pub struct Config {
 }
 
 #[derive(Default, Debug, Clone, Deserialize, Serialize, Merge, PartialEq)]
+#[serde(deny_unknown_fields)]
 pub struct Defaults {
     /// Initial palette
     pub initial_palette: Option<usize>,
@@ -105,6 +107,7 @@ pub struct Defaults {
 /// Audio bank
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(untagged)]
+#[serde(deny_unknown_fields)]
 pub enum AudioBank {
     /// Paths to audio files
     Paths { paths: Vec<String> },
@@ -124,6 +127,7 @@ impl AudioBank {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Merge)]
+#[serde(deny_unknown_fields)]
 pub struct Screen {
     #[merge(skip)]
     /// Canvas size, logical pixels, e.g., [128, 128] for pico8
@@ -133,6 +137,7 @@ pub struct Screen {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default, Merge)]
+#[serde(deny_unknown_fields)]
 pub struct SpriteSheet {
     /// Path to image
     pub path: String,
@@ -162,6 +167,7 @@ pub struct SpriteMap {
 
 /// Font
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
 #[serde(untagged)]
 pub enum Font {
     /// Default font
@@ -178,6 +184,7 @@ pub enum Font {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Merge)]
+#[serde(deny_unknown_fields)]
 pub struct Palette {
     /// Path to palette
     pub path: String,
@@ -206,6 +213,7 @@ impl Palette {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
 #[serde(untagged)]
 pub enum Mesh {
     Path { path: String },
@@ -396,7 +404,7 @@ mod test {
     fn test_config_0() {
         let config: Config = toml::from_str(
             r#"
-image = []
+sprite_sheet = []
 "#,
         )
         .unwrap();
@@ -531,14 +539,15 @@ path = "blah.p8"
     #[test]
     fn test_config_7() {
         // I didn't know it would let other values through like this. Boo.
-        let config: Config = toml::from_str(
-            r#"
+        assert!(
+            toml::from_str::<Config>(
+                r#"
 frames_per_second = 70
 blah = 7
 "#,
-        )
-        .unwrap();
-        assert_eq!(config.frames_per_second, Some(70));
+            )
+            .is_err()
+        );
     }
 
     #[test]
@@ -635,7 +644,7 @@ path = "sprites.png"
             r#"
 [[sprite_sheet]]
 path = "sprites.png"
-extract_palette = true
+sprite_size = [16,16]
 "#,
         )
         .unwrap();
@@ -673,6 +682,20 @@ cuboid = [0.1, 0.2, 0.3]
             Mesh::Cuboid {
                 cuboid: [0.1, 0.2, 0.3]
             }
+        );
+    }
+
+    #[test]
+    fn test_unexpected_name() {
+        assert!(
+            toml::from_str::<Config>(
+                r#"
+[[mesh]]
+cuboid = [0.1, 0.2, 0.3]
+bad_name = 1
+"#,
+            )
+            .is_err()
         );
     }
 }
