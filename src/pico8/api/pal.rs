@@ -115,7 +115,10 @@ mod lua {
                  new: Option<usize>,
                  mode: Option<u8>| {
                     with_pico8(&ctx, move |pico8| {
-                        if let Some(old) = old && new.is_none() && mode.is_none() {
+                        if let Some(old) = old
+                            && new.is_none()
+                            && mode.is_none()
+                        {
                             // Set the palette.
                             pico8.state.palette = old;
                         } else {

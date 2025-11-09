@@ -19,7 +19,7 @@ impl Rand8<'_> {
     #[cfg(feature = "scripting")]
     pub fn rnd(&mut self, value: Option<ScriptValue>) -> ScriptValue {
         let value = value.unwrap_or(ScriptValue::Unit);
-        let (rng, _seed) = &mut* self.rand;
+        let (rng, _seed) = &mut *self.rand;
         match value {
             ScriptValue::Integer(x) => {
                 ScriptValue::from(

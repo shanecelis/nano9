@@ -4,8 +4,8 @@ use bevy::{
 };
 
 use crate::{
-    pico8::{PalError, Palette},
     PColor,
+    pico8::{PalError, Palette},
 };
 
 pub(crate) fn plugin(app: &mut App) {

@@ -53,11 +53,11 @@ use bevy::{
 use tiny_skia::{self, FillRule, Paint, PathBuilder, Pixmap, Stroke};
 
 use crate::{
-    pico8::{
-        self, audio::AudioBank, image::pixel_art_settings, ClearEvent, Clearable, PalMap, Palette,
-        SpriteMap,
-    },
     DrawState, FillColor, N9Color, PColor,
+    pico8::{
+        self, ClearEvent, Clearable, PalMap, Palette, SpriteMap, audio::AudioBank,
+        image::pixel_art_settings,
+    },
 };
 use std::{borrow::Cow, f32::consts::PI};
 
@@ -107,11 +107,7 @@ pub(crate) fn plugin(app: &mut App) {
 /// Negates y IF the feature "negate-y" is enabled.
 #[inline]
 pub fn negate_y(y: f32) -> f32 {
-    if cfg!(feature = "negate-y") {
-        -y
-    } else {
-        y
-    }
+    if cfg!(feature = "negate-y") { -y } else { y }
 }
 
 #[inline]

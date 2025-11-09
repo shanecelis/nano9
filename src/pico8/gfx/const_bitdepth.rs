@@ -8,7 +8,6 @@ use bevy::{
 };
 use bitvec::{prelude::*, view::BitView};
 
-
 /// An indexed image using `N`-bit palette with color index `T`.
 #[derive(Asset, Debug, Reflect, Clone)]
 pub struct Gfx<const N: usize = 4, T: TypePath + Send + Sync + BitStore = u8> {
@@ -27,8 +26,8 @@ impl<const N: usize> Gfx<N, u8> {
         let decoder = png::Decoder::new(cursor);
         let mut reader = decoder.read_info()?;
         let info = reader.info();
-        if let Some(palette) = &mut palette &&
-            let Some(pal) = Palette::from_png_palette_info(info)
+        if let Some(palette) = &mut palette
+            && let Some(pal) = Palette::from_png_palette_info(info)
         {
             palette.data = pal.data;
         }
@@ -83,7 +82,9 @@ impl<const N: usize> Gfx<N, u8> {
     }
 }
 
-impl<T: TypePath + Send + Sync + Default + BitView<Store = T> + BitStore + Copy> const_bitdepth::Gfx<1, T> {
+impl<T: TypePath + Send + Sync + Default + BitView<Store = T> + BitStore + Copy>
+    const_bitdepth::Gfx<1, T>
+{
     pub fn mirror_horizontal(mut self) -> Self {
         for elem in self.data.chunks_mut(self.width) {
             elem.reverse();
@@ -92,10 +93,8 @@ impl<T: TypePath + Send + Sync + Default + BitView<Store = T> + BitStore + Copy>
     }
 }
 
-impl<
-        const N: usize,
-        T: TypePath + Send + Sync + Default + BitView<Store = T> + BitStore + Copy,
-    > Gfx<N, T>
+impl<const N: usize, T: TypePath + Send + Sync + Default + BitView<Store = T> + BitStore + Copy>
+    Gfx<N, T>
 {
     /// Create an indexed image.
     pub fn new(width: usize, height: usize) -> Self {
@@ -203,7 +202,6 @@ impl<
         .unwrap()
     }
 }
-
 
 #[cfg(test)]
 mod test {

@@ -9,8 +9,6 @@ pub fn on_just_pressed_with(
     modifiers: Vec<KeyCode>,
 ) -> impl Fn(Res<ButtonInput<KeyCode>>) -> bool {
     move |input: Res<ButtonInput<KeyCode>>| {
-        {
-            input.just_pressed(key) && input.any_pressed(modifiers.iter().copied())
-        }
+        input.just_pressed(key) && input.any_pressed(modifiers.iter().copied())
     }
 }

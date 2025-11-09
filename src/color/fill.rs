@@ -5,13 +5,13 @@ use super::PColor;
 use bevy::reflect::TypeRegistry;
 #[cfg(feature = "scripting")]
 use bevy_mod_scripting::{
+    GetTypeDependencies,
     bindings::{
+        InteropError, WorldAccessGuard,
         docgen::typed_through::{ThroughTypeInfo, TypedThrough},
         function::from::FromScript,
         script_value::ScriptValue,
-        InteropError, WorldAccessGuard,
     },
-    GetTypeDependencies,
 };
 
 /// This is a fill color that specifies what color to use for the "off" bit (default) and "on" bit.

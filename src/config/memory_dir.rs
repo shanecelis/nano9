@@ -1,7 +1,7 @@
 use bevy::{
     asset::io::{
-        memory::{Dir, MemoryAssetReader},
         AssetSource, AssetSourceId,
+        memory::{Dir, MemoryAssetReader},
     },
     prelude::*,
 };

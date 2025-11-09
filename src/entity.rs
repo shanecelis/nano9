@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use crate::pico8::{negate_y, Clearable, Pico8State};
+use crate::pico8::{Clearable, Pico8State, negate_y};
 use bevy_mod_scripting::{
     bindings::function::{
         from::Val, namespace::NamespaceBuilder, script_function::FunctionCallContext,

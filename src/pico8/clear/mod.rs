@@ -1,7 +1,7 @@
 use super::canvas;
 use crate::{
-    pico8::{Gfx, GfxDirty, GfxSprite, Palettes, Pico8State},
     PColor,
+    pico8::{Gfx, GfxDirty, GfxSprite, Palettes, Pico8State},
 };
 use bevy::prelude::*;
 use mashmap::MashMap;
@@ -199,7 +199,6 @@ fn handle_overflow(mut query: Query<&mut Clearable>) {
         DRAW_COUNTER.reset_overflowed()
     }
 }
-
 
 #[allow(clippy::too_many_arguments)]
 fn handle_clear_event(

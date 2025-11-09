@@ -10,9 +10,9 @@ use bevy_minibuffer::prelude::*;
 #[cfg(feature = "scripting")]
 use bevy_mod_scripting::{
     bindings::{
+        InteropError,
         function::{namespace::NamespaceBuilder, script_function::FunctionCallContext},
         script_value::ScriptValue,
-        InteropError,
     },
     core::event::ScriptCallbackEvent,
 };

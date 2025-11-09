@@ -3,7 +3,7 @@ use super::*;
 use bevy::platform::hash::FixedHasher;
 #[cfg(feature = "scripting")]
 use bevy_mod_scripting::bindings::{
-    function::from::FromScript, script_value::ScriptValue, InteropError, WorldAccessGuard,
+    InteropError, WorldAccessGuard, function::from::FromScript, script_value::ScriptValue,
 };
 
 use crate::{hash::hash_f32, pico8::Gfx};
@@ -434,9 +434,10 @@ impl super::Pico8<'_, '_> {
 #[cfg(feature = "scripting")]
 mod lua {
     use super::*;
-    use crate::{pico8::lua::with_pico8, DropPolicy, N9Entity};
+    use crate::{DropPolicy, N9Entity, pico8::lua::with_pico8};
 
     use bevy_mod_scripting::bindings::{
+        ReflectReference,
         function::{
             from::FromScript,
             into_ref::IntoScriptRef,
@@ -444,7 +445,6 @@ mod lua {
             script_function::FunctionCallContext,
         },
         script_value::ScriptValue,
-        ReflectReference,
     };
     pub(crate) fn plugin(app: &mut App) {
         let world = app.world_mut();

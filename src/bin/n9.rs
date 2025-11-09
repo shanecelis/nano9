@@ -1,13 +1,13 @@
 use bevy::{
     asset::{
-        io::{AssetSourceBuilder, AssetSourceId},
         AssetPath,
+        io::{AssetSourceBuilder, AssetSourceId},
     },
     prelude::*,
 };
 use clap::{Parser, Subcommand};
 use nano9::{
-    config::{front_matter, pause_pico8_when_loaded, run_pico8_when_loaded, Config},
+    config::{Config, front_matter, pause_pico8_when_loaded, run_pico8_when_loaded},
     pico8::{CartLoaderSettings, Pico8Asset, Pico8Handle, SharedData},
     *,
 };
@@ -284,7 +284,9 @@ fn new(cli: Cli) -> io::Result<ExitCode> {
                                 return Ok(ExitCode::from(6));
                             }
                             if path.is_dir() && !force {
-                                error!("error: {path:?} already exists, canceling; cautiously use --force to overwrite.");
+                                error!(
+                                    "error: {path:?} already exists, canceling; cautiously use --force to overwrite."
+                                );
                                 return Ok(ExitCode::from(7));
                             }
                         } else {
@@ -432,7 +434,9 @@ fn run(cli: Cli) -> io::Result<ExitCode> {
             eprintln!("loading config");
             let path: &Path = &script_path;
             let config_path = if set_default_source {
-                eprintln!("warn: NANO9_ASSETS_DIR environment variable overriding Nano-9.toml's directory.");
+                eprintln!(
+                    "warn: NANO9_ASSETS_DIR environment variable overriding Nano-9.toml's directory."
+                );
                 Some(AssetPath::from_path(path).with_source(&cwd).into_owned())
             } else if let Some(parent) = path.parent() {
                 app.register_asset_source(
@@ -526,16 +530,20 @@ fn run(cli: Cli) -> io::Result<ExitCode> {
                 } else {
                     Config::pico8()
                 };
-            config.scripts = vec![AssetPath::from_path(&script_path)
-                .with_source(&cwd)
-                .to_string()];
+            config.scripts = vec![
+                AssetPath::from_path(&script_path)
+                    .with_source(&cwd)
+                    .to_string(),
+            ];
             nano9_plugin = Nano9Plugin {
                 config,
                 ..default()
             };
         }
         ext => {
-            eprintln!("error: File has {ext:?} extension but only accepts extensions: .p8, .png, .lua, .p8lua, and .toml.");
+            eprintln!(
+                "error: File has {ext:?} extension but only accepts extensions: .p8, .png, .lua, .p8lua, and .toml."
+            );
             return Ok(ExitCode::from(1));
         }
     }

@@ -7,8 +7,8 @@ pub(crate) fn plugin(app: &mut App) {
 
 #[cfg(feature = "fixed-point")]
 mod fixed_point {
-    use fixed::types::extra::U16;
     use fixed::FixedI32;
+    use fixed::types::extra::U16;
     impl super::Pico8<'_, '_> {
         pub fn shl(a: f32, b: u8) -> f32 {
             let a = FixedI32::<U16>::from_num(a);

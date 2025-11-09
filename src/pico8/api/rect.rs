@@ -35,8 +35,7 @@ impl super::Pico8<'_, '_> {
             // We clear the screen.
             trace!(
                 "Clearing the screen on rectfill {:?} {:?}",
-                upper_left,
-                lower_right
+                upper_left, lower_right
             );
             self.cls(Some(color.off()))?;
 

@@ -162,15 +162,15 @@ impl super::Pico8<'_, '_> {
 #[cfg(feature = "scripting")]
 mod lua {
     use super::*;
-    use crate::{pico8::lua::with_pico8, DropPolicy, N9Entity};
+    use crate::{DropPolicy, N9Entity, pico8::lua::with_pico8};
 
     use bevy_mod_scripting::bindings::{
+        ReflectReference,
         function::{
             into_ref::IntoScriptRef,
             namespace::{GlobalNamespace, NamespaceBuilder},
             script_function::FunctionCallContext,
         },
-        ReflectReference,
     };
     pub(crate) fn plugin(app: &mut App) {
         let world = app.world_mut();

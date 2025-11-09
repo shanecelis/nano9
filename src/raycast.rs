@@ -6,16 +6,16 @@ use bevy::{
 
 #[cfg(feature = "scripting")]
 use crate::pico8::lua::with_system_param;
-use crate::pico8::{negate_y, Error};
+use crate::pico8::{Error, negate_y};
 #[cfg(feature = "scripting")]
 use bevy_mod_scripting::bindings::{
+    InteropError,
     function::{
         from::FromScript,
         namespace::{GlobalNamespace, NamespaceBuilder},
         script_function::FunctionCallContext,
     },
     script_value::ScriptValue,
-    InteropError,
 };
 
 #[cfg(feature = "scripting")]
@@ -132,7 +132,9 @@ impl Rays<'_, '_> {
         self.covers
             .iter()
             .filter_map(|(id, cover, transform)| {
-                if let Some(mask) = mask &&cover.flags & mask == 0 {
+                if let Some(mask) = mask
+                    && cover.flags & mask == 0
+                {
                     return None;
                 }
                 let min = (*transform * cover.aabb.min.extend(0.0)).xy();
@@ -176,7 +178,9 @@ impl Rays<'_, '_> {
             self.covers
                 .iter()
                 .filter_map(|(id, cover, transform)| {
-                    if let Some(mask) = mask && cover.flags & mask == 0 {
+                    if let Some(mask) = mask
+                        && cover.flags & mask == 0
+                    {
                         return None;
                     }
                     let min = (*transform * cover.aabb.min.extend(0.0)).xy();
@@ -192,8 +196,8 @@ impl Rays<'_, '_> {
             self.covers
                 .iter()
                 .filter_map(|(id, cover, transform)| {
-                    if let Some(mask) = mask &&
-                        cover.flags & mask == 0
+                    if let Some(mask) = mask
+                        && cover.flags & mask == 0
                     {
                         return None;
                     }

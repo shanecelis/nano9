@@ -5,8 +5,8 @@ use bitvec::prelude::*;
 use crate::pico8::audio::{Sfx, SfxChannels};
 
 use std::sync::{
-    atomic::{AtomicBool, Ordering},
     Arc,
+    atomic::{AtomicBool, Ordering},
 };
 
 pub(crate) fn plugin(app: &mut App) {
@@ -60,8 +60,8 @@ impl Command for AudioCommand {
                         // TODO: Consider using smallvec for channels.
                         let channels: Vec<Entity> = (*world.resource::<SfxChannels>()).clone();
                         for chan in channels {
-                            if let Some(mode) = mode &&
-                                !world
+                            if let Some(mode) = mode
+                                && !world
                                     .get::<PlaybackSettings>(chan)
                                     .map(|s| mode_eq(s.mode, mode))
                                     .unwrap_or(true)

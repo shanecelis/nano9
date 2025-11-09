@@ -2,10 +2,10 @@
 use crate::level::{self};
 use crate::{
     config::{self, Mesh, *},
-    pico8::{self, image::pixel_art_settings, MeshHandle, Pico8Asset},
+    pico8::{self, MeshHandle, Pico8Asset, image::pixel_art_settings},
 };
 use bevy::{
-    asset::{io::Reader, AssetLoader, AssetPath, LoadContext},
+    asset::{AssetLoader, AssetPath, LoadContext, io::Reader},
     prelude::*,
 };
 #[cfg(feature = "scripting")]
@@ -130,7 +130,8 @@ impl AssetLoader for LuaLoader {
             .or(load_context.path().extension().map(|x| x == "p8lua"))
             .unwrap_or(false);
         if cfg!(feature = "pico8-to-lua") {
-            if translate && let Some(patched_code) =
+            if translate
+                && let Some(patched_code) =
                     pico8::translate_pico8_to_lua(&code, load_context).await?
             {
                 code = patched_code;

@@ -100,11 +100,7 @@ fn strip_bom(s: &str) -> &str {
 // OLD ME: But this is performant.
 fn bom_len(s: &str) -> usize {
     const BOM: &str = "\u{FEFF}";
-    if s.starts_with(BOM) {
-        BOM.len()
-    } else {
-        0
-    }
+    if s.starts_with(BOM) { BOM.len() } else { 0 }
 }
 
 #[cfg(test)]

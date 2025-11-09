@@ -218,13 +218,13 @@ mod lua {
     use bevy_mod_scripting::{
         bindings::InteropError,
         bindings::{
+            IntoScript,
             access_map::ReflectAccessId,
             function::{
                 namespace::{GlobalNamespace, NamespaceBuilder},
                 script_function::FunctionCallContext,
             },
             script_value::ScriptValue,
-            IntoScript,
         },
     };
     pub(crate) fn plugin(app: &mut App) {

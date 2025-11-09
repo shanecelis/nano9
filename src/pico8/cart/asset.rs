@@ -1,5 +1,5 @@
 use crate::pico8::{self, image::pixel_art_settings, *};
-use bevy::asset::{io::Reader, AssetLoader, LoadContext};
+use bevy::asset::{AssetLoader, LoadContext, io::Reader};
 
 use super::*;
 #[cfg(feature = "scripting")]
@@ -145,14 +145,16 @@ fn to_asset(cart: Cart, load_context: &mut LoadContext) -> Result<Pico8Asset, Ca
             .loader()
             .with_settings(pixel_art_settings)
             .load(pico8::PICO8_BORDER),
-        maps: vec![load_context
-            .add_labeled_asset(
-                "map".to_string(),
-                P8Map {
-                    entries: cart.map.clone(),
-                },
-            )
-            .into()],
+        maps: vec![
+            load_context
+                .add_labeled_asset(
+                    "map".to_string(),
+                    P8Map {
+                        entries: cart.map.clone(),
+                    },
+                )
+                .into(),
+        ],
         audio_banks: vec![{
             let bank = AudioBank(
                 cart.sfx

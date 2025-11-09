@@ -1,6 +1,6 @@
 use crate::{
-    config::{Config, MemoryDir},
     Nano9Plugin,
+    config::{Config, MemoryDir},
 };
 use bevy::{
     app::{PluginGroup, PluginGroupBuilder},

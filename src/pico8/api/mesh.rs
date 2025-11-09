@@ -1,6 +1,6 @@
 use crate::{
-    pico8::{Clearable, Error},
     DropPolicy, N9Entity,
+    pico8::{Clearable, Error},
 };
 use bevy::prelude::*;
 

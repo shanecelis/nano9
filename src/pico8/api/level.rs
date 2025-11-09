@@ -3,7 +3,7 @@ use crate::ValueExt;
 
 #[cfg(feature = "scripting")]
 use bevy_mod_scripting::core::{
-    bindings::{function::from::FromScript, script_value::ScriptValue, WorldAccessGuard},
+    bindings::{WorldAccessGuard, function::from::FromScript, script_value::ScriptValue},
     docgen::{ThroughTypeInfo, TypedThrough},
     error::InteropError,
 };
@@ -108,10 +108,11 @@ impl super::Pico8<'_, '_> {
 #[cfg(feature = "scripting")]
 mod lua {
     use super::*;
-    use crate::{pico8::lua::with_pico8, DropPolicy, N9Entity};
+    use crate::{DropPolicy, N9Entity, pico8::lua::with_pico8};
 
     use bevy_mod_scripting::core::{
         bindings::{
+            IntoScript, ReflectReference,
             access_map::ReflectAccessId,
             function::{
                 from::FromScript,
@@ -120,7 +121,6 @@ mod lua {
                 script_function::FunctionCallContext,
             },
             script_value::ScriptValue,
-            IntoScript, ReflectReference,
         },
         error::InteropError,
     };

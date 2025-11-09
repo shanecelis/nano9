@@ -5,13 +5,13 @@ use crate::pico8::{Error, PalMap};
 use bevy::reflect::TypeRegistry;
 #[cfg(feature = "scripting")]
 use bevy_mod_scripting::{
+    GetTypeDependencies,
     bindings::{
+        InteropError, IntoScript, WorldAccessGuard,
         docgen::typed_through::{ThroughTypeInfo, TypedThrough},
         function::from::FromScript,
         script_value::ScriptValue,
-        InteropError, IntoScript, WorldAccessGuard,
     },
-    GetTypeDependencies,
 };
 
 #[derive(Debug, Clone, Copy, Reflect)]

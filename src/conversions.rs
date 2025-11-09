@@ -1,6 +1,6 @@
 use bevy_mod_scripting::bindings::InteropError;
 use bevy_mod_scripting::bindings::{
-    function::from::FromScript, script_value::ScriptValue, WorldAccessGuard,
+    WorldAccessGuard, function::from::FromScript, script_value::ScriptValue,
 };
 
 use bevy::platform::collections::hash_map::HashMap;

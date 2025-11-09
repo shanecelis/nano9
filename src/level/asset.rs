@@ -10,7 +10,7 @@ use bevy::reflect::TypeRegistryArc;
 
 use crate::level::reader::BytesResourceReader;
 use bevy::{
-    asset::{io::Reader, AssetLoader, LoadContext},
+    asset::{AssetLoader, LoadContext, io::Reader},
     prelude::*,
 };
 

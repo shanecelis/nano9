@@ -1,7 +1,7 @@
 use crate::pico8::{audio::*, *};
 use bevy::asset::{
-    io::{AssetSourceId, Reader},
     AssetLoader, AssetPath, LoadContext,
+    io::{AssetSourceId, Reader},
 };
 use bitvec::prelude::*;
 use pico8_decompress::{decompress, extract_bits_from_png};
@@ -184,7 +184,9 @@ impl Cart {
                         rows = 64;
                         shared_data = bytes.split_off(columns * 64 / 2);
                     } else {
-                        warn!("cart settings specify shared data for map expected more than 64 rows but was {rows}.");
+                        warn!(
+                            "cart settings specify shared data for map expected more than 64 rows but was {rows}."
+                        );
                     }
                 }
                 gfx = Some(Gfx {

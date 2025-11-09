@@ -4,8 +4,9 @@ use std::time::Duration;
 
 #[cfg(feature = "scripting")]
 use bevy_mod_scripting::{
+    BMSPlugin,
     asset::ScriptAsset,
-    bindings::{function::namespace::NamespaceBuilder, InteropError},
+    bindings::{InteropError, function::namespace::NamespaceBuilder},
     core::{
         callback_labels,
         event::{CallbackLabel, ScriptCallbackEvent},
@@ -13,14 +14,14 @@ use bevy_mod_scripting::{
         script::{ContextPolicy, ScriptAttachment, ScriptContext},
     },
     lua::LuaScriptingPlugin,
-    BMSPlugin,
 };
 
 use crate::{
+    PColor,
     config::*,
-    pico8::{self, canvas::N9Canvas, input::fill_input, FillPat, Pico8Asset, Pico8Handle},
+    pico8::{self, FillPat, Pico8Asset, Pico8Handle, canvas::N9Canvas, input::fill_input},
     run::RunState,
-    schedule, PColor,
+    schedule,
 };
 
 #[derive(Clone, Debug, Reflect)]
@@ -384,8 +385,8 @@ impl Plugin for Nano9Plugin {
     }
 }
 
-pub fn init_when<T: Asset>(
-) -> impl FnMut(EventReader<AssetEvent<T>>, Local<bool>, Res<State<RunState>>) -> bool + Clone {
+pub fn init_when<T: Asset>()
+-> impl FnMut(EventReader<AssetEvent<T>>, Local<bool>, Res<State<RunState>>) -> bool + Clone {
     // The events need to be consumed, so that there are no false positives on subsequent
     // calls of the run condition. Simply checking `is_empty` would not be enough.
     // PERF: note that `count` is efficient (not actually looping/iterating),

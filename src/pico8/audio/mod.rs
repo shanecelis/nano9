@@ -6,16 +6,16 @@ use bevy::{
     prelude::*,
 };
 use dasp::{
-    signal::{self, noise, Noise, Phase, Step},
     Signal,
+    signal::{self, Noise, Phase, Step, noise},
 };
 use std::time::Duration;
 use std::{
     borrow::Cow,
     f32,
     sync::{
-        atomic::{AtomicBool, Ordering},
         Arc,
+        atomic::{AtomicBool, Ordering},
     },
 };
 
@@ -152,11 +152,7 @@ where
     #[inline]
     fn next(&mut self) -> Self::Frame {
         let phase = self.phase.next_phase();
-        if phase < self.width {
-            1.0
-        } else {
-            -1.0
-        }
+        if phase < self.width { 1.0 } else { -1.0 }
     }
 }
 
@@ -519,8 +515,8 @@ impl Sfx {
         let mut sfxs = world.resource_mut::<Assets<Sfx>>();
         let mut new_sfx = None;
         let mut new_release = None;
-        if let Some(sfx) = sfxs.get(&handle) &&
-            let Some(ref loop_maybe) = sfx.loop_maybe
+        if let Some(sfx) = sfxs.get(&handle)
+            && let Some(ref loop_maybe) = sfx.loop_maybe
         {
             match loop_maybe {
                 &Loop::Unstoppable { start, end } => {
@@ -567,10 +563,12 @@ impl Iterator for NoteIter {
                     end,
                     release,
                 } => 'block: {
-                    if let Some(end) = end &&
-                        *end as usize == self.index && !release.load(Ordering::Relaxed) {
-                            self.index = start.unwrap_or(0) as usize;
-                            break 'block;
+                    if let Some(end) = end
+                        && *end as usize == self.index
+                        && !release.load(Ordering::Relaxed)
+                    {
+                        self.index = start.unwrap_or(0) as usize;
+                        break 'block;
                     }
                     self.index += 1;
                 }
