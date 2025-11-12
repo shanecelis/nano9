@@ -54,14 +54,14 @@ git clone https://github.com/shanecelis/nano-9.git
 Recommended if you are writing your game in Rust and not Lua.
 
 ``` sh
-cargo add nano9@0.1.0-alpha.2
+cargo add nano9@0.1.0-alpha.4
 ```
 
 ### As a command line tool n9
 
 Recommended if you are writing your game in Lua and not Rust.
 ``` sh
-cargo install nano9@0.1.0-alpha.2
+cargo install nano9@0.1.0-alpha.4
 ```
 ## Exercise
 
