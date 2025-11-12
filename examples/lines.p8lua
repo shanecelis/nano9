@@ -1,0 +1,10 @@
+function _init()
+    cls()
+end
+
+function _update()
+    local x = rnd(128)
+    local y = rnd(128)
+    local c = rnd(16)
+    line(0, 0, x, y, c)
+end

@@ -1,4 +1,0 @@
-function _init()
-    cls(0)
-    line(0,127,127,0, 1)
-end

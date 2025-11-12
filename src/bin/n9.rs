@@ -202,15 +202,9 @@ fn new(cli: Cli) -> io::Result<ExitCode> {
             .init();
             if let Some(extension) = path.extension().and_then(|s| s.to_str()) {
                 match extension {
-                    "lua" => {
-                        // Copy the lua template.
-                        let content = include_str!("../../examples/line.lua");
-                        fs::write(path, content)?;
-                        Ok(ExitCode::from(0))
-                    }
-                    "p8lua" => {
+                    "lua" | "p8lua" => {
                         // Copy the p8lua template.
-                        let content = include_str!("../../examples/line.p8lua");
+                        let content = include_str!("../../examples/pset.lua");
                         fs::write(path, content)?;
                         Ok(ExitCode::from(0))
                     }
