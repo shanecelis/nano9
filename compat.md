@@ -146,3 +146,25 @@ Parameters shown in italics are extensions to the Pico-8 API.
 Supports keyboard and some mouse functions.
 - [x] stop() (undocumented)
 - [ ] trace() (undocumented)
+
+# Performance Compatability
+
+Let me provide an example where Nano-9 and Pico-8 performance differs. In
+Pico-8 if one doesn't clear the screen `cls()` and continues to draw sprites
+`spr()` each `_draw()` call, the performance curve will be flat. However, in
+Nano-9 a `spr()` creates a Bevy `Sprite` and if one doesn't clear them
+frequently, they will accumulate and degrade performance.
+
+Why not reify the last render to an image to preserve Pico-8's performance?
+One could do this certainly but the aim is to support Bevy's native elements
+as much as possible. I'd prefer for `spr()` to be a thin layer to Bevy's
+[`Sprite`](https://docs.rs/bevy/latest/bevy/sprite/struct.Sprite.html),
+`print()` to create a
+[`Text`](https://docs.rs/bevy/latest/bevy/prelude/struct.Text.html) component,
+`map()` to create a
+[`bevy_ecs_tilemap::TilemapBundle`](https://docs.rs/bevy_ecs_tilemap/latest/bevy_ecs_tilemap/type.TilemapBundle.html).
+
+In this way the comfortable world of Pico-8 can help introduce one to the
+world of Bevy, and it can also provide affordances not possible in Pico-8. For
+instance one could query on-screen entities for collision information with a
+suitable extension.

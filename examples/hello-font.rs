@@ -14,8 +14,7 @@ fn draw(mut pico8: Pico8) {
         .print(
             format!("font {} size {:.1} ", &font, &size),
             Some(Vec2::new(0.0, 20.0)),
-            Some(PColor::Palette(12).into()),
-            // Some(PColor::Palette(2).into()),
+            Some(PColor::Palette(12)),
             None,
             None,
         )

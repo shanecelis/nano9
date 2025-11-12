@@ -17,26 +17,22 @@ extract_index = false
 
 t = 0
 p = 0
-last_p = -1
 
 function _init()
-    -- Replace a blue with black.
-    -- pal(6, 1)
-    -- palm(0)
 end
 
 function _draw()
     cls()
-    print("p "..p.." last_p "..last_p, 0, 0, 7)
     local n = time() * 4 % 8 + 8
     local x, y = t % 128, t / 128
-    spr(n, x, y, 1, 1, true --[[flip horizontal]])
+    local flip_horizontal = true
+    spr(n, x, y, 1, 1, flip_horizontal)
     t = t + 1
 end
 
 function _update()
     if btnp() then
-        p += 1
-        last_p = palm(p)
+        p += 1 -- Cycle through the palettes.
+        palm(p)
     end
 end

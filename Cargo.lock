@@ -5874,6 +5874,7 @@ dependencies = [
  "log",
  "mashmap",
  "merge2",
+ "num-traits",
  "pico8-to-lua",
  "pico8_decompress",
  "png",

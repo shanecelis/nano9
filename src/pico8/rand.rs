@@ -6,6 +6,7 @@ use bevy_mod_scripting::bindings::ScriptValue;
 use bevy_prng::WyRand;
 use bevy_rand::prelude::{Entropy, EntropyPlugin, RngSeed};
 use rand::RngCore;
+use ::rand::Rng;
 
 #[derive(Debug, Component)]
 struct Source;
@@ -16,8 +17,15 @@ pub struct Rand8<'w> {
 }
 
 impl Rand8<'_> {
+
+    pub fn rnd<T>(&mut self, max: T) -> T
+                   where T: ::rand::distributions::uniform::SampleUniform + PartialOrd + num_traits::Zero + Copy {
+        let (rng, _seed) = &mut *self.rand;
+        rng.gen_range(T::zero()..max)
+    }
+
     #[cfg(feature = "scripting")]
-    pub fn rnd(&mut self, value: Option<ScriptValue>) -> ScriptValue {
+    pub fn rnd_value(&mut self, value: Option<ScriptValue>) -> ScriptValue {
         let value = value.unwrap_or(ScriptValue::Unit);
         let (rng, _seed) = &mut *self.rand;
         match value {

@@ -3,12 +3,13 @@ use nano9::prelude::*;
 
 fn init(mut pico8: Pico8) {
     pico8.cls(None).unwrap();
-    pico8.color(None).unwrap();
 }
 
-fn update(mut pico8: Pico8, mut x: Local<u32>) {
-    let _ = pico8.pset(UVec2::new(*x, *x), Some(PColor::Palette(1)));
-    *x += 1;
+fn update(mut pico8: Pico8) {
+    let x = pico8.rnd(128);
+    let y = pico8.rnd(128);
+    let c = pico8.rnd(16);
+    let _ = pico8.pset(UVec2::new(x, y), Some(PColor::Palette(c)));
 }
 
 fn main() {

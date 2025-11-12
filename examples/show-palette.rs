@@ -5,7 +5,7 @@ use std::{io, process::ExitCode};
 
 fn init(mut pico8: Pico8) {
     pico8.cls(None).unwrap();
-    let n = pico8.paln(None).unwrap();
+    let n = pico8.paln(Some(0)).unwrap();
 
     let UVec2 {
         x: width,

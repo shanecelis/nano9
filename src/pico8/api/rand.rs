@@ -9,9 +9,14 @@ pub(crate) fn plugin(app: &mut App) {
 }
 
 impl super::Pico8<'_, '_> {
+
+    pub fn rnd<T>(&mut self, max: T) -> T
+                   where T: ::rand::distributions::uniform::SampleUniform + PartialOrd + num_traits::Zero + Copy {
+        self.rand8.rnd(max)
+    }
     #[cfg(feature = "scripting")]
-    pub fn rnd(&mut self, value: Option<ScriptValue>) -> ScriptValue {
-        self.rand8.rnd(value)
+    pub fn rnd_value(&mut self, value: Option<ScriptValue>) -> ScriptValue {
+        self.rand8.rnd_value(value)
     }
 
     pub fn srand(&mut self, seed: u64) {
@@ -38,7 +43,7 @@ mod lua {
             .register(
                 "rnd",
                 |ctx: FunctionCallContext, value: Option<ScriptValue>| {
-                    with_pico8(&ctx, move |pico8| Ok(pico8.rnd(value)))
+                    with_pico8(&ctx, move |pico8| Ok(pico8.rnd_value(value)))
                 },
             )
             .register("srand", |ctx: FunctionCallContext, value: u64| {

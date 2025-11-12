@@ -1,11 +1,10 @@
 function _init()
     cls()
-    x = 0
 end
 
 function _update()
-    pset(x, x)
-    -- can't use pico8 dialect here.
-    -- x = x + 1
-    x += 1
+    local x = rnd(128)
+    local y = rnd(128)
+    local c = rnd(16)
+    pset(x, y, c)
 end

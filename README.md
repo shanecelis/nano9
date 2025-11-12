@@ -38,24 +38,6 @@ The goals for Nano-9 are to
 - Do not use fixed-point numbers in general.
 - Do not support the same performance characteristics.
   
-  Let me provide an example where Nano-9 and Pico-8 performance differs. In
-  Pico-8 if one doesn't clear the screen `cls()` and continues to draw sprites
-  `spr()` each `_draw()` call, the performance curve will be flat. However, in
-  Nano-9 a `spr()` creates a Bevy `Sprite` and if one doesn't clear them
-  frequently, they will accumulate and degrade performance.
-  
-  Why not reify the last render to an image to preserve Pico-8's performance?
-  One could do this certainly but the aim is to support Bevy's native elements
-  as much as possible. I'd prefer for `spr()` to be a thin layer to Bevy's
-  [`Sprite`](https://docs.rs/bevy/latest/bevy/sprite/struct.Sprite.html),
-  `print()` to create a
-  [`Text`](https://docs.rs/bevy/latest/bevy/prelude/struct.Text.html) component,
-  `map()` to create a
-  [`bevy_ecs_tilemap::TilemapBundle`](https://docs.rs/bevy_ecs_tilemap/latest/bevy_ecs_tilemap/type.TilemapBundle.html).
-  In this way the comfortable world of Pico-8 can help introduce one to the
-  world of Bevy, and it can also provide affordances not possible in Pico-8. For
-  instance one could query on-screen entities for collision information with a
-  suitable extension.
 
 ## Install
 
@@ -81,6 +63,15 @@ Recommended if you are writing your game in Lua and not Rust.
 ``` sh
 cargo install nano9@0.1.0-alpha.2
 ```
+
+## Examples
+
+### Hello World (Rust)
+
+``` sh
+cargo run --example hello-world
+```
+
 
 ## Exercise
 
@@ -428,26 +419,9 @@ If you can't afford Pico-8, you can still play with it and learn it using the
 
 Nearly none currently. 
 
-Pico-8 provides a memory-mapped interface for its more
+Pico-8 provides a [memory-mapped interface](https://www.lexaloffle.com/dl/docs/pico-8_manual.html#Base_RAM_Memory_Layout) for its more
 esoteric features. For instance one _can_ access the keyboard keys or the mouse
 position, which are otherwise not explicitly available via the API.
-
-| Start   | End     | Purpose                                             |
-|---------|---------|-----------------------------------------------------|
-| 0x0     | 0x0fff  | Sprite sheet (0-127)*                               |
-| 0x1000  | 0x1fff  | Sprite sheet (128-255)* / Map (rows 32-63) (shared) |
-| 0x2000  | 0x2fff  | Map (rows 0-31)                                     |
-| 0x3000  | 0x30ff  | Sprite flags                                        |
-| 0x3100  | 0x31ff  | Music                                               |
-| 0x3200  | 0x42ff  | Sound effects                                       |
-| 0x4300  | 0x55ff  | General use (or work RAM)                           |
-| 0x5600  | 0x5dff  | General use / custom font (0.2.2+)                  |
-| 0x5e00  | 0x5eff  | Persistent cart data (64 numbers = 256 bytes)       |
-| 0x5f00  | 0x5f3f  | Draw state                                          |
-| 0x5f40  | 0x5f7f  | Hardware state                                      |
-| 0x5f80  | 0x5fff  | GPIO pins (128 bytes)                               |
-| 0x6000  | 0x7fff  | Screen data (8k)*                                   |
-| 0x8000  | 0xffff  | General use / extended map (0.2.4+)                 |
 
 Nano-9 does not in general support this memory-mapped interface. The interface
 forces strong assumptions about how many sprites, maps, sound effects, and
@@ -474,7 +448,7 @@ The more popular the memory-mapped feature is, the more likely it'll be supporte
 
 | nano9 | bevy |
 |-------|------|
-| 0.1.0 | 0.15 |
+| 0.1.0 | 0.16 |
 
 ## License
 
