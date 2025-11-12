@@ -33,7 +33,7 @@ fn main() {
             r#"
             template = "pico8"
             [[sprite_sheet]]
-            path = "BirdSprite.png"
+            path = "bird-sprite.png"
             sprite_size = [16, 16]
         "#,
         )
@@ -43,7 +43,7 @@ fn main() {
         // Construct a configuration.
         let mut config = Config::pico8();
         config.sprite_sheets.push(nano9::config::SpriteSheet {
-            path: "BirdSprite.png".into(),
+            path: "bird-sprite.png".into(),
             sprite_size: Some(UVec2::splat(16)),
             ..default()
         });

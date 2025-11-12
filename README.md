@@ -165,7 +165,7 @@ configuration:
 --[===[
 template = "pico8"
 [[sprite_sheet]]
-path = "BirdSprite.png"
+path = "bird-sprite.png"
 sprite_size = [16, 16]
 ]===]
 ```
