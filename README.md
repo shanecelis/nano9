@@ -63,20 +63,6 @@ Recommended if you are writing your game in Lua and not Rust.
 ``` sh
 cargo install nano9@0.1.0-alpha.2
 ```
-
-## Examples
-
-### Hello World
-
-``` sh
-cargo run --example hello-world; # Rust
-```
-
-``` sh
-cargo run -- examples/hello-world.p8lua; # Lua
-```
-
-
 ## Exercise
 
 Run a cart directly from a URL. For instance one may run the Pico-8 version of
@@ -138,7 +124,9 @@ what they like with either language. The Lua examples can be run with `cargo run
 FILE.lua`.
 
 ### hello-world
-This one-liner prints "Hello".
+<img align="right" height="300%" alt="hello-world" src="https://github.com/user-attachments/assets/9d8d3ac8-2730-4bc5-9039-ba301b285115" />
+
+This one-liner prints "Hello World".
 
 To run the Lua version:
 ``` sh
@@ -148,26 +136,40 @@ To run the Rust version:
 ``` sh
 cargo run --example hello-world
 ```
-### line
-This example draws a line from the top-left to the bottom-right, one pixel per
-frame.
+### pset
+<img align="right" height="50%" src="https://github.com/user-attachments/assets/08385e6e-b8a1-4601-9e57-b368d04e0d0d"/>
 
+This example sets a random pixel to a random colora.
 ``` sh
-cargo run examples/line.lua
+cargo run examples/pset.lua
 ```
 OR
 ``` sh
-cargo run --example line; # Rust
+cargo run --example pset; # Rust
+```
+
+### lines
+<img align="right" src="https://github.com/user-attachments/assets/7769aef8-2437-4af1-a241-c581575ad646"/>
+
+This example draws a line from the top-left to a random position.
+``` sh
+cargo run examples/lines.lua
+```
+OR
+``` sh
+cargo run --example lines; # Rust
 ```
 ### show-palette
+<img align="right" width="128" height="128" alt="show-palette_pico8" src="https://github.com/user-attachments/assets/86a9bb8c-bb98-42ab-9f58-2cb137a1b5f2" />
 This example draws the color palette as columns on the screen. You can choose
 between the two templates: pico8 and gameboy. This example does not have a Lua
 counterpart yet.
 
-``` sh
+```sh
 cargo run --example show-palette pico8
 ```
 OR
+<img align="right" width="160" height="144" alt="show-palette_gameboy" src="https://github.com/user-attachments/assets/92195a76-1a64-484b-93ea-68749d25b5e0" />
 ``` sh
 cargo run --example show-palette gameboy
 ```
