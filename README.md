@@ -66,10 +66,14 @@ cargo install nano9@0.1.0-alpha.2
 
 ## Examples
 
-### Hello World (Rust)
+### Hello World
 
 ``` sh
-cargo run --example hello-world
+cargo run --example hello-world; # Rust
+```
+
+``` sh
+cargo run -- examples/hello-world.p8lua; # Lua
 ```
 
 
