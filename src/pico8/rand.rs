@@ -1,4 +1,5 @@
 use crate::pico8::Error;
+use ::rand::Rng;
 use bevy::{ecs::system::SystemParam, prelude::*};
 use bevy_mod_scripting::bindings::InteropError;
 #[cfg(feature = "scripting")]
@@ -6,7 +7,6 @@ use bevy_mod_scripting::bindings::ScriptValue;
 use bevy_prng::WyRand;
 use bevy_rand::prelude::{Entropy, EntropyPlugin, RngSeed};
 use rand::RngCore;
-use ::rand::Rng;
 
 #[derive(Debug, Component)]
 struct Source;
@@ -17,9 +17,10 @@ pub struct Rand8<'w> {
 }
 
 impl Rand8<'_> {
-
     pub fn rnd<T>(&mut self, max: T) -> T
-                   where T: ::rand::distributions::uniform::SampleUniform + PartialOrd + num_traits::Zero + Copy {
+    where
+        T: ::rand::distributions::uniform::SampleUniform + PartialOrd + num_traits::Zero + Copy,
+    {
         let (rng, _seed) = &mut *self.rand;
         rng.gen_range(T::zero()..max)
     }

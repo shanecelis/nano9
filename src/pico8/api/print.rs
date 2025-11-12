@@ -138,8 +138,7 @@ impl super::Pico8<'_, '_> {
             .ok_or(Error::NoSuch("font".into()))?
             .handle
             .clone();
-        let pcolor = color
-            .unwrap_or(state.draw_state.pen);
+        let pcolor = color.unwrap_or(state.draw_state.pen);
         let c: Color = {
             let palettes = world.resource::<Palettes>();
             palettes.get_color(pcolor, state.palette)
@@ -270,8 +269,7 @@ mod lua {
                         // See if there's already an entity available.
                         let cached_id = pico8.resurrect(hash, negate_vy(pos_p8));
                         if let Some(id) = cached_id {
-                            let pcolor = c
-                                .unwrap_or(pico8.state.draw_state.pen);
+                            let pcolor = c.unwrap_or(pico8.state.draw_state.pen);
                             if let Ok(color) = pico8.get_color(pcolor) {
                                 pico8.commands.queue(move |world: &mut World| {
                                     if let Some(mut text_color) = world.get_mut::<TextColor>(id) {

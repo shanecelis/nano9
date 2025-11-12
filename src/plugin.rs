@@ -149,25 +149,26 @@ impl Nano9Plugin {
             .screen
             .as_ref()
             .and_then(|s| s.resize_constraints.clone())
-            .unwrap_or(ResizeConstraints::MatchScreen { match_screen: false });
+            .unwrap_or(ResizeConstraints::MatchScreen {
+                match_screen: false,
+            });
         let resolution: bevy::window::WindowResolution = screen_size.as_vec2().into();
         let resize_constraints = match resize_constraints {
-            ResizeConstraints::MatchScreen { match_screen: true } =>
-                WindowResizeConstraints {
-                    min_width: resolution.width(),
-                    max_width: resolution.width(),
-                    min_height: resolution.height(),
-                    max_height: resolution.height(),
-                },
-            ResizeConstraints::MatchScreen { match_screen: false } =>
-                WindowResizeConstraints::default(),
-            ResizeConstraints::Rect { rect } =>
-                WindowResizeConstraints {
-                    min_width: rect.min.x as f32,
-                    max_width: rect.max.x as f32,
-                    min_height: rect.min.y as f32,
-                    max_height: rect.max.y as f32,
-                },
+            ResizeConstraints::MatchScreen { match_screen: true } => WindowResizeConstraints {
+                min_width: resolution.width(),
+                max_width: resolution.width(),
+                min_height: resolution.height(),
+                max_height: resolution.height(),
+            },
+            ResizeConstraints::MatchScreen {
+                match_screen: false,
+            } => WindowResizeConstraints::default(),
+            ResizeConstraints::Rect { rect } => WindowResizeConstraints {
+                min_width: rect.min.x as f32,
+                max_width: rect.max.x as f32,
+                min_height: rect.min.y as f32,
+                max_height: rect.max.y as f32,
+            },
         };
         WindowPlugin {
             primary_window: Some(Window {

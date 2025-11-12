@@ -9,9 +9,10 @@ pub(crate) fn plugin(app: &mut App) {
 }
 
 impl super::Pico8<'_, '_> {
-
     pub fn rnd<T>(&mut self, max: T) -> T
-                   where T: ::rand::distributions::uniform::SampleUniform + PartialOrd + num_traits::Zero + Copy {
+    where
+        T: ::rand::distributions::uniform::SampleUniform + PartialOrd + num_traits::Zero + Copy,
+    {
         self.rand8.rnd(max)
     }
     #[cfg(feature = "scripting")]
