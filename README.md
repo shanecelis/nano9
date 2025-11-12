@@ -37,7 +37,6 @@ The goals for Nano-9 are to
 - Do not write P8 or PNG cartridges.
 - Do not use fixed-point numbers in general.
 - Do not support the same performance characteristics.
-  
 
 ## Install
 
@@ -63,11 +62,18 @@ Recommended if you are writing your game in Lua and not Rust.
 ``` sh
 cargo install nano9@0.1.0-alpha.4
 ```
-## Exercise
+## Run a Pico-8 Cart
 
 Run a cart directly from a URL. For instance one may run the Pico-8 version of
 Celeste like so:
 
+``` sh
+cargo install nano9@0.1.0-alpha.4
+curl -o celeste.p8.png https://www.lexaloffle.com/bbs/cposts/1/15133.p8.png
+n9 run --shared-data=map celeste.p8.png
+```
+
+### Use "web-asset" feature
 ``` sh
 cd nano-9
 cargo install --features web-asset --path .
