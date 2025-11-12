@@ -137,7 +137,7 @@ To run the Rust version:
 cargo run --example hello-world
 ```
 ### pset
-<img align="right" height="50%" src="https://github.com/user-attachments/assets/08385e6e-b8a1-4601-9e57-b368d04e0d0d"/>
+<img align="right" height="50%" src="https://github.com/user-attachments/assets/245a6794-7883-4dd8-be02-dc8e60eef7e3"/>
 
 This example sets a random pixel to a random colora.
 ``` sh
@@ -161,17 +161,39 @@ cargo run --example lines; # Rust
 ```
 ### show-palette
 <img align="right" width="128" height="128" alt="show-palette_pico8" src="https://github.com/user-attachments/assets/86a9bb8c-bb98-42ab-9f58-2cb137a1b5f2" />
+
 This example draws the color palette as columns on the screen. You can choose
 between the two templates: pico8 and gameboy. This example does not have a Lua
 counterpart yet.
-
+#### Pico-8 Palette
 ```sh
 cargo run --example show-palette pico8
 ```
-OR
+#### Gameboy Palette
 <img align="right" width="160" height="144" alt="show-palette_gameboy" src="https://github.com/user-attachments/assets/92195a76-1a64-484b-93ea-68749d25b5e0" />
+
+This example shows the original gameboy palette.
 ``` sh
 cargo run --example show-palette gameboy
+```
+The "gameboy" configuration includes more than just the gameboy palette. It is actually configured with the same dimensions as the original gameboy screen 160x144 as well.
+### hello-font
+<img align="right" height="300%" alt="hello-world" src="https://github.com/user-attachments/assets/501ad0b7-6607-48db-a9a0-27042f523ecb"/>
+
+This example shows a variety of font and font sizes both a Pico-8 font and Bevy's default font.
+
+To run the Rust version:
+``` sh
+cargo run --example hello-font
+```
+### indexed-sprite
+<img align="right" height="300%" alt="hello-world" src="https://github.com/user-attachments/assets/e5b683d9-8b96-4179-ac95-b5948601ea05"/>
+
+This example shows how to import an indexed sprite, i.e., a sprite that uses its own color palette, and how to change that color palette.
+
+To run the Rust version:
+``` sh
+cargo run --example indexed-sprite
 ```
 ### sprite
 <p align="center">
