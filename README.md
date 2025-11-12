@@ -12,31 +12,7 @@ Take your Pico-8 skills straight into Bevy!
 > Nano-9 is currently in the early stages of development and is subject to
 > breaking changes and only ready for alpha testing. 
 
-## Goals
-
-The goals for Nano-9 are to
-
-- offer a Pico-8 API and semantics in both Rust and Lua,
-- support reading and playing the P8 and PNG cartridge format,
-- provide a gateway from the Pico-8 world to the Bevy world,
-- support different color palettes,
-- support different color palette sizes,
-- support different screen sizes,
-- support different sprite sizes,
-- support audio files,
-- support different fonts,
-- provide a library first, and an application second,
-- support tilemap editors like [Tiled](http://www.mapeditor.org),
-- and support unlimited code size.
-
-## Anti-Goals
-
-- Do not provide 100% compatibility with Pico-8. See [compatibility](compat.md) document.
-- Do not provide a comprehensive game development console experience.
-- Do not support `peek()` or `poke()` in their entirety.
-- Do not write P8 or PNG cartridges.
-- Do not use fixed-point numbers in general.
-- Do not support the same performance characteristics.
+The goals and anti-goals for this project are [down below](#goals).
 
 ## Install
 
@@ -74,55 +50,10 @@ curl -o celeste.p8.png https://www.lexaloffle.com/bbs/cposts/1/15133.p8.png
 n9 run --shared-data=map celeste.p8.png
 ```
 
-### Use "web-asset" feature
+### Use the "web-asset" feature
 ``` sh
-cd nano-9
-cargo install --features web-asset --path .
+cargo install --features web-asset nano9@0.1.0-alpha.4
 n9 run --shared-data=map https://www.lexaloffle.com/bbs/cposts/1/15133.p8.png
-```
-
-## API Extensions
-
-There are many extensions to the Pico-8 API usually in the form of extra
-optional arguments at the end. For instance, Pico-8 has this signature for its
-`print` function:
-
-```lua
-print(str, [x,] [y,] [col])
-```
-
-Nano-9's is the same with two additional arguments: font size and a font index
-to select which font from the "Nano-9.toml" config file to use.
-
-```lua
-print(str, [x,] [y,] [col,] [font_size,] [font_index])
-```
-
-The rest of the extensions are indicated in italics in the
-[compatibility](compat.md) document.
-
-### Opt-in to retained entities 
-One of the principle differences between Pico-8 and Bevy is that Pico-8 uses an
-immediate rendering system. If one wants to render a character, one renders its
-sprite every frame by calling `spr()`. Bevy in contrast uses a retained
-rendering system. One spawns a `Sprite` and that persists and is rendered every
-frame until it is despawned.
-
-Nano-9 extends Pico-8's API for `spr()` by returning an `N9Entity`. This has a
-handful of methods: `retain([z_position])`, `name([name])`, `pos(x, y, z)`,
-`vis([visible])`, and `despawn()`.
-
-``` lua
-function _init()
-  a = spr(n):retain()
-end
-
-function _update()
-  if btn(0) then
-    a.x = a.x + 1
-  end
-  -- ...
-end
 ```
 
 ## Examples
@@ -158,13 +89,14 @@ cargo run --example pset; # Rust
 ### lines
 <img align="right" src="https://github.com/user-attachments/assets/7769aef8-2437-4af1-a241-c581575ad646"/>
 
-This example draws a line from the top-left to a random position.
+This example draws a line from the top-left to a random position with a random color.
 ``` sh
 cargo run examples/lines.lua
 ```
 OR
 ``` sh
 cargo run --example lines; # Rust
+cargo run --example lines gameboy; # Use gameboy palette.
 ```
 ### show-palette
 <img align="right" width="128" height="128" alt="show-palette_pico8" src="https://github.com/user-attachments/assets/86a9bb8c-bb98-42ab-9f58-2cb137a1b5f2" />
@@ -289,6 +221,51 @@ cd nano-9
 NANO9_ASSETS_DIR=assets n9 examples/sprite.p8lua
 ```
 
+## API Extensions
+
+There are many extensions to the Pico-8 API usually in the form of extra
+optional arguments at the end. For instance, Pico-8 has this signature for its
+`print` function:
+
+```lua
+print(str, [x,] [y,] [col])
+```
+
+Nano-9's is the same with two additional arguments: font size and a font index
+to select which font from the "Nano-9.toml" config file to use.
+
+```lua
+print(str, [x,] [y,] [col,] [font_size,] [font_index])
+```
+
+The rest of the extensions are indicated in italics in the
+[compatibility](compat.md) document.
+
+### Opt-in to retained entities 
+One of the principle differences between Pico-8 and Bevy is that Pico-8 uses an
+immediate rendering system. If one wants to render a character, one renders its
+sprite every frame by calling `spr()`. Bevy in contrast uses a retained
+rendering system. One spawns a `Sprite` and that persists and is rendered every
+frame until it is despawned.
+
+Nano-9 extends Pico-8's API for `spr()` by returning an `N9Entity`. This has a
+handful of methods: `retain([z_position])`, `name([name])`, `pos(x, y, z)`,
+`vis([visible])`, and `despawn()`.
+
+``` lua
+function _init()
+  a = spr(n):retain()
+end
+
+function _update()
+  if btn(0) then
+    a.x = a.x + 1
+  end
+  -- ...
+end
+```
+
+
 ## Cargo Features
 
 Nano-9 has a number of cargo features to tailor it to your use case. For
@@ -335,6 +312,32 @@ for the "n9" CLI tool. It only has a few key bindings:
 ### "inspector" (disabled by default)
 This enables
 [bevy_minibuffer_inspector](https://github.com/shanecelis/bevy_minibuffer_inspector) which allows one initiate [bevy-inspector-egui](https://github.com/jakobhellermann/bevy-inspector-egui) from Minibuffer.
+
+## Goals
+
+The goals for Nano-9 are to
+
+- offer a Pico-8 API and semantics in both Rust and Lua,
+- support reading and playing the P8 and PNG cartridge format,
+- provide a gateway from the Pico-8 world to the Bevy world,
+- support different color palettes,
+- support different color palette sizes,
+- support different screen sizes,
+- support different sprite sizes,
+- support audio files,
+- support different fonts,
+- provide a library first, and an application second,
+- support tilemap editors like [Tiled](http://www.mapeditor.org),
+- and support unlimited code size.
+
+## Anti-Goals
+
+- Do not provide 100% compatibility with Pico-8. See [compatibility](compat.md) document.
+- Do not provide a comprehensive game development console experience.
+- Do not support `peek()` or `poke()` in their entirety.
+- Do not write P8 or PNG cartridges.
+- Do not use fixed-point numbers in general.
+- Do not support the same performance characteristics.
 
 ## FAQ
 
