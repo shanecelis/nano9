@@ -63,6 +63,7 @@ Recommended if you are writing your game in Lua and not Rust.
 cargo install nano9@0.1.0-alpha.4
 ```
 ## Run a Pico-8 Cart
+<img align="right" height="300%" alt="hello-world" src="https://github.com/user-attachments/assets/1e09631e-9ece-48cb-ba9f-174a6bca4f87" />
 
 Run a cart directly from a URL. For instance one may run the Pico-8 version of
 Celeste like so:
