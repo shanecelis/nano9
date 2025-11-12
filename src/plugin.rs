@@ -136,19 +136,50 @@ impl Nano9Plugin {
             .as_ref()
             .and_then(|s| s.screen_size)
             .unwrap_or(DEFAULT_SCREEN_SIZE);
+
+        let decorations = self
+            .config
+            .screen
+            .as_ref()
+            .map(|s| s.decorations)
+            .unwrap_or(DEFAULT_DECORATIONS);
+
+        let resize_constraints = self
+            .config
+            .screen
+            .as_ref()
+            .and_then(|s| s.resize_constraints.clone())
+            .unwrap_or(ResizeConstraints::MatchScreen { match_screen: false });
+        let resolution: bevy::window::WindowResolution = screen_size.as_vec2().into();
+        let resize_constraints = match resize_constraints {
+            ResizeConstraints::MatchScreen { match_screen: true } =>
+                WindowResizeConstraints {
+                    min_width: resolution.width(),
+                    max_width: resolution.width(),
+                    min_height: resolution.height(),
+                    max_height: resolution.height(),
+                },
+            ResizeConstraints::MatchScreen { match_screen: false } =>
+                WindowResizeConstraints::default(),
+            ResizeConstraints::Rect { rect } =>
+                WindowResizeConstraints {
+                    min_width: rect.min.x as f32,
+                    max_width: rect.max.x as f32,
+                    min_height: rect.min.y as f32,
+                    max_height: rect.max.y as f32,
+                },
+        };
         WindowPlugin {
             primary_window: Some(Window {
-                resolution: screen_size.as_vec2().into(),
                 title: self.config.name.as_deref().unwrap_or("Nano-9").into(),
                 // Turn off vsync to maximize CPU/GPU usage
                 present_mode: PresentMode::AutoVsync,
                 // Let's not allow resizing.
-                // resize_constraints: WindowResizeConstraints {
-                //     min_width: resolution.x,
-                //     max_width: resolution.x,
-                //     min_height: resolution.y,
-                //     max_height: resolution.y,
-                // },
+                resize_constraints,
+                decorations,
+                // decorations: false,
+                // resolution: resolution.with_scale_factor_override(1.0),
+                resolution,
                 ..default()
             }),
             ..default()

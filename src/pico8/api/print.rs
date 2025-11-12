@@ -30,7 +30,7 @@ impl super::Pico8<'_, '_> {
         &mut self,
         text: impl Into<String>,
         pos: Option<Vec2>,
-        color: Option<N9Color>,
+        color: Option<PColor>,
         font_size: Option<f32>,
         font_index: Option<usize>,
     ) -> Result<Entity, Error> {
@@ -79,7 +79,7 @@ impl super::Pico8<'_, '_> {
         dest: Option<Entity>,
         text: String,
         pos: Option<Vec2>,
-        color: Option<N9Color>,
+        color: Option<PColor>,
         font_size: Option<f32>,
         font_index: Option<usize>,
         clearable: Option<Clearable>,
@@ -119,7 +119,7 @@ impl super::Pico8<'_, '_> {
         entity: Option<Entity>,
         mut text: String,
         pos: Option<Vec2>,
-        color: Option<N9Color>,
+        color: Option<PColor>,
         font_size: Option<f32>,
         font_index: Option<usize>,
         clearable: Option<Clearable>,
@@ -139,8 +139,7 @@ impl super::Pico8<'_, '_> {
             .handle
             .clone();
         let pcolor = color
-            .unwrap_or(N9Color::Pen)
-            .into_pcolor(&state.draw_state.pen);
+            .unwrap_or(state.draw_state.pen);
         let c: Color = {
             let palettes = world.resource::<Palettes>();
             palettes.get_color(pcolor, state.palette)
@@ -237,7 +236,7 @@ mod lua {
                  text: Option<ScriptValue>,
                  x: Option<f32>,
                  y: Option<f32>,
-                 c: Option<N9Color>,
+                 c: Option<PColor>,
                  font_size: Option<f32>,
                  font_index: Option<usize>| {
                     let text: Cow<'_, str> = match text.unwrap_or(ScriptValue::Unit) {
@@ -272,8 +271,7 @@ mod lua {
                         let cached_id = pico8.resurrect(hash, negate_vy(pos_p8));
                         if let Some(id) = cached_id {
                             let pcolor = c
-                                .unwrap_or(N9Color::Pen)
-                                .into_pcolor(&pico8.state.draw_state.pen);
+                                .unwrap_or(pico8.state.draw_state.pen);
                             if let Ok(color) = pico8.get_color(pcolor) {
                                 pico8.commands.queue(move |world: &mut World| {
                                     if let Some(mut text_color) = world.get_mut::<TextColor>(id) {

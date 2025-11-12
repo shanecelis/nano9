@@ -22,6 +22,7 @@ pub mod gameboy;
 
 pub const DEFAULT_CANVAS_SIZE: UVec2 = UVec2::splat(128);
 pub const DEFAULT_SCREEN_SIZE: UVec2 = UVec2::splat(512);
+pub const DEFAULT_DECORATIONS: bool = true;
 
 pub(crate) fn plugin(app: &mut App) {
     app.add_systems(Update, update_asset)
@@ -126,6 +127,14 @@ impl AudioBank {
     }
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
+#[serde(untagged)]
+pub enum ResizeConstraints {
+    MatchScreen { match_screen: bool },
+    Rect { rect: URect },
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Merge)]
 #[serde(deny_unknown_fields)]
 pub struct Screen {
@@ -134,6 +143,10 @@ pub struct Screen {
     pub canvas_size: UVec2,
     /// Screen size, physical pixels, e.g., [512, 512] for pico8
     pub screen_size: Option<UVec2>,
+    /// Resize constraints if any for the window
+    pub resize_constraints: Option<ResizeConstraints>,
+    /// Include title bar
+    pub decorations: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default, Merge)]
@@ -319,6 +332,8 @@ impl Config {
             screen: Some(Screen {
                 canvas_size: UVec2::splat(128),
                 screen_size: Some(UVec2::splat(512)),
+                decorations: true,
+                resize_constraints: None,
             }),
             palettes: vec![Palette {
                 path: pico8::PICO8_PALETTE.into(),
@@ -348,8 +363,10 @@ impl Config {
         Config {
             frames_per_second: Some(60),
             screen: Some(Screen {
-                canvas_size: UVec2::new(240, 160),
-                screen_size: Some(UVec2::new(480, 320)),
+                canvas_size: UVec2::new(160, 144),
+                screen_size: Some(4 * UVec2::new(160, 144)),
+                decorations: true,
+                resize_constraints: None,
             }),
             palettes: vec![Palette {
                 path: gameboy::PALETTES.into(),
