@@ -1,4 +1,4 @@
-use crate::pico8::{self, Error, Gfx, GfxMaterial, SprHandle, SpriteSheet};
+use crate::pico8::{self, Error, Gfx, GfxMaterial, SprHandle, SpriteSheet, Pico8Handle, Pico8Asset};
 use bevy::platform::collections::HashSet;
 use bevy::prelude::*;
 use std::collections::VecDeque;
@@ -72,11 +72,12 @@ fn compute_gfx_tilemap_texture_on_asset_event(
     mut images: ResMut<Assets<Image>>,
     gfxs: Res<Assets<Gfx>>,
     gfx_materials: Res<Assets<GfxMaterial>>,
-    palettes: Res<pico8::Palettes>,
     mut textures: Query<(Entity, &GfxTilemapTexture, Option<&mut TilemapTexture>)>,
     mut pairs: ResMut<pico8::GfxImageMap>,
     mut update_ids: Local<Vec<Entity>>,
     mut update_images: Local<VecDeque<Handle<Image>>>,
+    pico8_handle: Res<Pico8Handle>,
+    pico8_assets: Res<Assets<Pico8Asset>>,
 ) {
     // We store the asset ids of added/modified image assets.
     let added_handles: HashSet<_> = events
@@ -100,13 +101,18 @@ fn compute_gfx_tilemap_texture_on_asset_event(
         let Some(gfx_material) = gfx_materials.get(&gfx_sprite.material) else {
             continue;
         };
+        let Some(pico8_asset) = pico8_assets
+            .get(&pico8_handle.handle) else {
+                warn!("No pico8 asset setup for gfx.");
+                return;
+            };
         let image_handle = crate::pico8::gfx::compute_image(
             &gfx_sprite.image,
             true,
             gfx_material,
             &gfxs,
             &mut images,
-            &palettes,
+            &pico8_asset.palettes,
             &mut pairs,
         );
         match image_handle {
@@ -150,24 +156,30 @@ fn compute_image_on_gfx_tilemap_texture_change(
     mut images: ResMut<Assets<Image>>,
     gfxs: Res<Assets<Gfx>>,
     gfx_materials: Res<Assets<GfxMaterial>>,
-    palettes: Res<pico8::Palettes>,
     mut sprites: Query<
         (Entity, &GfxTilemapTexture, Option<&mut TilemapTexture>),
         Changed<GfxTilemapTexture>,
     >,
     mut pairs: ResMut<pico8::GfxImageMap>,
+    pico8_handle: Res<Pico8Handle>,
+    pico8_assets: Res<Assets<Pico8Asset>>,
 ) {
     for (id, gfx_sprite, sprite) in &mut sprites {
         let Some(gfx_material) = gfx_materials.get(&gfx_sprite.material) else {
             continue;
         };
+        let Some(pico8_asset) = pico8_assets
+            .get(&pico8_handle.handle) else {
+                warn!("No pico8 asset on gfx change.");
+                return;
+            };
         let image_handle = crate::pico8::gfx::compute_image(
             &gfx_sprite.image,
             false,
             gfx_material,
             &gfxs,
             &mut images,
-            &palettes,
+            &pico8_asset.palettes,
             &mut pairs,
         );
         match image_handle {

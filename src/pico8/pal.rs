@@ -17,6 +17,8 @@ pub enum PalError {
     NoSuchColor(usize),
     #[error("no such color {color} in palette {palette}")]
     NoSuchPaletteColor { color: usize, palette: usize },
+    #[error("no Pico8Asset")]
+    NoPico8Asset,
 }
 
 pub(crate) fn plugin(app: &mut App) {

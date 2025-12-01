@@ -140,7 +140,7 @@ fn to_asset(cart: Cart, load_context: &mut LoadContext) -> Result<Pico8Asset, Ca
         } else {
             vec![]
         },
-        palettes: vec![Palette::from_slice(&PALETTE)],
+        palettes: vec![Palette::from_slice(&PALETTE)].into(),
         border: load_context
             .loader()
             .with_settings(pixel_art_settings)

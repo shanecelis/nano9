@@ -5,7 +5,7 @@ mod loader;
 pub use loader::*;
 pub mod front_matter;
 use crate::{
-    pico8::{self, Palettes, Pico8Handle},
+    pico8::{self, Pico8Handle},
     run::RunState,
 };
 use bevy::prelude::*;
@@ -237,7 +237,6 @@ pub fn update_asset(
     mut reader: EventReader<AssetEvent<pico8::Pico8Asset>>,
     assets: Res<Assets<pico8::Pico8Asset>>,
     mut next_state: ResMut<NextState<RunState>>,
-    mut palettes: ResMut<Palettes>,
     mut pico8_handle: Option<ResMut<Pico8Handle>>,
     #[cfg(feature = "scripting")] mut commands: Commands,
     #[cfg(feature = "scripting")] _scripts: ResMut<Assets<ScriptAsset>>,
@@ -255,8 +254,6 @@ pub fn update_asset(
                         warn!("Script loaded but does not match Pico8Handle.");
                         continue;
                     }
-                    // Copy the palettes.
-                    palettes.0 = pico8_asset.palettes.clone();
                     // XXX: It happens here too!
                     #[cfg(feature = "scripting")]
                     {

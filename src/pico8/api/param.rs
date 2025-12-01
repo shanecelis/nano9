@@ -2,7 +2,7 @@ use super::*;
 use bevy::ecs::system::SystemParam;
 
 use crate::pico8::{
-    self, Gfx, Palettes, api::canvas::N9Canvas, audio::SfxChannels, keyboard::KeyInput,
+    self, Gfx, api::canvas::N9Canvas, audio::SfxChannels, keyboard::KeyInput,
     mouse::MouseInput,
 };
 
@@ -23,7 +23,7 @@ pub struct Pico8<'w, 's> {
     #[cfg(feature = "level")]
     pub(crate) tiled: crate::level::tiled::Level<'w, 's>,
     pub(crate) gfxs: ResMut<'w, Assets<Gfx>>,
-    pub(crate) palettes: ResMut<'w, Palettes>,
+    // pub(crate) palettes: ResMut<'w, Palettes>,
     #[cfg(feature = "rand")]
     pub(crate) rand8: pico8::rand::Rand8<'w>,
     pub(crate) key_input: ResMut<'w, KeyInput>,
@@ -77,4 +77,11 @@ impl Pico8<'_, '_> {
             None
         }
     }
+
+    pub fn pico8_asset(&self) -> Result<&Pico8Asset, Error> {
+        self.pico8_assets
+            .get(&self.pico8_handle.handle)
+            .ok_or_else(|| Error::NoAsset("pico8".into()))
+    }
+
 }

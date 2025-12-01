@@ -158,11 +158,12 @@ fn compute_image_on_asset_event(
     gfxs: Res<Assets<Gfx>>,
     gfx_materials: Res<Assets<GfxMaterial>>,
     _state: Res<Pico8State>,
-    palettes: Res<Palettes>,
     mut sprites: Query<(Entity, &GfxSprite, Option<&mut Sprite>)>,
     mut pairs: ResMut<GfxImageMap>,
     mut update_ids: Local<Vec<Entity>>,
     mut update_images: Local<VecDeque<Handle<Image>>>,
+    pico8_handle: Res<Pico8Handle>,
+    pico8_assets: Res<Assets<Pico8Asset>>,
     // mut update_images: Local<Vec<(Entity, Handle<Image>)>>,
 ) {
     // We store the asset ids of added/modified image assets.
@@ -188,13 +189,18 @@ fn compute_image_on_asset_event(
         let Some(gfx_material) = gfx_materials.get(&gfx_sprite.material) else {
             continue;
         };
+        let Some(pico8_asset) = pico8_assets
+            .get(&pico8_handle.handle) else {
+                warn!("No pico8 asset setup during clear event.");
+                return;
+            };
         let image_handle = compute_image(
             &gfx_sprite.image,
             true,
             gfx_material,
             &gfxs,
             &mut images,
-            &palettes,
+            &pico8_asset.palettes,
             &mut pairs,
         );
         match image_handle {
@@ -238,14 +244,26 @@ fn compute_image_on_gfx_sprite_change(
     gfxs: Res<Assets<Gfx>>,
     gfx_materials: Res<Assets<GfxMaterial>>,
     _state: Res<Pico8State>,
-    palettes: Res<Palettes>,
     mut sprites: Query<(Entity, &GfxSprite, Option<&mut Sprite>), Changed<GfxSprite>>,
     mut pairs: ResMut<GfxImageMap>,
+    pico8_handle: Res<Pico8Handle>,
+    pico8_assets: Res<Assets<Pico8Asset>>,
 ) {
+
+    let mut pico8_asset_maybe = None;
     for (id, gfx_sprite, sprite) in &mut sprites {
         let Some(gfx_material) = gfx_materials.get(&gfx_sprite.material) else {
             trace!("No gfx material for gfx sprite {}", id);
             continue;
+        };
+
+        if pico8_asset_maybe.is_none() {
+            pico8_asset_maybe = pico8_assets
+                .get(&pico8_handle.handle);
+        }
+        let Some(pico8_asset) = &pico8_asset_maybe else {
+            warn!("No pico8 asset setup during gfx sprite change.");
+            return;
         };
         let image_handle = compute_image(
             &gfx_sprite.image,
@@ -253,7 +271,7 @@ fn compute_image_on_gfx_sprite_change(
             gfx_material,
             &gfxs,
             &mut images,
-            &palettes,
+            &pico8_asset.palettes,
             &mut pairs,
         );
         match image_handle {

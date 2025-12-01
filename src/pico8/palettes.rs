@@ -8,11 +8,11 @@ use crate::{
     pico8::{PalError, Palette},
 };
 
-pub(crate) fn plugin(app: &mut App) {
-    app.init_resource::<Palettes>();
+pub(crate) fn plugin(_app: &mut App) {
+    // app.init_resource::<Palettes>();
 }
 
-#[derive(Debug, Resource, Default, Deref, DerefMut)]
+#[derive(Debug, Default, Deref, DerefMut, Reflect, Clone)]
 pub struct Palettes(pub(crate) Vec<Palette>);
 
 impl Palettes {
@@ -39,5 +39,11 @@ impl Palettes {
                 }),
             PColor::Color(c) => Ok(c.into()),
         }
+    }
+}
+
+impl From<Vec<Palette>> for Palettes {
+    fn from(palettes: Vec<Palette>) -> Self {
+        Self(palettes)
     }
 }

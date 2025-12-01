@@ -7,7 +7,7 @@ pub struct Pico8Asset {
     #[cfg(feature = "scripting")]
     pub scripts: Vec<Handle<bevy_mod_scripting::asset::ScriptAsset>>,
     // this palette is given away and not actually used here.
-    pub(crate) palettes: Vec<Palette>,
+    pub(crate) palettes: Palettes,
     pub(crate) border: Handle<Image>,
     pub(crate) sprite_sheets: Vec<Handle<SpriteSheet>>,
     pub(crate) maps: Vec<SpriteMap>,
@@ -29,12 +29,37 @@ impl Pico8Asset {
             .ok_or(Error::NoSuch(format!("map index {index}").into()))
     }
 
-    pub fn sprite_map_mut(&mut self, map_index: Option<usize>) -> Result<&mut SpriteMap, Error> {
-        let index = map_index.unwrap_or(0);
-        self.maps
-            .get_mut(index)
-            .ok_or(Error::NoSuch(format!("map index {index}").into()))
-    }
+    // pub fn get_pal(&self, palette_index: usize) -> Result<&Palette, PalError> {
+    //     self.palettes.get(palette_index).ok_or(PalError::NoSuchPalette {
+    //         index: palette_index,
+    //         count: self.palettes.len(),
+    //     })
+    // }
+
+    // // Resolve a PColor into a Color.
+    // pub fn get_color(&self, c: PColor, palette_index: usize) -> Result<Color, PalError> {
+    //     match c {
+    //         PColor::Palette(n) => self
+    //             .get_pal(palette_index)?
+    //             .get_color(n)
+    //             .map(|c| c.into())
+    //             .map_err(|e| match e {
+    //                 PalError::NoSuchColor(c) => PalError::NoSuchPaletteColor {
+    //                     color: c,
+    //                     palette: palette_index,
+    //                 },
+    //                 x => x,
+    //             }),
+    //         PColor::Color(c) => Ok(c.into()),
+    //     }
+    // }
+
+    // pub fn sprite_map_mut(&mut self, map_index: Option<usize>) -> Result<&mut SpriteMap, Error> {
+    //     let index = map_index.unwrap_or(0);
+    //     self.maps
+    //         .get_mut(index)
+    //         .ok_or(Error::NoSuch(format!("map index {index}").into()))
+    // }
 }
 
 impl FromWorld for Pico8Asset {
@@ -44,7 +69,7 @@ impl FromWorld for Pico8Asset {
         Pico8Asset {
             #[cfg(feature = "scripting")]
             scripts: vec![],
-            palettes: vec![Palette::from_slice(&crate::pico8::PALETTE)],
+            palettes: vec![Palette::from_slice(&crate::pico8::PALETTE)].into(),
             border: asset_server.load_with_settings(PICO8_BORDER, pixel_art_settings),
             font: vec![N9Font {
                 handle: asset_server.load(PICO8_FONT),

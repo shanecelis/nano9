@@ -304,7 +304,7 @@ async fn into_asset(
     let state = pico8::Pico8Asset {
         #[cfg(feature = "scripting")]
         scripts,
-        palettes,
+        palettes: palettes.into(),
         border: load_context
             .loader()
             .with_settings(pixel_art_settings)
