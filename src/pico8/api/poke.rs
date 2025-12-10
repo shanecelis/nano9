@@ -20,7 +20,10 @@ impl super::Pico8<'_, '_> {
     }
 
     pub fn peek(&mut self, addr: usize) -> Result<u8, Error> {
-        Err(Error::UnsupportedPeek(addr))
+        match addr {
+            0x5f27 => Ok(self.state.draw_state.print_cursor.y as u8),
+            _ => Err(Error::UnsupportedPeek(addr))
+        }
     }
 
     #[cfg(feature = "scripting")]
