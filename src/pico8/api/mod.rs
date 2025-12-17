@@ -95,6 +95,8 @@ pub(crate) fn plugin(app: &mut App) {
             pal::plugin,
             bit_ops::plugin,
             line::plugin,
+        ))
+        .add_plugins((
             poke::plugin,
             canvas::plugin,
             camera::plugin,

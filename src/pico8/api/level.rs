@@ -1,19 +1,12 @@
 use super::*;
 use crate::ValueExt;
 
-#[cfg(feature = "scripting")]
-use bevy_mod_scripting::core::{
-    bindings::{WorldAccessGuard, function::from::FromScript, script_value::ScriptValue},
-    docgen::{ThroughTypeInfo, TypedThrough},
-    error::InteropError,
-};
-
 use crate::pico8::Gfx;
 
 use std::{any::TypeId, collections::HashMap};
 
 pub(crate) fn plugin(app: &mut App) {
-    #[cfg(feature = "scripting")]
+    #[cfg(all(feature = "scripting", feature = "level"))]
     lua::plugin(app);
 }
 
@@ -42,88 +35,87 @@ impl From<String> for PropBy {
 //     }
 // }
 
-#[cfg(feature = "scripting")]
-impl TypedThrough for PropBy {
-    fn through_type_info() -> ThroughTypeInfo {
-        ThroughTypeInfo::TypeInfo(<PropBy as bevy::reflect::Typed>::type_info())
-    }
-}
-
-#[cfg(feature = "scripting")]
-impl FromScript for PropBy {
-    type This<'w> = Self;
-    fn from_script(
-        value: ScriptValue,
-        _world: WorldAccessGuard<'_>,
-    ) -> Result<Self::This<'_>, InteropError> {
-        match value {
-            ScriptValue::String(n) => Ok(PropBy::Name(n)),
-            ScriptValue::List(l) => {
-                let x = l.first().and_then(ValueExt::to_f32).unwrap_or(0.0);
-                let y = l.get(1).and_then(ValueExt::to_f32).unwrap_or(0.0);
-                Ok(PropBy::Pos(Vec2::new(x, y)))
-            }
-            ScriptValue::Map(v) => {
-                let x = v.get("x").and_then(ValueExt::to_f32).unwrap_or(0.0);
-                let y = v.get("y").and_then(ValueExt::to_f32).unwrap_or(0.0);
-                let w = v.get("width").and_then(ValueExt::to_f32);
-                let h = v.get("height").and_then(ValueExt::to_f32);
-                if w.is_some() && h.is_some() {
-                    Ok(PropBy::Rect(Rect::from_corners(
-                        Vec2::new(x, y),
-                        Vec2::new(x + w.unwrap(), y + h.unwrap()),
-                    )))
-                } else {
-                    Ok(PropBy::Pos(Vec2::new(x, y)))
-                }
-            }
-            _ => Err(InteropError::impossible_conversion(TypeId::of::<PropBy>())),
-        }
-    }
-}
+// PropBy implementations for scripting are in the lua module below
 
 impl super::Pico8<'_, '_> {
     /// Get properties
+    #[cfg(feature = "level")]
     pub fn props(&self, id: Entity) -> Result<tiled::Properties, Error> {
         self.tiled.props(id)
     }
 
     /// Get properties
+    #[cfg(feature = "level")]
     pub fn mgetp(
         &self,
         prop_by: PropBy,
         map_index: Option<usize>,
         layer_index: Option<usize>,
     ) -> Option<tiled::Properties> {
-        let map: &SpriteMap = self.sprite_map(map_index).ok()?;
-        match *map {
-            SpriteMap::P8(ref _map) => None,
+        let asset = self.pico8_asset().ok()?;
+        let index = map_index.unwrap_or(0);
+        let map = asset.maps.get(index)?;
+        match map {
+            SpriteMap::P8(_) => None,
 
             #[cfg(feature = "level")]
-            SpriteMap::Level(ref map) => self.tiled.mgetp(map, prop_by, map_index, layer_index),
+            SpriteMap::Level(map) => self.tiled.mgetp(map, prop_by, map_index, layer_index),
+            
+            #[cfg(not(feature = "level"))]
+            _ => None,
         }
     }
 }
 
-#[cfg(feature = "scripting")]
+#[cfg(all(feature = "scripting", feature = "level"))]
 mod lua {
     use super::*;
     use crate::{DropPolicy, N9Entity, pico8::lua::with_pico8};
 
-    use bevy_mod_scripting::core::{
-        bindings::{
-            IntoScript, ReflectReference,
-            access_map::ReflectAccessId,
-            function::{
-                from::FromScript,
-                into_ref::IntoScriptRef,
-                namespace::{GlobalNamespace, NamespaceBuilder},
-                script_function::FunctionCallContext,
-            },
-            script_value::ScriptValue,
+    use bevy_mod_scripting::bindings::{
+        InteropError,
+        IntoScript, ReflectReference,
+        access_map::ReflectAccessId,
+        function::{
+            from::FromScript,
+            into_ref::IntoScriptRef,
+            namespace::{GlobalNamespace, NamespaceBuilder},
+            script_function::FunctionCallContext,
         },
-        error::InteropError,
+        script_value::ScriptValue,
     };
+
+    impl FromScript for PropBy {
+        type This<'w> = Self;
+        fn from_script(
+            value: ScriptValue,
+            _world: bevy_mod_scripting::bindings::WorldAccessGuard<'_>,
+        ) -> Result<Self::This<'_>, InteropError> {
+            match value {
+                ScriptValue::String(n) => Ok(PropBy::Name(n)),
+                ScriptValue::List(l) => {
+                    let x = l.first().and_then(ValueExt::to_f32).unwrap_or(0.0);
+                    let y = l.get(1).and_then(ValueExt::to_f32).unwrap_or(0.0);
+                    Ok(PropBy::Pos(Vec2::new(x, y)))
+                }
+                ScriptValue::Map(v) => {
+                    let x = v.get("x").and_then(ValueExt::to_f32).unwrap_or(0.0);
+                    let y = v.get("y").and_then(ValueExt::to_f32).unwrap_or(0.0);
+                    let w = v.get("width").and_then(ValueExt::to_f32);
+                    let h = v.get("height").and_then(ValueExt::to_f32);
+                    if w.is_some() && h.is_some() {
+                        Ok(PropBy::Rect(Rect::from_corners(
+                            Vec2::new(x, y),
+                            Vec2::new(x + w.unwrap(), y + h.unwrap()),
+                        )))
+                    } else {
+                        Ok(PropBy::Pos(Vec2::new(x, y)))
+                    }
+                }
+                _ => Err(InteropError::value_mismatch(std::any::TypeId::of::<PropBy>(), value)),
+            }
+        }
+    }
     pub(crate) fn plugin(app: &mut App) {
         let world = app.world_mut();
 
@@ -151,7 +143,8 @@ mod lua {
     }
 
     fn from_properties(properties: &tiled::Properties) -> ScriptValue {
-        let map: HashMap<String, ScriptValue> = properties
+        use bevy::platform::collections::HashMap as BevyHashMap;
+        let map: BevyHashMap<String, ScriptValue> = properties
             .iter()
             .flat_map(|(name, value)| from_property(value).map(|v| (name.to_owned(), v)))
             .collect();

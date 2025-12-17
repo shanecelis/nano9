@@ -59,8 +59,8 @@ impl super::Pico8<'_, '_> {
             // trace!("Resurrect map with hash {hash}");
             return Ok(id);
         }
-        // match self.sprite_map(map_index)?.clone() {
-        //     SpriteMap::P8(map) => {
+        match self.sprite_map(Some(map_index))?.clone() {
+            SpriteMap::P8(map) => {
         // trace!("Create map with hash {hash}");
 
         // let map_size = TilemapSize::from(size);
@@ -90,10 +90,12 @@ impl super::Pico8<'_, '_> {
             ))
             .id();
         Ok(map_entity)
-        // }
-        // #[cfg(feature = "level")]
-        // SpriteMap::Level(map) => Ok(map.map(screen_start, 0, &mut self.commands)),
-        // }
+        }
+        #[cfg(feature = "level")]
+        SpriteMap::Level(map) => {
+            Ok(map.map(screen_start, 0, &mut self.commands))
+            }
+        }
     }
 
     pub fn mget(
@@ -127,7 +129,13 @@ impl super::Pico8<'_, '_> {
             }
 
             #[cfg(feature = "level")]
-            SpriteMap::Level(ref map) => self.tiled.mget(map, pos, map_index, _layer_index).ok(),
+            SpriteMap::Level(ref map) => {
+                self.tiled.mget(map, pos, map_index, _layer_index)
+                    .ok_or_else(|| Error::NoSuch("tile".into()))
+            }
+            
+            #[cfg(not(feature = "level"))]
+            _ => Err(Error::NoSuch("level feature not enabled".into())),
         }
     }
 

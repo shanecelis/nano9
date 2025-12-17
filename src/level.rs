@@ -1,6 +1,6 @@
 use crate::pico8::Clearable;
 use bevy::prelude::*;
-use bevy_ecs_tiled::{TiledMapPluginConfig, prelude::*};
+use bevy_ecs_tiled::prelude::*;
 use bevy_ecs_tilemap::prelude::*;
 // pub mod ldtk;
 // use ldtk::*;
@@ -10,8 +10,9 @@ pub mod tiled;
 
 #[derive(Debug, Clone, Reflect)]
 pub enum Tiled {
-    SpriteMap { handle: Handle<TiledMap> },
-    World { handle: Handle<TiledWorld> },
+    // TODO: TiledMap is not an Asset in bevy_ecs_tiled 0.9.5
+    SpriteMap { handle: Handle<TiledMapAsset> },
+    World { handle: Handle<TiledWorldAsset> },
 }
 
 impl Tiled {
@@ -24,12 +25,12 @@ impl Tiled {
         // transform.translation += screen_start.extend(0.0);
         match self {
             Tiled::SpriteMap { handle } => {
+                // TODO: Fix when TiledMapHandle is available
                 commands
                     .spawn((
-                        TiledMapHandle(handle.clone()),
-                        // ldtk_map: self.handle.clone(),
+                        TiledMap(handle.clone()),
                         Transform::from_xyz(screen_start.x, screen_start.y, clearable.suggest_z()),
-                        TiledMapAnchor::TopLeft,
+                        TilemapAnchor::TopLeft,
                         TiledMapLayerZOffset(1.0),
                         Name::new("level"),
                         clearable,
@@ -38,14 +39,13 @@ impl Tiled {
                     .id()
             }
             Tiled::World { handle } => {
+                // TODO: Fix when TiledWorldHandle is available
                 commands
                     .spawn((
-                        TiledWorldHandle(handle.clone()),
-                        TiledWorldChunking::new(1000., 1000.),
-                        // TiledWorldChunking(None),
-                        // ldtk_map: self.handle.clone(),
+                        TiledWorld(handle.clone()),
+                        // TiledWorldChunking::new(1000., 1000.),
                         Transform::from_xyz(screen_start.x, screen_start.y, clearable.suggest_z()),
-                        TiledMapAnchor::TopLeft,
+                        TilemapAnchor::TopLeft,
                         TiledMapLayerZOffset(1.0),
                         Name::new("level"),
                         clearable,
@@ -62,7 +62,7 @@ pub(crate) fn plugin(app: &mut App) {
         .register_type::<Tiled>()
         .init_asset_loader::<asset::TiledSetLoader>()
         .add_plugins(TilemapPlugin)
-        .add_plugins(TiledMapPlugin(TiledMapPluginConfig { tiled_types_export_file: None }))
+        .add_plugins(TiledPlugin::default())
         .add_plugins(tiled::plugin)
         // .add_plugins(ldtk::LdtkPlugin)
         // .register_ldtk_entity::<Slime>("Slime")

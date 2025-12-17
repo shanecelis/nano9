@@ -249,6 +249,12 @@ fn add_tilemaps(
                 for x in 0..map_size.x {
                     for y in 0..map_size.y {
                         let entries = match p8map {
+                            #[cfg(feature = "level")]
+                            SpriteMap::Level(_) => {
+                                todo!();
+                                // TODO: Handle TiledMap
+                                return;
+                            }
                             SpriteMap::P8(handle) => {
                                 let Some(p8map_asset) = p8_maps.get(handle) else {
                                     warn!("Unable to get p8 map");

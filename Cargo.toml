@@ -87,7 +87,7 @@ rand = [ "dep:rand", "dep:bevy_rand", "dep:bevy_prng" ]
 # level = [ "dep:bevy_ecs_tiled", "dep:serde_json", "bevy_ecs_tiled/user_properties" ]
 user_properties = [ "bevy_ecs_tiled/user_properties" ]
 # level = [ "dep:bevy_ecs_tiled", "dep:serde_json" ]
-level = [ "dep:bevy_ecs_tiled", "dep:serde_json", "dep:futures-lite" ]
+level = [ "dep:bevy_ecs_tiled", "dep:serde_json", "dep:futures-lite", "tiled", "scripting" ]
 
 
 [dev-dependencies]

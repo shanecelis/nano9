@@ -1,5 +1,7 @@
 #[cfg(feature = "level")]
 use crate::level::{self};
+#[cfg(feature = "level")]
+use bevy_ecs_tiled::prelude::{TiledMapAsset, TiledWorldAsset};
 use crate::{
     config::{self, Mesh, *},
     pico8::{self, MeshHandle, Pico8Asset, image::pixel_art_settings},
@@ -226,8 +228,26 @@ async fn into_asset(
 
     let mut maps: Vec<pico8::SpriteMap> = Vec::with_capacity(config.maps.len());
     for map in config.maps.into_iter() {
-        let p8map: Handle<pico8::P8Map> = load_context.load::<pico8::P8Map>(map.path);
-        maps.push(p8map.into());
+        let asset_path = AssetPath::try_parse(&map.path)?;
+        match asset_path.path().extension().and_then(std::ffi::OsStr::to_str).unwrap_or("") {
+            "p8" => {
+                let p8map: Handle<pico8::P8Map> = load_context.load::<pico8::P8Map>(map.path);
+                maps.push(p8map.into());
+            }
+            #[cfg(feature = "level")]
+            "tmx" => {
+                let handle = load_context.load::<TiledMapAsset>(map.path);
+                maps.push(pico8::SpriteMap::Level(level::Tiled::SpriteMap { handle }));
+            }
+            #[cfg(feature = "level")]
+            "world" => {
+                let handle = load_context.load::<TiledWorldAsset>(map.path);
+                maps.push(pico8::SpriteMap::Level(level::Tiled::World { handle }));
+            }
+            x => {
+                panic!("Unexpected map extension {x:?}");
+            }
+        }
     }
     let mut audio_banks = vec![];
     for (i, bank) in config.audio_banks.into_iter().enumerate() {
