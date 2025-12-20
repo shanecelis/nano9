@@ -146,7 +146,7 @@ pub struct Screen {
     /// Resize constraints if any for the window
     pub resize_constraints: Option<ResizeConstraints>,
     /// Include title bar
-    pub decorations: bool,
+    pub decorations: Option<bool>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default, Merge)]
@@ -329,7 +329,7 @@ impl Config {
             screen: Some(Screen {
                 canvas_size: UVec2::splat(128),
                 screen_size: Some(UVec2::splat(512)),
-                decorations: true,
+                decorations: Some(true),
                 resize_constraints: None,
             }),
             palettes: vec![Palette {
@@ -362,7 +362,7 @@ impl Config {
             screen: Some(Screen {
                 canvas_size: UVec2::new(160, 144),
                 screen_size: Some(4 * UVec2::new(160, 144)),
-                decorations: true,
+                decorations: Some(true),
                 resize_constraints: None,
             }),
             palettes: vec![Palette {

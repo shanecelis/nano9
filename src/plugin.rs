@@ -141,7 +141,7 @@ impl Nano9Plugin {
             .config
             .screen
             .as_ref()
-            .map(|s| s.decorations)
+            .and_then(|s| s.decorations)
             .unwrap_or(DEFAULT_DECORATIONS);
 
         let resize_constraints = self
