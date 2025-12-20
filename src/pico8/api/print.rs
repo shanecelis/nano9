@@ -108,6 +108,7 @@ impl super::Pico8<'_, '_> {
             state.draw_state.print_cursor.x = pos.x;
             state.draw_state.print_cursor.y = negate_y(pos.y) + text_layout.size.y;
         } else {
+            assert_ne!(text_layout.size.x, 0.0);
             state.draw_state.print_cursor.x = pos.x + text_layout.size.x;
         }
         Ok(pos.x + text_layout.size.x)

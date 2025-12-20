@@ -209,8 +209,8 @@ fn add_logging(app: &mut App) {
         });
 }
 // use bevy_mod_scripting::bindings::InteropError;
-// use bevy_mod_scripting::bindings::ReflectAccessId;
-// use bevy_mod_scripting::bindings::FunctionCallContext;
+use bevy_mod_scripting::bindings::ReflectAccessId;
+use bevy_mod_scripting::bindings::FunctionCallContext;
 
 // #[derive(Event)]
 // pub struct MyTrigger(usize);

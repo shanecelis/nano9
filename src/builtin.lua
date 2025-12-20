@@ -14,6 +14,18 @@ function on_script_loaded()
         --_init()
     end
 end
+-- Save the original
+local _ipairs = ipairs
+
+-- Overwrite ipairs to tolerate nil
+function ipairs(t)
+  if t == nil then
+    -- Return an iterator that yields nothing:
+    --   iter, state, init
+    return function() return nil end, nil, nil
+  end
+  return _ipairs(t)
+end
 
 function min(a,b)
     if a == nil or b == nil then

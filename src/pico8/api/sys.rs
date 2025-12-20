@@ -18,7 +18,7 @@ impl super::Pico8<'_, '_> {
         self.commands.send_event(match error {
             Some(n) => std::num::NonZero::new(n)
                 .map(AppExit::Error)
-                .unwrap_or(AppExit::Success),
+                .expect("non-zero error"),
             None => AppExit::Success,
         });
     }

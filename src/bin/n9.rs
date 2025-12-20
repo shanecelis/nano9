@@ -574,7 +574,10 @@ fn run(cli: Cli) -> io::Result<ExitCode> {
             name.contains("bevy_ecs_tilemap::tiles") || name.contains("nano9")
         });
     });
-    app.run();
+    let app_exit = app.run();
 
-    Ok(ExitCode::from(0))
+    Ok(match app_exit {
+        AppExit::Success => ExitCode::from(0),
+        AppExit::Error(code) => ExitCode::from(code.get()),
+    })
 }
