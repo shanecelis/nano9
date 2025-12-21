@@ -1,4 +1,6 @@
-use crate::pico8::{self, Error, Gfx, GfxMaterial, SprHandle, SpriteSheet, Pico8Handle, Pico8Asset};
+use crate::pico8::{
+    self, Error, Gfx, GfxMaterial, Pico8Asset, Pico8Handle, SprHandle, SpriteSheet,
+};
 use bevy::platform::collections::HashSet;
 use bevy::prelude::*;
 use std::collections::VecDeque;
@@ -101,11 +103,10 @@ fn compute_gfx_tilemap_texture_on_asset_event(
         let Some(gfx_material) = gfx_materials.get(&gfx_sprite.material) else {
             continue;
         };
-        let Some(pico8_asset) = pico8_assets
-            .get(&pico8_handle.handle) else {
-                warn!("No pico8 asset setup for gfx.");
-                return;
-            };
+        let Some(pico8_asset) = pico8_assets.get(&pico8_handle.handle) else {
+            warn!("No pico8 asset setup for gfx.");
+            return;
+        };
         let image_handle = crate::pico8::gfx::compute_image(
             &gfx_sprite.image,
             true,
@@ -168,11 +169,10 @@ fn compute_image_on_gfx_tilemap_texture_change(
         let Some(gfx_material) = gfx_materials.get(&gfx_sprite.material) else {
             continue;
         };
-        let Some(pico8_asset) = pico8_assets
-            .get(&pico8_handle.handle) else {
-                warn!("No pico8 asset on gfx change.");
-                return;
-            };
+        let Some(pico8_asset) = pico8_assets.get(&pico8_handle.handle) else {
+            warn!("No pico8 asset on gfx change.");
+            return;
+        };
         let image_handle = crate::pico8::gfx::compute_image(
             &gfx_sprite.image,
             false,

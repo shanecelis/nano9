@@ -1,7 +1,7 @@
 use super::canvas;
 use crate::{
     PColor,
-    pico8::{Gfx, GfxDirty, GfxSprite, Pico8State, Pico8Handle, Pico8Asset},
+    pico8::{Gfx, GfxDirty, GfxSprite, Pico8Asset, Pico8Handle, Pico8State},
 };
 use bevy::prelude::*;
 use mashmap::MashMap;
@@ -218,12 +218,11 @@ fn handle_clear_event(
     // Clear the 1x1 background.
     let mut sprite = one_color.into_inner();
 
-    let Some(pico8_asset) = pico8_assets
-        .get(&pico8_handle.handle) else {
-            warn!("No pico8 asset setup during clear event.");
-            return;
-        };
-        // .ok_or_else(|| Error::NoAsset("pico8".into()))
+    let Some(pico8_asset) = pico8_assets.get(&pico8_handle.handle) else {
+        warn!("No pico8 asset setup during clear event.");
+        return;
+    };
+    // .ok_or_else(|| Error::NoAsset("pico8".into()))
     match pico8_asset.palettes.get_color(trigger.color, state.palette) {
         Ok(color) => {
             sprite.color = color;

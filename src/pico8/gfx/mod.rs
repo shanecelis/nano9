@@ -189,11 +189,10 @@ fn compute_image_on_asset_event(
         let Some(gfx_material) = gfx_materials.get(&gfx_sprite.material) else {
             continue;
         };
-        let Some(pico8_asset) = pico8_assets
-            .get(&pico8_handle.handle) else {
-                warn!("No pico8 asset setup during clear event.");
-                return;
-            };
+        let Some(pico8_asset) = pico8_assets.get(&pico8_handle.handle) else {
+            warn!("No pico8 asset setup during clear event.");
+            return;
+        };
         let image_handle = compute_image(
             &gfx_sprite.image,
             true,
@@ -249,7 +248,6 @@ fn compute_image_on_gfx_sprite_change(
     pico8_handle: Res<Pico8Handle>,
     pico8_assets: Res<Assets<Pico8Asset>>,
 ) {
-
     let mut pico8_asset_maybe = None;
     for (id, gfx_sprite, sprite) in &mut sprites {
         let Some(gfx_material) = gfx_materials.get(&gfx_sprite.material) else {
@@ -258,8 +256,7 @@ fn compute_image_on_gfx_sprite_change(
         };
 
         if pico8_asset_maybe.is_none() {
-            pico8_asset_maybe = pico8_assets
-                .get(&pico8_handle.handle);
+            pico8_asset_maybe = pico8_assets.get(&pico8_handle.handle);
         }
         let Some(pico8_asset) = &pico8_asset_maybe else {
             warn!("No pico8 asset setup during gfx sprite change.");

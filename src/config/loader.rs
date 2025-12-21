@@ -1,7 +1,5 @@
 #[cfg(feature = "level")]
 use crate::level::{self};
-#[cfg(feature = "level")]
-use bevy_ecs_tiled::prelude::{TiledMapAsset, TiledWorldAsset};
 use crate::{
     config::{self, Mesh, *},
     pico8::{self, MeshHandle, Pico8Asset, image::pixel_art_settings},
@@ -10,6 +8,8 @@ use bevy::{
     asset::{AssetLoader, AssetPath, LoadContext, io::Reader},
     prelude::*,
 };
+#[cfg(feature = "level")]
+use bevy_ecs_tiled::prelude::{TiledMapAsset, TiledWorldAsset};
 #[cfg(feature = "scripting")]
 use bevy_mod_scripting::asset::{Language, ScriptAsset};
 use std::io;
@@ -229,7 +229,12 @@ async fn into_asset(
     let mut maps: Vec<pico8::SpriteMap> = Vec::with_capacity(config.maps.len());
     for map in config.maps.into_iter() {
         let asset_path = AssetPath::try_parse(&map.path)?;
-        match asset_path.path().extension().and_then(std::ffi::OsStr::to_str).unwrap_or("") {
+        match asset_path
+            .path()
+            .extension()
+            .and_then(std::ffi::OsStr::to_str)
+            .unwrap_or("")
+        {
             "p8" => {
                 let p8map: Handle<pico8::P8Map> = load_context.load::<pico8::P8Map>(map.path);
                 maps.push(p8map.into());

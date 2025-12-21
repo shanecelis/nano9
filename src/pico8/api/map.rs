@@ -61,40 +61,38 @@ impl super::Pico8<'_, '_> {
         }
         match self.sprite_map(Some(map_index))?.clone() {
             SpriteMap::P8(map) => {
-        // trace!("Create map with hash {hash}");
+                // trace!("Create map with hash {hash}");
 
-        // let map_size = TilemapSize::from(size);
-        let clearable = Clearable::new(self.defaults.time_to_live).with_hash(hash);
-        // let tile_storage = TileStorage::empty(map_size);
-        let gfx_material = self.gfx_material().clone();
-        let sprite_sheet = self
-            .pico8_asset()?
-            .sprite_sheets
-            .get(self.state.sprite_sheet_index)
-            .ok_or(Error::NoSuch("Sprite sheet for map".into()))?;
+                // let map_size = TilemapSize::from(size);
+                let clearable = Clearable::new(self.defaults.time_to_live).with_hash(hash);
+                // let tile_storage = TileStorage::empty(map_size);
+                let gfx_material = self.gfx_material().clone();
+                let sprite_sheet = self
+                    .pico8_asset()?
+                    .sprite_sheets
+                    .get(self.state.sprite_sheet_index)
+                    .ok_or(Error::NoSuch("Sprite sheet for map".into()))?;
 
-        let map_entity = self
-            .commands
-            .spawn((
-                Name::new("map"),
-                Transform::from_translation(screen_start.extend(clearable.suggest_z())),
-                Visibility::Inherited,
-                clearable,
-                P8SpriteMap {
-                    map_index,
-                    sprite_sheet: sprite_sheet.clone(),
-                    gfx_material,
-                    rect,
-                    mask,
-                },
-            ))
-            .id();
-        Ok(map_entity)
-        }
-        #[cfg(feature = "level")]
-        SpriteMap::Level(map) => {
-            Ok(map.map(screen_start, 0, &mut self.commands))
+                let map_entity = self
+                    .commands
+                    .spawn((
+                        Name::new("map"),
+                        Transform::from_translation(screen_start.extend(clearable.suggest_z())),
+                        Visibility::Inherited,
+                        clearable,
+                        P8SpriteMap {
+                            map_index,
+                            sprite_sheet: sprite_sheet.clone(),
+                            gfx_material,
+                            rect,
+                            mask,
+                        },
+                    ))
+                    .id();
+                Ok(map_entity)
             }
+            #[cfg(feature = "level")]
+            SpriteMap::Level(map) => Ok(map.map(screen_start, 0, &mut self.commands)),
         }
     }
 
@@ -129,11 +127,11 @@ impl super::Pico8<'_, '_> {
             }
 
             #[cfg(feature = "level")]
-            SpriteMap::Level(ref map) => {
-                self.tiled.mget(map, pos, map_index, _layer_index)
-                    .ok_or_else(|| Error::NoSuch("tile".into()))
-            }
-            
+            SpriteMap::Level(ref map) => self
+                .tiled
+                .mget(map, pos, map_index, _layer_index)
+                .ok_or_else(|| Error::NoSuch("tile".into())),
+
             #[cfg(not(feature = "level"))]
             _ => Err(Error::NoSuch("level feature not enabled".into())),
         }

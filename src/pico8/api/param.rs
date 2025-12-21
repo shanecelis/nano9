@@ -2,8 +2,7 @@ use super::*;
 use bevy::ecs::system::SystemParam;
 
 use crate::pico8::{
-    self, Gfx, api::canvas::N9Canvas, audio::SfxChannels, keyboard::KeyInput,
-    mouse::MouseInput,
+    self, Gfx, api::canvas::N9Canvas, audio::SfxChannels, keyboard::KeyInput, mouse::MouseInput,
 };
 
 #[derive(SystemParam)]
@@ -83,5 +82,4 @@ impl Pico8<'_, '_> {
             .get(&self.pico8_handle.handle)
             .ok_or_else(|| Error::NoAsset("pico8".into()))
     }
-
 }

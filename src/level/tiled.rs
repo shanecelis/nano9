@@ -167,10 +167,14 @@ impl Level<'_, '_> {
         layer_index: Option<usize>,
     ) -> Result<(), pico8::Error> {
         match map {
-            level::Tiled::SpriteMap { handle: _map_handle } => {
+            level::Tiled::SpriteMap {
+                handle: _map_handle,
+            } => {
                 // TODO: Fix when TiledMap is an Asset and tiled_id_storage is available
                 // For now, return error as the API needs to be updated
-                Err(pico8::Error::Unsupported("TiledMap API needs update".into()))
+                Err(pico8::Error::Unsupported(
+                    "TiledMap API needs update".into(),
+                ))
                 /* OLD CODE - needs API update
                 let tile_size =
                     UVec2::new(map_handle.map.tile_width, map_handle.map.tile_width);
@@ -210,10 +214,16 @@ impl Level<'_, '_> {
             .get(id)
             .map_err(|_| pico8::Error::NoSuch("TiledLookup".into()))?;
         match tiled_lookup {
-            TiledLookup::Object { layer: _layer, idx: _idx, handle: _handle } => {
+            TiledLookup::Object {
+                layer: _layer,
+                idx: _idx,
+                handle: _handle,
+            } => {
                 // TODO: Fix when TiledMap is an Asset - TiledMap structure may have changed
                 // For now, return error as the API needs to be updated
-                Err(pico8::Error::Unsupported("TiledMap API needs update".into()))
+                Err(pico8::Error::Unsupported(
+                    "TiledMap API needs update".into(),
+                ))
                 /* OLD CODE - needs API update
                 let layer = handle
                     .map

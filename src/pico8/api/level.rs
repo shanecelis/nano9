@@ -60,7 +60,7 @@ impl super::Pico8<'_, '_> {
 
             #[cfg(feature = "level")]
             SpriteMap::Level(map) => self.tiled.mgetp(map, prop_by, map_index, layer_index),
-            
+
             #[cfg(not(feature = "level"))]
             _ => None,
         }
@@ -73,8 +73,7 @@ mod lua {
     use crate::{DropPolicy, N9Entity, pico8::lua::with_pico8};
 
     use bevy_mod_scripting::bindings::{
-        InteropError,
-        IntoScript, ReflectReference,
+        InteropError, IntoScript, ReflectReference,
         access_map::ReflectAccessId,
         function::{
             from::FromScript,
@@ -112,7 +111,10 @@ mod lua {
                         Ok(PropBy::Pos(Vec2::new(x, y)))
                     }
                 }
-                _ => Err(InteropError::value_mismatch(std::any::TypeId::of::<PropBy>(), value)),
+                _ => Err(InteropError::value_mismatch(
+                    std::any::TypeId::of::<PropBy>(),
+                    value,
+                )),
             }
         }
     }

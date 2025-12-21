@@ -15,12 +15,11 @@ impl super::Pico8<'_, '_> {
     }
 
     pub fn exit(&mut self, error: Option<u8>) {
-        self.commands.send_event(match error {
-            Some(n) => std::num::NonZero::new(n)
-                .map(AppExit::Error)
-                .expect("non-zero error"),
-            None => AppExit::Success,
-        });
+        self.commands
+            .send_event(match error.and_then(std::num::NonZero::new) {
+                Some(n) => AppExit::Error(n),
+                None => AppExit::Success,
+            });
     }
 }
 

@@ -14,16 +14,20 @@ pub enum PalModify {
 }
 
 impl super::Pico8<'_, '_> {
-
     pub fn palettes(&self) -> Result<&Palettes, PalError> {
-        Ok(&self.pico8_asset().map_err(|_| PalError::NoPico8Asset)?.palettes)
+        Ok(&self
+            .pico8_asset()
+            .map_err(|_| PalError::NoPico8Asset)?
+            .palettes)
     }
 
     pub(crate) fn palette(&self, index: Option<usize>) -> Result<&Palette, PalError> {
         let palettes = self.palettes()?;
         let index = index.unwrap_or(self.state.palette);
-        palettes.get(index)
-                .ok_or_else(|| PalError::NoSuchPalette { index, count: palettes.len() })
+        palettes.get(index).ok_or_else(|| PalError::NoSuchPalette {
+            index,
+            count: palettes.len(),
+        })
     }
 
     pub(crate) fn get_color(&self, c: impl Into<N9Color>) -> Result<Color, PalError> {
