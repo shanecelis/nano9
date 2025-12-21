@@ -1,0 +1,43 @@
+#include lib/tinytest.lua
+
+demo_misctests = {
+    demo_pass = function(t)
+        t:ok(true, "hi")
+    end,
+
+    demo_fail = function(t)
+        t:ok(false, "bye")
+    end,
+
+    demo_error = function(t)
+        assert(false, "wtf")
+    end,
+
+    demo_misc = function(t)
+        t:ok(false, "bye2")
+        assert(false, "wtf2")
+    end,
+}
+
+demo_fail_tests = {
+    demo_fail = function(t)
+        t:ok(false, "bye")
+    end,
+}
+
+demo_error_tests = {
+    demo_error = function(t)
+        assert(false, "wtf")
+    end,
+}
+
+demo_pass_tests = {
+    demo_pass = function(t)
+        t:ok(true, "hi")
+    end,
+}
+function _init()
+    cls()
+    local fails, errors = tinytest:new():run(demo_pass_tests)
+    exit(fails + errors)
+end
