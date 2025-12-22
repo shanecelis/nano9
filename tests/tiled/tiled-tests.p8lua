@@ -1,0 +1,29 @@
+--[===[
+template = "pico8"
+[[map]]
+path = "outside.tmx"
+]===]
+
+#include ../lib/tinytest.lua
+map_tests = {
+    mget_tests = function(t)
+      t:eq(48, mget(0,0))
+      t:eq(48, mget(1,0))
+      t:eq(4,  mget(2,2))
+      --t:eq(0, fget(4))
+      -- this fails because my map is too small.
+      --local a = mget(0, 1)
+      -- world.info("mget ".. (nil == mget(0,1)))
+      --assert(nil == mget(0,1))
+    end,
+    mget_invalid = function(T)
+
+      -- mget(-1, -1)
+    end,
+}
+
+function _init()
+  map(0,0,0,0,1,1)
+    local fails, errors = tinytest:new():run(map_tests)
+    exit(fails + errors)
+end

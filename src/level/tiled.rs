@@ -24,7 +24,7 @@ pub enum TiledLookup {
 #[derive(SystemParam)]
 pub struct Level<'w, 's> {
     // TODO: TiledMap is not an Asset in bevy_ecs_tiled 0.9.5
-    // tiled_maps: ResMut<'w, Assets<bevy_ecs_tiled::prelude::TiledMap>>,
+    tiled_maps: ResMut<'w, Assets<bevy_ecs_tiled::prelude::TiledMapAsset>>,
     // tiled_worlds: ResMut<'w, Assets<bevy_ecs_tiled::prelude::TiledWorld>>,
     // TODO: Fix when bevy_ecs_tiled API is updated
     // tiled_id_storage: Query<'w, 's, (&'static TiledMapStorage, &'static TiledMapHandle)>,
@@ -41,13 +41,11 @@ impl Level<'_, '_> {
     ) -> Option<usize> {
         match map {
             level::Tiled::SpriteMap { handle } => {
-                todo!();
                 // TODO: Fix when TiledMap is an Asset - TiledMap structure may have changed
                 // For now, return None as the API needs to be updated
-                None
-                /* OLD CODE - needs API update
-                handle.map.get_layer(layer_index.unwrap_or(0)).and_then(|layer| {
-                    let tile_size = UVec2::new(handle.map.tile_width, handle.map.tile_width);
+                let asset = self.tiled_maps.get(handle)?;
+                asset.map.get_layer(layer_index.unwrap_or(0)).and_then(|layer| {
+                    let tile_size = UVec2::new(asset.map.tile_width, asset.map.tile_width);
                     match layer.layer_type() {
                         tiled::LayerType::Tiles(tile_layer) => tile_layer
                             .get_tile(pos.x as i32, pos.y as i32)
@@ -71,7 +69,6 @@ impl Level<'_, '_> {
                         _ => None,
                     }
                 })
-                */
             }
             level::Tiled::World { handle: _ } => {
                 todo!()

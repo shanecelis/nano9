@@ -1280,7 +1280,7 @@ dependencies = [
  "serde",
  "serde_json",
  "thiserror 2.0.12",
- "tiled 0.15.0",
+ "tiled",
 ]
 
 [[package]]
@@ -5882,7 +5882,7 @@ dependencies = [
  "serde",
  "serde_json",
  "thiserror 1.0.69",
- "tiled 0.14.0",
+ "tiled",
  "tiny-skia",
  "toml 0.8.23",
  "version-sync",
@@ -8095,18 +8095,6 @@ dependencies = [
  "flate2",
  "jpeg-decoder",
  "weezl",
-]
-
-[[package]]
-name = "tiled"
-version = "0.14.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "963ef63fa3552ead705617d9f42de2b076c48a15f780e4d1c95dd52e9362a700"
-dependencies = [
- "base64 0.22.1",
- "flate2",
- "xml-rs",
- "zstd",
 ]
 
 [[package]]

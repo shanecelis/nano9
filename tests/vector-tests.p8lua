@@ -1,0 +1,24 @@
+#include lib/tinytest.lua
+#include lib/vector.lua
+
+vector_tests = {
+    constructor = function(t)
+        local v = vec(0,1)
+        t:eq(0, v.x)
+        t:eq(1, v.y)
+    end,
+
+    add = function(t)
+        local v = vec(0,1)
+        local w = vec(2,3)
+        local u = v + w
+        t:eq(u, vec(2,4))
+    end,
+
+}
+
+function _init()
+    cls()
+    local fails, errors = tinytest:new():run(vector_tests)
+    exit(fails + errors)
+end

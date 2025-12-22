@@ -1,6 +1,6 @@
 #include lib/tinytest.lua
 
-demo_misctests = {
+demo_misc_tests = {
     demo_pass = function(t)
         t:ok(true, "hi")
     end,

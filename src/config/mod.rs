@@ -413,6 +413,7 @@ impl Config {
 #[cfg(test)]
 mod test {
     use super::*;
+    use std::path::PathBuf;
 
     #[test]
     fn test_config_0() {

@@ -11,6 +11,7 @@ fn test_run_lua_files() {
     //
     let dir_path = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests");
     find_lua_files(&dir_path, &mut test_files);
+    find_lua_files(&dir_path.join("tiled"), &mut test_files);
 
     if test_files.is_empty() {
         panic!("No .lua or .p8lua files found to test");
@@ -66,7 +67,7 @@ fn find_lua_files(dir: &Path, files: &mut Vec<PathBuf>) {
             if !path.is_dir()
                 && let Some(ext) = path.extension()
             {
-                if ext == "lua" || ext == "p8lua" {
+                if ext == "lua" || ext == "p8lua" || ext == "p8" {
                     files.push(path.strip_prefix(root).unwrap().to_path_buf());
                 }
             }
