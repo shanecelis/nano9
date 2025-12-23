@@ -1,8 +1,12 @@
 use super::*;
 use bevy::ecs::system::SystemParam;
 
-use crate::pico8::{
-    self, Gfx, api::canvas::N9Canvas, audio::SfxChannels, keyboard::KeyInput, mouse::MouseInput,
+use crate::{
+    translate::Position,
+    pico8::{
+    self, Gfx, api::canvas::N9Canvas, audio::SfxChannels, keyboard::KeyInput,
+    mouse::MouseInput,
+}
 };
 
 #[derive(SystemParam)]
@@ -49,27 +53,19 @@ impl Pico8<'_, '_> {
         // See if there's already an entity available.
         if let Some(id) = self.clear_cache.take(&hash) {
             self.commands.queue(move |world: &mut World| {
-                let maybe_z = world.get_mut::<Clearable>(id).map(|mut clearable| {
+                world.get_mut::<Clearable>(id).map(|mut clearable| {
                     // We've extracted it from the cache, so it's no longer cached.
                     clearable.state = ClearState::Visible;
                     clearable.resurrect(); // Make this a parameter.
-                    clearable.suggest_z()
                 });
-                // assert!(maybe_z.is_some(), "No Clearable for entity {:?}", id);
-                if maybe_z.is_none() {
-                    // eprintln!("No Clearable for entity {:?}", id);
-                    if let Err(e) = world.get_entity(id) {
-                        warn!("Get entity {:?} err {e:?}", id);
-                    }
-                    // return None;
-                }
                 if let Some(mut visibility) = world.get_mut::<Visibility>(id) {
                     *visibility = Visibility::Inherited;
                 }
-                if let Some(mut transform) = world.get_mut::<Transform>(id) {
-                    let z = maybe_z.unwrap_or(transform.translation.z);
-                    transform.translation = position.extend(z);
+
+                if let Some(mut p) = world.get_mut::<Position>(id) {
+                    p.0 = position;
                 }
+
             });
             Some(id)
         } else {

@@ -45,14 +45,16 @@ impl DrawState {
 
     #[inline]
     pub fn apply_camera_delta(&self, a: Vec2) -> Vec2 {
-        self.camera_position_delta.map(|d| a + d).unwrap_or(a)
+        a
+        // self.camera_position_delta.map(|d| a + d).unwrap_or(a)
     }
 
     #[inline]
     pub fn apply_camera_delta_ivec2(&self, a: IVec2) -> IVec2 {
-        self.camera_position_delta
-            .map(|d| a + d.as_ivec2())
-            .unwrap_or(a)
+        a
+        // self.camera_position_delta
+        //     .map(|d| a + d.as_ivec2())
+        //     .unwrap_or(a)
     }
 
     pub fn clear_screen(&mut self) {

@@ -3,6 +3,7 @@ use bevy::{
     render::camera::Viewport,
     window::{PrimaryWindow, WindowResized},
 };
+use crate::translate::Position;
 
 #[derive(Debug, Clone, Resource, Default, Reflect)]
 pub struct N9Canvas {
@@ -123,6 +124,7 @@ fn spawn_camera(mut commands: Commands, canvas: Res<N9Canvas>) {
                 IsDefaultUiCamera,
                 InheritedVisibility::default(),
                 Nano9Camera,
+                Position::default(),
             ));
         });
 }

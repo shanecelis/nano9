@@ -1,4 +1,5 @@
 use super::*;
+use crate::translate::Position;
 use bevy::platform::hash::FixedHasher;
 // use bevy_ecs_tilemap::prelude::*;
 use std::hash::{BuildHasher, Hash, Hasher};
@@ -77,7 +78,8 @@ impl super::Pico8<'_, '_> {
                     .commands
                     .spawn((
                         Name::new("map"),
-                        Transform::from_translation(screen_start.extend(clearable.suggest_z())),
+
+                        Position::from(screen_start),
                         Visibility::Inherited,
                         clearable,
                         P8SpriteMap {

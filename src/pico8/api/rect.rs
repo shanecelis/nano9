@@ -1,4 +1,5 @@
 use super::*;
+use crate::translate::Position;
 
 pub(crate) fn plugin(app: &mut App) {
     #[cfg(feature = "scripting")]
@@ -118,7 +119,8 @@ impl super::Pico8<'_, '_> {
                         ..default()
                     }
                 },
-                Transform::from_xyz(upper_left.x, negate_y(upper_left.y), clearable.suggest_z()),
+                Position::from(upper_left),
+                // Transform::from_xyz(upper_left.x, negate_y(upper_left.y), clearable.suggest_z()),
                 clearable,
             ))
             .id();
@@ -154,7 +156,7 @@ impl super::Pico8<'_, '_> {
                     }),
                     ..default()
                 },
-                Transform::from_xyz(upper_left.x, negate_y(upper_left.y), clearable.suggest_z()),
+                Position::from(upper_left),
                 clearable,
             ))
             .id();

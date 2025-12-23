@@ -1,6 +1,9 @@
 use bevy::prelude::*;
 
-use crate::pico8::{Clearable, Pico8State, negate_y};
+use crate::{
+    translate::{Position, Rotation},
+    pico8::{Clearable, Pico8State, negate_y},
+};
 use bevy_mod_scripting::{
     bindings::function::{
         from::Val, namespace::NamespaceBuilder, script_function::FunctionCallContext,
@@ -66,9 +69,9 @@ pub(crate) fn plugin(app: &mut App) {
                 world.with_global_access(|world| {
                     let mut commands = world.commands();
                     commands.entity(this.entity).remove::<Clearable>();
-                    if let Some(mut transform) = world.get_mut::<Transform>(this.entity) {
-                        transform.translation.z = z.unwrap_or(0.0);
-                    }
+                    // if let Some(mut transform) = world.get_mut::<Transform>(this.entity) {
+                    //     transform.translation.z = z.unwrap_or(0.0);
+                    // }
                 })?;
                 Ok(this)
             },
@@ -79,40 +82,37 @@ pub(crate) fn plugin(app: &mut App) {
              this: Val<N9Entity>,
              x: Option<f32>,
              y: Option<f32>,
-             z: Option<f32>| {
+             // z: Option<f32>
+                | {
                 let world = ctx.world()?;
                 let pos = world.with_global_access(|world| {
                     let camera_position_delta = world
                         .get_resource::<Pico8State>()
                         .and_then(|state| state.draw_state.camera_position_delta);
-                    if x.is_some() || y.is_some() || z.is_some() {
+                    if x.is_some() || y.is_some() { // || z.is_some() {
                         world
-                            .get_mut::<Transform>(this.entity)
-                            .map(|mut transform| {
-                                let last = transform.translation;
+                            .get_mut::<Position>(this.entity)
+                            .map(|mut position| {
+                                let last = position.0;
                                 if let Some(x) = x {
-                                    transform.translation.x =
-                                        camera_position_delta.map(|d| x + d.x).unwrap_or(x);
+                                    position.0.x = x;
                                 }
                                 if let Some(y) = y {
-                                    transform.translation.y = negate_y(
-                                        camera_position_delta.map(|d| y + d.y).unwrap_or(y),
-                                    );
-                                    // transform.translation.y = camera_position_delta.map(|d| negate_y(y) + d.y).unwrap_or_else(|| negate_y(y));
+                                    position.0.y = y;
                                 }
-                                if let Some(z) = z {
-                                    transform.translation.z = z;
-                                }
+                                // if let Some(z) = z {
+                                //     transform.translation.z = z;
+                                // }
                                 last
                             })
                     } else {
                         world
-                            .get::<Transform>(this.entity)
-                            .map(|transform| transform.translation)
+                            .get::<Position>(this.entity)
+                            .map(|position| position.0)
                     }
                 })?;
                 if let Some(pos) = pos {
-                    Ok(Some(vec![pos.x, negate_y(pos.y), pos.z]))
+                    Ok(Some(vec![pos.x, pos.y]))
                 } else {
                     Ok(None)
                 }
@@ -130,31 +130,33 @@ pub(crate) fn plugin(app: &mut App) {
                 let rot = world.with_global_access(|world| {
                     if x.is_some() || y.is_some() || z.is_some() {
                         world
-                            .get_mut::<Transform>(this.entity)
-                            .map(|mut transform| {
-                                let last = transform.rotation.to_euler(EulerRot::ZYX);
-                                let mut euler = last;
-                                if let Some(x) = x {
-                                    euler.2 = x * 2.0 * PI;
+                            .get_mut::<Rotation>(this.entity)
+                            .map(|mut rotation| {
+                                let last = rotation.0;
+                                // let last = transform.rotation.to_euler(EulerRot::ZYX);
+                                let mut turns = last;
+                                if let Some(z) = z {
+                                    turns.z = z;
                                 }
                                 if let Some(y) = y {
-                                    euler.1 = y * 2.0 * PI;
+                                    turns.y = y;
                                 }
-                                if let Some(z) = z {
-                                    euler.0 = z * 2.0 * PI;
+                                if let Some(x) = x {
+                                    turns.x = x;
                                 }
-                                transform.rotation =
-                                    Quat::from_euler(EulerRot::ZYX, euler.0, euler.1, euler.2);
+                                rotation.0 = turns;
+                                // transform.rotation =
+                                //     Quat::from_euler(EulerRot::ZYX, turns.0, turns.1, turns.2);
                                 last
                             })
                     } else {
                         world
-                            .get::<Transform>(this.entity)
-                            .map(|transform| transform.rotation.to_euler(EulerRot::ZYX))
+                            .get::<Rotation>(this.entity)
+                            .map(|rotation| rotation.0)
                     }
                 })?;
                 if let Some(rot) = rot {
-                    Ok(Some(vec![rot.0, rot.1, rot.2]))
+                    Ok(Some(vec![rot.z, rot.y, rot.x]))
                 } else {
                     Ok(None)
                 }

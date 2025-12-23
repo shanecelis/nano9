@@ -1,4 +1,5 @@
 use super::*;
+use crate::translate::Position;
 use crate::hash::hash_f32;
 use bevy::platform::hash::FixedHasher;
 use std::hash::{BuildHasher, Hash, Hasher};
@@ -97,13 +98,13 @@ impl super::Pico8<'_, '_> {
 
     fn post_print_world(
         In((id, add_newline)): In<(Entity, bool)>,
-        query: Query<(&Transform, &TextLayoutInfo)>,
+        query: Query<(&Position, &TextLayoutInfo)>,
         mut state: ResMut<Pico8State>,
     ) -> Result<f32, Error> {
-        let (transform, text_layout) = query
+        let (position, text_layout) = query
             .get(id)
             .map_err(|_| Error::NoSuch("text layout".into()))?;
-        let pos = &transform.translation;
+        let pos = &position.0;
         if add_newline {
             state.draw_state.print_cursor.x = pos.x;
             state.draw_state.print_cursor.y = negate_y(pos.y) + text_layout.size.y;
@@ -166,11 +167,10 @@ impl super::Pico8<'_, '_> {
             true
         };
         let font_size = font_size.unwrap_or(5.0);
-        let z = clearable.suggest_z();
         let id = entity.unwrap_or_else(|| world.spawn_empty().id());
         world.entity_mut(id).insert((
             Name::new("print"),
-            Transform::from_xyz(pos.x, negate_y(pos.y), z),
+            Position::from(pos),
             Text2d::new(text),
             Visibility::default(),
             TextColor(c),

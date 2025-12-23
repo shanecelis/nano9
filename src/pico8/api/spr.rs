@@ -6,7 +6,7 @@ use bevy_mod_scripting::bindings::{
     InteropError, WorldAccessGuard, function::from::FromScript, script_value::ScriptValue,
 };
 
-use crate::{hash::hash_f32, pico8::Gfx};
+use crate::{hash::hash_f32, pico8::Gfx, translate::{Rotation, Position}};
 use std::{
     any::TypeId,
     hash::{BuildHasher, Hash, Hasher},
@@ -183,7 +183,7 @@ impl super::Pico8<'_, '_> {
         let mut ecommands = self.commands.spawn((
             Name::new("sspr"),
             sprite,
-            Transform::from_xyz(screen_pos.x, screen_pos.y, clearable.suggest_z()),
+            Position::from(screen_pos),
             clearable,
         ));
         if let Some(gfx_handle) = gfx_handle {
@@ -217,8 +217,8 @@ impl super::Pico8<'_, '_> {
         flip: Option<BVec2>,
         turns: Option<f32>,
     ) -> Result<Entity, Error> {
-        let mut pos = pixel_snap(self.state.draw_state.apply_camera_delta(pos));
-        pos.y = negate_y(pos.y);
+        // let mut pos = pixel_snap(self.state.draw_state.apply_camera_delta(pos));
+        // pos.y = negate_y(pos.y);
         let spr = spr.into();
         let index;
         let hash = {
@@ -301,18 +301,21 @@ impl super::Pico8<'_, '_> {
             }
         };
         let clearable = Clearable::new(self.defaults.time_to_live).with_hash(hash);
-        let mut transform = Transform::from_xyz(pos.x, pos.y, clearable.suggest_z());
-        if let Some(turns) = turns {
-            transform.translation.x += pixel_size.x;
-            transform.translation.y += negate_y(pixel_size.y);
-            sprite.anchor = Anchor::Center;
-            transform.rotation = Quat::from_rotation_z(turns * 2.0 * PI);
-        }
         let material = self.gfx_material();
+        let position = Position::from(pos);
         let mut ecommands = self
             .commands
-            .spawn((Name::new("spr"), sprite, transform, clearable));
+            .spawn((Name::new("spr"), sprite, position, clearable));
 
+        // let mut transform = Transform::default();
+        // let mut translation = Vec2::new(pos.x, pos.y);
+        if let Some(turns) = turns {
+            ecommands.insert(Rotation(Vec3::new(0.0, 0.0, turns)));
+            // translation.x += pixel_size.x;
+            // translation.y += negate_y(pixel_size.y);
+            // sprite.anchor = Anchor::Center;
+            // transform.rotation = Quat::from_rotation_z(turns * 2.0 * PI);
+        }
         if let Some(handle) = gfx_handle {
             ecommands.insert(GfxSprite {
                 image: handle,

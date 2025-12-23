@@ -7,15 +7,18 @@ fn update(mut pico8: Pico8, mut t: Local<usize>) {
     let x = *t % 128;
     let y = *t / 128;
 
+    pico8.camera(Some(Vec2::new(-(x as f32), 0.0)));
     pico8
         .spr(
             n as usize,
-            Vec2::new(x as f32, y as f32),
+            Vec2::new(0.0 * x as f32, y as f32),
             None,
             Some(BVec2::new(true, false)),
             None,
         )
         .unwrap();
+    pico8.camera(Some(Vec2::ZERO));
+    pico8.print("hello world", Some(Vec2::ZERO), None, None, None).unwrap();
     *t += 1;
 }
 

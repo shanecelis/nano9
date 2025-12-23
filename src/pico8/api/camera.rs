@@ -1,43 +1,30 @@
 use super::*;
+use crate::translate::Position;
 
 #[derive(Component, Debug, Reflect)]
 pub struct Nano9Camera;
 
 pub(crate) fn plugin(app: &mut App) {
-    app.add_observer(
-        |trigger: Trigger<UpdateCameraPos>,
-         camera: Single<&mut Transform, With<Nano9Camera>>,
-         mut state: ResMut<Pico8State>| {
-            let mut pos = trigger.event().0;
-            let mut camera = camera.into_inner();
-            pos.y = negate_y(pos.y);
-            trace!("UpdateCameraPos({:.2}, {:.2})", pos.x, pos.y);
-            camera.translation.x = pos.x;
-            camera.translation.y = pos.y;
-            state.draw_state.camera_position_delta = None;
-        },
-    );
     #[cfg(feature = "scripting")]
     lua::plugin(app);
 }
 
-#[derive(Event, Debug)]
-pub(crate) struct UpdateCameraPos(pub(crate) Vec2);
+fn change_camera_position(In(position): In<Vec2>,
+                          mut camera: Single<&mut Position, With<Nano9Camera>>,
+                          mut items: Query<&mut Position, Without<Nano9Camera>>) {
+    let old_position = camera.0;
+    camera.0 = position;
+    let dp = position - old_position;
+    for mut item_position in &mut items {
+        item_position.0 += dp;
+    }
+}
 
 impl super::Pico8<'_, '_> {
     pub fn camera(&mut self, pos: Option<Vec2>) -> Vec2 {
-        if let Some(pos) = pos.map(pixel_snap) {
+        if let Some(pos) = pos {
             let last = std::mem::replace(&mut self.state.draw_state.camera_position, pos);
-            if let Some(delta) = &mut self.state.draw_state.camera_position_delta {
-                // Do not move the camera. Something has already been drawn.
-                // Accumulate the delta.
-                *delta += last - pos;
-            }
-            if self.state.draw_state.is_clear {
-                trace!("camera(): trigger update camera position");
-                // We haven't drawn anything yet. Move the actual camera.
-                self.commands.trigger(UpdateCameraPos(pos));
-            }
+            self.commands.run_system_cached_with(change_camera_position, pos);
             last
         } else {
             self.state.draw_state.camera_position

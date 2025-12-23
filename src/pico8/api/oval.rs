@@ -1,4 +1,5 @@
 use super::*;
+use crate::translate::Position;
 
 pub(crate) fn plugin(app: &mut App) {
     #[cfg(feature = "scripting")]
@@ -65,7 +66,7 @@ impl super::Pico8<'_, '_> {
                     custom_size: Some(Vec2::new(size.x as f32, size.y as f32)),
                     ..default()
                 },
-                Transform::from_xyz(upper_left.x, negate_y(upper_left.y), clearable.suggest_z()),
+                Position::from(upper_left),
                 clearable,
             ))
             .id();
@@ -132,7 +133,7 @@ impl super::Pico8<'_, '_> {
                     custom_size: Some(Vec2::new(size.x as f32, size.y as f32)),
                     ..default()
                 },
-                Transform::from_xyz(upper_left.x, negate_y(upper_left.y), clearable.suggest_z()),
+                Position::from(upper_left),
                 clearable,
             ))
             .id();

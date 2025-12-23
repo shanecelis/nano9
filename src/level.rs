@@ -1,5 +1,6 @@
 use crate::pico8::Clearable;
 use bevy::prelude::*;
+use crate::translate::Position;
 use bevy_ecs_tiled::prelude::*;
 use bevy_ecs_tilemap::prelude::*;
 // pub mod ldtk;
@@ -29,7 +30,7 @@ impl Tiled {
                 commands
                     .spawn((
                         TiledMap(handle.clone()),
-                        Transform::from_xyz(screen_start.x, screen_start.y, clearable.suggest_z()),
+                        Position(screen_start),
                         TilemapAnchor::TopLeft,
                         TiledMapLayerZOffset(1.0),
                         Name::new("level"),
@@ -44,7 +45,7 @@ impl Tiled {
                     .spawn((
                         TiledWorld(handle.clone()),
                         // TiledWorldChunking::new(1000., 1000.),
-                        Transform::from_xyz(screen_start.x, screen_start.y, clearable.suggest_z()),
+                        Position(screen_start),
                         TilemapAnchor::TopLeft,
                         TiledMapLayerZOffset(1.0),
                         Name::new("level"),
