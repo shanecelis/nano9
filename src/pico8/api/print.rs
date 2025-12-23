@@ -13,7 +13,7 @@ impl super::Pico8<'_, '_> {
     pub fn cursor(&mut self, pos: Option<Vec2>, color: Option<PColor>) -> (Vec2, PColor) {
         let last_pos = self.state.draw_state.print_cursor;
         let last_color = self.state.draw_state.pen;
-        if let Some(pos) = pos.map(|p| pixel_snap(self.state.draw_state.apply_camera_delta(p))) {
+        if let Some(pos) = pos {
             self.state.draw_state.print_cursor = pos;
         }
         if let Some(color) = color {
@@ -52,7 +52,7 @@ impl super::Pico8<'_, '_> {
         };
         self.state.draw_state.mark_drawn();
         // See if there's already an entity available.
-        if let Some(id) = self.resurrect(hash, negate_vy(pos.unwrap_or(Vec2::ZERO))) {
+        if let Some(id) = self.resurrect(hash, pos.unwrap_or(Vec2::ZERO)) {
             return Ok(id);
         }
         let clearable = Clearable::new(self.defaults.time_to_live).with_hash(hash);
@@ -107,7 +107,7 @@ impl super::Pico8<'_, '_> {
         let pos = &position.0;
         if add_newline {
             state.draw_state.print_cursor.x = pos.x;
-            state.draw_state.print_cursor.y = negate_y(pos.y) + text_layout.size.y;
+            state.draw_state.print_cursor.y = pos.y + text_layout.size.y;
         } else {
             assert_ne!(text_layout.size.x, 0.0);
             state.draw_state.print_cursor.x = pos.x + text_layout.size.x;
@@ -151,13 +151,8 @@ impl super::Pico8<'_, '_> {
         }?;
 
         // XXX: Should the camera delta apply to the print cursor position?
-        let pos = pos
-            .map(|p| pixel_snap(state.draw_state.apply_camera_delta(p)))
-            .unwrap_or_else(|| {
-                pixel_snap(Vec2::new(
-                    state.draw_state.print_cursor.x,
-                    state.draw_state.print_cursor.y,
-                ))
+        let pos = pos.unwrap_or_else(|| {
+                state.draw_state.print_cursor
             });
         let clearable = clearable.unwrap_or_default();
         let add_newline = if text.ends_with('\0') {
@@ -256,7 +251,6 @@ mod lua {
                             x.unwrap_or(pico8.state.draw_state.print_cursor.x),
                             y.unwrap_or(pico8.state.draw_state.print_cursor.y),
                         );
-                        let pos_p8 = pixel_snap(pico8.state.draw_state.apply_camera_delta(pos_p8));
 
                         let hash = {
                             let mut hasher = FixedHasher.build_hasher();
@@ -272,7 +266,7 @@ mod lua {
                             hasher.finish()
                         };
                         // See if there's already an entity available.
-                        let cached_id = pico8.resurrect(hash, negate_vy(pos_p8));
+                        let cached_id = pico8.resurrect(hash, pos_p8);
                         if let Some(id) = cached_id {
                             let pcolor = c.unwrap_or(pico8.state.draw_state.pen);
                             if let Ok(color) = pico8.get_color(pcolor) {

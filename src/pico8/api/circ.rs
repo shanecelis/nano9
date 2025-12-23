@@ -13,7 +13,6 @@ impl super::Pico8<'_, '_> {
         r: impl Into<UVec2>,
         color: Option<N9Color>,
     ) -> Result<Entity, Error> {
-        let pos = pixel_snap(self.state.draw_state.apply_camera_delta(pos));
         let color = self.get_color(color.unwrap_or(N9Color::Pen))?;
         let r: UVec2 = r.into();
         let size: UVec2 = r * UVec2::splat(2) + UVec2::ONE;
@@ -77,7 +76,6 @@ impl super::Pico8<'_, '_> {
         r: impl Into<UVec2>,
         color: Option<N9Color>,
     ) -> Result<Entity, Error> {
-        let pos = pixel_snap(self.state.draw_state.apply_camera_delta(pos));
         let color = self.get_color(color.unwrap_or(N9Color::Pen))?;
         let r: UVec2 = r.into();
         let size: UVec2 = r * UVec2::splat(2) + UVec2::ONE;

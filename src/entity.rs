@@ -2,7 +2,7 @@ use bevy::prelude::*;
 
 use crate::{
     translate::{Position, Rotation},
-    pico8::{Clearable, Pico8State, negate_y},
+    pico8::{Clearable, Pico8State},
 };
 use bevy_mod_scripting::{
     bindings::function::{

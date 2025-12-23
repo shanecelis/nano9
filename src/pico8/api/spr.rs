@@ -139,8 +139,6 @@ impl super::Pico8<'_, '_> {
         flip: Option<BVec2>,
         sheet_index: Option<usize>,
     ) -> Result<Entity, Error> {
-        let mut screen_pos = pixel_snap(self.state.draw_state.apply_camera_delta(screen_pos));
-        screen_pos.y = negate_y(screen_pos.y);
         // let sheet_index = sheet_index.unwrap_or(0);
 
         let hash = {

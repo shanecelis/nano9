@@ -13,8 +13,6 @@ impl super::Pico8<'_, '_> {
         lower_right: Vec2,
         color: Option<N9Color>,
     ) -> Result<Entity, Error> {
-        let upper_left = pixel_snap(self.state.draw_state.apply_camera_delta(upper_left));
-        let lower_right = pixel_snap(self.state.draw_state.apply_camera_delta(lower_right));
         let color = self.get_color(color.unwrap_or(N9Color::Pen))?;
         // let min = a.min(b);
         let size: UVec2 = ((lower_right.as_ivec2() - upper_left.as_ivec2()) + IVec2::ONE)
@@ -80,8 +78,6 @@ impl super::Pico8<'_, '_> {
         lower_right: Vec2,
         color: Option<N9Color>,
     ) -> Result<Entity, Error> {
-        let upper_left = pixel_snap(self.state.draw_state.apply_camera_delta(upper_left));
-        let lower_right = pixel_snap(self.state.draw_state.apply_camera_delta(lower_right));
         let color = self.get_color(color.unwrap_or(N9Color::Pen))?;
         let size: UVec2 = ((lower_right.as_ivec2() - upper_left.as_ivec2()) + IVec2::ONE)
             .try_into()

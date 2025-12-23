@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use crate::pico8::{negate_y, Nano9Camera, Clearable, pixel_snap};
+use crate::pico8::{Nano9Camera, Clearable};
 
 /// The position the Nano9 element was drawn. Note: it may be altered by
 /// subsequent camera position changes.
@@ -32,5 +32,31 @@ fn apply_translation(
         v = pixel_snap(v);
         v.y = negate_y(v.y);
         transform.translation = v.extend(clearable_maybe.map(|c| c.suggest_z()).unwrap_or(0.0));
+    }
+}
+
+/// Negates y IF the feature "negate-y" is enabled.
+#[inline]
+pub fn negate_y(y: f32) -> f32 {
+    if cfg!(feature = "negate-y") { -y } else { y }
+}
+
+#[inline]
+fn negate_vy(mut v: Vec2) -> Vec2 {
+    if cfg!(feature = "negate-y") {
+        v.y = -v.y;
+        v
+    } else {
+        v
+    }
+}
+
+/// Snap to pixel IF the feature "pixel-snap" is enabled.
+#[inline]
+fn pixel_snap(v: Vec2) -> Vec2 {
+    if cfg!(feature = "pixel-snap") {
+        v.floor()
+    } else {
+        v
     }
 }

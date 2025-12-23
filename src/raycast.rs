@@ -6,7 +6,7 @@ use bevy::{
 
 #[cfg(feature = "scripting")]
 use crate::pico8::lua::with_system_param;
-use crate::pico8::{Error, negate_y};
+use crate::pico8::Error;
 #[cfg(feature = "scripting")]
 use bevy_mod_scripting::bindings::{
     InteropError,
@@ -128,7 +128,7 @@ fn with_rays<X>(
 
 impl Rays<'_, '_> {
     pub fn raydown(&self, mut pos: Vec2, mask: Option<u32>, shape: Option<Aabb2d>) -> Vec<Entity> {
-        pos.y = negate_y(pos.y);
+        // pos.y = negate_y(pos.y);
         self.covers
             .iter()
             .filter_map(|(id, cover, transform)| {
