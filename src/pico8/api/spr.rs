@@ -326,13 +326,18 @@ impl super::Pico8<'_, '_> {
     pub fn sset(
         &mut self,
         pos: UVec2,
-        color: Option<N9Color>,
+        color: Option<PColor>,
         sheet_index: Option<usize>,
     ) -> Result<(), Error> {
-        let color = color.unwrap_or(N9Color::Pen);
         let sheet = self.sprite_sheet(sheet_index)?;
         match sheet.handle.clone() {
             SprHandle::Gfx(handle) => {
+                let color = match self.get_pcolor(color) {
+                    PColor::Palette(n) => Ok(n as u8),
+                    PColor::Color(_) => Err(Error::InvalidArgument(
+                        "Cannot write pen `Color` to Gfx asset".into(),
+                    )),
+                }?;
                 let gfx = self
                     .gfxs
                     .get_mut(&handle)
@@ -340,12 +345,7 @@ impl super::Pico8<'_, '_> {
                 gfx.set(
                     pos.x as usize,
                     pos.y as usize,
-                    match color.into_pcolor(&self.state.draw_state.pen) {
-                        PColor::Palette(n) => Ok(n as u8),
-                        PColor::Color(_) => Err(Error::InvalidArgument(
-                            "Cannot write pen `Color` to Gfx asset".into(),
-                        )),
-                    }?,
+                    color,
                 );
             }
             SprHandle::Image(handle) => {
@@ -523,7 +523,7 @@ mod lua {
                 |ctx: FunctionCallContext,
                  x: u32,
                  y: u32,
-                 color: Option<N9Color>,
+                 color: Option<PColor>,
                  sprite_index: Option<usize>| {
                     with_pico8(&ctx, move |pico8| {
                         pico8.sset(UVec2::new(x, y), color, sprite_index)

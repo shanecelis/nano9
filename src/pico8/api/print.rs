@@ -268,8 +268,7 @@ mod lua {
                         // See if there's already an entity available.
                         let cached_id = pico8.resurrect(hash, pos_p8);
                         if let Some(id) = cached_id {
-                            let pcolor = c.unwrap_or(pico8.state.draw_state.pen);
-                            if let Ok(color) = pico8.get_color(pcolor) {
+                            if let Ok(color) = pico8.get_color(c) {
                                 pico8.commands.queue(move |world: &mut World| {
                                     if let Some(mut text_color) = world.get_mut::<TextColor>(id) {
                                         text_color.0 = color;

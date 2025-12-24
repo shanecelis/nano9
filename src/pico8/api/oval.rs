@@ -11,9 +11,9 @@ impl super::Pico8<'_, '_> {
         &mut self,
         upper_left: Vec2,
         lower_right: Vec2,
-        color: Option<N9Color>,
+        color: Option<PColor>,
     ) -> Result<Entity, Error> {
-        let color = self.get_color(color.unwrap_or(N9Color::Pen))?;
+        let color = self.get_color(color)?;
         // let min = a.min(b);
         let size: UVec2 = ((lower_right.as_ivec2() - upper_left.as_ivec2()) + IVec2::ONE)
             .try_into()
@@ -76,9 +76,9 @@ impl super::Pico8<'_, '_> {
         &mut self,
         upper_left: Vec2,
         lower_right: Vec2,
-        color: Option<N9Color>,
+        color: Option<PColor>,
     ) -> Result<Entity, Error> {
-        let color = self.get_color(color.unwrap_or(N9Color::Pen))?;
+        let color = self.get_color(color)?;
         let size: UVec2 = ((lower_right.as_ivec2() - upper_left.as_ivec2()) + IVec2::ONE)
             .try_into()
             .unwrap();
@@ -158,7 +158,7 @@ mod lua {
                  y0: Option<f32>,
                  x1: Option<f32>,
                  y1: Option<f32>,
-                 c: Option<N9Color>| {
+                 c: Option<PColor>| {
                     let _ = with_pico8(&ctx, move |pico8| {
                         pico8.ovalfill(
                             Vec2::new(x0.unwrap_or(0.0), y0.unwrap_or(0.0)),
@@ -176,7 +176,7 @@ mod lua {
                  y0: Option<f32>,
                  x1: Option<f32>,
                  y1: Option<f32>,
-                 c: Option<N9Color>| {
+                 c: Option<PColor>| {
                     let _ = with_pico8(&ctx, move |pico8| {
                         pico8.oval(
                             Vec2::new(x0.unwrap_or(0.0), y0.unwrap_or(0.0)),

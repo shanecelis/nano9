@@ -11,9 +11,9 @@ impl super::Pico8<'_, '_> {
         &mut self,
         pos: Vec2,
         r: impl Into<UVec2>,
-        color: Option<N9Color>,
+        color: Option<PColor>,
     ) -> Result<Entity, Error> {
-        let color = self.get_color(color.unwrap_or(N9Color::Pen))?;
+        let color = self.get_color(color)?;
         let r: UVec2 = r.into();
         let size: UVec2 = r * UVec2::splat(2) + UVec2::ONE;
         let mut pixmap = Pixmap::new(size.x, size.y).expect("pixmap");
@@ -74,9 +74,9 @@ impl super::Pico8<'_, '_> {
         &mut self,
         pos: Vec2,
         r: impl Into<UVec2>,
-        color: Option<N9Color>,
+        color: Option<PColor>,
     ) -> Result<Entity, Error> {
-        let color = self.get_color(color.unwrap_or(N9Color::Pen))?;
+        let color = self.get_color(color)?;
         let r: UVec2 = r.into();
         let size: UVec2 = r * UVec2::splat(2) + UVec2::ONE;
         let mut pixmap = Pixmap::new(size.x, size.y).expect("pixmap");
@@ -162,7 +162,7 @@ mod lua {
                  x0: Option<f32>,
                  y0: Option<f32>,
                  r: Option<u32>,
-                 c: Option<N9Color>| {
+                 c: Option<PColor>| {
                     let id = with_pico8(&ctx, move |pico8| {
                         pico8.circfill(
                             Vec2::new(x0.unwrap_or(0.0), y0.unwrap_or(0.0)),
@@ -190,7 +190,7 @@ mod lua {
                  x0: Option<f32>,
                  y0: Option<f32>,
                  r: Option<u32>,
-                 c: Option<N9Color>| {
+                 c: Option<PColor>| {
                     let _ = with_pico8(&ctx, move |pico8| {
                         pico8.circ(
                             Vec2::new(x0.unwrap_or(0.0), y0.unwrap_or(0.0)),

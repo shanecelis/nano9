@@ -7,13 +7,12 @@ pub(crate) fn plugin(app: &mut App) {
 }
 
 impl super::Pico8<'_, '_> {
-    pub fn line(&mut self, a: IVec2, b: IVec2, color: impl Into<N9Color>) -> Result<Entity, Error> {
+    pub fn line(&mut self, a: IVec2, b: IVec2, color: Option<PColor>) -> Result<Entity, Error> {
         let color = self.get_color(color)?;
-        let a = self.state.draw_state.apply_camera_delta_ivec2(a);
-        let b = self.state.draw_state.apply_camera_delta_ivec2(b);
         let min = a.min(b);
         let delta = b - a;
-        let size = UVec2::new(delta.x.unsigned_abs(), delta.y.unsigned_abs()) + UVec2::ONE;
+        let size = UVec2::new(delta.x.unsigned_abs(),
+                              delta.y.unsigned_abs()) + UVec2::ONE;
         let mut image = Image::new_fill(
             Extent3d {
                 width: size.x,
@@ -43,7 +42,7 @@ impl super::Pico8<'_, '_> {
                     image: handle,
                     color,
                     anchor: Anchor::TopLeft,
-                    custom_size: Some(Vec2::new(size.x as f32, size.y as f32)),
+                    custom_size: Some(size.as_vec2()),
                     ..default()
                 },
                 Position::from(min.as_vec2()),

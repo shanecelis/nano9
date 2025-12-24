@@ -109,7 +109,7 @@ impl super::Pico8<'_, '_> {
                         ..default()
                     }
                 } else {
-                    let c = self.get_color(color.off())?;
+                    let c = self.get_color(Some(color.off()))?;
                     Sprite {
                         color: c,
                         anchor: Anchor::TopLeft,
@@ -130,9 +130,9 @@ impl super::Pico8<'_, '_> {
         &mut self,
         upper_left: Vec2,
         lower_right: Vec2,
-        color: Option<N9Color>,
+        color: Option<PColor>,
     ) -> Result<Entity, Error> {
-        let c = self.get_color(color.unwrap_or(N9Color::Pen))?;
+        let c = self.get_color(color)?;
         let size = (lower_right - upper_left) + Vec2::ONE;
         let clearable = Clearable::default();
         let id = self
@@ -217,7 +217,7 @@ mod lua {
                  y0: f32,
                  x1: f32,
                  y1: f32,
-                 color: Option<N9Color>| {
+                 color: Option<PColor>| {
                     with_pico8(&ctx, |pico8| {
                         // We want to ignore out of bounds errors specifically but possibly not others.
                         // Ok(pico8.pset(x, y, color)?)
