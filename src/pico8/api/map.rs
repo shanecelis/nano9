@@ -94,7 +94,7 @@ impl super::Pico8<'_, '_> {
                 Ok(map_entity)
             }
             #[cfg(feature = "level")]
-            SpriteMap::Level(map) => Ok(map.map(screen_start, 0, &mut self.commands)),
+            SpriteMap::Level(map) => Ok(map.map(screen_start, 0, hash, &mut self.commands)),
         }
     }
 

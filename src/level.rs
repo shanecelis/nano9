@@ -17,23 +17,19 @@ pub enum Tiled {
 }
 
 impl Tiled {
-    pub fn map(&self, screen_start: Vec2, _level: usize, commands: &mut Commands) -> Entity {
-        // commands.insert_resource(LevelSelection::index(level));
-        let clearable = Clearable::default();
-
-        // let mut transform =
-        //     get_tilemap_top_left_transform(&map_size, &grid_size, &map_type, clearable.suggest_z());
-        // transform.translation += screen_start.extend(0.0);
+    pub fn map(&self, screen_start: Vec2, _level: usize, hash: u64, commands: &mut Commands) -> Entity {
+        let mut clearable = Clearable::default()
+            .with_hash(hash);
+        clearable.time_to_live = 1;
         match self {
             Tiled::SpriteMap { handle } => {
-                // TODO: Fix when TiledMapHandle is available
                 commands
                     .spawn((
                         TiledMap(handle.clone()),
                         Position(screen_start),
                         TilemapAnchor::TopLeft,
                         TiledMapLayerZOffset(1.0),
-                        Name::new("level"),
+                        Name::new("map"),
                         clearable,
                         InheritedVisibility::default(),
                     ))
@@ -48,7 +44,7 @@ impl Tiled {
                         Position(screen_start),
                         TilemapAnchor::TopLeft,
                         TiledMapLayerZOffset(1.0),
-                        Name::new("level"),
+                        Name::new("map"),
                         clearable,
                         InheritedVisibility::default(),
                     ))
