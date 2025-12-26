@@ -8,7 +8,10 @@ use bevy::{
     audio::{AudioPlugin, Volume},
     prelude::*,
 };
-
+#[cfg(feature = "sdl")]
+use bevy_window_sdl2_backend::Sdl2WindowBackendPlugin;
+#[cfg(feature = "sdl")]
+use bevy::winit::WinitPlugin;
 /// Nano-9 plugins
 #[derive(Debug, Default)]
 pub struct Nano9Plugins {
@@ -35,8 +38,8 @@ impl PluginGroup for Nano9Plugins {
             config: self.config,
             config_path: self.config_path,
         };
-        let group = group.add_group(
-            DefaultPlugins
+
+        let default_plugins = DefaultPlugins
                 // .set(AssetPlugin {
                 //     mode: AssetMode::Processed,
                 //     ..default()
@@ -47,8 +50,16 @@ impl PluginGroup for Nano9Plugins {
                     },
                     ..default()
                 })
-                .set(nano9_plugin.window_plugin()),
+                .set(nano9_plugin.window_plugin());
+
+        #[cfg(feature = "sdl")]
+        let default_plugins = default_plugins.disable::<WinitPlugin>();
+
+        let group = group.add_group(
+            default_plugins
         );
+        #[cfg(feature = "sdl")]
+        let group = group.add(Sdl2WindowBackendPlugin);
 
         group.add(nano9_plugin)
     }
