@@ -1,5 +1,6 @@
 use super::*;
 use bevy::ecs::system::SystemParam;
+use crate::pico8::api::camera3d::Camera3dCommand;
 
 use crate::{
     translate::Position,
@@ -18,6 +19,7 @@ pub struct Pico8<'w, 's> {
     pub(crate) images: ResMut<'w, Assets<Image>>,
     pub(crate) state: ResMut<'w, Pico8State>,
     pub(crate) commands: Commands<'w, 's>,
+    pub(crate) camera3d_messages: MessageWriter<'w, Camera3dCommand>,
     pub(crate) canvas: Res<'w, N9Canvas>,
     pub(crate) player_inputs: Res<'w, PlayerInputs>,
     pub(crate) sfx_channels: Res<'w, SfxChannels>,
@@ -28,7 +30,7 @@ pub struct Pico8<'w, 's> {
     pub(crate) gfxs: ResMut<'w, Assets<Gfx>>,
     // pub(crate) palettes: ResMut<'w, Palettes>,
     #[cfg(feature = "rand")]
-    pub(crate) rand8: pico8::rand::Rand8<'w>,
+    pub(crate) rand8: pico8::rand::Rand8<'w,'s>,
     pub(crate) key_input: ResMut<'w, KeyInput>,
     pub(crate) mouse_input: ResMut<'w, MouseInput>,
     pub(crate) pico8_assets: ResMut<'w, Assets<Pico8Asset>>,

@@ -5,13 +5,13 @@ use std::time::Duration;
 #[cfg(feature = "scripting")]
 use bevy_mod_scripting::{
     BMSPlugin,
-    asset::ScriptAsset,
+    asset::ScriptAsset,prelude::ScriptAttachment,
     bindings::{InteropError, function::namespace::NamespaceBuilder},
     core::{
         callback_labels,
         event::{CallbackLabel, ScriptCallbackEvent},
         handler::event_handler,
-        script::{ContextPolicy, ScriptAttachment, ScriptContext},
+        script::{ContextPolicy, ScriptContext},
     },
     lua::LuaScriptingPlugin,
 };
@@ -100,7 +100,7 @@ pub fn send(
 
         match maybe_recipients {
             Some(recipients) => {
-                writer.send(ScriptCallbackEvent::new(
+                writer.write(ScriptCallbackEvent::new(
                     label.clone(),
                     vec![],
                     recipients,
@@ -108,7 +108,7 @@ pub fn send(
                 ));
             }
             None => {
-                writer.send(ScriptCallbackEvent::new_for_all_contexts(
+                writer.write(ScriptCallbackEvent::new_for_all_contexts(
                     label.clone(),
                     vec![],
                 ));
@@ -154,7 +154,7 @@ impl Nano9Plugin {
             .unwrap_or(ResizeConstraints::MatchScreen {
                 match_screen: false,
             });
-        let resolution: bevy::window::WindowResolution = screen_size.as_vec2().into();
+        let resolution: bevy::window::WindowResolution = screen_size.into();
         let resize_constraints = match resize_constraints {
             ResizeConstraints::MatchScreen { match_screen: true } => WindowResizeConstraints {
                 min_width: resolution.width(),

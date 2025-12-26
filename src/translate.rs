@@ -21,7 +21,7 @@ pub(crate) fn plugin(app: &mut App) {
         .register_type::<Position>()
         .register_type::<Rotation>()
         .add_systems(PostUpdate,
-                     apply_translation.before(TransformSystem::TransformPropagate));
+                     apply_translation.before(TransformSystems::Propagate));
 
 }
 

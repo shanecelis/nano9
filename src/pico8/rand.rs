@@ -5,30 +5,31 @@ use bevy_mod_scripting::bindings::InteropError;
 #[cfg(feature = "scripting")]
 use bevy_mod_scripting::bindings::ScriptValue;
 use bevy_prng::WyRand;
-use bevy_rand::prelude::{Entropy, EntropyPlugin, RngSeed};
+use bevy_rand::prelude::{SeedSource, EntropyPlugin, RngSeed};
 use rand::RngCore;
 
 #[derive(Debug, Component)]
 struct Source;
 
 #[derive(SystemParam)]
-pub struct Rand8<'w> {
-    rand: Single<'w, (&'static mut Entropy<WyRand>, &'static RngSeed<WyRand>), With<Source>>,
+pub struct Rand8<'w, 's> {
+    commands: Commands<'w, 's>,
+    rand: Single<'w, 's, (Entity, &'static mut WyRand), With<Source>>,
 }
 
-impl Rand8<'_> {
+impl Rand8<'_,'_> {
     pub fn rnd<T>(&mut self, max: T) -> T
     where
-        T: ::rand::distributions::uniform::SampleUniform + PartialOrd + num_traits::Zero + Copy,
+        T: ::rand::distr::uniform::SampleUniform + PartialOrd + num_traits::Zero + Copy,
     {
-        let (rng, _seed) = &mut *self.rand;
+        let (_id, rng) = &mut *self.rand;
         rng.gen_range(T::zero()..max)
     }
 
     #[cfg(feature = "scripting")]
     pub fn rnd_value(&mut self, value: Option<ScriptValue>) -> ScriptValue {
         let value = value.unwrap_or(ScriptValue::Unit);
-        let (rng, _seed) = &mut *self.rand;
+        let (_id, rng) = &mut *self.rand;
         match value {
             ScriptValue::Integer(x) => {
                 ScriptValue::from(
@@ -57,10 +58,12 @@ impl Rand8<'_> {
     }
 
     // XXX: For now.
-    #[allow(deprecated)]
+    // #[allow(deprecated)]
     pub fn srand(&mut self, new_seed: u64) {
-        let (rng, _seed) = &mut *self.rand;
-        rng.reseed(new_seed.to_ne_bytes());
+        let (id, rng) = &mut *self.rand;
+        self.commands.entity(*id)
+            .insert(RngSeed::<WyRand>::from_seed(new_seed.to_ne_bytes()));
+        // rng.reseed(new_seed.to_ne_bytes());
         // Commands does do it
         // commands.reseed(new_seed);
         //**seed = RngSeed::<WyRand>::from_seed(new_seed.to_ne_bytes());

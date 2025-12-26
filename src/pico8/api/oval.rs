@@ -60,10 +60,10 @@ impl super::Pico8<'_, '_> {
                 Sprite {
                     image: handle,
                     color,
-                    anchor: Anchor::TopLeft,
                     custom_size: Some(Vec2::new(size.x as f32, size.y as f32)),
                     ..default()
                 },
+                Anchor::TOP_LEFT,
                 Position::from(upper_left),
                 clearable,
             ))
@@ -125,10 +125,10 @@ impl super::Pico8<'_, '_> {
                 Sprite {
                     image: handle,
                     color,
-                    anchor: Anchor::TopLeft,
                     custom_size: Some(Vec2::new(size.x as f32, size.y as f32)),
                     ..default()
                 },
+                Anchor::TOP_LEFT,
                 Position::from(upper_left),
                 clearable,
             ))
