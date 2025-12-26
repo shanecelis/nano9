@@ -88,7 +88,6 @@ impl super::Pico8<'_, '_> {
                                 Ok::<(), Error>(())
                             })?;
                     Sprite {
-                        anchor: Anchor::TopLeft,
                         // NOTE: Technically we only need a 4x4 image. However, this generates a warning.
                         //
                         // ```
@@ -112,13 +111,12 @@ impl super::Pico8<'_, '_> {
                     let c = self.get_color(Some(color.off()))?;
                     Sprite {
                         color: c,
-                        anchor: Anchor::TopLeft,
                         custom_size: Some(size),
                         ..default()
                     }
                 },
                 Position::from(upper_left),
-                // Transform::from_xyz(upper_left.x, negate_y(upper_left.y), clearable.suggest_z()),
+                Anchor::TOP_LEFT,
                 clearable,
             ))
             .id();
@@ -142,7 +140,6 @@ impl super::Pico8<'_, '_> {
                 Sprite {
                     image: self.pico8_asset()?.border.clone(),
                     color: c,
-                    anchor: Anchor::TopLeft,
                     custom_size: Some(size),
                     image_mode: SpriteImageMode::Sliced(TextureSlicer {
                         border: BorderRect::all(1.0),
@@ -152,6 +149,7 @@ impl super::Pico8<'_, '_> {
                     }),
                     ..default()
                 },
+                Anchor::TOP_LEFT,
                 Position::from(upper_left),
                 clearable,
             ))

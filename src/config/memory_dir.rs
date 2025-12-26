@@ -67,7 +67,7 @@ impl Plugin for MemoryDir {
             root: self.dir.clone(),
         };
         app.register_asset_source(
-            AssetSourceId::from_static(self.source),
+            AssetSourceId::new(Some(self.source)),
             AssetSource::build().with_reader(move || Box::new(reader.clone())),
         );
         app.insert_resource(self.clone());

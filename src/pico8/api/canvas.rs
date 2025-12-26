@@ -1,6 +1,6 @@
 use super::*;
 use bevy::{
-    render::camera::Viewport,
+    camera::Viewport,
     window::{PrimaryWindow, WindowResized},
 };
 use crate::translate::Position;
@@ -196,7 +196,7 @@ impl super::Pico8<'_, '_> {
         //         image.set_color_at(i, j, c)?;
         //     }
         // }
-        self.commands.trigger(ClearEvent::new(c));
+        self.commands.run_system_cached_with(crate::pico8::clear::clear_screen, c);
         Ok(())
     }
 

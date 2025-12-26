@@ -137,7 +137,7 @@ fn with_minibuffer<T>(
 #[cfg(feature = "scripting")]
 pub fn lua_eval(mut minibuffer: Minibuffer) {
     minibuffer.prompt::<TextField>("Lua Eval: ").observe(
-        |mut trigger: Trigger<Submit<String>>,
+        |mut trigger: On<Submit<String>>,
          mut writer: EventWriter<ScriptCallbackEvent>,
          mut commands: Commands| {
             if let Ok(input) = trigger.event_mut().take_result() {
@@ -146,7 +146,7 @@ pub fn lua_eval(mut minibuffer: Minibuffer) {
                     vec![ScriptValue::String(input.into()), ScriptValue::Bool(true)],
                 ));
             } else {
-                commands.entity(trigger.target()).despawn();
+                commands.entity(trigger.event().entity).despawn();
             }
         },
     );

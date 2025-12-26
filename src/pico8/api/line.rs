@@ -41,10 +41,10 @@ impl super::Pico8<'_, '_> {
                 Sprite {
                     image: handle,
                     color,
-                    anchor: Anchor::TopLeft,
                     custom_size: Some(size.as_vec2()),
                     ..default()
                 },
+                Anchor::TOP_LEFT,
                 Position::from(min.as_vec2()),
                 clearable,
             ))
@@ -90,10 +90,10 @@ impl super::Pico8<'_, '_> {
                 Name::new("tline"),
                 Sprite {
                     image: handle,
-                    anchor: Anchor::TopLeft,
                     custom_size: Some(size.as_vec2()),
                     ..default()
                 },
+                Anchor::TOP_LEFT,
                 Position::from(min.as_vec2()),
                 clearable,
             ))

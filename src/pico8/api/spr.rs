@@ -109,7 +109,7 @@ impl super::Pico8<'_, '_> {
             .sprite_sheets
             .get(sheet_index)
             .ok_or_else(|| Error::NoSuch("sprite sheet handle".into()))?
-            .clone_weak();
+            .clone();
         self.sprite_sheets
             .get_mut(&handle)
             .ok_or_else(|| Error::NoSuch("sprite sheet asset".into()))
@@ -169,7 +169,6 @@ impl super::Pico8<'_, '_> {
                     Handle::default()
                 }
             },
-            anchor: Anchor::TopLeft,
             rect: Some(sprite_rect),
             custom_size: screen_size,
             flip_x: flip.x,
@@ -181,6 +180,7 @@ impl super::Pico8<'_, '_> {
         let mut ecommands = self.commands.spawn((
             Name::new("sspr"),
             sprite,
+            Anchor::TOP_LEFT,
             Position::from(screen_pos),
             clearable,
         ));
@@ -290,7 +290,6 @@ impl super::Pico8<'_, '_> {
         let mut sprite = {
             Sprite {
                 image,
-                anchor: Anchor::TopLeft,
                 texture_atlas: Some(atlas),
                 rect,
                 flip_x: flip.x,
@@ -303,7 +302,9 @@ impl super::Pico8<'_, '_> {
         let position = Position::from(pos);
         let mut ecommands = self
             .commands
-            .spawn((Name::new("spr"), sprite, position, clearable));
+            .spawn((Name::new("spr"), sprite,
+                    Anchor::TOP_LEFT,
+                    position, clearable));
 
         // let mut transform = Transform::default();
         // let mut translation = Vec2::new(pos.x, pos.y);

@@ -9,7 +9,7 @@ pub struct Nano9Camera3d;
 // }
 
 #[allow(dead_code)]
-#[derive(Event, Debug)]
+#[derive(Message, Debug)]
 pub enum Camera3dCommand {
     Set { active: bool },
     Goto { position: Vec3 },
@@ -25,7 +25,7 @@ pub enum Camera3dCommand {
 // }
 //
 fn update_camera3d(
-    mut events: EventReader<Camera3dCommand>,
+    mut events: MessageReader<Camera3dCommand>,
     camera: Option<Single<(&mut Transform, &mut Camera), With<Nano9Camera3d>>>,
     mut commands: Commands,
 ) {
@@ -81,7 +81,7 @@ fn update_camera3d(
 
 pub(crate) fn plugin(app: &mut App) {
     app.register_type::<Nano9Camera3d>()
-        .add_event::<Camera3dCommand>()
+        .add_message::<Camera3dCommand>()
         .add_systems(Update, update_camera3d);
     #[cfg(feature = "scripting")]
     lua::plugin(app);
@@ -91,16 +91,16 @@ impl super::Pico8<'_, '_> {
     // camera3d([x,] [y,] [z,] [lx,] [ly,] [lz,]
     pub fn camera3d(&mut self, position: Option<Vec3>, look: Option<Vec3>) {
         if let Some(position) = position {
-            self.commands.send_event(Camera3dCommand::Goto { position });
+            self.camera3d_messages.write(Camera3dCommand::Goto { position });
         }
         if let Some(position) = look {
-            self.commands
-                .send_event(Camera3dCommand::LookAt { position });
+            self.camera3d_messages
+                .write(Camera3dCommand::LookAt { position });
         }
     }
 
     pub fn camera3d_active(&mut self, active: bool) {
-        self.commands.send_event(Camera3dCommand::Set { active });
+        self.camera3d_messages.write(Camera3dCommand::Set { active });
     }
 }
 

@@ -3,7 +3,7 @@ use crate::{
     PColor,
     pico8::{Gfx, GfxDirty, GfxSprite, Pico8Asset, Pico8Handle, Pico8State},
 };
-use bevy::prelude::*;
+use bevy::{ecs::lifecycle::HookContext, prelude::*};
 use mashmap::MashMap;
 
 mod counter;
@@ -14,21 +14,8 @@ const MAX_EXPECTED_CLEARABLES: f32 = 1000.0;
 
 pub(crate) fn plugin(app: &mut App) {
     app.register_type::<Clearable>()
-        .add_event::<ClearEvent>()
         .init_resource::<ClearCache>()
-        .add_systems(Last, (handle_overflow).chain())
-        .add_observer(handle_clear_event);
-}
-
-#[derive(Debug, Event, Clone, Copy)]
-pub struct ClearEvent {
-    color: PColor,
-}
-
-impl ClearEvent {
-    pub fn new(color: PColor) -> Self {
-        Self { color }
-    }
+        .add_systems(Last, (handle_overflow).chain());
 }
 
 // We're relying on the hash to do all our dirty work without any Eq protection
@@ -120,9 +107,10 @@ impl ClearState {
 
 fn on_remove_hook(
     mut world: bevy::ecs::world::DeferredWorld,
-    hook: bevy::ecs::component::HookContext,
+    context: HookContext,
 ) {
-    let id = hook.entity;
+
+    let id = context.entity;
     let Some(clearable) = world.get::<Clearable>(id).copied() else {
         return;
     };
@@ -201,8 +189,8 @@ fn handle_overflow(mut query: Query<&mut Clearable>) {
 }
 
 #[allow(clippy::too_many_arguments)]
-fn handle_clear_event(
-    trigger: Trigger<ClearEvent>,
+pub(crate) fn clear_screen(
+    In(color): In<PColor>,
     mut query: Query<(Entity, &mut Clearable, &mut Visibility)>,
     mut commands: Commands,
     mut state: ResMut<Pico8State>,
@@ -223,7 +211,7 @@ fn handle_clear_event(
         return;
     };
     // .ok_or_else(|| Error::NoAsset("pico8".into()))
-    match pico8_asset.palettes.get_color(trigger.color, state.palette) {
+    match pico8_asset.palettes.get_color(color, state.palette) {
         Ok(color) => {
             sprite.color = color;
         }

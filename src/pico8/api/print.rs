@@ -88,9 +88,10 @@ impl super::Pico8<'_, '_> {
         let (id, add_newline) = Self::pre_print_world(
             world, dest, text, pos, color, font_size, font_index, clearable,
         )?;
-        world
-            .run_system_cached(bevy::text::update_text2d_layout)
-            .expect("update_text2d_layout");
+        // TODO: Fix for Bevy 0.17 - update_text2d_layout might have been moved/renamed
+        // world
+        //     .run_system_cached(bevy::text::update_text2d_layout)
+        //     .expect("update_text2d_layout");
         world
             .run_system_cached_with(Self::post_print_world, (id, add_newline))
             .expect("post_print_world")
@@ -175,7 +176,7 @@ impl super::Pico8<'_, '_> {
                 font_size,
                 ..default()
             },
-            Anchor::TopLeft,
+            Anchor::TOP_LEFT,
             clearable,
         ));
         Ok((id, add_newline))
