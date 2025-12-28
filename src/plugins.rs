@@ -1,6 +1,6 @@
 use crate::{
     Nano9Plugin,
-    config::{Config, MemoryDir},
+    config::{Config, MemoryDir, WindowBackend},
 };
 use bevy::{
     app::{PluginGroup, PluginGroupBuilder},
@@ -34,6 +34,7 @@ impl PluginGroup for Nano9Plugins {
         #[cfg(feature = "web-asset")]
         let group = group.add(bevy_web_asset::WebAssetPlugin);
         let group = group.add(MemoryDir::new("n9mem"));
+        let mut use_sdl = self.config.window_backend == WindowBackend::Sdl;
         let nano9_plugin = Nano9Plugin {
             config: self.config,
             config_path: self.config_path,
@@ -51,16 +52,24 @@ impl PluginGroup for Nano9Plugins {
                     ..default()
                 })
                 .set(nano9_plugin.window_plugin());
+        if use_sdl && cfg!(not(feature = "sdl")) {
+            warn!("Configured to use SDL but not compiled with 'sdl' feature, using winit instead.");
+            use_sdl = false;
+        }
 
-        #[cfg(feature = "sdl")]
-        let default_plugins = default_plugins.disable::<WinitPlugin>();
-
-        let group = group.add_group(
-            default_plugins
-        );
-        #[cfg(feature = "sdl")]
-        let group = group.add(Sdl2WindowBackendPlugin);
-
+        let group = if use_sdl {
+            #[cfg(not(feature = "sdl"))]
+            panic!("Cannot use SDL without the feature being enabled.");
+            #[cfg(feature = "sdl")]
+            group.add_group(
+                default_plugins.disable::<WinitPlugin>()
+            )
+                 .add(Sdl2WindowBackendPlugin)
+        } else {
+            group.add_group(
+                default_plugins
+            )
+        };
         group.add(nano9_plugin)
     }
 }

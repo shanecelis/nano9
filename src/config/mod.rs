@@ -37,6 +37,15 @@ pub(crate) fn plugin(app: &mut App) {
 //     Content(String),
 // }
 
+
+#[derive(Default, Debug, Clone, Deserialize, Serialize, PartialEq)]
+#[serde(rename_all = "lowercase")]
+pub enum WindowBackend {
+    #[default]
+    Winit,
+    Sdl
+}
+
 /// Nano-9 config
 #[derive(Debug, Clone, Deserialize, Serialize, Default, Merge, PartialEq)]
 #[serde(deny_unknown_fields)]
@@ -58,6 +67,11 @@ pub struct Config {
     pub screen: Option<Screen>,
     /// Defaults
     pub defaults: Option<Defaults>,
+    /// Window backend
+    #[serde(default)]
+    #[merge(strategy = ::merge2::any::overwrite_default)]
+    // #[merge(skip)]
+    pub window_backend: WindowBackend,
     /// Bit depth
     pub bit_depth: Option<u8>,
     /// Palettes
