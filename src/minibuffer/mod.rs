@@ -88,6 +88,7 @@ pub fn quick_plugin(app: &mut App) {
             info!("bevy_minibuffer_inspector requires EguiPlugin, adding it.");
             app.add_plugins(bevy_egui::EguiPlugin {
                 enable_multipass_for_primary_context: false,
+                ..default()
             });
         }
         app.add_acts((
