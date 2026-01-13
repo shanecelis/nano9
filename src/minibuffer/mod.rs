@@ -139,7 +139,7 @@ fn with_minibuffer<T>(
 pub fn lua_eval(mut minibuffer: Minibuffer) {
     minibuffer.prompt::<TextField>("Lua Eval: ").observe(
         |mut trigger: On<Submit<String>>,
-         mut writer: EventWriter<ScriptCallbackEvent>,
+         mut writer: MessageWriter<ScriptCallbackEvent>,
          mut commands: Commands| {
             if let Ok(input) = trigger.event_mut().take_result() {
                 writer.write(ScriptCallbackEvent::new_for_all_contexts(

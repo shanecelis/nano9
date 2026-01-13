@@ -234,7 +234,7 @@ pub enum Mesh {
 }
 
 pub fn update_asset(
-    mut reader: EventReader<AssetEvent<pico8::Pico8Asset>>,
+    mut reader: MessageReader<AssetEvent<pico8::Pico8Asset>>,
     assets: Res<Assets<pico8::Pico8Asset>>,
     mut next_state: ResMut<NextState<RunState>>,
     mut pico8_handle: Option<ResMut<Pico8Handle>>,

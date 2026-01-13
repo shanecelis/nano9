@@ -48,7 +48,7 @@ pub struct GfxImageMap(HashMap<AssetId<Gfx>, GfxImage>);
 pub struct GfxDirty(pub bool);
 
 fn check_dirty(
-    mut events: EventReader<AssetEvent<Gfx>>,
+    mut events: MessageReader<AssetEvent<Gfx>>,
     mut query: Query<(&mut GfxDirty, &GfxSprite)>,
 ) {
     let mut modified_handles: Option<HashSet<_>> = None;
@@ -153,7 +153,7 @@ pub(crate) fn compute_image(
 #[allow(clippy::too_many_arguments)]
 fn compute_image_on_asset_event(
     mut commands: Commands,
-    mut events: EventReader<AssetEvent<Gfx>>,
+    mut events: MessageReader<AssetEvent<Gfx>>,
     mut images: ResMut<Assets<Image>>,
     gfxs: Res<Assets<Gfx>>,
     gfx_materials: Res<Assets<GfxMaterial>>,

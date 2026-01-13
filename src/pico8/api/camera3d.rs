@@ -40,7 +40,7 @@ fn update_camera3d(
                     camera.is_active = *active;
                 }
                 Camera3dCommand::Goto { position } => {
-                    let mut pos = *position;
+                    let pos = *position;
                     // pos.y = negate_y(pos.y);
                     transform.translation = pos;
                 }

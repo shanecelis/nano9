@@ -91,9 +91,9 @@ pub mod call {
 #[cfg(feature = "scripting")]
 pub fn send(
     label: impl Into<CallbackLabel>,
-) -> impl Fn(EventWriter<ScriptCallbackEvent>, Option<Res<Pico8Handle>>) {
+) -> impl Fn(MessageWriter<ScriptCallbackEvent>, Option<Res<Pico8Handle>>) {
     let label = label.into();
-    move |mut writer: EventWriter<ScriptCallbackEvent>,
+    move |mut writer: MessageWriter<ScriptCallbackEvent>,
           maybe_pico8_handle: Option<Res<Pico8Handle>>| {
         let maybe_recipients =
             maybe_pico8_handle.and_then(|pico8_handle| pico8_handle.main_script.clone());
@@ -418,12 +418,12 @@ impl Plugin for Nano9Plugin {
 }
 
 pub fn init_when<T: Asset>()
--> impl FnMut(EventReader<AssetEvent<T>>, Local<bool>, Res<State<RunState>>) -> bool + Clone {
+-> impl FnMut(MessageReader<AssetEvent<T>>, Local<bool>, Res<State<RunState>>) -> bool + Clone {
     // The events need to be consumed, so that there are no false positives on subsequent
     // calls of the run condition. Simply checking `is_empty` would not be enough.
     // PERF: note that `count` is efficient (not actually looping/iterating),
     // due to Bevy having a specialized implementation for events.
-    move |mut reader: EventReader<AssetEvent<T>>,
+    move |mut reader: MessageReader<AssetEvent<T>>,
           mut asset_change: Local<bool>,
           state: Res<State<RunState>>| {
         let asset_just_changed = reader
@@ -445,12 +445,12 @@ pub fn init_when<T: Asset>()
     }
 }
 
-pub fn on_asset_change<T: Asset>() -> impl FnMut(EventReader<AssetEvent<T>>) -> bool + Clone {
+pub fn on_asset_change<T: Asset>() -> impl FnMut(MessageReader<AssetEvent<T>>) -> bool + Clone {
     // The events need to be consumed, so that there are no false positives on subsequent
     // calls of the run condition. Simply checking `is_empty` would not be enough.
     // PERF: note that `count` is efficient (not actually looping/iterating),
     // due to Bevy having a specialized implementation for events.
-    move |mut reader: EventReader<AssetEvent<T>>| {
+    move |mut reader: MessageReader<AssetEvent<T>>| {
         reader
             .read()
             // .inspect(|e| info!("asset event {e:?}"))
@@ -463,36 +463,36 @@ pub fn on_asset_change<T: Asset>() -> impl FnMut(EventReader<AssetEvent<T>>) -> 
     }
 }
 
-pub fn on_asset_loaded<T: Asset>() -> impl FnMut(EventReader<AssetEvent<T>>) -> bool + Clone {
+pub fn on_asset_loaded<T: Asset>() -> impl FnMut(MessageReader<AssetEvent<T>>) -> bool + Clone {
     // The events need to be consumed, so that there are no false positives on subsequent
     // calls of the run condition. Simply checking `is_empty` would not be enough.
     // PERF: note that `count` is efficient (not actually looping/iterating),
     // due to Bevy having a specialized implementation for events.
-    move |mut reader: EventReader<AssetEvent<T>>| {
+    move |mut reader: MessageReader<AssetEvent<T>>| {
         reader
             .read()
             .any(|e| matches!(e, AssetEvent::LoadedWithDependencies { .. }))
     }
 }
 
-pub fn on_asset_modified<T: Asset>() -> impl FnMut(EventReader<AssetEvent<T>>) -> bool + Clone {
+pub fn on_asset_modified<T: Asset>() -> impl FnMut(MessageReader<AssetEvent<T>>) -> bool + Clone {
     // The events need to be consumed, so that there are no false positives on subsequent
     // calls of the run condition. Simply checking `is_empty` would not be enough.
     // PERF: note that `count` is efficient (not actually looping/iterating),
     // due to Bevy having a specialized implementation for events.
-    move |mut reader: EventReader<AssetEvent<T>>| {
+    move |mut reader: MessageReader<AssetEvent<T>>| {
         reader
             .read()
             .any(|e| matches!(e, AssetEvent::Modified { .. }))
     }
 }
 
-pub fn info_on_asset_event<T: Asset>() -> impl FnMut(EventReader<AssetEvent<T>>) {
+pub fn info_on_asset_event<T: Asset>() -> impl FnMut(MessageReader<AssetEvent<T>>) {
     // The events need to be consumed, so that there are no false positives on subsequent
     // calls of the run condition. Simply checking `is_empty` would not be enough.
     // PERF: note that `count` is efficient (not actually looping/iterating),
     // due to Bevy having a specialized implementation for events.
-    move |mut reader: EventReader<AssetEvent<T>>| {
+    move |mut reader: MessageReader<AssetEvent<T>>| {
         for event in reader.read() {
             match event {
                 AssetEvent::Modified { .. } => (),

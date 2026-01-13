@@ -71,7 +71,7 @@ impl super::Pico8<'_, '_> {
 }
 
 pub(crate) fn fill_input(
-    mut connection_events: EventReader<GamepadConnectionEvent>,
+    mut connection_events: MessageReader<GamepadConnectionEvent>,
     keys: Res<ButtonInput<KeyCode>>,
     gamepads: Query<&Gamepad>,
     mut player_inputs: ResMut<PlayerInputs>,

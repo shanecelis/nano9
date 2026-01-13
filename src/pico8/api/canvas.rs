@@ -130,7 +130,7 @@ fn spawn_camera(mut commands: Commands, canvas: Res<N9Canvas>) {
 }
 
 pub fn sync_window_size(
-    mut resize_event: EventReader<WindowResized>,
+    mut resize_event: MessageReader<WindowResized>,
     canvas: Res<N9Canvas>,
     primary_windows: Query<&Window, With<PrimaryWindow>>,
     mut projection_query: Query<&mut Projection, With<Nano9Camera>>,

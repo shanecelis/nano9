@@ -2,7 +2,7 @@ use bevy::prelude::*;
 
 use crate::{
     translate::{Position, Rotation},
-    pico8::{Clearable, Pico8State},
+    pico8::{Clearable},
 };
 use bevy_mod_scripting::{
     bindings::function::{
@@ -64,7 +64,7 @@ pub(crate) fn plugin(app: &mut App) {
     NamespaceBuilder::<N9Entity>::new(app.world_mut())
         .register(
             "retain",
-            |ctx: FunctionCallContext, this: Val<N9Entity>, z: Option<f32>| {
+            |ctx: FunctionCallContext, this: Val<N9Entity>, _z: Option<f32>| {
                 let world = ctx.world()?;
                 world.with_global_access(|world| {
                     let mut commands = world.commands();
@@ -86,10 +86,7 @@ pub(crate) fn plugin(app: &mut App) {
                 | {
                 let world = ctx.world()?;
                 let pos = world.with_global_access(|world| {
-                    let camera_position_delta = world
-                        .get_resource::<Pico8State>()
-                        .and_then(|state| state.draw_state.camera_position_delta);
-                    if x.is_some() || y.is_some() { // || z.is_some() {
+                    if x.is_some() || y.is_some() {
                         world
                             .get_mut::<Position>(this.entity)
                             .map(|mut position| {
@@ -100,9 +97,6 @@ pub(crate) fn plugin(app: &mut App) {
                                 if let Some(y) = y {
                                     position.0.y = y;
                                 }
-                                // if let Some(z) = z {
-                                //     transform.translation.z = z;
-                                // }
                                 last
                             })
                     } else {

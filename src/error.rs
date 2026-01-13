@@ -28,7 +28,7 @@ pub struct ErrorMessages;
 
 /// Make component visible.
 pub fn show<T: Component>(
-    mut redraw: EventWriter<RequestRedraw>,
+    mut redraw: MessageWriter<RequestRedraw>,
     mut query: Query<&mut Visibility, With<T>>,
 ) {
     if let Ok(mut visibility) = query.single_mut() {
@@ -39,7 +39,7 @@ pub fn show<T: Component>(
 
 /// Make component visible.
 pub fn hide<T: Component>(
-    mut redraw: EventWriter<RequestRedraw>,
+    mut redraw: MessageWriter<RequestRedraw>,
     mut query: Query<&mut Visibility, With<T>>,
 ) {
     if let Ok(mut visibility) = query.single_mut() {
@@ -95,7 +95,7 @@ fn spawn_error_message_layout(mut commands: Commands) {
 
 #[cfg(feature = "scripting")]
 pub fn add_messages(
-    mut r: EventReader<ScriptErrorEvent>,
+    mut r: MessageReader<ScriptErrorEvent>,
     query: Query<Entity, With<ErrorMessages>>,
     _frame_count: Res<FrameCount>,
     mut state: ResMut<NextState<RunState>>,
@@ -142,7 +142,7 @@ pub fn clear_messages(query: Query<Entity, With<ErrorMessages>>, mut commands: C
 
 #[cfg(feature = "scripting")]
 fn try_to_run_after_error(
-    mut reader: EventReader<AssetEvent<ScriptAsset>>,
+    mut reader: MessageReader<AssetEvent<ScriptAsset>>,
     state: Res<State<RunState>>,
     mut next_state: ResMut<NextState<RunState>>,
 ) {

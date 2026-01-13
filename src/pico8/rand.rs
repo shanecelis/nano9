@@ -23,7 +23,7 @@ impl Rand8<'_,'_> {
         T: ::rand::distr::uniform::SampleUniform + PartialOrd + num_traits::Zero + Copy,
     {
         let (_id, rng) = &mut *self.rand;
-        rng.gen_range(T::zero()..max)
+        rng.random_range(T::zero()..max)
     }
 
     #[cfg(feature = "scripting")]

@@ -71,7 +71,7 @@ pub struct P8SpriteMap {
 #[allow(clippy::too_many_arguments)]
 fn compute_gfx_tilemap_texture_on_asset_event(
     mut commands: Commands,
-    mut events: EventReader<AssetEvent<Gfx>>,
+    mut events: MessageReader<AssetEvent<Gfx>>,
     mut images: ResMut<Assets<Image>>,
     gfxs: Res<Assets<Gfx>>,
     gfx_materials: Res<Assets<GfxMaterial>>,

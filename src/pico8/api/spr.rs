@@ -300,7 +300,7 @@ impl super::Pico8<'_, '_> {
                 // )?
             }
         };
-        let mut sprite = {
+        let sprite = {
             Sprite {
                 image,
                 texture_atlas: Some(atlas),

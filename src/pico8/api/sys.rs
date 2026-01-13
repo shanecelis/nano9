@@ -16,7 +16,7 @@ impl super::Pico8<'_, '_> {
 
     pub fn exit(&mut self, error: Option<u8>) {
         self.commands
-            .send_event(match error.and_then(std::num::NonZero::new) {
+            .write_message(match error.and_then(std::num::NonZero::new) {
                 Some(n) => AppExit::Error(n),
                 None => AppExit::Success,
             });

@@ -20,7 +20,7 @@ impl N9Var {
 }
 
 /// Sends initialization event
-fn set_vars(_writer: EventWriter<ScriptCallbackEvent>, query: Query<(Entity, &N9Var)>) {
+fn set_vars(_writer: MessageWriter<ScriptCallbackEvent>, query: Query<(Entity, &N9Var)>) {
     for (_id, _var) in &query {
         warn!("Need to impl set_vars().");
         // todo!();

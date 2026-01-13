@@ -82,6 +82,7 @@ impl super::Pico8<'_, '_> {
             // let map_color =
             // image.set_color_at(x as u32, y as u32, if i % 4 >= 2 { Color::WHITE } else { Color::BLACK })?;
             m += dm;
+            todo!();
         }
         let handle = self.images.add(image);
         let clearable = Clearable::default();
