@@ -25,6 +25,19 @@ pub enum Spr {
     From { sprite: usize, sheet: usize },
 }
 
+bobtail::define! {
+    #[macro_export]
+    fn spr(
+        &mut self,
+        spr: impl Into<Spr>,
+        #[tail]
+        pos: Vec2,
+        size: Option<Vec2>,
+        flip: Option<BVec2>,
+        turns: Option<f32>,
+    ) -> Result<Entity, Error>;
+}
+
 #[cfg(feature = "scripting")]
 impl FromScript for Spr {
     type This<'w> = Self;

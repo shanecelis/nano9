@@ -30,13 +30,15 @@ mod fixed_point {
 
         pub fn rotr(a: f32, b: u8) -> f32 {
             let c: u32 = FixedI32::<U16>::from_num(a).to_bits() as u32;
-            let d = (c << (32 - b)) | (c >> b);
+            // let d = (c << (32 - b)) | (c >> b);
+            let d = c.rotate_right(b as u32);
             FixedI32::<U16>::from_bits(d as i32).to_num()
         }
 
         pub fn rotl(a: f32, b: u8) -> f32 {
             let c: u32 = FixedI32::<U16>::from_num(a).to_bits() as u32;
-            let d = (c << b) | (c >> (32 - b));
+            let d = c.rotate_left(b as u32);
+            // let d = (c << b) | (c >> (32 - b));
             FixedI32::<U16>::from_bits(d as i32).to_num()
         }
     }

@@ -125,7 +125,6 @@ pub(crate) fn plugin(app: &mut App) {
              z: Option<f32>,
              y: Option<f32>,
              x: Option<f32>| {
-                use std::f32::consts::PI;
                 let world = ctx.world()?;
                 let rot = world.with_global_access(|world| {
                     if x.is_some() || y.is_some() || z.is_some() {

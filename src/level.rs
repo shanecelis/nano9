@@ -2,7 +2,6 @@ use crate::pico8::Clearable;
 use bevy::prelude::*;
 use crate::translate::Position;
 use bevy_ecs_tiled::prelude::*;
-use bevy_ecs_tilemap::prelude::*;
 // pub mod ldtk;
 // use ldtk::*;
 pub(crate) mod asset;

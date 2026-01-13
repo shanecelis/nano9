@@ -53,13 +53,13 @@ use bevy::{
 use tiny_skia::{self, FillRule, Paint, PathBuilder, Pixmap, Stroke};
 
 use crate::{
-    DrawState, FillColor, N9Color, PColor,
+    DrawState, FillColor, PColor,
     pico8::{
         self, Clearable, PalMap, Palette, SpriteMap, audio::AudioBank,
         image::pixel_art_settings,
     },
 };
-use std::{borrow::Cow, f32::consts::PI};
+use std::{borrow::Cow};
 
 pub const MAP_COLUMNS: u32 = 128;
 pub const PICO8_SPRITE_SIZE: UVec2 = UVec2::new(8, 8);

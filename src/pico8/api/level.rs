@@ -1,10 +1,6 @@
 use super::*;
 use crate::ValueExt;
 
-use crate::pico8::Gfx;
-
-use std::{any::TypeId, collections::HashMap};
-
 pub(crate) fn plugin(app: &mut App) {
     #[cfg(all(feature = "scripting", feature = "level"))]
     lua::plugin(app);
@@ -70,14 +66,11 @@ impl super::Pico8<'_, '_> {
 #[cfg(all(feature = "scripting", feature = "level"))]
 mod lua {
     use super::*;
-    use crate::{DropPolicy, N9Entity, pico8::lua::with_pico8};
+    use crate::{pico8::lua::with_pico8};
 
     use bevy_mod_scripting::bindings::{
-        InteropError, IntoScript, ReflectReference,
-        access_map::ReflectAccessId,
-        function::{
+        InteropError, function::{
             from::FromScript,
-            into_ref::IntoScriptRef,
             namespace::{GlobalNamespace, NamespaceBuilder},
             script_function::FunctionCallContext,
         },

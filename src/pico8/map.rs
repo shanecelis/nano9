@@ -36,7 +36,8 @@ pub struct P8Map {
 }
 
 pub(crate) fn plugin(app: &mut App) {
-    app.register_type::<GfxTilemapTexture>()
+    app
+        .register_type::<GfxTilemapTexture>()
         .register_type::<P8SpriteMap>()
         .init_asset::<P8Map>()
         .add_systems(
@@ -152,6 +153,7 @@ fn compute_gfx_tilemap_texture_on_asset_event(
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 fn compute_image_on_gfx_tilemap_texture_change(
     mut commands: Commands,
     mut images: ResMut<Assets<Image>>,

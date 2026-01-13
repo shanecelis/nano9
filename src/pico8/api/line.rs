@@ -77,9 +77,10 @@ impl super::Pico8<'_, '_> {
         for (i, (x, y)) in
             bresenham::Bresenham::new((c.x as isize, c.y as isize), (d.x as isize, d.y as isize)).enumerate()
         {
+
             // TODO: Make this do the real thing.
             // let map_color =
-            image.set_color_at(x as u32, y as u32, if i % 4 >= 2 { Color::WHITE } else { Color::BLACK })?;
+            // image.set_color_at(x as u32, y as u32, if i % 4 >= 2 { Color::WHITE } else { Color::BLACK })?;
             m += dm;
         }
         let handle = self.images.add(image);

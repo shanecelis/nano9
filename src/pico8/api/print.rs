@@ -9,6 +9,19 @@ pub(crate) fn plugin(app: &mut App) {
     lua::plugin(app);
 }
 
+bobtail::define! {
+    #[macro_export]
+    fn print(
+        &mut self,
+        text: impl Into<String>,
+        #[tail]
+        pos: Option<Vec2>,
+        color: Option<PColor>,
+        font_size: Option<f32>,
+        font_index: Option<usize>,
+    ) -> Result<Entity, Error>;
+}
+
 impl super::Pico8<'_, '_> {
     pub fn cursor(&mut self, pos: Option<Vec2>, color: Option<PColor>) -> (Vec2, PColor) {
         let last_pos = self.state.draw_state.print_cursor;

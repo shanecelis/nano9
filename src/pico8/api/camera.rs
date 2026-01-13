@@ -20,6 +20,11 @@ fn change_camera_position(In(position): In<Vec2>,
     }
 }
 
+bobtail::define! {
+    #[macro_export]
+    fn camera(&mut self, #[tail] pos: Option<Vec2>) -> Vec2;
+}
+
 impl super::Pico8<'_, '_> {
     pub fn camera(&mut self, pos: Option<Vec2>) -> Vec2 {
         if let Some(pos) = pos {

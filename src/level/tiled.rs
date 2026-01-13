@@ -1,9 +1,8 @@
 use crate::{
     level,
-    pico8::{self, PropBy},
+    pico8,
 };
 use bevy::{ecs::system::SystemParam, prelude::*};
-use bevy_ecs_tiled::prelude::TiledMap;
 use tiled::{PropertyValue, Tileset};
 
 pub(crate) fn plugin(app: &mut App) {

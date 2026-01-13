@@ -1,4 +1,4 @@
-use bevy::{image::TextureAccessError, prelude::*};
+use bevy::image::TextureAccessError;
 use std::borrow::Cow;
 
 #[derive(thiserror::Error, Debug)]

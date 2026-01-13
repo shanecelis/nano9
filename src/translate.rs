@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use crate::pico8::{Nano9Camera, Clearable};
+use crate::pico8::{Clearable};
 
 /// The position the Nano9 element was drawn. Note: it may be altered by
 /// subsequent camera position changes.

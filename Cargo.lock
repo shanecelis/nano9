@@ -2877,6 +2877,28 @@ dependencies = [
 ]
 
 [[package]]
+name = "bobtail"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d8fc08f58982375a298e4b6f9d2ad1a63076598dfcf48b8732592ca7dde73ba6"
+dependencies = [
+ "bobtail_proc_macros",
+]
+
+[[package]]
+name = "bobtail_proc_macros"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6be161334e29218382bff034ae4145972977b44c7c9693d904331559539ee2bb"
+dependencies = [
+ "proc-macro-crate",
+ "proc-macro-warning",
+ "proc-macro2",
+ "quote",
+ "syn 1.0.109",
+]
+
+[[package]]
 name = "bresenham"
 version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5747,6 +5769,7 @@ dependencies = [
  "bevy_web_asset",
  "bitflags 2.10.0",
  "bitvec",
+ "bobtail",
  "bresenham",
  "bytemuck",
  "clap",
@@ -6720,6 +6743,17 @@ dependencies = [
  "proc-macro2",
  "quote",
  "smallvec",
+]
+
+[[package]]
+name = "proc-macro-warning"
+version = "1.84.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "75eea531cfcd120e0851a3f8aed42c4841f78c889eefafd96339c72677ae42c3"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.104",
 ]
 
 [[package]]
