@@ -36,8 +36,7 @@ pub struct P8Map {
 }
 
 pub(crate) fn plugin(app: &mut App) {
-    app
-        .register_type::<GfxTilemapTexture>()
+    app.register_type::<GfxTilemapTexture>()
         .register_type::<P8SpriteMap>()
         .init_asset::<P8Map>()
         .add_systems(

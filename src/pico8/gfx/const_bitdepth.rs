@@ -2,9 +2,7 @@ use crate::pico8::*;
 use bevy::{
     asset::RenderAssetUsages,
     image::ImageSampler,
-    render::{
-        render_resource::{Extent3d, TextureDimension, TextureFormat},
-    },
+    render::render_resource::{Extent3d, TextureDimension, TextureFormat},
 };
 use bitvec::{prelude::*, view::BitView};
 

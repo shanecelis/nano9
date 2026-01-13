@@ -4,9 +4,9 @@ use bevy::{
     prelude::*,
 };
 
+use crate::pico8::Error;
 #[cfg(feature = "scripting")]
 use crate::pico8::lua::with_system_param;
-use crate::pico8::Error;
 #[cfg(feature = "scripting")]
 use bevy_mod_scripting::bindings::{
     InteropError,

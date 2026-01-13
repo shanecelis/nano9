@@ -78,7 +78,6 @@ impl super::Pico8<'_, '_> {
                     .commands
                     .spawn((
                         Name::new("map"),
-
                         Position::from(screen_start),
                         Visibility::Inherited,
                         clearable,

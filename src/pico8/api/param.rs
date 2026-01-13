@@ -1,13 +1,12 @@
 use super::*;
-use bevy::ecs::system::SystemParam;
 use crate::pico8::api::camera3d::Camera3dCommand;
+use bevy::ecs::system::SystemParam;
 
 use crate::{
-    translate::Position,
     pico8::{
-    self, Gfx, api::canvas::N9Canvas, audio::SfxChannels, keyboard::KeyInput,
-    mouse::MouseInput,
-}
+        self, Gfx, api::canvas::N9Canvas, audio::SfxChannels, keyboard::KeyInput, mouse::MouseInput,
+    },
+    translate::Position,
 };
 
 #[derive(SystemParam)]
@@ -30,7 +29,7 @@ pub struct Pico8<'w, 's> {
     pub(crate) gfxs: ResMut<'w, Assets<Gfx>>,
     // pub(crate) palettes: ResMut<'w, Palettes>,
     #[cfg(feature = "rand")]
-    pub(crate) rand8: pico8::rand::Rand8<'w,'s>,
+    pub(crate) rand8: pico8::rand::Rand8<'w, 's>,
     pub(crate) key_input: ResMut<'w, KeyInput>,
     pub(crate) mouse_input: ResMut<'w, MouseInput>,
     pub(crate) pico8_assets: ResMut<'w, Assets<Pico8Asset>>,
@@ -67,7 +66,6 @@ impl Pico8<'_, '_> {
                 if let Some(mut p) = world.get_mut::<Position>(id) {
                     p.0 = position;
                 }
-
             });
             Some(id)
         } else {

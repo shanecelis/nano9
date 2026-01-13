@@ -91,7 +91,8 @@ impl super::Pico8<'_, '_> {
     // camera3d([x,] [y,] [z,] [lx,] [ly,] [lz,]
     pub fn camera3d(&mut self, position: Option<Vec3>, look: Option<Vec3>) {
         if let Some(position) = position {
-            self.camera3d_messages.write(Camera3dCommand::Goto { position });
+            self.camera3d_messages
+                .write(Camera3dCommand::Goto { position });
         }
         if let Some(position) = look {
             self.camera3d_messages
@@ -100,7 +101,8 @@ impl super::Pico8<'_, '_> {
     }
 
     pub fn camera3d_active(&mut self, active: bool) {
-        self.camera3d_messages.write(Camera3dCommand::Set { active });
+        self.camera3d_messages
+            .write(Camera3dCommand::Set { active });
     }
 }
 

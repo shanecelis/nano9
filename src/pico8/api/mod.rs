@@ -44,9 +44,7 @@ use bevy::{
     asset::RenderAssetUsages,
     image::ImageSampler,
     input::gamepad::GamepadConnectionEvent,
-    render::{
-        render_resource::{Extent3d, TextureDimension, TextureFormat},
-    },
+    render::render_resource::{Extent3d, TextureDimension, TextureFormat},
     sprite::Anchor,
     text::TextLayoutInfo,
 };
@@ -55,11 +53,10 @@ use tiny_skia::{self, FillRule, Paint, PathBuilder, Pixmap, Stroke};
 use crate::{
     DrawState, FillColor, PColor,
     pico8::{
-        self, Clearable, PalMap, Palette, SpriteMap, audio::AudioBank,
-        image::pixel_art_settings,
+        self, Clearable, PalMap, Palette, SpriteMap, audio::AudioBank, image::pixel_art_settings,
     },
 };
-use std::{borrow::Cow};
+use std::borrow::Cow;
 
 pub const MAP_COLUMNS: u32 = 128;
 pub const PICO8_SPRITE_SIZE: UVec2 = UVec2::new(8, 8);
@@ -105,7 +102,6 @@ pub(crate) fn plugin(app: &mut App) {
             level::plugin,
         ));
 }
-
 
 #[cfg(test)]
 mod test {

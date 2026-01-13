@@ -5,7 +5,7 @@ use bevy_mod_scripting::bindings::InteropError;
 #[cfg(feature = "scripting")]
 use bevy_mod_scripting::bindings::ScriptValue;
 use bevy_prng::WyRand;
-use bevy_rand::prelude::{SeedSource, EntropyPlugin, RngSeed};
+use bevy_rand::prelude::{EntropyPlugin, RngSeed, SeedSource};
 use rand::RngCore;
 
 #[derive(Debug, Component)]
@@ -17,7 +17,7 @@ pub struct Rand8<'w, 's> {
     rand: Single<'w, 's, (Entity, &'static mut WyRand), With<Source>>,
 }
 
-impl Rand8<'_,'_> {
+impl Rand8<'_, '_> {
     pub fn rnd<T>(&mut self, max: T) -> T
     where
         T: ::rand::distr::uniform::SampleUniform + PartialOrd + num_traits::Zero + Copy,
@@ -61,7 +61,8 @@ impl Rand8<'_,'_> {
     // #[allow(deprecated)]
     pub fn srand(&mut self, new_seed: u64) {
         let (id, rng) = &mut *self.rand;
-        self.commands.entity(*id)
+        self.commands
+            .entity(*id)
             .insert(RngSeed::<WyRand>::from_seed(new_seed.to_ne_bytes()));
         // rng.reseed(new_seed.to_ne_bytes());
         // Commands does do it

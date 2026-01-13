@@ -1,6 +1,6 @@
 use crate::pico8::Clearable;
-use bevy::prelude::*;
 use crate::translate::Position;
+use bevy::prelude::*;
 use bevy_ecs_tiled::prelude::*;
 // pub mod ldtk;
 // use ldtk::*;
@@ -16,24 +16,27 @@ pub enum Tiled {
 }
 
 impl Tiled {
-    pub fn map(&self, screen_start: Vec2, _level: usize, hash: u64, commands: &mut Commands) -> Entity {
-        let mut clearable = Clearable::default()
-            .with_hash(hash);
+    pub fn map(
+        &self,
+        screen_start: Vec2,
+        _level: usize,
+        hash: u64,
+        commands: &mut Commands,
+    ) -> Entity {
+        let mut clearable = Clearable::default().with_hash(hash);
         clearable.time_to_live = 1;
         match self {
-            Tiled::SpriteMap { handle } => {
-                commands
-                    .spawn((
-                        TiledMap(handle.clone()),
-                        Position(screen_start),
-                        TilemapAnchor::TopLeft,
-                        TiledMapLayerZOffset(1.0),
-                        Name::new("map"),
-                        clearable,
-                        InheritedVisibility::default(),
-                    ))
-                    .id()
-            }
+            Tiled::SpriteMap { handle } => commands
+                .spawn((
+                    TiledMap(handle.clone()),
+                    Position(screen_start),
+                    TilemapAnchor::TopLeft,
+                    TiledMapLayerZOffset(1.0),
+                    Name::new("map"),
+                    clearable,
+                    InheritedVisibility::default(),
+                ))
+                .id(),
             Tiled::World { handle } => {
                 // TODO: Fix when TiledWorldHandle is available
                 commands

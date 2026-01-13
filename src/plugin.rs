@@ -5,7 +5,7 @@ use std::time::Duration;
 #[cfg(feature = "scripting")]
 use bevy_mod_scripting::{
     BMSPlugin,
-    asset::ScriptAsset,prelude::ScriptAttachment,
+    asset::ScriptAsset,
     bindings::{InteropError, function::namespace::NamespaceBuilder},
     core::{
         callback_labels,
@@ -14,6 +14,7 @@ use bevy_mod_scripting::{
         script::{ContextPolicy, ScriptContext},
     },
     lua::LuaScriptingPlugin,
+    prelude::ScriptAttachment,
 };
 
 use crate::{

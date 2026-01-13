@@ -1,7 +1,4 @@
-use crate::{
-    level,
-    pico8,
-};
+use crate::{level, pico8};
 use bevy::{ecs::system::SystemParam, prelude::*};
 use tiled::{PropertyValue, Tileset};
 
@@ -43,31 +40,35 @@ impl Level<'_, '_> {
                 // TODO: Fix when TiledMap is an Asset - TiledMap structure may have changed
                 // For now, return None as the API needs to be updated
                 let asset = self.tiled_maps.get(handle)?;
-                asset.map.get_layer(layer_index.unwrap_or(0)).and_then(|layer| {
-                    let tile_size = UVec2::new(asset.map.tile_width, asset.map.tile_width);
-                    match layer.layer_type() {
-                        tiled::LayerType::Tiles(tile_layer) => tile_layer
-                            .get_tile(pos.x as i32, pos.y as i32)
-                            .map(|layer_tile| layer_tile.id() as usize),
-                        tiled::LayerType::Objects(object_layer) => {
-                            let mut result = None;
-                            let posf = pos * tile_size.as_vec2();
-                            for object in object_layer.objects() {
-                                if shape_contains(&object, tile_size, posf) {
-                                    result = object.properties.get("p8flags").and_then(
-                                        |value| match value {
-                                            PropertyValue::IntValue(i) => Some(*i as usize),
-                                            _ => None,
-                                        },
-                                    );
-                                    break;
+                asset
+                    .map
+                    .get_layer(layer_index.unwrap_or(0))
+                    .and_then(|layer| {
+                        let tile_size = UVec2::new(asset.map.tile_width, asset.map.tile_width);
+                        match layer.layer_type() {
+                            tiled::LayerType::Tiles(tile_layer) => tile_layer
+                                .get_tile(pos.x as i32, pos.y as i32)
+                                .map(|layer_tile| layer_tile.id() as usize),
+                            tiled::LayerType::Objects(object_layer) => {
+                                let mut result = None;
+                                let posf = pos * tile_size.as_vec2();
+                                for object in object_layer.objects() {
+                                    if shape_contains(&object, tile_size, posf) {
+                                        result =
+                                            object.properties.get("p8flags").and_then(|value| {
+                                                match value {
+                                                    PropertyValue::IntValue(i) => Some(*i as usize),
+                                                    _ => None,
+                                                }
+                                            });
+                                        break;
+                                    }
                                 }
+                                result
                             }
-                            result
+                            _ => None,
                         }
-                        _ => None,
-                    }
-                })
+                    })
             }
             level::Tiled::World { handle: _ } => {
                 todo!()

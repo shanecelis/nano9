@@ -11,8 +11,7 @@ impl super::Pico8<'_, '_> {
         let color = self.get_color(color)?;
         let min = a.min(b);
         let delta = b - a;
-        let size = UVec2::new(delta.x.unsigned_abs(),
-                              delta.y.unsigned_abs()) + UVec2::ONE;
+        let size = UVec2::new(delta.x.unsigned_abs(), delta.y.unsigned_abs()) + UVec2::ONE;
         let mut image = Image::new_fill(
             Extent3d {
                 width: size.x,
@@ -52,11 +51,17 @@ impl super::Pico8<'_, '_> {
         Ok(id)
     }
 
-    pub fn tline(&mut self, a: IVec2, b: IVec2, m_start: IVec2, m_delta: Option<IVec2>, layers: Option<u8>) -> Result<Entity, Error> {
+    pub fn tline(
+        &mut self,
+        a: IVec2,
+        b: IVec2,
+        m_start: IVec2,
+        m_delta: Option<IVec2>,
+        layers: Option<u8>,
+    ) -> Result<Entity, Error> {
         let min = a.min(b);
         let delta = b - a;
-        let size = UVec2::new(delta.x.unsigned_abs(),
-                              delta.y.unsigned_abs()) + UVec2::ONE;
+        let size = UVec2::new(delta.x.unsigned_abs(), delta.y.unsigned_abs()) + UVec2::ONE;
         let mut image = Image::new_fill(
             Extent3d {
                 width: size.x,
@@ -75,9 +80,9 @@ impl super::Pico8<'_, '_> {
         let dm = m_delta.unwrap_or(IVec2::X);
 
         for (i, (x, y)) in
-            bresenham::Bresenham::new((c.x as isize, c.y as isize), (d.x as isize, d.y as isize)).enumerate()
+            bresenham::Bresenham::new((c.x as isize, c.y as isize), (d.x as isize, d.y as isize))
+                .enumerate()
         {
-
             // TODO: Make this do the real thing.
             // let map_color =
             // image.set_color_at(x as u32, y as u32, if i % 4 >= 2 { Color::WHITE } else { Color::BLACK })?;

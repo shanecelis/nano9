@@ -58,10 +58,7 @@ impl super::Pico8<'_, '_> {
                     custom_size: Some(Vec2::new(size.x as f32, size.y as f32)),
                     ..default()
                 },
-                Anchor(Vec2::new(
-                    -offset / size.x as f32,
-                    offset / size.y as f32,
-                )),
+                Anchor(Vec2::new(-offset / size.x as f32, offset / size.y as f32)),
                 Position::from(pos),
                 clearable,
             ))
@@ -126,10 +123,7 @@ impl super::Pico8<'_, '_> {
                     custom_size: Some(Vec2::new(size.x as f32, size.y as f32)),
                     ..default()
                 },
-                Anchor(Vec2::new(
-                    -offset / size.x as f32,
-                    offset / size.y as f32,
-                )),
+                Anchor(Vec2::new(-offset / size.x as f32, offset / size.y as f32)),
                 Position::from(pos),
                 clearable,
             ))

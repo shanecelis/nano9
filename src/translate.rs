@@ -1,5 +1,5 @@
+use crate::pico8::Clearable;
 use bevy::prelude::*;
-use crate::pico8::{Clearable};
 
 /// The position the Nano9 element was drawn. Note: it may be altered by
 /// subsequent camera position changes.
@@ -17,16 +17,15 @@ impl From<Vec2> for Position {
 }
 
 pub(crate) fn plugin(app: &mut App) {
-    app
-        .register_type::<Position>()
+    app.register_type::<Position>()
         .register_type::<Rotation>()
-        .add_systems(PostUpdate,
-                     apply_translation.before(TransformSystems::Propagate));
-
+        .add_systems(
+            PostUpdate,
+            apply_translation.before(TransformSystems::Propagate),
+        );
 }
 
-fn apply_translation(
-    mut query: Query<(&Position, &mut Transform, Option<&Clearable>)>) {
+fn apply_translation(mut query: Query<(&Position, &mut Transform, Option<&Clearable>)>) {
     for (position, mut transform, clearable_maybe) in &mut query {
         let mut v = position.0;
         v = pixel_snap(v);

@@ -66,10 +66,11 @@ impl super::Pico8<'_, '_> {
 #[cfg(all(feature = "scripting", feature = "level"))]
 mod lua {
     use super::*;
-    use crate::{pico8::lua::with_pico8};
+    use crate::pico8::lua::with_pico8;
 
     use bevy_mod_scripting::bindings::{
-        InteropError, function::{
+        InteropError,
+        function::{
             from::FromScript,
             namespace::{GlobalNamespace, NamespaceBuilder},
             script_function::FunctionCallContext,

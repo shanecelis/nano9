@@ -6,7 +6,11 @@ use bevy_mod_scripting::bindings::{
     InteropError, WorldAccessGuard, function::from::FromScript, script_value::ScriptValue,
 };
 
-use crate::{hash::hash_f32, pico8::Gfx, translate::{Rotation, Position}};
+use crate::{
+    hash::hash_f32,
+    pico8::Gfx,
+    translate::{Position, Rotation},
+};
 use std::{
     any::TypeId,
     hash::{BuildHasher, Hash, Hasher},
@@ -313,11 +317,13 @@ impl super::Pico8<'_, '_> {
         let clearable = Clearable::new(self.defaults.time_to_live).with_hash(hash);
         let material = self.gfx_material();
         let position = Position::from(pos);
-        let mut ecommands = self
-            .commands
-            .spawn((Name::new("spr"), sprite,
-                    Anchor::TOP_LEFT,
-                    position, clearable));
+        let mut ecommands = self.commands.spawn((
+            Name::new("spr"),
+            sprite,
+            Anchor::TOP_LEFT,
+            position,
+            clearable,
+        ));
 
         // let mut transform = Transform::default();
         // let mut translation = Vec2::new(pos.x, pos.y);
@@ -356,11 +362,7 @@ impl super::Pico8<'_, '_> {
                     .gfxs
                     .get_mut(&handle)
                     .ok_or(Error::NoSuch("Gfx".into()))?;
-                gfx.set(
-                    pos.x as usize,
-                    pos.y as usize,
-                    color,
-                );
+                gfx.set(pos.x as usize, pos.y as usize, color);
             }
             SprHandle::Image(handle) => {
                 let c = self.get_color(color)?;

@@ -1,8 +1,8 @@
 use bevy::prelude::*;
 
 use crate::{
+    pico8::Clearable,
     translate::{Position, Rotation},
-    pico8::{Clearable},
 };
 use bevy_mod_scripting::{
     bindings::function::{
@@ -122,26 +122,24 @@ pub(crate) fn plugin(app: &mut App) {
                 let world = ctx.world()?;
                 let rot = world.with_global_access(|world| {
                     if x.is_some() || y.is_some() || z.is_some() {
-                        world
-                            .get_mut::<Rotation>(this.entity)
-                            .map(|mut rotation| {
-                                let last = rotation.0;
-                                // let last = transform.rotation.to_euler(EulerRot::ZYX);
-                                let mut turns = last;
-                                if let Some(z) = z {
-                                    turns.z = z;
-                                }
-                                if let Some(y) = y {
-                                    turns.y = y;
-                                }
-                                if let Some(x) = x {
-                                    turns.x = x;
-                                }
-                                rotation.0 = turns;
-                                // transform.rotation =
-                                //     Quat::from_euler(EulerRot::ZYX, turns.0, turns.1, turns.2);
-                                last
-                            })
+                        world.get_mut::<Rotation>(this.entity).map(|mut rotation| {
+                            let last = rotation.0;
+                            // let last = transform.rotation.to_euler(EulerRot::ZYX);
+                            let mut turns = last;
+                            if let Some(z) = z {
+                                turns.z = z;
+                            }
+                            if let Some(y) = y {
+                                turns.y = y;
+                            }
+                            if let Some(x) = x {
+                                turns.x = x;
+                            }
+                            rotation.0 = turns;
+                            // transform.rotation =
+                            //     Quat::from_euler(EulerRot::ZYX, turns.0, turns.1, turns.2);
+                            last
+                        })
                     } else {
                         world
                             .get::<Rotation>(this.entity)

@@ -36,7 +36,10 @@ pub(crate) fn plugin(app: &mut App) {
         .add_systems(Last, clear_buffer);
 }
 
-fn fill_buffer(mut key_input: ResMut<KeyInput>, mut char_input_events: MessageReader<KeyboardInput>) {
+fn fill_buffer(
+    mut key_input: ResMut<KeyInput>,
+    mut char_input_events: MessageReader<KeyboardInput>,
+) {
     if !key_input.enabled {
         return;
     }

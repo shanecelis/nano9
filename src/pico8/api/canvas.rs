@@ -1,9 +1,9 @@
 use super::*;
+use crate::translate::Position;
 use bevy::{
     camera::Viewport,
     window::{PrimaryWindow, WindowResized},
 };
-use crate::translate::Position;
 
 #[derive(Debug, Clone, Resource, Default, Reflect)]
 pub struct N9Canvas {
@@ -196,7 +196,8 @@ impl super::Pico8<'_, '_> {
         //         image.set_color_at(i, j, c)?;
         //     }
         // }
-        self.commands.run_system_cached_with(crate::pico8::clear::clear_screen, c);
+        self.commands
+            .run_system_cached_with(crate::pico8::clear::clear_screen, c);
         Ok(())
     }
 

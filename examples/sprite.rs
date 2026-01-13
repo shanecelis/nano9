@@ -18,11 +18,14 @@ fn update(mut pico8: Pico8, mut t: Local<usize>) {
     //         None,
     //     )
     //     .unwrap();
-    nano9::spr!(pico8,
-         n as usize,
-         Vec2::new(0.0 * x as f32, y as f32),
-         _,
-         BVec2::new(true, false)).unwrap();
+    nano9::spr!(
+        pico8,
+        n as usize,
+        Vec2::new(0.0 * x as f32, y as f32),
+        _,
+        BVec2::new(true, false)
+    )
+    .unwrap();
     // pico8.camera(Some(Vec2::ZERO));
     nano9::camera!(pico8, Vec2::ZERO);
     // pico8.print("hello world", Some(Vec2::ZERO), None, None, None).unwrap();

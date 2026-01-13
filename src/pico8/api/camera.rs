@@ -9,9 +9,11 @@ pub(crate) fn plugin(app: &mut App) {
     lua::plugin(app);
 }
 
-fn change_camera_position(In(position): In<Vec2>,
-                          mut camera: Single<&mut Position, With<Nano9Camera>>,
-                          mut items: Query<&mut Position, Without<Nano9Camera>>) {
+fn change_camera_position(
+    In(position): In<Vec2>,
+    mut camera: Single<&mut Position, With<Nano9Camera>>,
+    mut items: Query<&mut Position, Without<Nano9Camera>>,
+) {
     let old_position = camera.0;
     camera.0 = position;
     let dp = position - old_position;
@@ -29,7 +31,8 @@ impl super::Pico8<'_, '_> {
     pub fn camera(&mut self, pos: Option<Vec2>) -> Vec2 {
         if let Some(pos) = pos {
             let last = std::mem::replace(&mut self.state.draw_state.camera_position, pos);
-            self.commands.run_system_cached_with(change_camera_position, pos);
+            self.commands
+                .run_system_cached_with(change_camera_position, pos);
             last
         } else {
             self.state.draw_state.camera_position
