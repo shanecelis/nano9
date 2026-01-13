@@ -1,4 +1,3 @@
-use std::io::ErrorKind;
 #[cfg(feature = "user_properties")]
 use std::ops::Deref;
 
@@ -50,8 +49,7 @@ impl AssetLoader for TiledSetLoader {
             );
             // Load the tile set.
             loader.load_tsx_tileset(&tileset_path).map_err(|e| {
-                std::io::Error::new(
-                    ErrorKind::Other,
+                std::io::Error::other(
                     format!("Could not load TSX tile set: {e}"),
                 )
             })?

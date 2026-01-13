@@ -127,7 +127,7 @@ fn with_rays<X>(
 }
 
 impl Rays<'_, '_> {
-    pub fn raydown(&self, mut pos: Vec2, mask: Option<u32>, shape: Option<Aabb2d>) -> Vec<Entity> {
+    pub fn raydown(&self, pos: Vec2, mask: Option<u32>, shape: Option<Aabb2d>) -> Vec<Entity> {
         // pos.y = negate_y(pos.y);
         self.covers
             .iter()

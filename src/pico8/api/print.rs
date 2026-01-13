@@ -165,7 +165,7 @@ impl super::Pico8<'_, '_> {
         }?;
 
         // XXX: Should the camera delta apply to the print cursor position?
-        let pos = pos.unwrap_or_else(|| state.draw_state.print_cursor);
+        let pos = pos.unwrap_or(state.draw_state.print_cursor);
         let clearable = clearable.unwrap_or_default();
         let add_newline = if text.ends_with('\0') {
             text.pop();

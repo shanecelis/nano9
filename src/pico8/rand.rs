@@ -60,7 +60,7 @@ impl Rand8<'_, '_> {
     // XXX: For now.
     // #[allow(deprecated)]
     pub fn srand(&mut self, new_seed: u64) {
-        let (id, rng) = &mut *self.rand;
+        let (id, _rng) = &mut *self.rand;
         self.commands
             .entity(*id)
             .insert(RngSeed::<WyRand>::from_seed(new_seed.to_ne_bytes()));

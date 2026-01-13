@@ -54,11 +54,11 @@ impl Pico8<'_, '_> {
         // See if there's already an entity available.
         if let Some(id) = self.clear_cache.take(&hash) {
             self.commands.queue(move |world: &mut World| {
-                world.get_mut::<Clearable>(id).map(|mut clearable| {
+                if let Some(mut clearable) = world.get_mut::<Clearable>(id) {
                     // We've extracted it from the cache, so it's no longer cached.
                     clearable.state = ClearState::Visible;
                     clearable.resurrect(); // Make this a parameter.
-                });
+                }
                 if let Some(mut visibility) = world.get_mut::<Visibility>(id) {
                     *visibility = Visibility::Inherited;
                 }

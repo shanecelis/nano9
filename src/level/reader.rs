@@ -26,14 +26,13 @@ impl<'a> tiled::ResourceReader for BytesResourceReader<'a, '_> {
     type Error = IoError;
 
     fn read_from(&mut self, path: &Path) -> std::result::Result<Self::Resource, Self::Error> {
-        if let Some(extension) = path.extension() {
-            if extension == "tsx" {
+        if let Some(extension) = path.extension()
+            && extension == "tsx" {
                 let future = self.context.read_asset_bytes(path.to_path_buf());
                 let data = futures_lite::future::block_on(future)
                     .map_err(|err| IoError::new(ErrorKind::NotFound, err))?;
                 return Ok(Box::new(Cursor::new(data)));
             }
-        }
         Ok(Box::new(Cursor::new(self.bytes.clone())))
     }
 }

@@ -57,7 +57,7 @@ impl super::Pico8<'_, '_> {
         b: IVec2,
         m_start: IVec2,
         m_delta: Option<IVec2>,
-        layers: Option<u8>,
+        _layers: Option<u8>,
     ) -> Result<Entity, Error> {
         let min = a.min(b);
         let delta = b - a;
@@ -79,7 +79,7 @@ impl super::Pico8<'_, '_> {
         let mut m = m_start;
         let dm = m_delta.unwrap_or(IVec2::X);
 
-        for (i, (x, y)) in
+        for (_i, (_x, _y)) in
             bresenham::Bresenham::new((c.x as isize, c.y as isize), (d.x as isize, d.y as isize))
                 .enumerate()
         {

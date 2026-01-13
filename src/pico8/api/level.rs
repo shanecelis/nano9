@@ -96,13 +96,13 @@ mod lua {
                     let y = v.get("y").and_then(ValueExt::to_f32).unwrap_or(0.0);
                     let w = v.get("width").and_then(ValueExt::to_f32);
                     let h = v.get("height").and_then(ValueExt::to_f32);
-                    if w.is_some() && h.is_some() {
-                        Ok(PropBy::Rect(Rect::from_corners(
-                            Vec2::new(x, y),
-                            Vec2::new(x + w.unwrap(), y + h.unwrap()),
-                        )))
-                    } else {
-                        Ok(PropBy::Pos(Vec2::new(x, y)))
+                    match (w, h) {
+                        (Some(w), Some(h)) =>
+                            Ok(PropBy::Rect(Rect::from_corners(
+                                Vec2::new(x, y),
+                                Vec2::new(x + w, y + h),
+                            ))),
+                        _ => Ok(PropBy::Pos(Vec2::new(x, y)))
                     }
                 }
                 _ => Err(InteropError::value_mismatch(

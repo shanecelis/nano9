@@ -61,7 +61,7 @@ impl super::Pico8<'_, '_> {
             return Ok(id);
         }
         match self.sprite_map(Some(map_index))?.clone() {
-            SpriteMap::P8(map) => {
+            SpriteMap::P8(_map) => {
                 // trace!("Create map with hash {hash}");
 
                 // let map_size = TilemapSize::from(size);
@@ -157,7 +157,7 @@ impl super::Pico8<'_, '_> {
                     .ok_or_else(|| Error::NoSuch("map entry".into()))
             }
             #[cfg(feature = "level")]
-            SpriteMap::Level(map) => {
+            SpriteMap::Level(_map) => {
                 todo!()
                 // self.tiled
                 //     .mset(map, pos, sprite_index, map_index, layer_index)

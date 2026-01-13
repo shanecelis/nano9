@@ -286,7 +286,7 @@ impl super::Pico8<'_, '_> {
             min: Vec2::ZERO,
             max: sprites.sprite_size.as_vec2() * v,
         });
-        let pixel_size = sprites.sprite_size.as_vec2() * size.unwrap_or(Vec2::ONE) / 2.0;
+        let _pixel_size = sprites.sprite_size.as_vec2() * size.unwrap_or(Vec2::ONE) / 2.0;
 
         let mut gfx_handle = None;
         let image = match sprites.handle.clone() {

@@ -24,7 +24,7 @@ pub struct Level<'w, 's> {
     // tiled_worlds: ResMut<'w, Assets<bevy_ecs_tiled::prelude::TiledWorld>>,
     // TODO: Fix when bevy_ecs_tiled API is updated
     // tiled_id_storage: Query<'w, 's, (&'static TiledMapStorage, &'static TiledMapHandle)>,
-    sprites: Query<'w, 's, &'static mut Sprite>,
+    // sprites: Query<'w, 's, &'static mut Sprite>,
     tiled_lookups: Query<'w, 's, &'static TiledLookup>,
 }
 impl Level<'_, '_> {
@@ -79,9 +79,9 @@ impl Level<'_, '_> {
     pub fn mgetp(
         &self,
         map: &level::Tiled,
-        prop_by: pico8::PropBy,
+        _prop_by: pico8::PropBy,
         _map_index: Option<usize>,
-        layer_index: Option<usize>,
+        _layer_index: Option<usize>,
     ) -> Option<tiled::Properties> {
         match map {
             level::Tiled::SpriteMap { handle: _handle } => {
@@ -158,10 +158,10 @@ impl Level<'_, '_> {
     pub fn mset(
         &mut self,
         map: &level::Tiled,
-        pos: Vec2,
-        sprite_index: usize,
+        _pos: Vec2,
+        _sprite_index: usize,
         _map_index: Option<usize>,
-        layer_index: Option<usize>,
+        _layer_index: Option<usize>,
     ) -> Result<(), pico8::Error> {
         match map {
             level::Tiled::SpriteMap {
