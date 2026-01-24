@@ -24,11 +24,12 @@ fn change_camera_position(
 
 bobtail::define! {
     #[macro_export]
-    fn camera(&mut self, #[tail] pos: Option<Vec2>) -> Vec2;
+    fn camera(&mut self, #[tail] pos: Option<impl Into<Vec2>>) -> Vec2;
 }
 
 impl super::Pico8<'_, '_> {
-    pub fn camera(&mut self, pos: Option<Vec2>) -> Vec2 {
+    pub fn camera(&mut self, pos: Option<impl Into<Vec2>>) -> Vec2 {
+        let pos = pos.map(Into::into);
         if let Some(pos) = pos {
             let last = std::mem::replace(&mut self.state.draw_state.camera_position, pos);
             self.commands

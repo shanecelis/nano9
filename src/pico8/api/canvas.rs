@@ -20,6 +20,10 @@ pub struct Background;
 #[derive(Component, Debug, Reflect)]
 pub struct OneColorBackground;
 
+bobtail::define! {
+    #[macro_export]
+    fn cls(&mut self, #[tail] color: Option<PColor>) -> Result<(), Error>;
+}
 pub(crate) fn plugin(app: &mut App) {
     app.register_type::<OneColorBackground>()
         .register_type::<Background>()
@@ -184,9 +188,9 @@ pub fn sync_window_size(
 
 impl super::Pico8<'_, '_> {
     // cls([n])
-    pub fn cls(&mut self, color: Option<PColor>) -> Result<(), Error> {
+    pub fn cls(&mut self, color: Option<impl Into<PColor>>) -> Result<(), Error> {
         trace!("cls");
-        let c = color.unwrap_or(PColor::Palette(self.defaults.clear_color));
+        let c = color.map(|c| c.into()).unwrap_or(PColor::Palette(self.defaults.clear_color));
         // let image = self
         //     .images
         //     .get_mut(&self.canvas.handle)

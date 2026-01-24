@@ -56,6 +56,7 @@ impl From<Handle<P8Map>> for SpriteMap {
     }
 }
 
+/// This will add the tilemap when it is added to the scene.
 #[derive(Component, Reflect)]
 pub struct P8SpriteMap {
     // TODO: This should really be a Handle<P8Map>.
@@ -209,7 +210,7 @@ fn add_tilemaps(
     p8_maps: Res<Assets<pico8::P8Map>>,
     mut commands: Commands,
 ) {
-    let mut p8map_maybe = None;
+    let mut p8map_maybe: Option<&SpriteMap> = None;
     for (id, p8sprite_map) in &query {
         let size = p8sprite_map.rect.size();
         let map_size = TilemapSize::from(size);
@@ -228,7 +229,7 @@ fn add_tilemaps(
                 }
             }
         }
-        let p8map = p8map_maybe.unwrap();
+        let p8map: &SpriteMap = p8map_maybe.unwrap();
         let Some(sprite_sheet) = sprite_sheets.get(&p8sprite_map.sprite_sheet) else {
             warn!("Could not get sprite_sheet for map");
             continue;
