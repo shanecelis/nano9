@@ -30,8 +30,10 @@ pub enum Spr {
 }
 
 bobtail::define! {
-    #[macro_export]
-    fn spr(
+    // #[macro_export]
+    #[doc(hidden)]
+    pub __spr => fn spr(
+    // pub spr => fn spr(
         &mut self,
         spr: impl Into<Spr>,
         #[tail]
@@ -41,6 +43,8 @@ bobtail::define! {
         turns: Option<f32>,
     ) -> Result<Entity, Error>;
 }
+
+pub use __spr as spr;
 
 #[cfg(feature = "scripting")]
 impl FromScript for Spr {
@@ -105,7 +109,7 @@ pub enum SprHandle {
 
 // I don't think this block is doing anything yet.
 // The define! block does this.
-#[bobtail::block]
+// #[bobtail::block]
 impl super::Pico8<'_, '_> {
     pub fn sprite_sheet(&self, sheet_index: Option<usize>) -> Result<&SpriteSheet, Error> {
         let sheet_index = sheet_index.unwrap_or(0);
@@ -226,12 +230,12 @@ impl super::Pico8<'_, '_> {
     //         .ok_or(Error::NoSuch("Pico8Asset".into()))
     // }
 
-    #[bob]
+    // #[bob]
     /// spr(n, [x,] [y,] [w,] [h,] [flip_x,] [flip_y])
     pub fn spr(
         &mut self,
         spr: impl Into<Spr>,
-        #[tail]
+        // #[tail]
         pos: Vec2,
         size: Option<Vec2>,
         flip: Option<BVec2>,

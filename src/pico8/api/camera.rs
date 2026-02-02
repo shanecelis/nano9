@@ -23,9 +23,10 @@ fn change_camera_position(
 }
 
 bobtail::define! {
-    #[macro_export]
-    fn camera(&mut self, #[tail] pos: Option<impl Into<Vec2>>) -> Vec2;
+    #[doc(hidden)]
+    pub __camera => fn camera(&mut self, #[tail] pos: Option<impl Into<Vec2>>) -> Vec2;
 }
+pub use __camera as camera;
 
 impl super::Pico8<'_, '_> {
     pub fn camera(&mut self, pos: Option<impl Into<Vec2>>) -> Vec2 {

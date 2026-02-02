@@ -10,8 +10,9 @@ pub(crate) fn plugin(app: &mut App) {
 }
 
 bobtail::define! {
-    #[macro_export]
-    fn print(
+
+    #[doc(hidden)]
+    pub __print => fn print(
         &mut self,
         text: impl Into<String>,
         #[tail]
@@ -21,6 +22,8 @@ bobtail::define! {
         font_index: Option<usize>,
     ) -> Result<Entity, Error>;
 }
+
+pub use __print as print;
 
 impl super::Pico8<'_, '_> {
     pub fn cursor(&mut self, pos: Option<Vec2>, color: Option<PColor>) -> (Vec2, PColor) {

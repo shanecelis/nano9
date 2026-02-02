@@ -1,7 +1,8 @@
 use bevy::prelude::*;
 use nano9::prelude::*;
-#[macro_use]
-extern crate nano9;
+// use nano9::{cls, camera, spr, print};
+//use nano9::print;
+//use nano9::spr;
 
 fn update(mut pico8: Pico8, mut t: Local<usize>) {
     // pico8.cls(Some(PColor::Palette(2))).unwrap();
@@ -14,9 +15,9 @@ fn update(mut pico8: Pico8, mut t: Local<usize>) {
     let x = *t % 128;
     let y = *t / 128;
 
-    pico8.camera(Some((-(x as f32), 0.0)));
+    // pico8.camera(Some((-(x as f32), 0.0)));
     // camera!(pico8, Vec2::new(-(x as f32), 0.0));
-    // camera!(pico8, (-(x as f32), 0.0));
+    camera!(pico8, (-(x as f32), 0.0));
     // pico8
     //     .spr(
     //         n as usize,
@@ -38,7 +39,7 @@ fn update(mut pico8: Pico8, mut t: Local<usize>) {
     // pico8.camera(Some(Vec2::ZERO));
     camera!(pico8, Vec2::ZERO);
     // pico8.print("hello world", Some(Vec2::ZERO), None, None, None).unwrap();
-    print!(pico8, "hello world", Vec2::ZERO).unwrap();
+    crate::print!(pico8, "hello world", Vec2::ZERO).unwrap();
     *t += 1;
 }
 

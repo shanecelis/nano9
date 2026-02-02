@@ -3,8 +3,12 @@ pub use super::{
     config::{self, Config, ConfigError, pause_pico8_when_loaded, run_pico8_when_loaded},
     pico8::Pico8,
     run::RunState,
-
 };
+
+// macros
+// pub use crate::{cls, camera, spr, print};
+// pub use crate::cls;
+pub use crate::pico8::{spr, canvas::cls, print::print, camera};
 
 // pub use super::spr2 as spr;
 // pub use spr2;

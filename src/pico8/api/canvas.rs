@@ -21,9 +21,12 @@ pub struct Background;
 pub struct OneColorBackground;
 
 bobtail::define! {
-    #[macro_export]
-    fn cls(&mut self, #[tail] color: Option<PColor>) -> Result<(), Error>;
+
+    #[doc(hidden)]
+    pub __cls => fn cls(&mut self, #[tail] color: Option<PColor>) -> Result<(), Error>;
 }
+pub use __cls as cls;
+
 pub(crate) fn plugin(app: &mut App) {
     app.register_type::<OneColorBackground>()
         .register_type::<Background>()
