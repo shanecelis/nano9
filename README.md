@@ -486,7 +486,7 @@ The more popular the memory-mapped feature is, the more likely it'll be supporte
 
 | nano9 | bevy |
 |-------|------|
-| 0.1.0 | 0.16 |
+| 0.1.0 | 0.17 |
 
 ## License
 

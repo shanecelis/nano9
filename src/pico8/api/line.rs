@@ -76,14 +76,17 @@ impl super::Pico8<'_, '_> {
         image.sampler = ImageSampler::nearest();
         let c = a - min;
         let d = b - min;
-        let mut m = m_start;
+        let mut m: IVec2 = m_start;
         let dm = m_delta.unwrap_or(IVec2::X);
 
         for (_i, (_x, _y)) in
             bresenham::Bresenham::new((c.x as isize, c.y as isize), (d.x as isize, d.y as isize))
                 .enumerate()
         {
-            // TODO: Make this do the real thing.
+            // TODO: Make this do the real thing. Which is look up the color at
+            // m in an image. (It's actually the map, but let's start with the
+            // image.)
+
             // let map_color =
             // image.set_color_at(x as u32, y as u32, if i % 4 >= 2 { Color::WHITE } else { Color::BLACK })?;
             m += dm;

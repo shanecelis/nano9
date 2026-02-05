@@ -682,6 +682,8 @@ dependencies = [
 [[package]]
 name = "bevy-input-sequence"
 version = "0.9.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "31f88d00e6f05267a353569d0a8dd95dce6cc80bd64e7b978848a2f8962c9d77"
 dependencies = [
  "bevy 0.17.3",
  "keyseq",
@@ -704,7 +706,7 @@ dependencies = [
  "bevy_egui 0.38.1",
  "bevy_image",
  "bevy_light",
- "bevy_log",
+ "bevy_log 0.17.3",
  "bevy_math 0.17.3",
  "bevy_mesh",
  "bevy_pbr",
@@ -874,6 +876,8 @@ dependencies = [
 [[package]]
 name = "bevy_asky"
 version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c33da771bd8411e8afab523da59795b31139ab077e7a45e28cd3d28bbd901185"
 dependencies = [
  "accesskit",
  "bevy 0.17.3",
@@ -1280,7 +1284,7 @@ dependencies = [
  "bevy_ecs 0.17.3",
  "bevy_image",
  "bevy_input 0.17.3",
- "bevy_log",
+ "bevy_log 0.17.3",
  "bevy_math 0.17.3",
  "bevy_mesh",
  "bevy_picking",
@@ -1327,7 +1331,7 @@ dependencies = [
  "bevy_ecs 0.17.3",
  "bevy_image",
  "bevy_input 0.17.3",
- "bevy_log",
+ "bevy_log 0.17.3",
  "bevy_math 0.17.3",
  "bevy_mesh",
  "bevy_picking",
@@ -1377,7 +1381,7 @@ dependencies = [
  "bevy_app 0.17.3",
  "bevy_diagnostic 0.17.3",
  "bevy_ecs 0.17.3",
- "bevy_log",
+ "bevy_log 0.17.3",
  "bevy_platform 0.17.3",
  "bevy_reflect 0.17.3",
  "bevy_render",
@@ -1607,7 +1611,7 @@ dependencies = [
  "bevy_input 0.17.3",
  "bevy_input_focus",
  "bevy_light",
- "bevy_log",
+ "bevy_log 0.17.3",
  "bevy_math 0.17.3",
  "bevy_mesh",
  "bevy_pbr",
@@ -1656,6 +1660,23 @@ dependencies = [
 
 [[package]]
 name = "bevy_log"
+version = "0.16.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d7a61ee8aef17a974f5ca481dcedf0c2bd52670e231d4c4bc9ddef58328865f9"
+dependencies = [
+ "android_log-sys",
+ "bevy_app 0.16.1",
+ "bevy_ecs 0.16.1",
+ "bevy_utils 0.16.1",
+ "tracing",
+ "tracing-log",
+ "tracing-oslog 0.2.0",
+ "tracing-subscriber",
+ "tracing-wasm",
+]
+
+[[package]]
+name = "bevy_log"
 version = "0.17.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b1a2d4ea086ac4663ab9dfb056c7b85eee39e18f7e3e9a4ae6e39897eaa155c5"
@@ -1667,7 +1688,7 @@ dependencies = [
  "bevy_utils 0.17.3",
  "tracing",
  "tracing-log",
- "tracing-oslog",
+ "tracing-oslog 0.3.0",
  "tracing-subscriber",
  "tracing-wasm",
 ]
@@ -1772,6 +1793,8 @@ checksum = "7ef8e4b7e61dfe7719bb03c884dc270cd46a82efb40f93e9933b990c5c190c59"
 [[package]]
 name = "bevy_minibuffer"
 version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c5b58d6c2a9e2281984ea54640eff8b6427b2fcc7569a221fcff01131a720300"
 dependencies = [
  "accesskit",
  "bevy 0.17.3",
@@ -1789,12 +1812,14 @@ dependencies = [
 [[package]]
 name = "bevy_minibuffer_inspector"
 version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "696373b59ac136e5180a37b03104a8ca4fa348e93e1fc69d621785fd2890fce5"
 dependencies = [
  "bevy-inspector-egui",
  "bevy_app 0.17.3",
  "bevy_asset 0.17.3",
  "bevy_ecs 0.17.3",
- "bevy_log",
+ "bevy_log 0.17.3",
  "bevy_minibuffer",
  "bevy_reflect 0.17.3",
  "bevy_state",
@@ -1812,7 +1837,7 @@ dependencies = [
  "bevy_app 0.17.3",
  "bevy_color",
  "bevy_ecs 0.17.3",
- "bevy_log",
+ "bevy_log 0.17.3",
  "bevy_platform 0.17.3",
  "bevy_render",
  "bevy_utils 0.17.3",
@@ -1823,9 +1848,10 @@ dependencies = [
 [[package]]
 name = "bevy_mod_scripting"
 version = "0.17.0"
-source = "git+https://github.com/makspll/bevy_mod_scripting.git?branch=feat%2Fbevy-0.17-part-2#c77603b1a5a448f09d3950aadceeb81a96438f45"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "acb9b189330430acd08bc92df7a8f2a23bdaf903a48ced51d254f2dba22b42fa"
 dependencies = [
- "bevy_app 0.17.3",
+ "bevy_app 0.16.1",
  "bevy_mod_scripting_asset",
  "bevy_mod_scripting_bindings",
  "bevy_mod_scripting_bindings_domain",
@@ -1840,36 +1866,37 @@ dependencies = [
 [[package]]
 name = "bevy_mod_scripting_asset"
 version = "0.17.0"
-source = "git+https://github.com/makspll/bevy_mod_scripting.git?branch=feat%2Fbevy-0.17-part-2#c77603b1a5a448f09d3950aadceeb81a96438f45"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ac8b844358d6eedee40daa2b8b89c77716d5013d7eb7601e324dffd534918e8b"
 dependencies = [
- "bevy_asset 0.17.3",
- "bevy_log",
+ "bevy_asset 0.16.1",
+ "bevy_log 0.16.1",
  "bevy_mod_scripting_derive",
  "bevy_mod_scripting_display",
- "bevy_reflect 0.17.3",
+ "bevy_reflect 0.16.1",
  "serde",
 ]
 
 [[package]]
 name = "bevy_mod_scripting_bindings"
 version = "0.17.0"
-source = "git+https://github.com/makspll/bevy_mod_scripting.git?branch=feat%2Fbevy-0.17-part-2#c77603b1a5a448f09d3950aadceeb81a96438f45"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2afd5d1f9ef12afe3d21c39edb3dd5a20a16e8be3004f0ad25a3ffd7d7ac1332"
 dependencies = [
- "bevy_app 0.17.3",
- "bevy_asset 0.17.3",
- "bevy_diagnostic 0.17.3",
- "bevy_ecs 0.17.3",
- "bevy_log",
+ "bevy_app 0.16.1",
+ "bevy_asset 0.16.1",
+ "bevy_diagnostic 0.16.1",
+ "bevy_ecs 0.16.1",
+ "bevy_log 0.16.1",
  "bevy_mod_scripting_asset",
  "bevy_mod_scripting_bindings_domain",
  "bevy_mod_scripting_derive",
  "bevy_mod_scripting_display",
  "bevy_mod_scripting_script",
- "bevy_platform 0.17.3",
- "bevy_reflect 0.17.3",
+ "bevy_platform 0.16.1",
+ "bevy_reflect 0.16.1",
  "bevy_system_reflection",
  "itertools 0.14.0",
- "nonmax",
  "parking_lot",
  "profiling",
  "serde",
@@ -1880,7 +1907,8 @@ dependencies = [
 [[package]]
 name = "bevy_mod_scripting_bindings_domain"
 version = "0.17.0"
-source = "git+https://github.com/makspll/bevy_mod_scripting.git?branch=feat%2Fbevy-0.17-part-2#c77603b1a5a448f09d3950aadceeb81a96438f45"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "178bd092f9b2f714e043c21e8d2019a8c3381cf819113aeb9f1249d492a91458"
 dependencies = [
  "bevy_mod_scripting_derive",
  "bevy_mod_scripting_display",
@@ -1890,22 +1918,22 @@ dependencies = [
 [[package]]
 name = "bevy_mod_scripting_core"
 version = "0.17.0"
-source = "git+https://github.com/makspll/bevy_mod_scripting.git?branch=feat%2Fbevy-0.17-part-2#c77603b1a5a448f09d3950aadceeb81a96438f45"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "192959061c352d984a99d46dd277abcd6192bb66c0f4104721d127914bd0ca0a"
 dependencies = [
- "bevy_app 0.17.3",
- "bevy_asset 0.17.3",
- "bevy_diagnostic 0.17.3",
- "bevy_ecs 0.17.3",
- "bevy_log",
+ "bevy_app 0.16.1",
+ "bevy_asset 0.16.1",
+ "bevy_diagnostic 0.16.1",
+ "bevy_ecs 0.16.1",
+ "bevy_log 0.16.1",
  "bevy_mod_scripting_asset",
  "bevy_mod_scripting_bindings",
  "bevy_mod_scripting_derive",
  "bevy_mod_scripting_display",
  "bevy_mod_scripting_script",
- "bevy_platform 0.17.3",
- "bevy_reflect 0.17.3",
+ "bevy_platform 0.16.1",
+ "bevy_reflect 0.16.1",
  "bevy_system_reflection",
- "bevy_utils 0.17.3",
  "fixedbitset",
  "itertools 0.14.0",
  "parking_lot",
@@ -1919,7 +1947,8 @@ dependencies = [
 [[package]]
 name = "bevy_mod_scripting_derive"
 version = "0.17.0"
-source = "git+https://github.com/makspll/bevy_mod_scripting.git?branch=feat%2Fbevy-0.17-part-2#c77603b1a5a448f09d3950aadceeb81a96438f45"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fdebec7483d29834d1283e5ecfef24562b8627f1714870852131757cd6bfcaf6"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1929,23 +1958,25 @@ dependencies = [
 [[package]]
 name = "bevy_mod_scripting_display"
 version = "0.17.0"
-source = "git+https://github.com/makspll/bevy_mod_scripting.git?branch=feat%2Fbevy-0.17-part-2#c77603b1a5a448f09d3950aadceeb81a96438f45"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "60a1cd34ce1749008b8e97adf7184cebee21bc9e74c0bcc6bf873d0fa3dec1c8"
 dependencies = [
- "bevy_asset 0.17.3",
- "bevy_ecs 0.17.3",
- "bevy_platform 0.17.3",
- "bevy_reflect 0.17.3",
+ "bevy_asset 0.16.1",
+ "bevy_ecs 0.16.1",
+ "bevy_platform 0.16.1",
+ "bevy_reflect 0.16.1",
  "parking_lot",
 ]
 
 [[package]]
 name = "bevy_mod_scripting_functions"
 version = "0.17.0"
-source = "git+https://github.com/makspll/bevy_mod_scripting.git?branch=feat%2Fbevy-0.17-part-2#c77603b1a5a448f09d3950aadceeb81a96438f45"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6df1ec7b317dda1744dd63224f9e1158c4d51dcabe2509d2aa9b05f4e45731c0"
 dependencies = [
- "bevy_app 0.17.3",
- "bevy_asset 0.17.3",
- "bevy_ecs 0.17.3",
+ "bevy_app 0.16.1",
+ "bevy_asset 0.16.1",
+ "bevy_ecs 0.16.1",
  "bevy_mod_scripting_asset",
  "bevy_mod_scripting_bindings",
  "bevy_mod_scripting_core",
@@ -1953,8 +1984,8 @@ dependencies = [
  "bevy_mod_scripting_display",
  "bevy_mod_scripting_lua",
  "bevy_mod_scripting_script",
- "bevy_platform 0.17.3",
- "bevy_reflect 0.17.3",
+ "bevy_platform 0.16.1",
+ "bevy_reflect 0.16.1",
  "bevy_system_reflection",
  "profiling",
 ]
@@ -1962,19 +1993,20 @@ dependencies = [
 [[package]]
 name = "bevy_mod_scripting_lua"
 version = "0.17.0"
-source = "git+https://github.com/makspll/bevy_mod_scripting.git?branch=feat%2Fbevy-0.17-part-2#c77603b1a5a448f09d3950aadceeb81a96438f45"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a5f28ff82a175471676dbcfd23a34976f0b9854238147a03adae539ea347b35a"
 dependencies = [
- "bevy_app 0.17.3",
- "bevy_asset 0.17.3",
- "bevy_ecs 0.17.3",
- "bevy_log",
+ "bevy_app 0.16.1",
+ "bevy_asset 0.16.1",
+ "bevy_ecs 0.16.1",
+ "bevy_log 0.16.1",
  "bevy_mod_scripting_asset",
  "bevy_mod_scripting_bindings",
  "bevy_mod_scripting_bindings_domain",
  "bevy_mod_scripting_core",
  "bevy_mod_scripting_display",
  "bevy_mod_scripting_script",
- "bevy_platform 0.17.3",
+ "bevy_platform 0.16.1",
  "mlua",
  "profiling",
 ]
@@ -1982,13 +2014,14 @@ dependencies = [
 [[package]]
 name = "bevy_mod_scripting_script"
 version = "0.17.0"
-source = "git+https://github.com/makspll/bevy_mod_scripting.git?branch=feat%2Fbevy-0.17-part-2#c77603b1a5a448f09d3950aadceeb81a96438f45"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "82bc81fd92d8815666f3aac9102bbadcb7da65c22466cc290c9bdabdac9d358f"
 dependencies = [
- "bevy_asset 0.17.3",
- "bevy_ecs 0.17.3",
+ "bevy_asset 0.16.1",
+ "bevy_ecs 0.16.1",
  "bevy_mod_scripting_asset",
  "bevy_mod_scripting_display",
- "bevy_reflect 0.17.3",
+ "bevy_reflect 0.16.1",
 ]
 
 [[package]]
@@ -2429,12 +2462,13 @@ dependencies = [
 [[package]]
 name = "bevy_system_reflection"
 version = "0.17.0"
-source = "git+https://github.com/makspll/bevy_mod_scripting.git?branch=feat%2Fbevy-0.17-part-2#c77603b1a5a448f09d3950aadceeb81a96438f45"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8565f2e4e63f1ff183b23b6e1728200731cd090a85052d6c80ad4a17ea27f692"
 dependencies = [
- "bevy_ecs 0.17.3",
- "bevy_log",
- "bevy_platform 0.17.3",
- "bevy_reflect 0.17.3",
+ "bevy_ecs 0.16.1",
+ "bevy_log 0.16.1",
+ "bevy_platform 0.16.1",
+ "bevy_reflect 0.16.1",
  "dot-writer",
 ]
 
@@ -2489,7 +2523,7 @@ dependencies = [
  "bevy_derive 0.17.3",
  "bevy_ecs 0.17.3",
  "bevy_image",
- "bevy_log",
+ "bevy_log 0.17.3",
  "bevy_math 0.17.3",
  "bevy_platform 0.17.3",
  "bevy_reflect 0.17.3",
@@ -2555,7 +2589,7 @@ checksum = "b41fabfeaa53f51ff5ccf4d87e66836293159d50d21f6d3e16c93efb7c30f969"
 dependencies = [
  "bevy_app 0.17.3",
  "bevy_ecs 0.17.3",
- "bevy_log",
+ "bevy_log 0.17.3",
  "bevy_math 0.17.3",
  "bevy_reflect 0.17.3",
  "bevy_tasks 0.17.3",
@@ -2738,7 +2772,7 @@ dependencies = [
  "bevy_image",
  "bevy_input 0.17.3",
  "bevy_input_focus",
- "bevy_log",
+ "bevy_log 0.17.3",
  "bevy_math 0.17.3",
  "bevy_platform 0.17.3",
  "bevy_reflect 0.17.3",
@@ -2752,6 +2786,26 @@ dependencies = [
  "web-sys",
  "wgpu-types 26.0.0",
  "winit",
+]
+
+[[package]]
+name = "bindgen"
+version = "0.70.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f49d8fed880d473ea71efb9bf597651e77201bdd4893efe54c9e5d65ae04ce6f"
+dependencies = [
+ "bitflags 2.10.0",
+ "cexpr",
+ "clang-sys",
+ "itertools 0.11.0",
+ "log",
+ "prettyplease",
+ "proc-macro2",
+ "quote",
+ "regex",
+ "rustc-hash 1.1.0",
+ "shlex",
+ "syn 2.0.104",
 ]
 
 [[package]]
@@ -2879,6 +2933,8 @@ dependencies = [
 [[package]]
 name = "bobtail"
 version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5f29f6515904e76c92b8b93255764a8db3b7d7919e2d7fce3c451e147fea5ceb"
 dependencies = [
  "bobtail_proc_macros",
 ]
@@ -2886,6 +2942,8 @@ dependencies = [
 [[package]]
 name = "bobtail_proc_macros"
 version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "27ec59bf6c63368eda06bceb7b88d361889ebc8a26ad69ad83bfa41b633243d8"
 dependencies = [
  "proc-macro-crate",
  "proc-macro-warning",
@@ -3315,7 +3373,7 @@ version = "0.2.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ceec7a6067e62d6f931a2baf6f3a751f4a892595bcec1461a3c94ef9949864b6"
 dependencies = [
- "bindgen",
+ "bindgen 0.72.0",
 ]
 
 [[package]]
@@ -5253,6 +5311,8 @@ dependencies = [
 [[package]]
 name = "keyseq"
 version = "0.7.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d635401c677aa3e375a7b0e518a8456be648d6ab24299844c963395cfe9db63a"
 dependencies = [
  "bevy 0.17.3",
  "bevy_reflect 0.17.3",
@@ -5263,6 +5323,8 @@ dependencies = [
 [[package]]
 name = "keyseq_macros"
 version = "0.3.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "150bc312b7b5d48912e41770e06d5e8a39826e950b6d265af1a1db3fa0563afc"
 dependencies = [
  "proc-macro-error",
  "proc-macro2",
@@ -6669,6 +6731,16 @@ name = "presser"
 version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e8cf8e6a8aa66ce33f63993ffc4ea4271eb5b0530a9002db8455ea6050c77bfa"
+
+[[package]]
+name = "prettyplease"
+version = "0.2.36"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ff24dfcda44452b9816fff4cd4227e1bb73ff5a2f1bc1105aa92fb8565ce44d2"
+dependencies = [
+ "proc-macro2",
+ "syn 2.0.104",
+]
 
 [[package]]
 name = "proc-macro-crate"
@@ -8158,6 +8230,21 @@ dependencies = [
  "log",
  "once_cell",
  "tracing-core",
+]
+
+[[package]]
+name = "tracing-oslog"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "528bdd1f0e27b5dd9a4ededf154e824b0532731e4af73bb531de46276e0aab1e"
+dependencies = [
+ "bindgen 0.70.1",
+ "cc",
+ "cfg-if",
+ "once_cell",
+ "parking_lot",
+ "tracing-core",
+ "tracing-subscriber",
 ]
 
 [[package]]

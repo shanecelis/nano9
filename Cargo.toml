@@ -102,12 +102,12 @@ bench = false
 required-features = [ "cli" ]
 
 [patch.crates-io]
-bobtail = { path = "../bobtail" }
-bevy_minibuffer = { path = "../bevy_minibuffer" }
-bevy_minibuffer_inspector = { path = "../bevy_minibuffer_inspector" }
-bevy_asky = { path = "../bevy_asky" }
-bevy-input-sequence = { path = "../bevy-input-sequence" }
-keyseq = { path = "../keyseq" }
+# bobtail = { path = "../bobtail" }
+# bevy_minibuffer = { path = "../bevy_minibuffer" }
+# bevy_minibuffer_inspector = { path = "../bevy_minibuffer_inspector" }
+# bevy_asky = { path = "../bevy_asky" }
+# bevy-input-sequence = { path = "../bevy-input-sequence" }
+# keyseq = { path = "../keyseq" }
 # mashmap = { git = "https://github.com/shanecelis/mashmap.git", branch = "drain_key_if" }
 # pico8-to-lua = { path = "../pico8-to-lua" }
 # bevy = { path = "../bevy-0.16" }
@@ -119,7 +119,7 @@ keyseq = { path = "../keyseq" }
 # bevy_ecs_tiled = { path = "../bevy_ecs_tiled" }
 # bevy_mod_scripting = { path = "../bevy_mod_scripting" }
 # bevy_mod_scripting = { git = "https://github.com/shanecelis/bevy_mod_scripting.git", branch = "use-handles" }
-bevy_mod_scripting = { git = "https://github.com/makspll/bevy_mod_scripting.git", branch = "feat/bevy-0.17-part-2" }
+# bevy_mod_scripting = { git = "https://github.com/makspll/bevy_mod_scripting.git", branch = "feat/bevy-0.17-part-2" }
 # bevy_minibuffer = { path = "../bevy_minibuffer" }
 # bevy_minibuffer_inspector = { path = "../bevy_minibuffer_inspector" }
 # bevy_asky = { path = "../bevy_asky" }
