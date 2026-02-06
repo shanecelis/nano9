@@ -1,10 +1,12 @@
 use super::*;
 use bitvec::prelude::*;
+use crate::config::KeyBindings;
 
 pub(crate) fn plugin(app: &mut App) {
     #[cfg(feature = "scripting")]
     lua::plugin(app);
 }
+
 
 #[derive(Default, Debug, Clone)]
 pub struct Buttons {
@@ -75,6 +77,7 @@ pub(crate) fn fill_input(
     keys: Res<ButtonInput<KeyCode>>,
     gamepads: Query<&Gamepad>,
     mut player_inputs: ResMut<PlayerInputs>,
+    bindings: Res<KeyBindings>,
 ) {
     for event in connection_events.read() {
         info!("{event:?}");
@@ -106,39 +109,20 @@ pub(crate) fn fill_input(
         buttons.last = buttons.curr;
         buttons.curr.fill(false);
 
+        // If we were doing one key hard-coded, it would look like this:
         // buttons.curr.set(0, keys.pressed(KeyCode::ArrowLeft)
         for b in 0..=5 {
-            let key_pressed = match i {
-                0 => match b {
-                    0 => keys.pressed(KeyCode::ArrowLeft),
-                    1 => keys.pressed(KeyCode::ArrowRight),
-                    2 => keys.pressed(KeyCode::ArrowUp),
-                    3 => keys.pressed(KeyCode::ArrowDown),
-                    4 => keys.any_pressed([
-                        KeyCode::KeyZ,
-                        KeyCode::KeyC,
-                        KeyCode::KeyN,
-                        KeyCode::NumpadSubtract,
-                    ]),
-                    5 => keys.any_pressed([
-                        KeyCode::KeyX,
-                        KeyCode::KeyV,
-                        KeyCode::KeyM,
-                        KeyCode::Numpad8,
-                    ]),
-                    _ => unreachable!(),
-                },
-                1 => match b {
-                    0 => keys.pressed(KeyCode::KeyS),
-                    1 => keys.pressed(KeyCode::KeyF),
-                    2 => keys.pressed(KeyCode::KeyE),
-                    3 => keys.pressed(KeyCode::KeyD),
-                    4 => keys.any_pressed([KeyCode::ShiftLeft, KeyCode::Tab]),
-                    5 => keys.any_pressed([KeyCode::KeyA, KeyCode::KeyQ]),
-                    _ => unreachable!(),
-                },
-                _ => false,
+            let Some(player) = bindings.players.get(i) else { continue; };
+            let key_list: &Vec<KeyCode> = match b {
+                0 => &player.left,
+                1 => &player.right,
+                2 => &player.up,
+                3 => &player.down,
+                4 => &player.o,
+                5 => &player.x,
+                _ => unreachable!(),
             };
+            let key_pressed = keys.any_pressed(key_list.iter().copied());
             let (button, dir_maybe) = match b {
                 0 => (GamepadButton::DPadLeft, Some(Vec2::NEG_X)),
                 1 => (GamepadButton::DPadRight, Some(Vec2::X)),

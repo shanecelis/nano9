@@ -9,6 +9,23 @@
 template = "pico8"
 scripts = [ "main.lua" ]
 
+## Pico-8 key bindings
+[pico8.key_bindings.player0]
+left = ["ArrowLeft"]
+right = ["ArrowRight"]
+up = ["ArrowUp"]
+down = ["ArrowDown"]
+o = ["KeyZ", "KeyC", "KeyN", "NumpadSubtract"]
+x = ["KeyX", "KeyV", "KeyM", "Numpad8"]
+
+[pico8.key_bindings.player1]
+left = ["KeyS"]
+right = ["KeyF"]
+up = ["KeyE"]
+down = ["KeyD"]
+o = ["ShiftLeft", "Tab"]
+x = ["KeyA", "KeyQ"]
+
 ## Screen
 # [screen]
 # canvas_size = [128, 128]

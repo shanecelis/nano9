@@ -84,6 +84,9 @@ pub struct Config {
     /// Meshes
     #[serde(default, rename = "mesh")]
     pub meshes: Vec<Mesh>,
+
+    /// Key bindings
+    pub key_bindings: Option<KeyBindings>,
 }
 
 #[derive(Default, Debug, Clone, Deserialize, Serialize, Merge, PartialEq)]
@@ -103,6 +106,76 @@ pub struct Defaults {
     pub time_to_live: Option<u8>,
     /// Bit depth of canvas
     pub canvas_bit_depth: Option<u8>,
+}
+
+/// Key bindings for Pico-8 players.
+///
+/// This is an override-friendly representation: each field is `Option<Vec<KeyCode>>` so a user can
+/// override only what they care about in `Nano9.toml`, while the Pico-8 template provides the full
+/// defaults.
+#[derive(Debug, Default, Clone, Deserialize, Serialize, Merge, PartialEq, Resource, Reflect)]
+#[serde(deny_unknown_fields)]
+pub struct KeyBindings {
+    pub players: Vec<PlayerKeyBindings>,
+}
+
+impl KeyBindings {
+    /// Returns the Pico-8 key bindings for two players.
+    pub fn pico8() -> Self {
+        use bevy::prelude::KeyCode::*;
+        Self {
+            players: vec![
+                PlayerKeyBindings {
+                    left: vec![ArrowLeft],
+                    right: vec![ArrowRight],
+                    up: vec![ArrowUp],
+                    down: vec![ArrowDown],
+                    o: vec![
+                        KeyZ,
+                        KeyC,
+                        KeyN,
+                        NumpadSubtract,
+                    ],
+                    x: vec![
+                        KeyX,
+                        KeyV,
+                        KeyM,
+                        Numpad8,
+                    ],
+                },
+                PlayerKeyBindings {
+                    left: vec![KeyS],
+                    right: vec![KeyF],
+                    up: vec![KeyE],
+                    down: vec![KeyD],
+                    o: vec![ShiftLeft, Tab],
+                    x: vec![KeyA, KeyQ],
+                }]
+        }
+    }
+}
+
+#[derive(Default, Debug, Clone, Deserialize, Serialize, Merge, PartialEq, Reflect)]
+#[serde(deny_unknown_fields)]
+pub struct PlayerKeyBindings {
+    /// Button 0
+    #[serde(default)]
+    pub left: Vec<KeyCode>,
+    /// Button 1
+    #[serde(default)]
+    pub right: Vec<KeyCode>,
+    /// Button 2
+    #[serde(default)]
+    pub up: Vec<KeyCode>,
+    /// Button 3
+    #[serde(default)]
+    pub down: Vec<KeyCode>,
+    /// Button 4 (PICO-8 "O")
+    #[serde(default)]
+    pub o: Vec<KeyCode>,
+    /// Button 5 (PICO-8 "X")
+    #[serde(default)]
+    pub x: Vec<KeyCode>,
 }
 
 /// Audio bank
@@ -322,6 +395,7 @@ impl std::str::FromStr for Config {
 }
 
 impl Config {
+
     /// The pico8 configuration
     pub fn pico8() -> Self {
         Config {
@@ -350,6 +424,7 @@ impl Config {
                 time_to_live: Some(1),
                 ..default()
             }),
+            key_bindings: Some(KeyBindings::pico8()),
             ..default()
         }
     }
@@ -383,6 +458,7 @@ impl Config {
                 time_to_live: Some(1),
                 ..default()
             }),
+            key_bindings: Some(KeyBindings::pico8()),
             ..default()
         }
     }

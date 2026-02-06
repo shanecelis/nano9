@@ -352,6 +352,7 @@ impl Plugin for Nano9Plugin {
                 .map(pico8::Defaults::from_config)
                 .unwrap_or_default(),
         )
+        .insert_resource(self.config.key_bindings.clone().unwrap_or_default())
         .insert_resource(N9Canvas {
             size: canvas_size,
             ..default()
