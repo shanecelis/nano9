@@ -484,9 +484,13 @@ The more popular the memory-mapped feature is, the more likely it'll be supporte
 
 ## Compatibility
 
-| nano9 | bevy |
-|-------|------|
-| 0.1.0 | 0.17 |
+| nano9         | bevy |
+|---------------|------|
+| 0.1.0-alpha.5 | 0.17 |
+| 0.1.0-alpha.4 | 0.16 |
+| 0.1.0-alpha.3 | 0.15 |
+| 0.1.0-alpha.2 | 0.15 |
+| 0.1.0-alpha.1 | 0.15 |
 
 ## License
 
