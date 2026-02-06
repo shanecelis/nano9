@@ -29,4 +29,6 @@ pub enum Error {
     UnsupportedPeek(usize),
     #[error("unsupported stat at address {0}")]
     UnsupportedStat(u8),
+    #[error("{0}")]
+    Message(Cow<'static, str>),
 }

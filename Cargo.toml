@@ -22,7 +22,7 @@ exclude = [
 
 [dependencies]
 bevy = { version = "0.17", features = [ "bevy_dev_tools", "asset_processor" ] }
-bevy_mod_scripting = { version = "0.17.0", features = ["lua54", "core_functions"], default-features = false, optional = true }
+bevy_mod_scripting = { version = "0.18.0", features = ["lua54", "core_functions"], default-features = false, optional = true }
 bytemuck = "1.16.3"
 thiserror = "1.0.63"
 bevy_minibuffer = { version = "0.5", optional = true }
