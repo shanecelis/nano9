@@ -20,7 +20,7 @@ Parameters shown in italics are extensions to the Pico-8 API.
 - [x] color(col)
 - [x] cursor([x,] [y,] [col])
 - [x] fget(n, [f])
-- [ ] fillp([pat])
+- [x] fillp([pat])
 - [x] fset(n, [f,] [v])
 - [x] line(x0, y0, x1, y1, [col])
 - [x] pal([c0,] [c1,] [p])
@@ -34,7 +34,10 @@ Parameters shown in italics are extensions to the Pico-8 API.
 - [x] spr(n, x, y, [w,] [h,] [flip_x,] [flip_y,] *[turns]*)
 - [x] sset(x, y, [c])
 - [x] sspr(sx, sy, sw, sh, dx, dy, [dw,] [dh,] [flip_x,] [flip_y,] *[image_index]*)
-- [ ] tline(x0, y0, x1, y1, mx, my, [mdx,] [mdy])
+- [/] tline(x0, y0, x1, y1, mx, my, [mdx,] [mdy], [layers,]*[image_index]*)
+
+This is only partially implemented. It works on the image currently rather than
+the map. But it will be made to work with maps soon.
 
 ## Tables
 - [x] add(t, v, [i])
@@ -46,7 +49,7 @@ Parameters shown in italics are extensions to the Pico-8 API.
 - [x] ipairs(t)
 - [x] pack(...)
 - [x] pairs(t)
-- [ ] unpack(t, [i], [j])
+- [x] unpack(t, [i], [j])
 - [x] next(t, [key])
 
 ## Input
@@ -54,13 +57,13 @@ Parameters shown in italics are extensions to the Pico-8 API.
 - [x] btnp([i,] [p])
 
 ## Sound
-- [ ] music([n,] [fade_len,] [channel_mask,] *[bank_index]*)
+- [x] music([n,] [fade_len,] [channel_mask,] *[bank_index]*)
 - [x] sfx(n, [channel,] [offset,] *[bank_index]*)
 
 ## Map
-- [x] map(cel_x, cel_y, sx, sy, cel_w, cel_h, [layer,] *[map_index]*)
-- [ ] mget(x, y)
-- [ ] mset(x, y, v)
+- [x] map(cel_x, cel_y, sx, sy, cel_w, cel_h, [layers], *[map_index]*)
+- [x] mget(x, y)
+- [x] mset(x, y, v)
 
 ## Memory
 - [ ] cstore(destaddr, sourceaddr, len, [filename])
@@ -68,9 +71,21 @@ Parameters shown in italics are extensions to the Pico-8 API.
 - [ ] memset(dest_addr, val, len)
 - [/] peek(addr, [n])
 
+| address | description               |
+|---------|---------------------------|
+| 0xf527  | draw_state.print_cursor.y |
+
+Very limited support. Only supports 0xf527 which returns the print cursor y
+position of draw state.
+
 - [ ] peek2(addr, [n])
 - [ ] peek4(addr, [n])
 - [/] poke(addr, [value,] [...])
+
+| address | description           |
+|---------|-----------------------|
+| 0x5f2d  | keyboard input enable |
+
 - [ ] poke2(addr, [...])
 - [ ] poke4(addr, [...])
 - [ ] reload(destaddr, sourceaddr, len, [filename])
@@ -144,6 +159,16 @@ Parameters shown in italics are extensions to the Pico-8 API.
 - [/] printh(str, [filename], [overwrite])
 - [/] stat(n)
 Supports keyboard and some mouse functions.
+
+| value | description           |
+|-------|-----------------------|
+| 8     | target frame rate     |
+| 9     | actual frame rate     |
+| 30    | has keyboard input    |
+| 31    | keyboard input if any |
+| 32    | mouse position x      |
+| 33    | mouse position y      |
+| 34    | mouse buttons         |
 - [x] stop() (undocumented)
 - [ ] trace() (undocumented)
 
