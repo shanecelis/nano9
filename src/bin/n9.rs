@@ -388,9 +388,7 @@ fn run(cli: Cli) -> io::Result<ExitCode> {
             shared_data,
             pause,
         } => (path, shared_data, pause, false),
-        Command::Check {
-            path,
-        } => (path, None, false, true),
+        Command::Check { path } => (path, None, false, true),
         _ => unreachable!(),
     };
     let mut app = App::new();
@@ -542,9 +540,7 @@ fn run(cli: Cli) -> io::Result<ExitCode> {
                 } else {
                     Config::pico8()
                 };
-            config.scripts = vec![
-                AssetPath::from_path(&script_path_rel).to_string(),
-            ];
+            config.scripts = vec![AssetPath::from_path(&script_path_rel).to_string()];
             nano9_plugin = Nano9Plugin {
                 config,
                 ..default()

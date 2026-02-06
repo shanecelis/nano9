@@ -1,12 +1,11 @@
 use super::*;
-use bitvec::prelude::*;
 use crate::config::KeyBindings;
+use bitvec::prelude::*;
 
 pub(crate) fn plugin(app: &mut App) {
     #[cfg(feature = "scripting")]
     lua::plugin(app);
 }
-
 
 #[derive(Default, Debug, Clone)]
 pub struct Buttons {
@@ -112,7 +111,9 @@ pub(crate) fn fill_input(
         // If we were doing one key hard-coded, it would look like this:
         // buttons.curr.set(0, keys.pressed(KeyCode::ArrowLeft)
         for b in 0..=5 {
-            let Some(player) = bindings.players.get(i) else { continue; };
+            let Some(player) = bindings.players.get(i) else {
+                continue;
+            };
             let key_list: &Vec<KeyCode> = match b {
                 0 => &player.left,
                 1 => &player.right,

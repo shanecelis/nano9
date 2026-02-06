@@ -97,12 +97,11 @@ mod lua {
                     let w = v.get("width").and_then(ValueExt::to_f32);
                     let h = v.get("height").and_then(ValueExt::to_f32);
                     match (w, h) {
-                        (Some(w), Some(h)) =>
-                            Ok(PropBy::Rect(Rect::from_corners(
-                                Vec2::new(x, y),
-                                Vec2::new(x + w, y + h),
-                            ))),
-                        _ => Ok(PropBy::Pos(Vec2::new(x, y)))
+                        (Some(w), Some(h)) => Ok(PropBy::Rect(Rect::from_corners(
+                            Vec2::new(x, y),
+                            Vec2::new(x + w, y + h),
+                        ))),
+                        _ => Ok(PropBy::Pos(Vec2::new(x, y))),
                     }
                 }
                 _ => Err(InteropError::value_mismatch(

@@ -48,11 +48,9 @@ impl AssetLoader for TiledSetLoader {
                 BytesResourceReader::new(&bytes, load_context),
             );
             // Load the tile set.
-            loader.load_tsx_tileset(&tileset_path).map_err(|e| {
-                std::io::Error::other(
-                    format!("Could not load TSX tile set: {e}"),
-                )
-            })?
+            loader
+                .load_tsx_tileset(&tileset_path)
+                .map_err(|e| std::io::Error::other(format!("Could not load TSX tile set: {e}")))?
         };
         Ok(TiledSet(tileset))
     }

@@ -193,7 +193,9 @@ impl super::Pico8<'_, '_> {
     // cls([n])
     pub fn cls(&mut self, color: Option<impl Into<PColor>>) -> Result<(), Error> {
         trace!("cls");
-        let c = color.map(|c| c.into()).unwrap_or(PColor::Palette(self.defaults.clear_color));
+        let c = color
+            .map(|c| c.into())
+            .unwrap_or(PColor::Palette(self.defaults.clear_color));
         // let image = self
         //     .images
         //     .get_mut(&self.canvas.handle)

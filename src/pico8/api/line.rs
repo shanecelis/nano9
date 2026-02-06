@@ -58,7 +58,10 @@ impl super::Pico8<'_, '_> {
                 UVec2::new(gfx.width as u32, gfx.height as u32)
             }
             SprHandle::Image(handle) => {
-                let image = self.images.get(handle).ok_or(Error::NoAsset("image".into()))?;
+                let image = self
+                    .images
+                    .get(handle)
+                    .ok_or(Error::NoAsset("image".into()))?;
                 let sz = image.size();
                 UVec2::new(sz.x, sz.y)
             }
@@ -93,7 +96,9 @@ impl super::Pico8<'_, '_> {
         let UVec2 { x: tex_w, y: tex_h } = self.sheet_size(&sheet_handle)?;
 
         if tex_w == 0 || tex_h == 0 {
-            return Err(Error::Message("sprite sheet has zero width or height".into()));
+            return Err(Error::Message(
+                "sprite sheet has zero width or height".into(),
+            ));
         }
 
         match sheet_handle {
@@ -239,7 +244,7 @@ mod lua {
              mdx: Option<i32>,
              mdy: Option<i32>,
              layers: Option<u8>,
-             sheet: Option<usize>,| {
+             sheet: Option<usize>| {
                 let _ = with_pico8(&ctx, move |pico8| {
                     pico8.tline(
                         IVec2::new(x0.unwrap_or(0), y0.unwrap_or(0)),

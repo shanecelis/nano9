@@ -130,18 +130,8 @@ impl KeyBindings {
                     right: vec![ArrowRight],
                     up: vec![ArrowUp],
                     down: vec![ArrowDown],
-                    o: vec![
-                        KeyZ,
-                        KeyC,
-                        KeyN,
-                        NumpadSubtract,
-                    ],
-                    x: vec![
-                        KeyX,
-                        KeyV,
-                        KeyM,
-                        Numpad8,
-                    ],
+                    o: vec![KeyZ, KeyC, KeyN, NumpadSubtract],
+                    x: vec![KeyX, KeyV, KeyM, Numpad8],
                 },
                 PlayerKeyBindings {
                     left: vec![KeyS],
@@ -150,7 +140,8 @@ impl KeyBindings {
                     down: vec![KeyD],
                     o: vec![ShiftLeft, Tab],
                     x: vec![KeyA, KeyQ],
-                }]
+                },
+            ],
         }
     }
 }
@@ -395,7 +386,6 @@ impl std::str::FromStr for Config {
 }
 
 impl Config {
-
     /// The pico8 configuration
     pub fn pico8() -> Self {
         Config {

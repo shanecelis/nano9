@@ -3,6 +3,22 @@
 All notable changes to this project will be documented in this file.
 
 ## [unreleased]
+
+## [0.1.0-alpha.5] - 2026-02-06
+- refactor: Update to Bevy 0.17 and BMS 0.18.
+- feat: Nano-9.toml directory defines the default asset directory.
+- feat: Add `check` sub-command.
+- feat: Add config for key bindings.
+- doc: Update compatibility document.
+- feat: tline supports using image but not map yet.
+- feat: Add bobtail macros: cls!(), spr!(), print!(), and camera!().
+- binary: Add logo files.
+- feat: mget works with tiled files.
+- test: Add lua test harness.
+- fix: Use AppExit code in main.
+- feat: Implement peek for print cursor y.
+- refactor: Use Palettes from assets not resources.
+
 ## [0.1.0-alpha.4] - 2025-11-12
 - refactor: Update to Bevy 0.16 and BMS 0.16.
 - binary: Flop the gameboy color palettes.
