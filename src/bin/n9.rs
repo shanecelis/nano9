@@ -57,6 +57,16 @@ enum Command {
         /// Shared data for Pico-8 carts
         shared_data: Option<SharedData>,
     },
+    /// Check a Pico-8 cart or Nano-9 project
+    ///
+    /// Environment variables:
+    ///
+    /// NANO9_ASSETS_DIR - override the assets directory
+    /// NANO9_LUA_CODE   - log the translated code to file
+    Check {
+        /// Run path.
+        path: PathBuf,
+    },
     /// Create a new Nano-9 project
     ///
     /// Depending on the extension and arguments, it will create the following kind of project:
@@ -145,7 +155,7 @@ fn main() -> io::Result<ExitCode> {
     //     "code.n9",
     // ];
     match cli.command {
-        Command::Run { .. } => run(cli),
+        Command::Run { .. } | Command::Check { .. } => run(cli),
         Command::New { .. } => new(cli),
         Command::Info { .. } => info(cli),
     }
@@ -372,12 +382,15 @@ macro_rules! copy_template {
 }
 
 fn run(cli: Cli) -> io::Result<ExitCode> {
-    let (script, shared_data, pause) = match cli.command {
+    let (script, shared_data, pause, check) = match cli.command {
         Command::Run {
             path,
             shared_data,
             pause,
-        } => (path, shared_data, pause),
+        } => (path, shared_data, pause, false),
+        Command::Check {
+            path,
+        } => (path, None, false, true),
         _ => unreachable!(),
     };
     let script_path = {
@@ -574,7 +587,22 @@ fn run(cli: Cli) -> io::Result<ExitCode> {
             name.contains("bevy_ecs_tilemap::tiles") || name.contains("nano9")
         });
     });
-    let app_exit = app.run();
+    let app_exit = if !check {
+        app.run()
+    } else {
+        use bevy::app::PluginsState;
+
+        while app.plugins_state() == PluginsState::Adding {
+            #[cfg(not(all(target_arch = "wasm32", feature = "web")))]
+            bevy::tasks::tick_global_task_pools_on_main_thread();
+        }
+
+        app.finish();
+        app.cleanup();
+
+        app.update();
+        app.should_exit().unwrap_or(AppExit::Success)
+    };
 
     Ok(match app_exit {
         AppExit::Success => ExitCode::from(0),
