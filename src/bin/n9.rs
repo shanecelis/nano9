@@ -12,7 +12,9 @@ use nano9::{
     *,
 };
 use std::{
-    env, fs, io,
+    env,
+    ffi::OsStr,
+    fs, io,
     path::{Path, PathBuf},
     process::ExitCode,
 };
@@ -391,42 +393,62 @@ fn run(cli: Cli) -> io::Result<ExitCode> {
         Command::Check { path } => (path, None, false, true),
         _ => unreachable!(),
     };
-    let script_path = {
-        let mut path = PathBuf::from(&script);
-        if path.is_dir() {
-            path.push("Nano9.toml")
-        }
-        path
-    };
-    let mut app = App::new();
-    let cwd = AssetSourceId::Name("cwd".into());
-    let builder = AssetSourceBuilder::platform_default(
-        env::current_dir()?.to_str().expect("current dir"),
-        None,
-    );
-    // The problem here is that if you are in a "noisy" directory, like a the
-    // source tree, where there are ".git/*" file events, these will be
-    // reported.
-    //
-    // builder.watcher = None;
-    // builder.processed_watcher = None;
-    app.register_asset_source(&cwd, builder);
 
-    let set_default_source = if let Some(dir_name) = env::var_os("NANO9_ASSETS_DIR") {
-        let mut asset_dir: PathBuf = dir_name.into();
-        if asset_dir.is_relative() {
-            let mut cur_dir = env::current_dir()?;
-            cur_dir.push(&asset_dir);
-            asset_dir = cur_dir;
-        }
+    let invocation_dir = env::current_dir()?;
+    let config_path = if script.extension() == Some(OsStr::new("Nano9.toml")) {
+        Some(script.clone())
+    } else if script.is_dir() {
+        let mut path = script.clone();
+        path.push("Nano9.toml");
+        Some(script.clone())
+    } else {
+        None
+    };
+    let script_path = config_path.clone().unwrap_or_else(|| script.clone());
+    let mut app = App::new();
+
+    // Choose the default asset root:
+    // - If NANO9_ASSETS_DIR is set, it always wins.
+    // - Otherwise, if the input is a local path, use the "game directory":
+    //   - directory arg: that directory
+    //   - file arg: parent directory
+    //
+    // This keeps relative asset paths (scripts, sprite sheets, etc.) resolving the same way for:
+    //   (cd examples/sprite && ... check .)
+    //   (cd examples && ... check sprite)
+    let default_asset_root: Option<PathBuf> =
+        if let Some(dir_name) = env::var_os("NANO9_ASSETS_DIR") {
+            let mut asset_dir: PathBuf = dir_name.into();
+            if asset_dir.is_relative() {
+                asset_dir = invocation_dir.join(&asset_dir);
+            }
+            Some(asset_dir)
+        } else if script.exists() {
+            // Local path.
+            Some(fs::canonicalize(if script.is_dir() {
+                script
+            } else {
+                script
+                    .parent()
+                    .map(|p| {
+                        if p.to_str() == Some("") {
+                            PathBuf::from(".")
+                        } else {
+                            p.to_path_buf()
+                        }
+                    })
+                    .unwrap_or_else(|| invocation_dir.clone())
+            })?)
+        } else {
+            None
+        };
+
+    if let Some(root) = default_asset_root.as_ref() {
         app.register_asset_source(
             &AssetSourceId::Default,
-            AssetSourceBuilder::platform_default(asset_dir.to_str().expect("asset dir"), None),
+            AssetSourceBuilder::platform_default(root.to_str().expect("asset dir"), None),
         );
-        true
-    } else {
-        false
-    };
+    }
 
     let nano9_plugin;
 
@@ -438,24 +460,6 @@ fn run(cli: Cli) -> io::Result<ExitCode> {
         "toml" => {
             eprintln!("loading config");
             let path: &Path = &script_path;
-            let config_path = if set_default_source {
-                eprintln!(
-                    "warn: NANO9_ASSETS_DIR environment variable overriding Nano-9.toml's directory."
-                );
-                Some(AssetPath::from_path(path).with_source(&cwd).into_owned())
-            } else if let Some(parent) = path.parent() {
-                app.register_asset_source(
-                    &AssetSourceId::Default,
-                    AssetSourceBuilder::platform_default(
-                        parent.to_str().expect("parent dir"),
-                        None,
-                    ),
-                );
-                Some(AssetPath::from_path(path).into_owned())
-            } else {
-                warn!("No parent directory to set asset root to.");
-                None
-            };
             // OLD SHANE: Get rid of this.
             //
             // NEW SHANE: No. We use part of Config to configure the App and can't
@@ -470,7 +474,7 @@ fn run(cli: Cli) -> io::Result<ExitCode> {
             }
             nano9_plugin = Nano9Plugin {
                 config,
-                config_path,
+                config_path: config_path.map(AssetPath::from_path_buf),
             };
         }
         "p8" | "png" => {
@@ -479,7 +483,13 @@ fn run(cli: Cli) -> io::Result<ExitCode> {
 
             let path = script_path;
             let asset_path: AssetPath<'static> = if fs::exists(&path).unwrap_or(false) {
-                AssetPath::from_path(&path).with_source(&cwd)
+                if let Some(root) = default_asset_root.as_ref()
+                    && let Ok(rel) = path.strip_prefix(root)
+                {
+                    AssetPath::from_path(rel)
+                } else {
+                    AssetPath::from_path(&path)
+                }
             } else if let Some(s) = path.to_str() {
                 match AssetPath::try_parse(s) {
                     Ok(p) => p,
@@ -501,7 +511,7 @@ fn run(cli: Cli) -> io::Result<ExitCode> {
                 move |asset_server: Res<AssetServer>, mut commands: Commands| {
                     let shared_data = shared_data.unwrap_or_default();
                     let pico8_asset: Handle<Pico8Asset> = asset_server.load_with_settings(
-                        dbg!(&asset_path),
+                        &asset_path,
                         move |settings: &mut CartLoaderSettings| {
                             settings.shared_data = shared_data;
                         },
@@ -535,11 +545,8 @@ fn run(cli: Cli) -> io::Result<ExitCode> {
                 } else {
                     Config::pico8()
                 };
-            config.scripts = vec![
-                AssetPath::from_path(&script_path)
-                    .with_source(&cwd)
-                    .to_string(),
-            ];
+            let script_asset_path = AssetPath::from_path(&script_path);
+            config.scripts = vec![script_asset_path.to_string()];
             nano9_plugin = Nano9Plugin {
                 config,
                 ..default()
