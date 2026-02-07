@@ -1,9 +1,8 @@
 use crate::pico8::{
     self, Error, Gfx, GfxMaterial, Pico8Asset, Pico8Handle, SprHandle, SpriteSheet,
 };
-use bevy::platform::collections::HashSet;
+use bevy::platform::collections::{HashSet, HashMap};
 use bevy::prelude::*;
-use std::collections::VecDeque;
 
 #[cfg(feature = "level")]
 use crate::level;
@@ -77,8 +76,8 @@ fn compute_gfx_tilemap_texture_on_asset_event(
     gfx_materials: Res<Assets<GfxMaterial>>,
     mut textures: Query<(Entity, &GfxTilemapTexture, Option<&mut TilemapTexture>)>,
     mut pairs: ResMut<pico8::GfxImageMap>,
+    mut update_images: Local<HashMap<Entity, Handle<Image>>>,
     mut update_ids: Local<Vec<Entity>>,
-    mut update_images: Local<VecDeque<Handle<Image>>>,
     pico8_handle: Res<Pico8Handle>,
     pico8_assets: Res<Assets<Pico8Asset>>,
 ) {
@@ -125,7 +124,7 @@ fn compute_gfx_tilemap_texture_on_asset_event(
                             TilemapTexture::Single(handle) if *handle != image => {
                                 // trace!("updating existant sprite on {}", id);
                                 update_ids.push(id);
-                                update_images.push_back(image);
+                                update_images.insert(id, image);
                             }
                             _ => {}
                         }
@@ -143,14 +142,20 @@ fn compute_gfx_tilemap_texture_on_asset_event(
     }
     // Try not to trigger a sprite change if we don't have to.
     let mut iter = textures.iter_many_mut(update_ids.iter());
-    while let Some((_, _, tilemap_texture)) = iter.fetch_next() {
+    while let Some((id, _, tilemap_texture)) = iter.fetch_next() {
         match tilemap_texture {
             Some(mut tilemap_texture) => {
-                *tilemap_texture = TilemapTexture::Single(update_images.pop_front().unwrap());
+                let Some(image) = update_images.remove(&id) else { continue };
+                *tilemap_texture = TilemapTexture::Single(image);
             }
             _ => unreachable!(),
         }
     }
+    if update_images.len() > 0 {
+        warn!("Had {} leftover gfx update images.", update_images.len());
+    }
+    update_ids.clear();
+    update_images.clear();
 }
 
 #[allow(clippy::too_many_arguments)]
