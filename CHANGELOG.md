@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 ## [unreleased]
 
+## [0.1.0-alpha.6] - 2026-02-07
+- bug: Fix handling of URLs on CLI.
+- excise: Cannot use `Option<impl T>` for anything.
+- bug: Don't show FPS overlay when "inspector" enabled.
+- bug: Fix non-nearest sampler images for `map()` calls.
+- bug: Remove an `unwrap()` panic.
+
 ## [0.1.0-alpha.5] - 2026-02-06
 - refactor: Update to Bevy 0.17 and BMS 0.18.
 - feat: Nano-9.toml directory defines the default asset directory.
