@@ -6,6 +6,7 @@ use bevy::{
     app::{PluginGroup, PluginGroupBuilder},
     asset::AssetPath,
     audio::{AudioPlugin, Volume},
+    image::ImagePlugin,
     prelude::*,
 };
 
@@ -41,6 +42,13 @@ impl PluginGroup for Nano9Plugins {
                 //     mode: AssetMode::Processed,
                 //     ..default()
                 // })
+                // Preserve crisp pixel art by default.
+                //
+                // TODO: I don't necessarily want to do this because it's a
+                // global setting. But currently the images that I use with
+                // bevy_ecs_tilemap do not seem to be using nearest, so this is
+                // the fix for now.
+                .set(ImagePlugin::default_nearest())
                 .set(AudioPlugin {
                     global_volume: GlobalVolume {
                         volume: Volume::Linear(0.4),
