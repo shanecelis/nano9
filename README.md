@@ -66,6 +66,10 @@ FILE.lua`.
 
 This one-liner prints "Hello World".
 
+``` lua
+print("hello world")
+```
+
 To run the Lua version:
 ``` sh
 cargo run examples/hello-world.lua
@@ -77,7 +81,7 @@ cargo run --example hello-world
 ### pset
 <img align="right" height="50%" src="https://github.com/user-attachments/assets/245a6794-7883-4dd8-be02-dc8e60eef7e3"/>
 
-This example sets a random pixel to a random colora.
+This example sets a random pixel to a random color each frame.
 ``` sh
 cargo run examples/pset.lua
 ```

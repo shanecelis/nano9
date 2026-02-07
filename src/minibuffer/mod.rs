@@ -1,7 +1,7 @@
 #[cfg(feature = "scripting")]
 use crate::{call, pico8::lua::with_system_param};
 use bevy::{
-    dev_tools::fps_overlay::{FpsOverlayConfig, FpsOverlayPlugin},
+    dev_tools::fps_overlay::{FpsOverlayConfig, FpsOverlayPlugin, FrameTimeGraphConfig},
     prelude::*,
     text::FontSmoothing,
 };
@@ -40,6 +40,7 @@ impl Default for Nano9Acts {
 
 fn toggle_fps(mut config: ResMut<FpsOverlayConfig>) {
     config.enabled = !config.enabled;
+    config.frame_time_graph_config.enabled = config.enabled;
 }
 
 /// Quick use plugin for Minibuffer, configured similarly to n9.
@@ -65,6 +66,10 @@ pub fn quick_plugin(app: &mut App) {
             // We can also change color of the overlay
             text_color: Color::WHITE,
             enabled: false,
+            frame_time_graph_config: FrameTimeGraphConfig {
+                enabled: false,
+                ..default()
+            },
             ..default()
         },
     });
