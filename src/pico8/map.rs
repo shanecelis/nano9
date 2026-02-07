@@ -1,7 +1,7 @@
 use crate::pico8::{
     self, Error, Gfx, GfxMaterial, Pico8Asset, Pico8Handle, SprHandle, SpriteSheet,
 };
-use bevy::platform::collections::{HashSet, HashMap};
+use bevy::platform::collections::{HashMap, HashSet};
 use bevy::prelude::*;
 
 #[cfg(feature = "level")]
@@ -145,7 +145,9 @@ fn compute_gfx_tilemap_texture_on_asset_event(
     while let Some((id, _, tilemap_texture)) = iter.fetch_next() {
         match tilemap_texture {
             Some(mut tilemap_texture) => {
-                let Some(image) = update_images.remove(&id) else { continue };
+                let Some(image) = update_images.remove(&id) else {
+                    continue;
+                };
                 *tilemap_texture = TilemapTexture::Single(image);
             }
             _ => unreachable!(),

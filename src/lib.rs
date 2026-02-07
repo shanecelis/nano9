@@ -1,4 +1,4 @@
-#![doc(html_root_url = "https://docs.rs/nano9/0.1.0-alpha.5")]
+#![doc(html_root_url = "https://docs.rs/nano9/0.1.0-alpha.6")]
 #![doc = include_str!("../README.md")]
 #![allow(clippy::type_complexity)]
 use bevy::prelude::*;

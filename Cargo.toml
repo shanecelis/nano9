@@ -2,7 +2,7 @@
 name = "nano9"
 description = "A Pico-8 compatibility layer for Bevy"
 authors = ["Shane Celis <shane.celis@gmail.com>"]
-version = "0.1.0-alpha.5"
+version = "0.1.0-alpha.6"
 edition = "2024"
 keywords = [
     "bevy",
@@ -49,7 +49,6 @@ pico8_decompress = { version = "0.1.0" }
 png = "0.17.16"
 pico8-to-lua = { version = "0.1.1", optional = true }
 fixed = { version = "1.29.0", optional = true }
-bevy_web_asset = { version = "0.11.0", optional = true, default-features = false }
 mashmap = "0.2.2"
 clap = { version = "4.5.39", features = ["derive"], optional = true }
 cmd_lib = { version = "1.9.5", optional = true }
@@ -63,7 +62,7 @@ num-traits = "0.2.19"
 bobtail = { version = "0.3.0", features = [ "omit-token" ] }
 
 [features]
-default = [ "cli", "level" ]
+default = [ "cli" ]
 cli = [ "lua-lib", "dep:clap", "dep:cmd_lib", "gameboy", "dep:log", "dep:env_logger", "dep:cmd_lib" ]
 lua-lib = [ "rust-lib", "pico8-to-lua", "scripting", "rand", "framepace" ]
 rust-lib = [ "negate-y", "fixed-point", "pixel-snap", "rand", "framepace" ]
@@ -74,7 +73,7 @@ debugdump = [ "dep:bevy_mod_debugdump" ]
 pico8-to-lua = [ "dep:pico8-to-lua" ]
 fixed-point = [ "dep:fixed" ]
 scripting = [ "dep:bevy_mod_scripting" ]
-web-asset = [ "dep:bevy_web_asset" ]
+web-asset = [ "bevy/http", "bevy/https" ]
 watcher = [ "bevy/file_watcher" ]
 framepace = [ "dep:bevy_framepace" ]
 pixel-snap = []
@@ -89,6 +88,7 @@ rand = [ "dep:rand", "dep:bevy_rand", "dep:bevy_prng" ]
 user_properties = [ "bevy_ecs_tiled/user_properties" ]
 # level = [ "dep:bevy_ecs_tiled", "dep:serde_json" ]
 level = [ "dep:bevy_ecs_tiled", "dep:serde_json", "dep:futures-lite", "tiled", "scripting" ]
+web = []
 
 
 [dev-dependencies]

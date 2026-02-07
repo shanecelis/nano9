@@ -29,8 +29,7 @@ impl Nano9Plugins {
 impl PluginGroup for Nano9Plugins {
     fn build(self) -> PluginGroupBuilder {
         let group = PluginGroupBuilder::start::<Self>();
-        #[cfg(feature = "web-asset")]
-        let group = group.add(bevy_web_asset::WebAssetPlugin);
+        // TODO: Get rid of this n9mem directory.
         let group = group.add(MemoryDir::new("n9mem"));
         let nano9_plugin = Nano9Plugin {
             config: self.config,

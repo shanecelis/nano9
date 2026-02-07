@@ -126,15 +126,11 @@ impl super::Pico8<'_, '_> {
                     )
                 })? as usize)
             }
-
             #[cfg(feature = "level")]
             SpriteMap::Level(ref map) => self
                 .tiled
                 .mget(map, pos, map_index, _layer_index)
                 .ok_or_else(|| Error::NoSuch("tile".into())),
-
-            #[cfg(not(feature = "level"))]
-            _ => Err(Error::NoSuch("level feature not enabled".into())),
         }
     }
 

@@ -27,7 +27,7 @@ fn main() {
     let gameboy = std::env::args().any(|s| s == "gameboy");
     let mut app = App::new();
     app.add_systems(nano9::schedule::Init, init);
-    let mut config = if gameboy {
+    let config = if gameboy {
         app.add_systems(nano9::schedule::Draw, draw_gameboy);
         Config::gameboy()
     } else {
@@ -35,8 +35,6 @@ fn main() {
         Config::pico8()
     };
 
-    let config = Config::pico8();
-    // let config = Config::gameboy();
     app.add_plugins(Nano9Plugins::new(config))
         .add_systems(PreUpdate, run_pico8_when_loaded);
 
