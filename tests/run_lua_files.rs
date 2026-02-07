@@ -1,6 +1,6 @@
 use std::fs;
 use std::path::{Path, PathBuf};
-use std::process::{Command, Stdio};
+use std::process::{Command};
 
 /// Test that all .lua and .p8lua files can be loaded and run (with a timeout)
 #[test]
@@ -26,9 +26,10 @@ fn test_run_lua_files() {
         let mut command = Command::new("cargo");
         command
             .args(&[
-                "n9",
-                "--",
+                // "n9",
                 "run",
+                "--",
+                "check",
                 file.to_str().expect("path should be valid UTF-8"),
             ])
             .current_dir(env!("CARGO_MANIFEST_DIR"))
@@ -56,7 +57,6 @@ fn test_run_lua_files() {
 
 fn find_lua_files(dir: &Path, files: &mut Vec<PathBuf>) {
     let root = Path::new(env!("CARGO_MANIFEST_DIR"));
-    let dir_path = root.join(dir);
     if !dir.exists() {
         return;
     }

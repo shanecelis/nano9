@@ -479,6 +479,8 @@ impl Config {
 #[cfg(test)]
 mod test {
     use super::*;
+
+    #[cfg(feature = "level")]
     use std::path::PathBuf;
 
     #[test]
