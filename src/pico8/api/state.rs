@@ -1,6 +1,42 @@
 use super::*;
-use bevy::platform::{collections::HashMap, hash::FixedHasher};
+use bevy::{
+    platform::{collections::HashMap, hash::FixedHasher},
+    prelude::{AssetEvent, MessageReader},
+};
 use std::hash::{BuildHasher, Hash, Hasher};
+
+pub(crate) fn plugin(app: &mut App) {
+    app
+        .add_systems(Update, ensure_pal_map_capacity_on_pico8_asset_change);
+}
+
+
+/// When the Pico8Asset matching the current Pico8Handle is added or modified,
+/// ensure pal_map has at least as many entries as the largest palette in the asset.
+pub fn ensure_pal_map_capacity_on_pico8_asset_change(
+    mut reader: MessageReader<AssetEvent<Pico8Asset>>,
+    assets: Res<Assets<Pico8Asset>>,
+    pico8_handle: Res<Pico8Handle>,
+    mut state: ResMut<Pico8State>,
+) {
+    let handle_id = pico8_handle.handle.id();
+    for e in reader.read() {
+        let id = match e {
+            AssetEvent::Added { id } | AssetEvent::Modified { id } | AssetEvent::LoadedWithDependencies { id } => *id,
+            AssetEvent::Removed { .. } | AssetEvent::Unused { .. } => continue,
+        };
+        if id != handle_id {
+            continue;
+        }
+        let Some(asset) = assets.get(id) else {
+            continue;
+        };
+        if let Some(max_len) = asset.palettes.iter().map(|p| p.data.len()).max() {
+            state.pal_map.ensure_capacity(max_len);
+        }
+        break;
+    }
+}
 
 /// Pico8State's state.
 #[derive(Resource, Clone, Debug, Reflect)]

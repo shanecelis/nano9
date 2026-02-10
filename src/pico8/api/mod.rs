@@ -79,6 +79,7 @@ pub(crate) fn plugin(app: &mut App) {
             asset::plugin,
             mesh::plugin,
             camera3d::plugin,
+            state::plugin,
         ))
         .add_plugins((
             sfx::plugin,

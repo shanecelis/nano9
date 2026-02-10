@@ -47,6 +47,21 @@ impl PalMap {
         })
     }
 
+    /// Ensure remap and transparency have at least `min_len` entries, so that
+    /// palette indices in `0..min_len` are not wrapped. New slots get identity
+    /// mapping and non-transparent. Use when the palette has more colors than
+    /// the default 16 (e.g. FromImage with a non-row/column layout).
+    pub fn ensure_capacity(&mut self, min_len: usize) {
+        if self.remap.len() >= min_len {
+            return;
+        }
+        let start = self.remap.len();
+        for i in start..min_len {
+            self.remap.push(i as u8);
+            self.transparency.push(false);
+        }
+    }
+
     pub fn reset(&mut self) {
         let n = self.remap.len() as u8;
         self.remap.clear();
