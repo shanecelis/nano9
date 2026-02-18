@@ -65,11 +65,12 @@ pub const PICO8_TILE_COUNT: UVec2 = UVec2::new(16, 16);
 const ANALOG_STICK_THRESHOLD: f32 = 0.1;
 
 pub(crate) fn plugin(app: &mut App) {
-    app.register_type::<Pico8Asset>()
-        .register_type::<Pico8State>()
-        .register_type::<N9Font>()
-        .register_type::<Palette>()
-        .register_type::<SpriteSheet>()
+    app
+        //.register_type::<Pico8Asset>()
+        // .register_type::<Pico8State>()
+        // .register_type::<N9Font>()
+        // .register_type::<Palette>()
+        // .register_type::<SpriteSheet>()
         .init_asset::<Pico8Asset>()
         .init_resource::<Pico8State>()
         .init_resource::<PlayerInputs>()

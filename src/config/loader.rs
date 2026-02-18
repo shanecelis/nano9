@@ -62,7 +62,7 @@ pub enum ConfigError {
 pub struct ConfigLoader;
 
 impl AssetLoader for ConfigLoader {
-    type Asset = pico8::Pico8Asset;
+    type Asset = Config;
     type Settings = ();
     type Error = ConfigError;
 
@@ -78,6 +78,37 @@ impl AssetLoader for ConfigLoader {
         let mut config: Config =
             toml::from_str::<Config>(content).map_err(|e| io::Error::other(format!("{e}")))?;
         config.inject_template(None)?;
+        Ok(config)
+        // into_asset(config, load_context).await
+    }
+
+    fn extensions(&self) -> &[&str] {
+        static EXTENSIONS: &[&str] = &[];
+        EXTENSIONS
+    }
+}
+
+#[derive(Default)]
+pub struct Pico8Loader;
+
+impl AssetLoader for Pico8Loader {
+    type Asset = pico8::Pico8Asset;
+    type Settings = ();
+    type Error = ConfigError;
+
+    async fn load(
+        &self,
+        reader: &mut dyn Reader,
+        settings: &Self::Settings,
+        load_context: &mut LoadContext<'_>,
+    ) -> Result<Self::Asset, Self::Error> {
+        let config = ConfigLoader::load(&ConfigLoader, reader, settings, load_context).await?;
+        // let mut bytes = Vec::new();
+        // let _ = reader.read_to_end(&mut bytes).await?;
+        // let content = std::str::from_utf8(&bytes)?;
+        // let mut config: Config =
+        //     toml::from_str::<Config>(content).map_err(|e| io::Error::other(format!("{e}")))?;
+        // config.inect_template(None)?;
         into_asset(config, load_context).await
     }
 
@@ -162,11 +193,12 @@ async fn into_asset(
     config: Config,
     load_context: &mut LoadContext<'_>,
 ) -> Result<Pico8Asset, ConfigError> {
-    let mut palettes = Vec::new();
-    if config.palettes.is_empty() {
+    let whole_config = config.clone();
+    let palettes = if config.palettes.is_empty() {
         warn!("No palettes were provided.");
+        Vec::new()
     } else {
-        palettes = Vec::with_capacity(config.palettes.len());
+        let mut palettes = Vec::with_capacity(config.palettes.len());
         for palette in config.palettes.iter() {
             let palette_settings = palette.into_settings().expect("palette");
             let palette = load_context
@@ -186,7 +218,8 @@ async fn into_asset(
             //     pico8::Palette::from_image(image.get())
             // });
         }
-    }
+        palettes
+    };
     let mut sprite_sheets = vec![];
     for sheet in config.sprite_sheets.into_iter() {
         let asset_path = AssetPath::try_parse(&sheet.path)?;
@@ -353,6 +386,7 @@ async fn into_asset(
             })
             .collect::<Vec<_>>(),
         meshes,
+        config: load_context.add_labeled_asset("config".into(), whole_config),
     };
     Ok(state)
 }

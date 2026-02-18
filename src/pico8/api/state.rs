@@ -16,9 +16,12 @@ pub(crate) fn plugin(app: &mut App) {
 pub fn ensure_pal_map_capacity_on_pico8_asset_change(
     mut reader: MessageReader<AssetEvent<Pico8Asset>>,
     assets: Res<Assets<Pico8Asset>>,
-    pico8_handle: Res<Pico8Handle>,
+    pico8_handle: Option<Res<Pico8Handle>>,
     mut state: ResMut<Pico8State>,
 ) {
+    let Some(pico8_handle) = pico8_handle else {
+        return;
+    };
     let handle_id = pico8_handle.handle.id();
     for e in reader.read() {
         let id = match e {

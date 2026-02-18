@@ -728,8 +728,8 @@ impl Decodable for Sfx {
 }
 
 pub(crate) fn plugin(app: &mut App) {
-    app.register_type::<Sfx>()
-        .register_type::<Loop>()
+    app//.register_type::<Sfx>()
+        //.register_type::<Loop>()
         .add_plugins(command::plugin)
         .add_systems(PreStartup, add_channels)
         .add_audio_source::<Sfx>();

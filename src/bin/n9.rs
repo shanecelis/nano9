@@ -473,8 +473,8 @@ fn run(cli: Cli) -> io::Result<ExitCode> {
                 return Ok(ExitCode::from(2));
             }
             nano9_plugin = Nano9Plugin {
-                config,
-                config_path: config_path.map(AssetPath::from_path_buf),
+                // config,
+                // config_path: config_path.map(AssetPath::from_path_buf),
             };
         }
         "p8" | "png" => {
@@ -520,7 +520,7 @@ fn run(cli: Cli) -> io::Result<ExitCode> {
                 },
             );
             nano9_plugin = Nano9Plugin {
-                config,
+                // config,
                 ..default()
             };
         }
@@ -548,7 +548,7 @@ fn run(cli: Cli) -> io::Result<ExitCode> {
             let script_asset_path = AssetPath::from_path(&script_path);
             config.scripts = vec![script_asset_path.to_string()];
             nano9_plugin = Nano9Plugin {
-                config,
+                // config,
                 ..default()
             };
         }
@@ -561,7 +561,7 @@ fn run(cli: Cli) -> io::Result<ExitCode> {
     }
 
     app.add_plugins(Nano9Plugins {
-        config: nano9_plugin.config,
+        // config: nano9_plugin.config,
         ..default()
     });
 

@@ -1,11 +1,11 @@
-mod memory_dir;
+// mod memory_dir;
 
-pub use memory_dir::*;
+// pub use memory_dir::*;
 mod loader;
 pub use loader::*;
 pub mod front_matter;
 use crate::{
-    pico8::{self, Pico8Handle},
+    pico8::{self, Pico8Handle, canvas::N9Canvas},
     run::RunState,
 };
 use bevy::prelude::*;
@@ -29,6 +29,9 @@ pub(crate) fn plugin(app: &mut App) {
         .add_plugins(loader::plugin);
     #[cfg(feature = "gameboy")]
     app.add_plugins(gameboy::plugin);
+    app.init_resource::<KeyBindings>()
+        .init_asset::<Config>()
+        ;
 }
 
 // #[derive(Default, Debug, Clone, Deserialize, Serialize)]
@@ -38,7 +41,7 @@ pub(crate) fn plugin(app: &mut App) {
 // }
 
 /// Nano-9 config
-#[derive(Debug, Clone, Deserialize, Serialize, Default, Merge, PartialEq)]
+#[derive(Debug, Clone, Deserialize, Serialize, Default, Merge, PartialEq, Reflect, Asset)]
 #[serde(deny_unknown_fields)]
 pub struct Config {
     /// Name of the game
@@ -89,7 +92,7 @@ pub struct Config {
     pub key_bindings: Option<KeyBindings>,
 }
 
-#[derive(Default, Debug, Clone, Deserialize, Serialize, Merge, PartialEq)]
+#[derive(Default, Debug, Clone, Deserialize, Serialize, Merge, PartialEq, Reflect)]
 #[serde(deny_unknown_fields)]
 pub struct Defaults {
     /// Initial palette
@@ -170,7 +173,7 @@ pub struct PlayerKeyBindings {
 }
 
 /// Audio bank
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Reflect)]
 #[serde(untagged)]
 #[serde(deny_unknown_fields)]
 pub enum AudioBank {
@@ -191,7 +194,7 @@ impl AudioBank {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Reflect)]
 #[serde(deny_unknown_fields)]
 #[serde(untagged)]
 pub enum ResizeConstraints {
@@ -199,7 +202,7 @@ pub enum ResizeConstraints {
     Rect { rect: URect },
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Merge)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Merge, Reflect)]
 #[serde(deny_unknown_fields)]
 pub struct Screen {
     #[merge(skip)]
@@ -213,7 +216,7 @@ pub struct Screen {
     pub decorations: Option<bool>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default, Merge)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default, Merge, Reflect)]
 #[serde(deny_unknown_fields)]
 pub struct SpriteSheet {
     /// Path to image
@@ -235,7 +238,7 @@ pub struct SpriteSheet {
 }
 
 /// Sprite map
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Reflect)]
 // #[serde(untagged)]
 pub struct SpriteMap {
     /// Path to map, can have extensions .p8 or .tmx
@@ -243,7 +246,7 @@ pub struct SpriteMap {
 }
 
 /// Font
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Reflect)]
 #[serde(deny_unknown_fields)]
 #[serde(untagged)]
 pub enum Font {
@@ -260,7 +263,7 @@ pub enum Font {
     // pub height: Option<f32>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Merge)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Merge, Reflect)]
 #[serde(deny_unknown_fields)]
 pub struct Palette {
     /// Path to palette
@@ -289,7 +292,7 @@ impl Palette {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Reflect)]
 #[serde(deny_unknown_fields)]
 #[serde(untagged)]
 pub enum Mesh {
@@ -473,6 +476,45 @@ impl Config {
             self.fonts.push(Font::Default { default: true });
         }
         self
+    }
+
+    pub(crate) fn was_plugin_build(&self, mut commands: Commands) {
+        commands.insert_resource(
+            self
+                .defaults
+                .as_ref()
+                .map(pico8::Defaults::from_config)
+                .unwrap_or_default(),
+        );
+
+        commands.insert_resource(self.key_bindings.clone().unwrap_or_default());
+
+        let canvas_size: UVec2 = self
+            .screen
+            .as_ref()
+            .map(|s| s.canvas_size)
+            .unwrap_or(DEFAULT_CANVAS_SIZE);
+
+        commands.insert_resource(N9Canvas {
+            size: canvas_size,
+            ..default()
+        });
+
+        if let Some(fps) = self.frames_per_second {
+            info!("Set FPS {}", &fps);
+
+            #[cfg(feature = "framepace")]
+            {
+                let limiter = bevy_framepace::Limiter::from_framerate(fps as f64);
+                commands.insert_resource(
+                    bevy_framepace::FramepaceSettings::default().with_limiter(limiter),
+                );
+            }
+            // app.insert_resource(Time::<Fixed>::from_seconds(
+            //     1.0 / fps as f64,
+            // ));
+        }
+
     }
 }
 

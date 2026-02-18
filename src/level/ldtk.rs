@@ -20,8 +20,9 @@ pub struct LdtkPlugin;
 
 impl Plugin for LdtkPlugin {
     fn build(&self, app: &mut App) {
-        app.register_type::<LdtkMapConfig>()
-            .register_type::<LdtkMapHandle>()
+        app
+            // .register_type::<LdtkMapConfig>()
+            // .register_type::<LdtkMapHandle>()
             .init_asset::<LdtkMap>()
             .register_asset_loader(LdtkLoader)
             .add_systems(Update, process_loaded_tile_maps);

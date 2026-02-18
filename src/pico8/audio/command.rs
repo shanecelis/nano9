@@ -10,8 +10,8 @@ use std::sync::{
 };
 
 pub(crate) fn plugin(app: &mut App) {
-    app.register_type::<Audio>()
-        .register_type::<AudioBank>()
+    app//.register_type::<Audio>()
+        // .register_type::<AudioBank>()
         .init_asset::<AudioBank>();
 }
 

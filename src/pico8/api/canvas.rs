@@ -28,11 +28,13 @@ bobtail::define! {
 pub use __cls as cls;
 
 pub(crate) fn plugin(app: &mut App) {
-    app.register_type::<OneColorBackground>()
-        .register_type::<Background>()
-        .register_type::<N9Canvas>()
-        .add_systems(PreStartup, (spawn_camera, setup_canvas).chain());
+    // app.register_type::<OneColorBackground>()
+    //     .register_type::<Background>()
+    //     .register_type::<N9Canvas>()
+    //     // .add_systems(PreStartup, (spawn_camera, setup_canvas).chain())
+    //     ;
 
+    app.add_systems(PreUpdate, (spawn_camera, setup_canvas).chain());
     if app.is_plugin_added::<WindowPlugin>() {
         app.add_systems(Update, sync_window_size);
     }
@@ -51,8 +53,11 @@ pub fn setup_canvas(
     mut gfx_materials: ResMut<Assets<GfxMaterial>>,
     mut commands: Commands,
 ) {
-    trace!("setup_canvas");
-    if let Some(mut canvas) = canvas {
+    let Some(mut canvas) = canvas else {
+        return;
+    };
+    if canvas.is_added() {
+        trace!("setup canvas");
         let camera_id = camera.into_inner();
 
         let mut image = Image::new_fill(
@@ -82,15 +87,11 @@ pub fn setup_canvas(
             .insert(ChildOf(camera_id));
 
         // What should the bitdepth be configurable?
-        // XXX: It should be configured.
-        // let mut gfx_image = Gfx::new(canvas.bit_depth as usize, canvas.size.x as usize, canvas.size.y as usize);
         let gfx_image = Gfx::new(
             defaults.canvas_bit_depth.into(),
             canvas.size.x as usize,
             canvas.size.y as usize,
         );
-        // Just setting an errant pixel. Why?
-        // gfx_image.set(0,0,1);
         let gfx_handle = gfxs.add(gfx_image);
         let material = state.gfx_material(&mut gfx_materials);
         canvas.gfx_handle = gfx_handle.clone();
@@ -109,40 +110,66 @@ pub fn setup_canvas(
                 .insert(ChildOf(camera_id))
                 .id(),
         );
+    } else if canvas.is_changed() {
+        trace!("sync canvas");
     }
 }
 
-fn spawn_camera(mut commands: Commands, canvas: Res<N9Canvas>) {
-    commands
-        .spawn((
-            Name::new("dolly"),
-            Transform::from_xyz(
-                canvas.size.x as f32 / 2.0,
-                -(canvas.size.y as f32) / 2.0,
-                0.0,
-            ),
-            InheritedVisibility::default(),
-        ))
-        .with_children(|parent| {
-            parent.spawn((
-                Name::new("camera"),
-                Camera2d,
-                Projection::Orthographic(OrthographicProjection::default_2d()),
-                IsDefaultUiCamera,
+#[derive(Component, Debug, Reflect, Clone, Copy)]
+struct Dolly;
+
+fn spawn_camera(mut commands: Commands,
+                canvas: Option<Res<N9Canvas>>,
+                mut dolly: Query<&mut Transform, With<Dolly>>,
+) {
+
+    let Some(mut canvas) = canvas else {
+        return;
+    };
+    if canvas.is_added() {
+        commands
+            .spawn((
+                Name::new("dolly"),
+                Transform::from_xyz(
+                    canvas.size.x as f32 / 2.0,
+                    -(canvas.size.y as f32) / 2.0,
+                    0.0,
+                ),
+                Dolly,
                 InheritedVisibility::default(),
-                Nano9Camera,
-                Position::default(),
-            ));
-        });
+            ))
+            .with_children(|parent| {
+                parent.spawn((
+                    Name::new("camera"),
+                    Camera2d,
+                    Projection::Orthographic(OrthographicProjection::default_2d()),
+                    IsDefaultUiCamera,
+                    InheritedVisibility::default(),
+                    Nano9Camera,
+                    Position::default(),
+                ));
+            });
+    } else if canvas.is_changed() {
+        if let Ok(mut transform) = dolly.single_mut() {
+        *transform = Transform::from_xyz(
+                    canvas.size.x as f32 / 2.0,
+                    -(canvas.size.y as f32) / 2.0,
+                    0.0,
+                );
+        }
+    }
 }
 
 pub fn sync_window_size(
     mut resize_event: MessageReader<WindowResized>,
-    canvas: Res<N9Canvas>,
+    canvas: Option<Res<N9Canvas>>,
     primary_windows: Query<&Window, With<PrimaryWindow>>,
     mut projection_query: Query<&mut Projection, With<Nano9Camera>>,
     mut camera_query: Query<&mut Camera, With<Nano9Camera>>,
 ) {
+    let Some(canvas) = canvas else {
+        return;
+    };
     if let Some(e) = resize_event
         .read()
         .filter(|e| primary_windows.get(e.window).is_ok())

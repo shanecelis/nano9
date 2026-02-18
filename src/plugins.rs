@@ -1,40 +1,39 @@
 use crate::{
     Nano9Plugin,
-    config::{Config, MemoryDir},
+    config::{Config},
 };
 use bevy::{
     app::{PluginGroup, PluginGroupBuilder},
     asset::AssetPath,
     audio::{AudioPlugin, Volume},
     image::ImagePlugin,
+    window::ExitCondition,
     prelude::*,
 };
 
 /// Nano-9 plugins
 #[derive(Debug, Default)]
-pub struct Nano9Plugins {
-    pub config: Config,
-    pub config_path: Option<AssetPath<'static>>,
-}
+pub struct Nano9Plugins;
 
-impl Nano9Plugins {
-    pub fn new(config: Config) -> Self {
-        Nano9Plugins {
-            config,
-            config_path: None,
-        }
-    }
-}
+// impl Nano9Plugins {
+//     pub fn new(config: Config) -> Self {
+//         Nano9Plugins {
+//             config,
+//             config_path: None,
+//         }
+//     }
+// }
 
 impl PluginGroup for Nano9Plugins {
     fn build(self) -> PluginGroupBuilder {
         let group = PluginGroupBuilder::start::<Self>();
         // TODO: Get rid of this n9mem directory.
-        let group = group.add(MemoryDir::new("n9mem"));
-        let nano9_plugin = Nano9Plugin {
-            config: self.config,
-            config_path: self.config_path,
-        };
+        // let group = group.add(MemoryDir::new("n9mem"));
+        let nano9_plugin = Nano9Plugin::default();
+        // {
+        //     config: self.config,
+        //     config_path: self.config_path,
+        // };
         let group = group.add_group(
             DefaultPlugins
                 // .set(AssetPlugin {
@@ -54,7 +53,11 @@ impl PluginGroup for Nano9Plugins {
                     },
                     ..default()
                 })
-                .set(nano9_plugin.window_plugin()),
+                .set(WindowPlugin {
+                    primary_window: None,
+                    exit_condition: ExitCondition::DontExit,
+                    ..default()
+                })
         );
 
         group.add(nano9_plugin)

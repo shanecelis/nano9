@@ -17,8 +17,12 @@ fn fill_mouse_position(
     camera_q: Query<(&Camera, &GlobalTransform), With<Nano9Camera>>,
     mut mouse_input: ResMut<MouseInput>,
 ) -> Result<(), BevyError> {
-    let window = windows.single()?;
-    let (camera, camera_transform) = camera_q.single()?;
+    let Ok(window) = windows.single() else {
+        return Ok(());
+    };
+    let Ok((camera, camera_transform)) = camera_q.single() else {
+        return Ok(());
+    };
 
     if let Some(world_position) = window
         .cursor_position()

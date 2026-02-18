@@ -9,10 +9,11 @@ use std::{
 pub use var_bitdepth::Gfx;
 
 pub(crate) fn plugin(app: &mut App) {
-    app.register_type::<Gfx>()
+    app
+        //register_type::<Gfx>()
         .register_asset_reflect::<Gfx>()
-        .register_type::<GfxSprite>()
-        .register_type::<GfxMaterial>()
+        // .register_type::<GfxSprite>()
+        // .register_type::<GfxMaterial>()
         .register_asset_reflect::<GfxMaterial>()
         .init_resource::<GfxImageMap>()
         .init_asset::<Gfx>()
@@ -162,10 +163,14 @@ fn compute_image_on_asset_event(
     mut pairs: ResMut<GfxImageMap>,
     mut update_ids: Local<Vec<Entity>>,
     mut update_images: Local<VecDeque<Handle<Image>>>,
-    pico8_handle: Res<Pico8Handle>,
+    pico8_handle: Option<Res<Pico8Handle>>,
     pico8_assets: Res<Assets<Pico8Asset>>,
     // mut update_images: Local<Vec<(Entity, Handle<Image>)>>,
 ) {
+
+    let Some(pico8_handle) = pico8_handle else {
+        return;
+    };
     // We store the asset ids of added/modified image assets.
     let added_handles: HashSet<_> = events
         .read()
@@ -245,9 +250,12 @@ fn compute_image_on_gfx_sprite_change(
     _state: Res<Pico8State>,
     mut sprites: Query<(Entity, &GfxSprite, Option<&mut Sprite>), Changed<GfxSprite>>,
     mut pairs: ResMut<GfxImageMap>,
-    pico8_handle: Res<Pico8Handle>,
+    pico8_handle: Option<Res<Pico8Handle>>,
     pico8_assets: Res<Assets<Pico8Asset>>,
 ) {
+    let Some(pico8_handle) = pico8_handle else {
+        return;
+    };
     let mut pico8_asset_maybe = None;
     for (id, gfx_sprite, sprite) in &mut sprites {
         let Some(gfx_material) = gfx_materials.get(&gfx_sprite.material) else {

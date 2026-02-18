@@ -7,7 +7,8 @@ use std::borrow::Cow;
 pub struct N9Var(Cow<'static, str>);
 
 pub(crate) fn plugin(app: &mut App) {
-    app.register_type::<N9Var>()
+    app
+        //.register_type::<N9Var>()
         // .add_systems(PostStartup, set_vars)
         .add_systems(PreUpdate, set_vars.run_if(on_asset_change::<ScriptAsset>()));
     // .add_systems(PreUpdate, set_vars.run_if(on_event::<OnScriptLoaded>));

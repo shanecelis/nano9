@@ -25,7 +25,7 @@ pub struct RaycastPlugin;
 
 impl Plugin for RaycastPlugin {
     fn build(&self, app: &mut App) {
-        app.register_type::<Place>().register_type::<Cover>();
+        // app.register_type::<Place>().register_type::<Cover>();
 
         // XXX: cfg!(feature = "scripting")
         let world = app.world_mut();

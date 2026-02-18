@@ -75,7 +75,13 @@ fn main() {
     };
     app.add_systems(nano9::schedule::Update, update);
 
-    app.add_plugins(Nano9Plugins::new(config))
+    app.add_plugins(Nano9Plugins)
+        .add_systems(Startup, move |mut configs: ResMut<Assets<Config>>,
+                     pico8assets: ResMut<Assets<nano9::pico8::Pico8Asset>>| {
+                         let config_handle = configs.add(config.clone());
+                         todo!("Load the pico8 asset here");
+
+                     })
         .add_systems(PreUpdate, run_pico8_when_loaded);
 
     #[cfg(feature = "minibuffer")]

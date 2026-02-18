@@ -1,4 +1,5 @@
 use crate::pico8::{self, image::pixel_art_settings, *};
+use crate::config::Config;
 use bevy::asset::{AssetLoader, LoadContext, io::Reader};
 
 use super::*;
@@ -172,6 +173,7 @@ fn to_asset(cart: Cart, load_context: &mut LoadContext) -> Result<Pico8Asset, Ca
             handle: load_context.load(PICO8_FONT),
         }],
         meshes: vec![],
+        config: load_context.add_labeled_asset("config".into(), Config::pico8()),
     };
     Ok(asset)
 }

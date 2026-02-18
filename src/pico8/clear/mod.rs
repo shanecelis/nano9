@@ -13,7 +13,7 @@ static DRAW_COUNTER: DrawCounter = DrawCounter::new(1);
 const MAX_EXPECTED_CLEARABLES: f32 = 1000.0;
 
 pub(crate) fn plugin(app: &mut App) {
-    app.register_type::<Clearable>()
+    app//.register_type::<Clearable>()
         .init_resource::<ClearCache>()
         .add_systems(Last, (handle_overflow).chain());
 }
@@ -194,10 +194,14 @@ pub(crate) fn clear_screen(
     mut gfxs: ResMut<Assets<Gfx>>,
     one_color: Single<&mut Sprite, With<canvas::OneColorBackground>>,
     background: Single<(Entity, &GfxSprite, &mut GfxDirty), With<canvas::Background>>,
-    pico8_handle: Res<Pico8Handle>,
+    pico8_handle: Option<Res<Pico8Handle>>,
     pico8_assets: Res<Assets<Pico8Asset>>,
     // palettes: Res<Palettes>,
 ) {
+    let Some(pico8_handle) = pico8_handle else {
+        warn!("clear_screen called but no Pico8Handle present.");
+        return;
+    };
     state.draw_state.clear_screen();
     // Clear the 1x1 background.
     let mut sprite = one_color.into_inner();

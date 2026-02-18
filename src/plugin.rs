@@ -120,35 +120,31 @@ pub fn send(
 
 #[derive(Default)]
 pub struct Nano9Plugin {
-    pub config: Config,
-    pub config_path: Option<AssetPath<'static>>,
+    // pub config_path: Option<AssetPath<'static>>,
 }
 
 impl Nano9Plugin {
-    pub fn new(config: Config) -> Self {
-        Nano9Plugin {
-            config,
-            config_path: None,
-        }
-    }
+    // pub fn new(config: Config) -> Self {
+    //     Nano9Plugin {
+    //         config,
+    //         config_path: None,
+    //     }
+    // }
 
-    pub fn window_plugin(&self) -> WindowPlugin {
-        let screen_size = self
-            .config
+    pub fn window_plugin(config: &Config) -> WindowPlugin {
+        let screen_size = config
             .screen
             .as_ref()
             .and_then(|s| s.screen_size)
             .unwrap_or(DEFAULT_SCREEN_SIZE);
 
-        let decorations = self
-            .config
+        let decorations = config
             .screen
             .as_ref()
             .and_then(|s| s.decorations)
             .unwrap_or(DEFAULT_DECORATIONS);
 
-        let resize_constraints = self
-            .config
+        let resize_constraints = config
             .screen
             .as_ref()
             .and_then(|s| s.resize_constraints.clone())
@@ -175,7 +171,7 @@ impl Nano9Plugin {
         };
         WindowPlugin {
             primary_window: Some(Window {
-                title: self.config.name.as_deref().unwrap_or("Nano-9").into(),
+                title: config.name.as_deref().unwrap_or("Nano-9").into(),
                 // Turn off vsync to maximize CPU/GPU usage
                 present_mode: PresentMode::AutoVsync,
                 // Let's not allow resizing.
@@ -267,39 +263,43 @@ fn context_initializer(
 
 impl Plugin for Nano9Plugin {
     fn build(&self, app: &mut App) {
-        app.register_type::<DrawState>();
+        // app.register_type::<DrawState>();
         // How do you enable shared context since it eats the plugin?
-        let canvas_size: UVec2 = self
-            .config
-            .screen
-            .as_ref()
-            .map(|s| s.canvas_size)
-            .unwrap_or(DEFAULT_CANVAS_SIZE);
+        // let canvas_size: UVec2 = self
+        //     .config
+        //     .screen
+        //     .as_ref()
+        //     .map(|s| s.canvas_size)
+        //     .unwrap_or(DEFAULT_CANVAS_SIZE);
 
-        let asset_path: AssetPath<'static> = self.config_path.clone().unwrap_or_else(|| {
-            // Make our config readable by the Bevy AssetServer.
-            //
-            // I kind of hate this because we have to serialize just to
-            // deserialize. It also breaks the ability to use bevy/file_watcher.
-            let config_string = toml::to_string(&self.config).unwrap();
-            if let Some(memory_dir) = app.world_mut().get_resource_mut::<MemoryDir>() {
-                memory_dir.insert_asset(
-                    std::path::Path::new("Nano9.toml"),
-                    config_string.into_bytes(),
-                );
-                AssetPath::<'static>::from("n9mem://Nano9.toml")
-            } else {
-                panic!("No 'n9mem://' asset source configured.");
-            }
-        });
+        // let asset_path: AssetPath<'static> = self.config_path.clone().unwrap_or_else(|| {
+        //     // Make our config readable by the Bevy AssetServer.
+        //     //
+        //     // I kind of hate this because we have to serialize just to
+        //     // deserialize. It also breaks the ability to use bevy/file_watcher.
+        //     let config_string = toml::to_string(&self.config).unwrap();
+        //     if let Some(memory_dir) = app.world_mut().get_resource_mut::<MemoryDir>() {
+        //         memory_dir.insert_asset(
+        //             std::path::Path::new("Nano9.toml"),
+        //             config_string.into_bytes(),
+        //         );
+        //         AssetPath::<'static>::from("n9mem://Nano9.toml")
+        //     } else {
+        //         panic!("No 'n9mem://' asset source configured.");
+        //     }
+        // });
         // app.add_supported_script_extensions(&[".p8"], Language::Lua);
-        app.add_systems(
-            Startup,
-            move |asset_server: Res<AssetServer>, mut commands: Commands| {
-                let pico8_asset: Handle<Pico8Asset> = asset_server.load(&asset_path);
-                commands.insert_resource(Pico8Handle::from(pico8_asset));
-            },
-        );
+
+        // TODO: Add this functionality somewhere.
+        // if let Some(asset_path) = self.config_path.clone() {
+        //     app.add_systems(
+        //         Startup,
+        //         move |asset_server: Res<AssetServer>, mut commands: Commands| {
+        //             let pico8_asset: Handle<Pico8Asset> = asset_server.load(&asset_path);
+        //             commands.insert_resource(Pico8Handle::from(pico8_asset));
+        //         },
+        //     );
+        // }
         #[cfg(feature = "scripting")]
         {
             app.insert_resource(ScriptContext::<LuaScriptingPlugin>::new(
@@ -345,35 +345,11 @@ impl Plugin for Nano9Plugin {
                 16,
             )),
         })
-        .insert_resource(
-            self.config
-                .defaults
-                .as_ref()
-                .map(pico8::Defaults::from_config)
-                .unwrap_or_default(),
-        )
-        .insert_resource(self.config.key_bindings.clone().unwrap_or_default())
-        .insert_resource(N9Canvas {
-            size: canvas_size,
-            ..default()
-        })
+            .init_resource::<pico8::Defaults>()
         .add_plugins(crate::plugin);
 
-        if let Some(fps) = self.config.frames_per_second {
-            info!("Set FPS {}", &fps);
-
-            #[cfg(feature = "framepace")]
-            {
-                let limiter = bevy_framepace::Limiter::from_framerate(fps as f64);
-                app.add_plugins(bevy_framepace::FramepacePlugin)
-                    .insert_resource(
-                        bevy_framepace::FramepaceSettings::default().with_limiter(limiter),
-                    );
-            }
-            // app.insert_resource(Time::<Fixed>::from_seconds(
-            //     1.0 / fps as f64,
-            // ));
-        }
+        #[cfg(feature = "framepace")]
+        app.add_plugins(bevy_framepace::FramepacePlugin);
 
         #[cfg(feature = "scripting")]
         app.add_plugins(add_logging);

@@ -3,7 +3,7 @@ use bevy::{ecs::system::SystemParam, prelude::*};
 use tiled::{PropertyValue, Tileset};
 
 pub(crate) fn plugin(app: &mut App) {
-    app.register_type::<TiledLookup>();
+    // app.register_type::<TiledLookup>();
 }
 
 #[derive(Debug, Component, Reflect)]

@@ -17,8 +17,9 @@ impl From<Vec2> for Position {
 }
 
 pub(crate) fn plugin(app: &mut App) {
-    app.register_type::<Position>()
-        .register_type::<Rotation>()
+    app
+        //.register_type::<Position>()
+        //.register_type::<Rotation>()
         .add_systems(
             PostUpdate,
             apply_translation.before(TransformSystems::Propagate),

@@ -35,8 +35,9 @@ pub struct P8Map {
 }
 
 pub(crate) fn plugin(app: &mut App) {
-    app.register_type::<GfxTilemapTexture>()
-        .register_type::<P8SpriteMap>()
+    app
+        //.register_type::<GfxTilemapTexture>()
+        //.register_type::<P8SpriteMap>()
         .init_asset::<P8Map>()
         .add_systems(
             PostUpdate,
@@ -78,9 +79,13 @@ fn compute_gfx_tilemap_texture_on_asset_event(
     mut pairs: ResMut<pico8::GfxImageMap>,
     mut update_images: Local<HashMap<Entity, Handle<Image>>>,
     mut update_ids: Local<Vec<Entity>>,
-    pico8_handle: Res<Pico8Handle>,
+    pico8_handle: Option<Res<Pico8Handle>>,
     pico8_assets: Res<Assets<Pico8Asset>>,
 ) {
+
+    let Some(pico8_handle) = pico8_handle else {
+        return;
+    };
     // We store the asset ids of added/modified image assets.
     let added_handles: HashSet<_> = events
         .read()
@@ -171,9 +176,13 @@ fn compute_image_on_gfx_tilemap_texture_change(
         Changed<GfxTilemapTexture>,
     >,
     mut pairs: ResMut<pico8::GfxImageMap>,
-    pico8_handle: Res<Pico8Handle>,
+    pico8_handle: Option<Res<Pico8Handle>>,
     pico8_assets: Res<Assets<Pico8Asset>>,
 ) {
+
+    let Some(pico8_handle) = pico8_handle else {
+        return;
+    };
     for (id, gfx_sprite, sprite) in &mut sprites {
         let Some(gfx_material) = gfx_materials.get(&gfx_sprite.material) else {
             continue;
@@ -213,10 +222,13 @@ fn add_tilemaps(
     query: Query<(Entity, &P8SpriteMap), Added<P8SpriteMap>>,
     sprite_sheets: Res<Assets<SpriteSheet>>,
     pico8_asset: Res<Assets<pico8::Pico8Asset>>,
-    pico8_handle: Res<pico8::Pico8Handle>,
+    pico8_handle: Option<Res<pico8::Pico8Handle>>,
     p8_maps: Res<Assets<pico8::P8Map>>,
     mut commands: Commands,
 ) {
+    let Some(pico8_handle) = pico8_handle else {
+        return;
+    };
     let mut p8map_maybe: Option<&SpriteMap> = None;
     for (id, p8sprite_map) in &query {
         let size = p8sprite_map.rect.size();

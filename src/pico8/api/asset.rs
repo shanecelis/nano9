@@ -1,4 +1,5 @@
 use super::*;
+use crate::config::Config;
 
 pub(crate) fn plugin(_app: &mut App) {}
 
@@ -14,6 +15,7 @@ pub struct Pico8Asset {
     pub(crate) font: Vec<N9Font>,
     pub(crate) audio_banks: Vec<Handle<AudioBank>>,
     pub(crate) meshes: Vec<MeshHandle>,
+    pub(crate) config: Handle<Config>,
 }
 
 #[derive(Clone, Debug, Reflect)]
@@ -64,6 +66,12 @@ impl Pico8Asset {
 
 impl FromWorld for Pico8Asset {
     fn from_world(world: &mut World) -> Self {
+
+        let config_handle = {
+            let mut configs = world.resource_mut::<Assets<Config>>();
+            configs.add(Config::default())
+        };
+
         let asset_server = world.resource::<AssetServer>();
 
         Pico8Asset {
@@ -78,6 +86,7 @@ impl FromWorld for Pico8Asset {
             sprite_sheets: Vec::new(),
             maps: Vec::new(),
             meshes: Vec::new(),
+            config: config_handle,
         }
     }
 }
