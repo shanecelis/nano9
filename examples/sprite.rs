@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use bevy::asset::embedded_asset;
 use nano9::prelude::*;
 // use nano9::{cls, camera, spr, print};
 //use nano9::print;
@@ -46,43 +47,15 @@ fn update(mut pico8: Pico8, mut t: Local<usize>) {
 fn main() {
     let mut app = App::new();
 
-    let config = if std::env::args()
-        .next()
-        .map(|s| s == "string")
-        .unwrap_or(false)
-    {
-        println!("Loading configuration from string.");
-        // OR provide configuration string.
-        Config::from_str(
-            r#"
-            template = "pico8"
-            [[sprite_sheet]]
-            path = "bird-sprite.png"
-            sprite_size = [16, 16]
-        "#,
-        )
-        .expect("invalid config")
-    } else {
-        println!("Constructing configuration manually.");
-        // Construct a configuration.
-        let mut config = Config::pico8();
-        config.sprite_sheets.push(nano9::config::SpriteSheet {
-            path: "bird-sprite.png".into(),
-            sprite_size: Some(UVec2::splat(16)),
-            ..default()
-        });
-        config
-    };
     app.add_systems(nano9::schedule::Update, update);
 
     app.add_plugins(Nano9Plugins)
-        .add_systems(Startup, move |mut configs: ResMut<Assets<Config>>,
-                     pico8assets: ResMut<Assets<nano9::pico8::Pico8Asset>>| {
-                         let config_handle = configs.add(config.clone());
-                         todo!("Load the pico8 asset here");
-
-                     })
+        .add_systems(Startup, move |asset_server: Res<AssetServer>, mut commands: Commands| {
+            let pico8_asset: Handle<Pico8Asset> = asset_server.load::<Pico8Asset>("embedded://sprite/sprite.toml");
+            commands.insert_resource(Pico8Handle::from(pico8_asset));
+        })
         .add_systems(PreUpdate, run_pico8_when_loaded);
+    embedded_asset!(app, "examples", "sprite.toml");
 
     #[cfg(feature = "minibuffer")]
     app.add_plugins(nano9::minibuffer::quick_plugin);
