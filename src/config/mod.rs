@@ -9,6 +9,7 @@ use crate::{
     run::RunState,
 };
 use bevy::prelude::*;
+use bevy::window::{PrimaryWindow, PresentMode, Window, WindowResolution, WindowResizeConstraints};
 #[cfg(feature = "scripting")]
 use bevy_mod_scripting::{
     asset::ScriptAsset,
@@ -303,9 +304,11 @@ pub enum Mesh {
 pub fn update_asset(
     mut reader: MessageReader<AssetEvent<pico8::Pico8Asset>>,
     assets: Res<Assets<pico8::Pico8Asset>>,
+    configs: Res<Assets<Config>>,
     mut next_state: ResMut<NextState<RunState>>,
     mut pico8_handle: Option<ResMut<Pico8Handle>>,
-    #[cfg(feature = "scripting")] mut commands: Commands,
+    mut commands: Commands,
+    mut primary_windows: Query<&mut Window, With<PrimaryWindow>>,
     #[cfg(feature = "scripting")] _scripts: ResMut<Assets<ScriptAsset>>,
 ) {
     for e in reader.read() {
@@ -335,6 +338,20 @@ pub fn update_asset(
                                 .id();
                             info!("Add scripts to entity {}", &entity);
                             pico8_handle.main_script = Some(Recipients::AllContexts);
+                        }
+                    }
+                    // Apply config so N9Canvas, key_bindings, Defaults, etc. exist for Pico8 systems.
+                    if let Some(config) = configs.get(&pico8_asset.config) {
+                        config.was_plugin_build(&mut commands);
+                        // Create or update the primary window from config.
+                        let window_spec = config.to_window();
+                        if let Some(mut window) = primary_windows.iter_mut().next() {
+                            window.title = window_spec.title.clone();
+                            window.resolution = window_spec.resolution.clone();
+                            window.resize_constraints = window_spec.resize_constraints;
+                            window.decorations = window_spec.decorations;
+                        } else {
+                            commands.spawn((window_spec, PrimaryWindow));
                         }
                     }
                     info!("Goto Loaded state");
@@ -478,7 +495,55 @@ impl Config {
         self
     }
 
-    pub(crate) fn was_plugin_build(&self, mut commands: Commands) {
+    /// Build a [`Window`] from this config's screen settings (resolution, title, decorations, etc.).
+    pub fn to_window(&self) -> Window {
+        let screen_size = self
+            .screen
+            .as_ref()
+            .and_then(|s| s.screen_size)
+            .unwrap_or(DEFAULT_SCREEN_SIZE);
+        let decorations = self
+            .screen
+            .as_ref()
+            .and_then(|s| s.decorations)
+            .unwrap_or(DEFAULT_DECORATIONS);
+        let resize_constraints = self
+            .screen
+            .as_ref()
+            .and_then(|s| s.resize_constraints.clone())
+            .unwrap_or(ResizeConstraints::MatchScreen {
+                match_screen: false,
+            });
+        let resolution =
+            WindowResolution::new(screen_size.x, screen_size.y);
+        let resize_constraints = match resize_constraints {
+            ResizeConstraints::MatchScreen { match_screen: true } => WindowResizeConstraints {
+                min_width: resolution.width(),
+                max_width: resolution.width(),
+                min_height: resolution.height(),
+                max_height: resolution.height(),
+            },
+            ResizeConstraints::MatchScreen {
+                match_screen: false,
+            } => WindowResizeConstraints::default(),
+            ResizeConstraints::Rect { rect } => WindowResizeConstraints {
+                min_width: rect.min.x as f32,
+                max_width: rect.max.x as f32,
+                min_height: rect.min.y as f32,
+                max_height: rect.max.y as f32,
+            },
+        };
+        Window {
+            title: self.name.as_deref().unwrap_or("Nano-9").into(),
+            present_mode: PresentMode::AutoVsync,
+            resize_constraints,
+            decorations,
+            resolution,
+            ..default()
+        }
+    }
+
+    pub(crate) fn was_plugin_build(&self, commands: &mut Commands) {
         commands.insert_resource(
             self
                 .defaults
