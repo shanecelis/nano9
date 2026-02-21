@@ -16,6 +16,7 @@ use std::io;
 
 pub(crate) fn plugin(app: &mut App) {
     app.init_asset_loader::<ConfigLoader>();
+    app.init_asset_loader::<Pico8Loader>();
     #[cfg(feature = "scripting")]
     app.init_asset_loader::<LuaLoader>();
 }

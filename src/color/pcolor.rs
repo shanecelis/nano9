@@ -14,7 +14,7 @@ use bevy_mod_scripting::{
     },
 };
 
-#[derive(Debug, Clone, Copy, Reflect)]
+#[derive(Debug, Clone, Copy, Reflect, PartialEq)]
 #[cfg_attr(feature = "scripting", derive(GetTypeDependencies))]
 pub enum PColor {
     Palette(usize),
@@ -121,4 +121,17 @@ impl From<i32> for PColor {
     fn from(n: i32) -> Self {
         PColor::Palette(n as usize)
     }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    #[test]
+    fn test_from_behavior() {
+        let a: Option<PColor> = Option::from(2i32.into());
+        // let a: Option<PColor> = Some(2.into());
+        assert!(matches!(a, Some(PColor::Palette(2))));
+
+    }
+
 }

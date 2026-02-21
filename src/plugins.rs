@@ -1,7 +1,4 @@
-use crate::{
-    Nano9Plugin,
-    config::{Config},
-};
+use crate::Nano9Plugin;
 use bevy::{
     app::{PluginGroup, PluginGroupBuilder},
     asset::AssetPath,
@@ -61,5 +58,21 @@ impl PluginGroup for Nano9Plugins {
         );
 
         group.add(nano9_plugin)
+    }
+}
+
+/// Headless plugin set for tests: no window, no winit event loop.
+/// Use this in tests to avoid "EventLoop must be created on the main thread" on macOS.
+#[derive(Debug, Default)]
+pub struct HeadlessNano9Plugins;
+
+impl PluginGroup for HeadlessNano9Plugins {
+    fn build(self) -> PluginGroupBuilder {
+        PluginGroupBuilder::start::<Self>()
+            .add_group(MinimalPlugins)
+            .add(bevy::state::app::StatesPlugin)
+            .add(AssetPlugin::default())
+            .add(ImagePlugin::default_nearest())
+            .add(Nano9Plugin::default())
     }
 }

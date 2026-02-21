@@ -1,5 +1,4 @@
 // mod memory_dir;
-
 // pub use memory_dir::*;
 mod loader;
 pub use loader::*;
@@ -34,6 +33,15 @@ pub(crate) fn plugin(app: &mut App) {
     app.init_resource::<KeyBindings>()
         .init_asset::<Config>()
         ;
+}
+
+/// Minimal plugin for headless tests: only asset loaders and asset types for
+/// loading config / Pico8Asset. No update_asset, no window, no RenderApp.
+pub fn headless_config_load_plugin(app: &mut App) {
+    app.init_asset::<Config>()
+        .init_asset::<crate::pico8::Pico8Asset>()
+        .init_asset::<crate::pico8::SpriteSheet>()
+        .add_plugins(loader::plugin);
 }
 
 // #[derive(Default, Debug, Clone, Deserialize, Serialize)]

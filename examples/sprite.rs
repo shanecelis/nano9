@@ -9,7 +9,8 @@ fn update(mut pico8: Pico8, mut t: Local<usize>) {
     // pico8.cls(Some(PColor::Palette(2))).unwrap();
     //pico8.cls(Some(2)).unwrap();
     //pico8.cls(Some(2)).unwrap();
-    cls!(pico8, PColor::Palette(2)).unwrap();
+    cls!(pico8).unwrap();
+    // cls!(pico8, PColor::Palette(2)).unwrap();
     // cls!(pico8, 2i32).unwrap();
     // cls!(pico8, 2).unwrap();
     let n = ((pico8.time() * 4.0) % 8.0) + 8.0;

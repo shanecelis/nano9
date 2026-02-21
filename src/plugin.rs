@@ -119,9 +119,7 @@ pub fn send(
 }
 
 #[derive(Default)]
-pub struct Nano9Plugin {
-    // pub config_path: Option<AssetPath<'static>>,
-}
+pub struct Nano9Plugin;
 
 impl Nano9Plugin {
     // pub fn new(config: Config) -> Self {
