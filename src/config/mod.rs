@@ -8,6 +8,7 @@ use crate::{
     pico8::{self, Pico8Handle, canvas::N9Canvas},
     run::RunState,
 };
+use bevy::asset::AssetLoadFailedEvent;
 use bevy::prelude::*;
 use bevy::window::{PrimaryWindow, PresentMode, Window, WindowResolution, WindowResizeConstraints};
 #[cfg(feature = "scripting")]
@@ -26,7 +27,7 @@ pub const DEFAULT_SCREEN_SIZE: UVec2 = UVec2::splat(512);
 pub const DEFAULT_DECORATIONS: bool = true;
 
 pub(crate) fn plugin(app: &mut App) {
-    app.add_systems(Update, update_asset)
+    app.add_systems(Update, (update_asset, warn_load_failed::<crate::pico8::SpriteSheet>, warn_load_failed::<crate::pico8::Pico8Asset>))
         .add_plugins(loader::plugin);
     #[cfg(feature = "gameboy")]
     app.add_plugins(gameboy::plugin);
@@ -301,6 +302,21 @@ pub enum Mesh {
     Cuboid { cuboid: [f32; 3] },
 }
 
+/// Warns when a sprite sheet fails to load (e.g. path wrong or file missing).
+fn warn_load_failed<A>(
+    mut reader: MessageReader<AssetLoadFailedEvent<A>>,
+) where A: Asset {
+
+    for e in reader.read() {
+        warn!(
+            "{} failed to load at path '{}': {}",
+            std::any::type_name::<A>(),
+            e.path,
+            e.error
+        );
+    }
+}
+
 pub fn update_asset(
     mut reader: MessageReader<AssetEvent<pico8::Pico8Asset>>,
     assets: Res<Assets<pico8::Pico8Asset>>,
@@ -316,7 +332,7 @@ pub fn update_asset(
         // modifications due to Pico-8 APIs changing assets rather than changing
         // state, which might be my preference.
 
-        // info!("update asset event {e:?}");
+        info!("update asset event {e:?}");
         if let AssetEvent::LoadedWithDependencies { id } = e {
             if let Some(pico8_handle) = &mut pico8_handle {
                 if let Some(pico8_asset) = assets.get(*id) {
