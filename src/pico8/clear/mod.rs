@@ -15,8 +15,14 @@ const MAX_EXPECTED_CLEARABLES: f32 = 1000.0;
 pub(crate) fn plugin(app: &mut App) {
     app//.register_type::<Clearable>()
         .init_resource::<ClearCache>()
+        .init_resource::<DespawnClearablesOnNextClear>()
         .add_systems(Last, (handle_overflow).chain());
 }
+
+/// When true, the next cls() will despawn all clearable entities instead of caching them.
+/// Set by config hot-reload (watcher) so sprites are recreated from the new asset.
+#[derive(Resource, Default)]
+pub struct DespawnClearablesOnNextClear(pub bool);
 
 // We're relying on the hash to do all our dirty work without any Eq protection
 // from collisions.
@@ -191,6 +197,7 @@ pub(crate) fn clear_screen(
     mut commands: Commands,
     mut state: ResMut<Pico8State>,
     mut cache: ResMut<ClearCache>,
+    mut despawn_on_next_clear: ResMut<DespawnClearablesOnNextClear>,
     mut gfxs: ResMut<Assets<Gfx>>,
     one_color: Single<&mut Sprite, With<canvas::OneColorBackground>>,
     background: Single<(Entity, &GfxSprite, &mut GfxDirty), With<canvas::Background>>,
@@ -229,6 +236,15 @@ pub(crate) fn clear_screen(
             gfx.data.set_elements(0x00);
         }
         gfx_dirty.0 = false;
+    }
+
+    if despawn_on_next_clear.0 {
+        despawn_on_next_clear.0 = false;
+        for (id, _, _) in &mut query {
+            commands.entity(id).despawn();
+        }
+        DRAW_COUNTER.set(1);
+        return;
     }
 
     for (id, mut clearable, mut visibility) in &mut query {

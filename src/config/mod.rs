@@ -425,6 +425,7 @@ pub fn update_asset(
                                 &mut commands,
                                 &mut primary_windows,
                             );
+                            commands.insert_resource(pico8::DespawnClearablesOnNextClear(true));
                         }
                     }
                 }

@@ -31,6 +31,7 @@ fn update(mut pico8: Pico8, mut t: Local<usize>) {
     //         None,
     //     )
     //     .unwrap();
+    if ! pico8.btn(None, None).unwrap() { 
     spr!(
         pico8,
         n as usize,
@@ -40,6 +41,7 @@ fn update(mut pico8: Pico8, mut t: Local<usize>) {
         BVec2::new(true, false)
     )
     .unwrap();
+    }
     // pico8.camera(Some(Vec2::ZERO));
     camera!(pico8, Vec2::ZERO);
     // pico8.print("hello world", Some(Vec2::ZERO), None, None, None).unwrap();
