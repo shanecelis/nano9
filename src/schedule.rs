@@ -34,7 +34,7 @@ pub(crate) fn run_schedule(label: impl ScheduleLabel + Clone) -> impl FnMut(&mut
             bevy::log::error!("Cannot run schedule {:?} because {e}", &label);
         } else {
             let frame_count = world.resource::<bevy::diagnostic::FrameCount>();
-            bevy::log::trace!("Ran schedule {:?} in frame {}", &label, &frame_count.0);
+            // bevy::log::trace!("Ran schedule {:?} in frame {}", &label, &frame_count.0);
         }
     }
 }

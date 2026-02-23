@@ -219,7 +219,7 @@ pub fn sync_window_size(
 impl super::Pico8<'_, '_> {
     // cls([n])
     pub fn cls(&mut self, color: Option<PColor>) -> Result<(), Error> {
-        trace!("cls");
+        // trace!("cls");
         let c = color.unwrap_or(PColor::Palette(self.defaults.clear_color));
         // let image = self
         //     .images

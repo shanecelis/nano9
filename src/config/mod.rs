@@ -325,6 +325,35 @@ fn warn_load_failed<A>(
     }
 }
 
+/// Applies config to the world (defaults, key bindings, canvas, framepace) and primary window.
+/// Used on initial load and when config is hot-reloaded (watcher feature).
+fn apply_config_to_world_and_window(
+    config: &Config,
+    commands: &mut Commands,
+    primary_windows: &mut Query<&mut Window, With<PrimaryWindow>>,
+) {
+    config.was_plugin_build(commands);
+    let window_spec = config.to_window();
+    if let Some(mut window) = primary_windows.iter_mut().next() {
+        trace!("Updating window");
+        window.title = window_spec.title.clone();
+        debug!("prior window resolution {:?}", &window.resolution);
+        debug!("new window resolution {:?}", &window_spec.resolution);
+        window.resolution.set(window_spec.resolution.physical_width() as f32,
+                              window_spec.resolution.physical_height() as f32);
+        // let scale_factor = window_spec.resolution.scale_factor();
+        // window.resolution = WindowResolution::new(window_spec.resolution.physical_width() * scale_factor,
+        //                                           window_spec.resolution.physical_height() * scale_factor)
+        //     .with_scale_factor_override(scale_factor);
+        window.resize_constraints = window_spec.resize_constraints;
+        window.decorations = window_spec.decorations;
+    } else {
+        trace!("Spawning window");
+        debug!("spawn with window resolution {:?}", &window_spec.resolution);
+        commands.spawn((window_spec, PrimaryWindow));
+    }
+}
+
 pub fn update_asset(
     mut reader: MessageReader<AssetEvent<pico8::Pico8Asset>>,
     assets: Res<Assets<pico8::Pico8Asset>>,
@@ -341,51 +370,66 @@ pub fn update_asset(
         // state, which might be my preference.
 
         info!("update asset event {e:?}");
-        if let AssetEvent::LoadedWithDependencies { id } = e {
-            if let Some(pico8_handle) = &mut pico8_handle {
-                if let Some(pico8_asset) = assets.get(*id) {
+        match e {
+            AssetEvent::LoadedWithDependencies { id } => {
+                if let Some(pico8_handle) = &mut pico8_handle {
+                    if let Some(pico8_asset) = assets.get(*id) {
+                        if pico8_handle.handle.id() != *id {
+                            warn!("Script loaded but does not match Pico8Handle.");
+                            continue;
+                        }
+                        // XXX: It happens here too!
+                        #[cfg(feature = "scripting")]
+                        {
+                            if !pico8_asset.scripts.is_empty() && pico8_handle.main_script.is_none() {
+                                // pico8_handle.main_script = Some(Recipients::All);
+                                // Spawn another script component for the libraries.
+                                let entity = commands
+                                    .spawn((
+                                        Name::new("scripts"),
+                                        ScriptComponent(pico8_asset.scripts.clone()),
+                                    ))
+                                    .id();
+                                info!("Add scripts to entity {}", &entity);
+                                pico8_handle.main_script = Some(Recipients::AllContexts);
+                            }
+                        }
+                        if let Some(config) = configs.get(&pico8_asset.config) {
+                            apply_config_to_world_and_window(
+                                config,
+                                &mut commands,
+                                &mut primary_windows,
+                            );
+                        }
+                        info!("Goto Loaded state");
+                        next_state.set(RunState::Loaded);
+                    } else {
+                        debug!("Pico8Asset not available for loaded {:?}.", id);
+                    }
+                } else {
+                    warn!("Script loaded but no Pico8Handle is loaded.");
+                }
+            }
+            #[cfg(feature = "watcher")]
+            AssetEvent::Modified { id } => {
+                // Config file changed; re-apply config to window and resources immediately.
+                if let Some(pico8_handle) = &pico8_handle {
                     if pico8_handle.handle.id() != *id {
-                        warn!("Script loaded but does not match Pico8Handle.");
                         continue;
                     }
-                    // XXX: It happens here too!
-                    #[cfg(feature = "scripting")]
-                    {
-                        if !pico8_asset.scripts.is_empty() && pico8_handle.main_script.is_none() {
-                            // pico8_handle.main_script = Some(Recipients::All);
-                            // Spawn another script component for the libraries.
-                            let entity = commands
-                                .spawn((
-                                    Name::new("scripts"),
-                                    ScriptComponent(pico8_asset.scripts.clone()),
-                                ))
-                                .id();
-                            info!("Add scripts to entity {}", &entity);
-                            pico8_handle.main_script = Some(Recipients::AllContexts);
+                    if let Some(pico8_asset) = assets.get(*id) {
+                        if let Some(config) = configs.get(&pico8_asset.config) {
+                            info!("Config changed, re-applying to window and resources");
+                            apply_config_to_world_and_window(
+                                config,
+                                &mut commands,
+                                &mut primary_windows,
+                            );
                         }
                     }
-                    // Apply config so N9Canvas, key_bindings, Defaults, etc. exist for Pico8 systems.
-                    if let Some(config) = configs.get(&pico8_asset.config) {
-                        config.was_plugin_build(&mut commands);
-                        // Create or update the primary window from config.
-                        let window_spec = config.to_window();
-                        if let Some(mut window) = primary_windows.iter_mut().next() {
-                            window.title = window_spec.title.clone();
-                            window.resolution = window_spec.resolution.clone();
-                            window.resize_constraints = window_spec.resize_constraints;
-                            window.decorations = window_spec.decorations;
-                        } else {
-                            commands.spawn((window_spec, PrimaryWindow));
-                        }
-                    }
-                    info!("Goto Loaded state");
-                    next_state.set(RunState::Loaded);
-                } else {
-                    debug!("Pico8Asset not available for loaded {:?}.", id);
                 }
-            } else {
-                warn!("Script loaded but no Pico8Handle is loaded.");
             }
+            _ => {}
         }
     }
 }
