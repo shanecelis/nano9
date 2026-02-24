@@ -1,0 +1,13 @@
+template = "pico8"
+name = "ohii"
+[screen]
+decorations = true
+canvas-size = [128, 128]
+# screen-size = [128, 128]
+[[sprite-sheet]]
+path = "bird-sprite.png"
+sprite-size = [16, 16]
+
+[[sprite-sheet]]
+path = "red-bird-sprite.png"
+sprite-size = [16, 16]

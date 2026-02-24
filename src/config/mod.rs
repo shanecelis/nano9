@@ -668,7 +668,7 @@ mod test {
     fn test_config_0() {
         let config: Config = toml::from_str(
             r#"
-sprite_sheet = []
+sprite-sheet = []
 "#,
         )
         .unwrap();
@@ -680,9 +680,9 @@ sprite_sheet = []
     fn test_config_1() {
         let config: Config = toml::from_str(
             r#"
-[[sprite_sheet]]
+[[sprite-sheet]]
 path = "sprites.png"
-sprite_size = [8, 8]
+sprite-size = [8, 8]
 "#,
         )
         .unwrap();
@@ -716,10 +716,10 @@ path = "sprites.png"
         let config: Config = toml::from_str(
             r#"
 [screen]
-canvas_size = [128,128]
-[[sprite_sheet]]
+canvas-size = [128,128]
+[[sprite-sheet]]
 path = "sprites.png"
-sprite_size = [8, 8]
+sprite-size = [8, 8]
 "#,
         )
         .unwrap();
@@ -736,7 +736,7 @@ sprite_size = [8, 8]
     fn test_config_3() {
         let config: Config = toml::from_str(
             r#"
-[[audio_bank]]
+[[audio-bank]]
 paths = ["blah.p8"]
 "#,
         )
@@ -752,7 +752,7 @@ paths = ["blah.p8"]
     fn test_config_4() {
         let config: Config = toml::from_str(
             r#"
-[[audio_bank]]
+[[audio-bank]]
 paths = [
 "blah.mp3"
 ]
@@ -820,8 +820,8 @@ blah = 7
         let config: Config = toml::from_str(
             r#"
 [screen]
-canvas_size = [128, 128]
-screen_size = [512, 512]
+canvas-size = [128, 128]
+screen-size = [512, 512]
 "#,
         )
         .unwrap();
@@ -837,10 +837,10 @@ screen_size = [512, 512]
         let config: Config = toml::from_str(
             r#"
 [defaults]
-font_size = 5
-initial_pen_color = 6
-initial_transparent_color = 7
-clear_color = 8
+font-size = 5
+initial-pen-color = 6
+initial-transparent-color = 7
+clear-color = 8
 "#,
         )
         .unwrap();
@@ -881,9 +881,9 @@ clear_color = 8
     fn test_image_palette0() {
         let config: Config = toml::from_str(
             r#"
-[[sprite_sheet]]
+[[sprite-sheet]]
 path = "sprites.png"
-index_color = true
+index-color = true
 "#,
         )
         .unwrap();
@@ -894,7 +894,7 @@ index_color = true
     fn test_image_palette1() {
         let config: Config = toml::from_str(
             r#"
-[[sprite_sheet]]
+[[sprite-sheet]]
 path = "sprites.png"
 "#,
         )
@@ -906,9 +906,9 @@ path = "sprites.png"
     fn test_image_palette2() {
         let config: Config = toml::from_str(
             r#"
-[[sprite_sheet]]
+[[sprite-sheet]]
 path = "sprites.png"
-sprite_size = [16,16]
+sprite-size = [16,16]
 "#,
         )
         .unwrap();

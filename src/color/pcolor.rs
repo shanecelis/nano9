@@ -128,7 +128,7 @@ mod test {
     use super::*;
     #[test]
     fn test_from_behavior() {
-        let a: Option<PColor> = Option::from(2i32.into());
+        let a: Option<PColor> = Some(PColor::from(2i32));
         // let a: Option<PColor> = Some(2.into());
         assert!(matches!(a, Some(PColor::Palette(2))));
 
