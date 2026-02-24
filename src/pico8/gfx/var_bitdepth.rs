@@ -28,16 +28,16 @@ fn bits_required(color_count: usize) -> Option<u32> {
 impl Gfx<u8> {
     pub fn from_png(
         bytes: &[u8],
-        mut palette: Option<&mut Palette>,
+        palette_data_out: Option<&mut Vec<[u8; 4]>>,
     ) -> Result<Self, png::DecodingError> {
         let cursor = std::io::Cursor::new(bytes);
         let decoder = png::Decoder::new(cursor);
         let mut reader = decoder.read_info()?;
         let info = reader.info();
-        if let Some(palette) = &mut palette
-            && let Some(pal) = Palette::from_png_palette_info(info)
+        if let Some(palette) = palette_data_out
+            && let Some(data) = Palette::from_png_palette_info(info)
         {
-            palette.data = pal.data;
+            *palette = data;
         }
         // Find highest power of 2 in the length of colors.
         let png_bit_depth: usize = info.bit_depth as u8 as usize;
@@ -234,6 +234,34 @@ impl<T: TypePath + Send + Sync + Default + BitView<Store = T> + BitStore + Copy>
             Ok(())
         })
         .unwrap()
+    }
+
+    /// Create an R8 index texture (one byte per pixel = palette index) for use with GPU palette lookup.
+    pub fn to_index_image(&self) -> Image
+    where
+        T: Copy + Into<u32>,
+    {
+        let n = self.bitdepth;
+        let mut indices = vec![0u8; self.width * self.height];
+        let mut color_index = T::default();
+        for (i, pixel) in self.data.chunks_exact(n).enumerate() {
+            color_index.view_bits_mut::<Lsb0>()[0..n].copy_from_bitslice(pixel);
+            let idx: u32 = color_index.into();
+            indices[i] = idx.min(255) as u8;
+        }
+        let mut image = Image::new(
+            Extent3d {
+                width: self.width as u32,
+                height: self.height as u32,
+                depth_or_array_layers: 1,
+            },
+            TextureDimension::D2,
+            indices,
+            TextureFormat::R8Unorm,
+            RenderAssetUsages::RENDER_WORLD | RenderAssetUsages::MAIN_WORLD,
+        );
+        image.sampler = ImageSampler::nearest();
+        image
     }
 }
 

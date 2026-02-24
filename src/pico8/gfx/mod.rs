@@ -1,4 +1,6 @@
 pub mod const_bitdepth;
+pub mod pal_map_textures;
+pub mod palette_lookup_material;
 mod var_bitdepth;
 use crate::{one_or_map::OneOrMap, pico8::*};
 use bevy::platform::collections::{HashMap, HashSet};
@@ -9,6 +11,7 @@ use std::{
 pub use var_bitdepth::Gfx;
 
 pub(crate) fn plugin(app: &mut App) {
+    palette_lookup_material::gfx_palette_lookup_material_plugin(app);
     app
         //register_type::<Gfx>()
         .register_asset_reflect::<Gfx>()
@@ -79,6 +82,10 @@ fn check_dirty(
     }
 }
 
+/// Computes the RGBA image for a Gfx sprite using the given palette and PalMap.
+/// Uses the CPU path (Gfx::try_to_image + PalMap::write_color). A GPU path is available
+/// via Gfx::to_index_image(), palette.image(), pal_map_textures::pal_map_to_images(), and
+/// GfxPaletteLookupMaterial with a camera or render-graph node that draws a fullscreen quad.
 pub(crate) fn compute_image(
     gfx_handle: &Handle<Gfx>,
     gfx_changed: bool,
@@ -103,6 +110,9 @@ pub(crate) fn compute_image(
     let hash = hasher.finish();
     let gfx_id = gfx_handle.id();
     let palette = palettes.get_pal(gfx_material.palette)?;
+    let palette_data = palette
+        .data()
+        .ok_or_else(|| Error::NoSuch("palette cached_data".into()))?;
     let image_handle: Option<Handle<Image>> = pairs.get(&gfx_id).and_then(|gfx_image| {
         gfx_image
             .get(&hash)
@@ -116,7 +126,7 @@ pub(crate) fn compute_image(
                         trace!("updating image for gfx {}", gfx_id);
                         if let Some(data) = &mut image.data {
                             if let Err(e) = gfx.try_write_bytes(data, |i, _, bytes| {
-                                gfx_material.pal_map.write_color(&palette.data, i, bytes)
+                                gfx_material.pal_map.write_color(palette_data, i, bytes)
                             }) {
                                 warn!("Unable to write color to handle {:?}: {e}", &handle);
                             }
@@ -134,9 +144,8 @@ pub(crate) fn compute_image(
             .get(gfx_handle)
             .ok_or(Error::NoSuch("gfx image".into()))?;
         trace!("creating image for gfx {}", gfx_id);
-        let image = images.add(gfx.try_to_image(|i, n, bytes| {
-            // trace!("pixel {} writing color {}", n, i);
-            gfx_material.pal_map.write_color(&palette.data, i, bytes)
+        let image = images.add(gfx.try_to_image(|i, _n, bytes| {
+            gfx_material.pal_map.write_color(palette_data, i, bytes)
         })?);
         // Update or add image to the map.
         pairs

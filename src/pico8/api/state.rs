@@ -34,7 +34,7 @@ pub fn ensure_pal_map_capacity_on_pico8_asset_change(
         let Some(asset) = assets.get(id) else {
             continue;
         };
-        if let Some(max_len) = asset.palettes.iter().map(|p| p.data.len()).max() {
+        if let Some(max_len) = asset.palettes.iter().map(|p| p.len()).max() {
             state.pal_map.ensure_capacity(max_len);
         }
         break;

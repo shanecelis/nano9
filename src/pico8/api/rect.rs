@@ -78,12 +78,19 @@ impl super::Pico8<'_, '_> {
                                     Some(color.off())
                                 };
                                 if let Some(c) = c {
-                                    // c.map(&self.state.pal_map).write_color(&PALETTE, pixel_bytes);
-                                    let _ = c.write_color(
-                                        &self.pico8_asset()?.palettes[self.state.palette].data,
-                                        &self.state.pal_map,
-                                        pixel_bytes,
-                                    );
+                                    if let Some(palette_data) = self
+                                        .pico8_asset()?
+                                        .palettes
+                                        .get_pal(self.state.palette)
+                                        .ok()
+                                        .and_then(|p| p.data())
+                                    {
+                                        let _ = c.write_color(
+                                            palette_data,
+                                            &self.state.pal_map,
+                                            pixel_bytes,
+                                        );
+                                    }
                                 }
                                 Ok::<(), Error>(())
                             })?;

@@ -104,12 +104,12 @@ impl super::Pico8<'_, '_> {
         match sheet_handle {
             SprHandle::Gfx(_handle) => {
                 // Indexed output: write palette indices into a tiny `Gfx`.
-                let palette_data = &self.palette(None)?.data;
-                let palette_bits: usize = if palette_data.is_empty() {
+                let palette = self.palette(None)?;
+                let palette_bits: usize = if palette.len() == 0 {
                     4
                 } else {
                     // Minimum bits to encode palette indices: ceil(log2(len))
-                    (usize::BITS - (palette_data.len().saturating_sub(1)).leading_zeros()) as usize
+                    (usize::BITS - (palette.len().saturating_sub(1)).leading_zeros()) as usize
                 };
                 let output_bitdepth: usize = palette_bits.max(1);
                 let mut line_gfx =

@@ -47,7 +47,7 @@ impl super::Pico8<'_, '_> {
         if let Some(color) = color {
             if let PColor::Palette(n) = color {
                 // Check that it's within the palette.
-                if n >= self.palette(None)?.data.len() {
+                if n >= self.palette(None)?.len() {
                     return Err(Error::NoSuch("palette color index".into()));
                 }
             }
@@ -92,7 +92,7 @@ impl super::Pico8<'_, '_> {
     pub fn paln(&self, palette_index: Option<usize>) -> Result<usize, PalError> {
         let palettes = self.palettes()?;
         match palette_index {
-            Some(index) => palettes.get_pal(index).map(|pal| pal.data.len()),
+            Some(index) => palettes.get_pal(index).map(|pal| pal.len()),
             None => Ok(palettes.len()),
         }
     }

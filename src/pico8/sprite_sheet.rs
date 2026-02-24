@@ -101,10 +101,12 @@ impl AssetLoader for SpriteSheetLoader {
                     )
                 }
                 "png" => {
-                    let mut palette = pico8::Palette::default();
+                    let mut palette_data = Vec::new();
                     let is_extract = settings.extract_palette;
-                    let gfx = Gfx::from_png(&bytes, is_extract.then_some(&mut palette))?;
-                    if is_extract {
+                    let gfx = Gfx::from_png(&bytes, is_extract.then_some(&mut palette_data))?;
+                    if is_extract && !palette_data.is_empty() {
+                        let palette =
+                            pico8::Palette::from_slice_with_context(&palette_data, load_context);
                         trace!("Extract palette from image {:?}", &palette);
                         extract_palette = Some(palette);
                     }
