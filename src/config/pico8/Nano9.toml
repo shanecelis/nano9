@@ -1,0 +1,62 @@
+frames-per-second = 30
+sprite-sheet = []
+scripts = []
+audio-bank = []
+map = []
+mesh = []
+
+[screen]
+canvas-size = [
+    128,
+    128,
+]
+screen-size = [
+    512,
+    512,
+]
+decorations = true
+
+[defaults]
+initial-pen-color = 6
+initial-transparent-color = 0
+clear-color = 0
+font-size = 5.0
+time-to-live = 1
+
+[[palette]]
+path = "embedded://nano9/config/pico8/pico-8-palette.png"
+
+[[font]]
+path = "embedded://nano9/config/pico8/pico-8.ttf"
+
+[[key-bindings.players]]
+left = ["ArrowLeft"]
+right = ["ArrowRight"]
+up = ["ArrowUp"]
+down = ["ArrowDown"]
+o = [
+    "KeyZ",
+    "KeyC",
+    "KeyN",
+    "NumpadSubtract",
+]
+x = [
+    "KeyX",
+    "KeyV",
+    "KeyM",
+    "Numpad8",
+]
+
+[[key-bindings.players]]
+left = ["KeyS"]
+right = ["KeyF"]
+up = ["KeyE"]
+down = ["KeyD"]
+o = [
+    "ShiftLeft",
+    "Tab",
+]
+x = [
+    "KeyA",
+    "KeyQ",
+]

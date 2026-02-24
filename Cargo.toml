@@ -19,6 +19,7 @@ exclude = [
     "assets/*.glb",
     "potato",
 ]
+default-run = "n9"
 
 [dependencies]
 bevy = { version = "0.17", features = [ "bevy_dev_tools", "asset_processor", "serialize" ] }
@@ -100,6 +101,11 @@ name = "n9"
 test = false
 bench = false
 required-features = [ "cli" ]
+
+[[bin]]
+name = "export-config"
+test = false
+bench = false
 
 [patch.crates-io]
 # bobtail = { path = "../bobtail" }

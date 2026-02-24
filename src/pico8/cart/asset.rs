@@ -148,7 +148,7 @@ fn to_asset(cart: Cart, load_context: &mut LoadContext) -> Result<Pico8Asset, Ca
         border: load_context
             .loader()
             .with_settings(pixel_art_settings)
-            .load(pico8::PICO8_BORDER),
+            .load(crate::config::pico8::BORDER),
         maps: vec![
             load_context
                 .add_labeled_asset(
@@ -173,7 +173,7 @@ fn to_asset(cart: Cart, load_context: &mut LoadContext) -> Result<Pico8Asset, Ca
         }],
         sprite_sheets,
         font: vec![N9Font {
-            handle: load_context.load(PICO8_FONT),
+            handle: load_context.load(crate::config::pico8::FONT),
         }],
         meshes: vec![],
         config: load_context.add_labeled_asset("config".into(), Config::pico8()),

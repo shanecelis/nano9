@@ -19,7 +19,7 @@ use bevy_mod_scripting::{
 
 use crate::{
     PColor,
-    config::*,
+    config::{Config, ResizeConstraints, DEFAULT_DECORATIONS},
     pico8::{self, FillPat, Pico8Asset, Pico8Handle, canvas::N9Canvas, input::fill_input},
     run::RunState,
     schedule,
@@ -130,6 +130,7 @@ impl Nano9Plugin {
     // }
 
     pub fn window_plugin(config: &Config) -> WindowPlugin {
+        use crate::config::*;
         let screen_size = config
             .screen
             .as_ref()

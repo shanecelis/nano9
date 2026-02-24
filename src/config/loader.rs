@@ -367,7 +367,7 @@ async fn into_asset(
         border: load_context
             .loader()
             .with_settings(pixel_art_settings)
-            .load(pico8::PICO8_BORDER),
+            .load(crate::config::pico8::BORDER),
         maps,
         audio_banks,
         sprite_sheets,

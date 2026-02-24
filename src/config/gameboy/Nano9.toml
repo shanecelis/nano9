@@ -1,0 +1,62 @@
+frames-per-second = 60
+sprite-sheet = []
+scripts = []
+audio-bank = []
+map = []
+mesh = []
+
+[screen]
+canvas-size = [
+    160,
+    144,
+]
+screen-size = [
+    640,
+    576,
+]
+decorations = true
+
+[defaults]
+initial-pen-color = 1
+clear-color = 3
+font-size = 5.0
+time-to-live = 1
+
+[[palette]]
+path = "embedded://nano9/config/gameboy/palettes.png"
+row = 15
+
+[[font]]
+path = "embedded://nano9/config/gameboy/font.ttf"
+
+[[key-bindings.players]]
+left = ["ArrowLeft"]
+right = ["ArrowRight"]
+up = ["ArrowUp"]
+down = ["ArrowDown"]
+o = [
+    "KeyZ",
+    "KeyC",
+    "KeyN",
+    "NumpadSubtract",
+]
+x = [
+    "KeyX",
+    "KeyV",
+    "KeyM",
+    "Numpad8",
+]
+
+[[key-bindings.players]]
+left = ["KeyS"]
+right = ["KeyF"]
+up = ["KeyE"]
+down = ["KeyD"]
+o = [
+    "ShiftLeft",
+    "Tab",
+]
+x = [
+    "KeyA",
+    "KeyQ",
+]

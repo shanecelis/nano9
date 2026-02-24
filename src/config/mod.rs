@@ -3,11 +3,13 @@
 mod loader;
 pub use loader::*;
 pub mod front_matter;
+
+pub mod pico8;
 use crate::{
-    pico8::{self, Pico8Handle, canvas::N9Canvas},
+    pico8::{Pico8Handle, canvas::N9Canvas, Pico8Asset},
     run::RunState,
 };
-use bevy::asset::AssetLoadFailedEvent;
+use bevy::asset::{AssetPath, AssetLoadFailedEvent};
 use bevy::prelude::*;
 use bevy::window::{PrimaryWindow, PresentMode, Window, WindowResolution, WindowResizeConstraints};
 #[cfg(feature = "scripting")]
@@ -21,6 +23,7 @@ use serde::{Deserialize, Serialize};
 #[cfg(feature = "gameboy")]
 pub mod gameboy;
 
+
 pub const DEFAULT_CANVAS_SIZE: UVec2 = UVec2::splat(128);
 pub const DEFAULT_SCREEN_SIZE: UVec2 = UVec2::splat(512);
 pub const DEFAULT_DECORATIONS: bool = true;
@@ -28,6 +31,7 @@ pub const DEFAULT_DECORATIONS: bool = true;
 pub(crate) fn plugin(app: &mut App) {
     app.add_systems(Update, (update_asset, warn_load_failed::<crate::pico8::SpriteSheet>, warn_load_failed::<crate::pico8::Pico8Asset>))
         .add_plugins(loader::plugin);
+    app.add_plugins(pico8::plugin);
     #[cfg(feature = "gameboy")]
     app.add_plugins(gameboy::plugin);
     app.init_resource::<KeyBindings>()
@@ -293,8 +297,8 @@ pub struct Palette {
 
 impl Palette {
     #[allow(clippy::wrong_self_convention)]
-    fn into_settings(&self) -> Option<pico8::PaletteSettings> {
-        use pico8::PaletteSettings;
+    fn into_settings(&self) -> Option<crate::pico8::PaletteSettings> {
+        use crate::pico8::PaletteSettings;
         if self.extract_index.unwrap_or(false) {
             Some(PaletteSettings::FromIndex)
         } else if let Some(row) = self.row {
@@ -360,8 +364,8 @@ fn apply_config_to_world_and_window(
 }
 
 pub fn update_asset(
-    mut reader: MessageReader<AssetEvent<pico8::Pico8Asset>>,
-    assets: Res<Assets<pico8::Pico8Asset>>,
+    mut reader: MessageReader<AssetEvent<crate::pico8::Pico8Asset>>,
+    assets: Res<Assets<crate::pico8::Pico8Asset>>,
     configs: Res<Assets<Config>>,
     mut next_state: ResMut<NextState<RunState>>,
     mut pico8_handle: Option<ResMut<Pico8Handle>>,
@@ -440,6 +444,14 @@ pub fn update_asset(
     }
 }
 
+pub fn load_and_insert_pico8(path: impl Into<AssetPath<'static>>) -> impl Fn(Res<AssetServer>, Commands) {
+    let path = path.into();
+    move |asset_server: Res<AssetServer>, mut commands: Commands| {
+        let pico8_asset: Handle<Pico8Asset> = asset_server.load::<Pico8Asset>(&path);
+        commands.insert_resource(Pico8Handle::from(pico8_asset));
+    }
+}
+
 pub fn run_pico8_when_loaded(
     state: Res<State<RunState>>,
     mut next_state: ResMut<NextState<RunState>>,
@@ -491,13 +503,13 @@ impl Config {
                 resize_constraints: None,
             }),
             palettes: vec![Palette {
-                path: pico8::PICO8_PALETTE.into(),
+                path: crate::config::pico8::PALETTE.into(),
                 row: None,
                 column: None,
                 extract_index: None,
             }],
             fonts: vec![Font::Path {
-                path: pico8::PICO8_FONT.into(),
+                path: pico8::FONT.into(),
                 height: None,
             }],
             defaults: Some(Defaults {
@@ -622,7 +634,7 @@ impl Config {
             self
                 .defaults
                 .as_ref()
-                .map(pico8::Defaults::from_config)
+                .map(crate::pico8::Defaults::from_config)
                 .unwrap_or_default(),
         );
 
@@ -961,5 +973,10 @@ bad_name = 1
             )
             .is_err()
         );
+    }
+
+    #[test]
+    fn pico8_config_string() {
+        assert_eq!("", toml::to_string(&Config::pico8()).unwrap());
     }
 }

@@ -77,10 +77,10 @@ impl FromWorld for Pico8Asset {
         Pico8Asset {
             #[cfg(feature = "scripting")]
             scripts: vec![],
-            palettes: vec![Palette::from_slice(&crate::pico8::PALETTE)].into(),
-            border: asset_server.load_with_settings(PICO8_BORDER, pixel_art_settings),
+            palettes: vec![Palette::from_slice(&pico8::PALETTE)].into(),
+            border: asset_server.load_with_settings(crate::config::pico8::BORDER, pixel_art_settings),
             font: vec![N9Font {
-                handle: asset_server.load(PICO8_FONT),
+                handle: asset_server.load(crate::config::pico8::FONT),
             }],
             audio_banks: Vec::new(),
             sprite_sheets: Vec::new(),
