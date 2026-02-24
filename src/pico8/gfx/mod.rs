@@ -110,9 +110,10 @@ pub(crate) fn compute_image(
     let hash = hasher.finish();
     let gfx_id = gfx_handle.id();
     let palette = palettes.get_pal(gfx_material.palette)?;
-    let palette_data = palette
-        .data()
-        .ok_or_else(|| Error::NoSuch("palette cached_data".into()))?;
+    let palette_image = images
+        .get(&palette.image)
+        .ok_or_else(|| Error::NoSuch("palette image".into()))?;
+    let palette_data = crate::pico8::pal::palette_data_from_image(palette_image);
     let image_handle: Option<Handle<Image>> = pairs.get(&gfx_id).and_then(|gfx_image| {
         gfx_image
             .get(&hash)
@@ -126,7 +127,7 @@ pub(crate) fn compute_image(
                         trace!("updating image for gfx {}", gfx_id);
                         if let Some(data) = &mut image.data {
                             if let Err(e) = gfx.try_write_bytes(data, |i, _, bytes| {
-                                gfx_material.pal_map.write_color(palette_data, i, bytes)
+                                gfx_material.pal_map.write_color(&palette_data, i, bytes)
                             }) {
                                 warn!("Unable to write color to handle {:?}: {e}", &handle);
                             }
@@ -145,7 +146,7 @@ pub(crate) fn compute_image(
             .ok_or(Error::NoSuch("gfx image".into()))?;
         trace!("creating image for gfx {}", gfx_id);
         let image = images.add(gfx.try_to_image(|i, _n, bytes| {
-            gfx_material.pal_map.write_color(palette_data, i, bytes)
+            gfx_material.pal_map.write_color(&palette_data, i, bytes)
         })?);
         // Update or add image to the map.
         pairs

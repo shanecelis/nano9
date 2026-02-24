@@ -63,7 +63,7 @@ num-traits = "0.2.19"
 bobtail = { version = "0.3.0", features = [ "omit-token" ] }
 
 [features]
-default = [ "cli" ]
+default = [ "cli", "watcher" ]
 cli = [ "lua-lib", "dep:clap", "dep:cmd_lib", "gameboy", "dep:log", "dep:env_logger", "dep:cmd_lib" ]
 lua-lib = [ "rust-lib", "pico8-to-lua", "scripting", "rand", "framepace" ]
 rust-lib = [ "negate-y", "fixed-point", "pixel-snap", "rand", "framepace" ]

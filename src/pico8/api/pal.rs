@@ -39,6 +39,7 @@ impl super::Pico8<'_, '_> {
         self.palettes()?.get_color(
             pcolor.map_pal(|i| self.state.pal_map.map_or_mod(i)),
             self.state.palette,
+            &self.images,
         )
     }
 
@@ -46,8 +47,13 @@ impl super::Pico8<'_, '_> {
         let last_color = self.state.draw_state.pen;
         if let Some(color) = color {
             if let PColor::Palette(n) = color {
-                // Check that it's within the palette.
-                if n >= self.palette(None)?.len() {
+                let len = self
+                    .palettes()?
+                    .len_in(self.state.palette, &self.images)
+                    .ok()
+                    .flatten()
+                    .unwrap_or(0);
+                if n >= len {
                     return Err(Error::NoSuch("palette color index".into()));
                 }
             }
@@ -88,11 +94,16 @@ impl super::Pico8<'_, '_> {
     }
 
     /// Return the number of palettes if no argument is given.
-    /// Return the number of colors for the given palette.
+    /// Return the number of colors for the given palette (from its image when loaded).
     pub fn paln(&self, palette_index: Option<usize>) -> Result<usize, PalError> {
         let palettes = self.palettes()?;
         match palette_index {
-            Some(index) => palettes.get_pal(index).map(|pal| pal.len()),
+            Some(index) => palettes
+                .len_in(index, &self.images)?
+                .ok_or(PalError::NoSuchPaletteColor {
+                    color: 0,
+                    palette: index,
+                }),
             None => Ok(palettes.len()),
         }
     }

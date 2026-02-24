@@ -66,10 +66,20 @@ impl Pico8Asset {
 
 impl FromWorld for Pico8Asset {
     fn from_world(world: &mut World) -> Self {
-
         let config_handle = {
             let mut configs = world.resource_mut::<Assets<Config>>();
             configs.add(Config::default())
+        };
+
+        let palettes = {
+            let mut images = world.resource_mut::<Assets<Image>>();
+            let strip = pico8::pal::strip_image_from_data(&pico8::PALETTE);
+            let palette_handle = images.add(strip);
+            vec![Palette {
+                image: palette_handle,
+                access: pico8::pal::PaletteAccess::default(),
+            }]
+            .into()
         };
 
         let asset_server = world.resource::<AssetServer>();
@@ -77,7 +87,7 @@ impl FromWorld for Pico8Asset {
         Pico8Asset {
             #[cfg(feature = "scripting")]
             scripts: vec![],
-            palettes: vec![Palette::from_slice(&pico8::PALETTE)].into(),
+            palettes,
             border: asset_server.load_with_settings(crate::config::pico8::BORDER, pixel_art_settings),
             font: vec![N9Font {
                 handle: asset_server.load(crate::config::pico8::FONT),

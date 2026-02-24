@@ -203,7 +203,7 @@ pub(crate) fn clear_screen(
     background: Single<(Entity, &GfxSprite, &mut GfxDirty), With<canvas::Background>>,
     pico8_handle: Option<Res<Pico8Handle>>,
     pico8_assets: Res<Assets<Pico8Asset>>,
-    // palettes: Res<Palettes>,
+    images: Res<Assets<Image>>,
 ) {
     let Some(pico8_handle) = pico8_handle else {
         warn!("clear_screen called but no Pico8Handle present.");
@@ -218,7 +218,10 @@ pub(crate) fn clear_screen(
         return;
     };
     // .ok_or_else(|| Error::NoAsset("pico8".into()))
-    match pico8_asset.palettes.get_color(color, state.palette) {
+    match pico8_asset
+        .palettes
+        .get_color(color, state.palette, &images)
+    {
         Ok(color) => {
             sprite.color = color;
         }

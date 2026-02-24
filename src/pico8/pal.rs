@@ -10,17 +10,31 @@ use bevy::asset::RenderAssetUsages;
 pub struct Palette {
     /// Canonical palette as a 1×N or N×1 RGBA image.
     pub image: Handle<Image>,
-    /// CPU cache for get_color, write_color, len; populated at load or when image is created from data.
-    pub cached_data: Option<Vec<[u8; 4]>>,
+    pub access: PaletteAccess,
 }
 
-impl Default for Palette {
-    fn default() -> Self {
-        Self {
-            image: Handle::default(),
-            cached_data: None,
-        }
-    }
+#[derive(Asset, Debug, Clone, Reflect)]
+/// How are the indices for the palette accessed?
+pub enum PaletteAccess {
+    #[default]
+    /// Access the palette linearly by row so the sequence would be:
+    /// color 0 -> pixel (0,0)
+    /// color 1 -> pixel (1,0)
+    /// color w -> pixel (0,1)
+    ///
+    /// Palette length is image width times height.
+    LinearByRow,
+    /// Access the palette linearly by column so the sequence would be:
+    /// color 0 -> pixel (0,0)
+    /// color 1 -> pixel (0,1)
+    /// color h -> pixel (1,0)
+    ///
+    /// Palette length is image width times height.
+    LinearByColumn,
+    /// Only use the specified row. Palette length is image width.
+    FromRow(u32),
+    /// Only use the specified column. Palette length is image height.
+    FromColumn(u32),
 }
 
 #[allow(clippy::enum_variant_names)]
@@ -42,7 +56,7 @@ pub(crate) fn plugin(app: &mut App) {
 }
 
 /// Build a 1×N RGBA strip image from palette data.
-fn strip_image_from_data(data: &[[u8; 4]]) -> Image {
+pub(crate) fn strip_image_from_data(data: &[[u8; 4]]) -> Image {
     let n = data.len();
     let pixel_bytes: Vec<u8> = data.iter().flat_map(|c| c.iter().copied()).collect();
     let mut image = Image::new(
@@ -60,20 +74,59 @@ fn strip_image_from_data(data: &[[u8; 4]]) -> Image {
     image
 }
 
+/// Read palette strip (first row) from a 1×N or N×1 image into a vec of RGBA.
+pub fn palette_data_from_image(image: &Image) -> Vec<[u8; 4]> {
+    let size = image.size();
+    let n = (size.x * size.y) as usize;
+    let mut data = Vec::with_capacity(n);
+    for j in 0..size.y {
+        for i in 0..size.x {
+            if let Ok(color) = image.get_color_at(i, j) {
+                let srgba: Srgba = color.into();
+                data.push(srgba.to_u8_array());
+            }
+        }
+    }
+    data
+}
+
 impl Palette {
     /// Reference to the palette image handle.
     pub fn image(&self) -> &Handle<Image> {
         &self.image
     }
 
-    /// CPU cache of palette colors; `None` if not yet populated.
-    pub fn data(&self) -> Option<&[[u8; 4]]> {
-        self.cached_data.as_deref()
+    /// Number of colors when read from the given image (width of a 1×N strip).
+    pub fn len_in(&self, image: &Image) -> usize {
+        image.size().x as usize
     }
 
-    /// Number of colors (from cache); 0 if cache is not set.
-    pub fn len(&self) -> usize {
-        self.cached_data.as_ref().map_or(0, Vec::len)
+    /// Get color at index using the loaded palette image.
+    pub fn get_color_in(&self, index: usize, image: &Image) -> Result<Srgba, PalError> {
+        let size = image.size();
+        let n = (size.x * size.y) as usize;
+        if index >= n {
+            return Err(PalError::NoSuchColor(index));
+        }
+        let x = (index as u32) % size.x;
+        let y = (index as u32) / size.x;
+        image
+            .get_color_at(x, y)
+            .map(|c| c.into())
+            .map_err(|_| PalError::NoSuchColor(index))
+    }
+
+    /// Write color at index into pixel_bytes using the loaded palette image.
+    pub fn write_color_in(
+        &self,
+        index: usize,
+        image: &Image,
+        pixel_bytes: &mut [u8],
+    ) -> Result<(), PalError> {
+        let color = self.get_color_in(index, image)?;
+        let arr = color.to_u8_array();
+        pixel_bytes.copy_from_slice(&arr[0..pixel_bytes.len()]);
+        Ok(())
     }
 
     pub fn from_png_palette(bytes: &[u8]) -> Result<Option<Vec<[u8; 4]>>, png::DecodingError> {
@@ -127,44 +180,14 @@ impl Palette {
         data
     }
 
-    /// Palette from slice; image handle is default (no asset). Use when no LoadContext is available.
-    pub fn from_slice(slice: &[[u8; 4]]) -> Self {
-        Palette {
-            image: Handle::default(),
-            cached_data: Some(Vec::from(slice)),
-        }
-    }
-
     /// Palette from slice, creating the strip image and adding it via `load_context`.
     pub fn from_slice_with_context(
         slice: &[[u8; 4]],
         load_context: &mut LoadContext<'_>,
     ) -> Self {
-        let data = Vec::from(slice);
-        let strip = strip_image_from_data(&data);
+        let strip = strip_image_from_data(slice);
         let image = load_context.add_labeled_asset("palette_image".into(), strip);
-        Palette {
-            image,
-            cached_data: Some(data),
-        }
-    }
-
-    pub fn write_color(&self, index: usize, pixel_bytes: &mut [u8]) -> Result<(), PalError> {
-        let data = self
-            .cached_data
-            .as_ref()
-            .and_then(|d| d.get(index))
-            .ok_or(PalError::NoSuchColor(index))?;
-        pixel_bytes.copy_from_slice(&data[0..pixel_bytes.len()]);
-        Ok(())
-    }
-
-    pub fn get_color(&self, index: usize) -> Result<Srgba, PalError> {
-        self.cached_data
-            .as_ref()
-            .and_then(|d| d.get(index))
-            .ok_or(PalError::NoSuchColor(index))
-            .map(|a| Srgba::rgba_u8(a[0], a[1], a[2], a[3]))
+        Palette { image }
     }
 }
 
@@ -213,10 +236,7 @@ impl AssetLoader for PaletteLoader {
                 .ok_or(PaletteError::NoIndex)?;
             let strip = strip_image_from_data(&data);
             let image = load_context.add_labeled_asset("palette_image".into(), strip);
-            return Ok(Palette {
-                image,
-                cached_data: Some(data),
-            });
+            return Ok(Palette { image });
         }
 
         let loader = bevy::image::ImageLoader::new(bevy::image::CompressedImageFormats::all());
@@ -238,7 +258,6 @@ impl AssetLoader for PaletteLoader {
         let image_handle = load_context.add_labeled_asset("palette_image".into(), strip);
         Ok(Palette {
             image: image_handle,
-            cached_data: Some(data),
         })
     }
 

@@ -16,6 +16,7 @@ pub(crate) fn plugin(app: &mut App) {
 pub fn ensure_pal_map_capacity_on_pico8_asset_change(
     mut reader: MessageReader<AssetEvent<Pico8Asset>>,
     assets: Res<Assets<Pico8Asset>>,
+    images: Res<Assets<Image>>,
     pico8_handle: Option<Res<Pico8Handle>>,
     mut state: ResMut<Pico8State>,
 ) {
@@ -34,7 +35,12 @@ pub fn ensure_pal_map_capacity_on_pico8_asset_change(
         let Some(asset) = assets.get(id) else {
             continue;
         };
-        if let Some(max_len) = asset.palettes.iter().map(|p| p.len()).max() {
+        let max_len = asset
+            .palettes
+            .iter()
+            .filter_map(|p| images.get(&p.image).map(|img| p.len_in(img)))
+            .max();
+        if let Some(max_len) = max_len {
             state.pal_map.ensure_capacity(max_len);
         }
         break;

@@ -161,10 +161,13 @@ impl super::Pico8<'_, '_> {
         let c: Color = {
             let pico8_handle = world.resource::<Pico8Handle>();
             let assets = world.resource::<Assets<Pico8Asset>>();
+            let images = world.resource::<Assets<Image>>();
             let pico8_asset = assets
                 .get(&pico8_handle.handle)
                 .ok_or_else(|| Error::NoAsset("pico8".into()))?;
-            pico8_asset.palettes.get_color(pcolor, state.palette)
+            pico8_asset
+                .palettes
+                .get_color(pcolor, state.palette, images)
         }?;
 
         // XXX: Should the camera delta apply to the print cursor position?
