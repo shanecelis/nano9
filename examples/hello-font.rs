@@ -23,21 +23,16 @@ fn draw(mut pico8: Pico8) {
 
 fn main() {
     let mut app = App::new();
-    // Set up your call backs.
     app.add_systems(nano9::schedule::Draw, draw);
 
-    let mut config = Config::pico8();
-    // Add Bevy's default font.
-    config
-        .fonts
-        .push(nano9::config::Font::Default { default: true });
-    app.add_plugins(Nano9Plugins::new(config))
+    app.add_plugins(Nano9Plugins::default())
+        .add_systems(Startup, load_and_insert_pico8("hello-font.toml"))
         .add_systems(PreUpdate, run_pico8_when_loaded)
         .add_systems(
             Update,
             nano9::action::toggle_pause.run_if(nano9::condition::on_just_pressed(KeyCode::KeyP)),
         );
-    #[cfg(feature = "minibuffer")]
+    #[cfg(feature = "")]
     app.add_plugins(nano9::minibuffer::quick_plugin);
     #[cfg(feature = "debugdump")]
     bevy_mod_debugdump::print_schedule_graph(&mut app, Update);

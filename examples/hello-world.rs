@@ -8,10 +8,8 @@ fn init(mut pico8: Pico8) {
 fn main() {
     let mut app = App::new();
     app.add_systems(nano9::schedule::Init, init);
-
-    let config = Config::pico8();
-    // let config = Config::gameboy();
-    app.add_plugins(Nano9Plugins::new(config))
+    app.add_plugins(Nano9Plugins::default())
+        .add_systems(Startup, load_and_insert_pico8(nano9::config::pico8::CONFIG))
         .add_systems(PreUpdate, run_pico8_when_loaded)
         .run();
 }

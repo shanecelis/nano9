@@ -29,19 +29,20 @@ fn main() -> io::Result<ExitCode> {
     app.add_systems(nano9::schedule::Init, init);
 
     let mut args = std::env::args();
-    if let Some(template) = args.nth(1) {
-        let mut config = Config::default();
-        if let Err(e) = config.inject_template(Some(&template)) {
-            eprintln!("error: {e}");
-            return Ok(ExitCode::from(2));
+    let path = if let Some(template) = args.nth(1) {
+        match template.as_str() {
+            "gameboy" => nano9::config::gameboy::CONFIG,
+            _ => nano9::config::pico8::CONFIG,
         }
-        app.add_plugins(Nano9Plugins::new(config))
-            .add_systems(PreUpdate, run_pico8_when_loaded)
-            .run();
-        Ok(ExitCode::from(0))
     } else {
         eprintln!("usage: show-palette <pico8|gameboy>");
         eprintln!("error: no template given.");
-        Ok(ExitCode::from(1))
-    }
+        return Ok(ExitCode::from(1));
+    };
+
+    app.add_plugins(Nano9Plugins::default())
+        .add_systems(Startup, load_and_insert_pico8(path))
+        .add_systems(PreUpdate, run_pico8_when_loaded)
+        .run();
+    Ok(ExitCode::from(0))
 }

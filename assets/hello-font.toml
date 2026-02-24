@@ -1,0 +1,5 @@
+template = "pico8"
+[[font]]
+path = "embedded://nano9/config/pico8/pico-8.ttf"
+[[font]]
+default = true
