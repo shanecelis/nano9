@@ -53,6 +53,7 @@ pub fn headless_config_load_plugin(app: &mut App) {
 /// Nano-9 config
 #[derive(Debug, Clone, Deserialize, Serialize, Default, Merge, PartialEq, Reflect, Asset)]
 #[serde(deny_unknown_fields)]
+#[serde(rename_all = "kebab-case")]
 pub struct Config {
     /// Name of the game
     pub name: Option<String>,
@@ -61,7 +62,6 @@ pub struct Config {
     /// Description of game
     pub description: Option<String>,
     /// Nano-9 template, e.g., "pico8" or "gameboy"
-    // #[toml_example(default = "pico8")]
     pub template: Option<String>,
     /// Author of game
     pub author: Option<String>,
@@ -81,15 +81,14 @@ pub struct Config {
     #[serde(default, rename = "font")]
     pub fonts: Vec<Font>,
     /// Images
-    #[serde(default, rename = "sprite_sheet")]
+    #[serde(default, rename = "sprite-sheet")]
     pub sprite_sheets: Vec<SpriteSheet>,
     /// Scripts
     #[serde(default)]
     #[cfg(feature = "scripting")]
-    // #[toml_example(default = "main.lua")]
     pub scripts: Vec<String>,
     /// Audio banks
-    #[serde(default, rename = "audio_bank")]
+    #[serde(default, rename = "audio-bank")]
     pub audio_banks: Vec<AudioBank>,
     /// Maps
     #[serde(default, rename = "map")]
@@ -97,13 +96,13 @@ pub struct Config {
     /// Meshes
     #[serde(default, rename = "mesh")]
     pub meshes: Vec<Mesh>,
-
     /// Key bindings
     pub key_bindings: Option<KeyBindings>,
 }
 
 #[derive(Default, Debug, Clone, Deserialize, Serialize, Merge, PartialEq, Reflect)]
 #[serde(deny_unknown_fields)]
+#[serde(rename_all = "kebab-case")]
 pub struct Defaults {
     /// Initial palette
     pub initial_palette: Option<usize>,
@@ -128,6 +127,7 @@ pub struct Defaults {
 /// defaults.
 #[derive(Debug, Default, Clone, Deserialize, Serialize, Merge, PartialEq, Resource, Reflect)]
 #[serde(deny_unknown_fields)]
+#[serde(rename_all = "kebab-case")]
 pub struct KeyBindings {
     pub players: Vec<PlayerKeyBindings>,
 }
@@ -161,6 +161,7 @@ impl KeyBindings {
 
 #[derive(Default, Debug, Clone, Deserialize, Serialize, Merge, PartialEq, Reflect)]
 #[serde(deny_unknown_fields)]
+#[serde(rename_all = "kebab-case")]
 pub struct PlayerKeyBindings {
     /// Button 0
     #[serde(default)]
@@ -186,6 +187,7 @@ pub struct PlayerKeyBindings {
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Reflect)]
 #[serde(untagged)]
 #[serde(deny_unknown_fields)]
+#[serde(rename_all = "kebab-case")]
 pub enum AudioBank {
     /// Paths to audio files
     Paths { paths: Vec<String> },
@@ -214,6 +216,7 @@ pub enum ResizeConstraints {
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Merge, Reflect)]
 #[serde(deny_unknown_fields)]
+#[serde(rename_all = "kebab-case")]
 pub struct Screen {
     #[merge(skip)]
     /// Canvas size, logical pixels, e.g., [128, 128] for pico8
@@ -228,6 +231,7 @@ pub struct Screen {
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default, Merge, Reflect)]
 #[serde(deny_unknown_fields)]
+#[serde(rename_all = "kebab-case")]
 pub struct SpriteSheet {
     /// Path to image
     pub path: String,
@@ -275,6 +279,7 @@ pub enum Font {
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Merge, Reflect)]
 #[serde(deny_unknown_fields)]
+#[serde(rename_all = "kebab-case")]
 pub struct Palette {
     /// Path to palette
     pub path: String,

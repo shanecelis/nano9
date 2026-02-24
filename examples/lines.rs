@@ -35,7 +35,7 @@ fn main() {
         Config::pico8()
     };
 
-    app.add_plugins(Nano9Plugins::new(config))
+    app.add_plugins(Nano9Plugins::default())
         .add_systems(PreUpdate, run_pico8_when_loaded);
 
     #[cfg(feature = "minibuffer")]

@@ -31,17 +31,20 @@ fn update(mut pico8: Pico8, mut t: Local<usize>) {
     //         None,
     //     )
     //     .unwrap();
-    if ! pico8.btn(None, None).unwrap() { 
+    let sheet = if pico8.btn(None, None).unwrap() { 
+        1
+    } else {
+        0
+    };
     spr!(
         pico8,
-        n as usize,
+        (n as usize, sheet as usize),
         // Vec2::new(0.0 * x as f32, y as f32),
         (0.0 * x as f32, y as f32),
         _,
         BVec2::new(true, false)
     )
     .unwrap();
-    }
     // pico8.camera(Some(Vec2::ZERO));
     camera!(pico8, Vec2::ZERO);
     // pico8.print("hello world", Some(Vec2::ZERO), None, None, None).unwrap();

@@ -135,7 +135,7 @@ pub(crate) fn compute_image(
             .ok_or(Error::NoSuch("gfx image".into()))?;
         trace!("creating image for gfx {}", gfx_id);
         let image = images.add(gfx.try_to_image(|i, n, bytes| {
-            trace!("pixel {} writing color {}", n, i);
+            // trace!("pixel {} writing color {}", n, i);
             gfx_material.pal_map.write_color(&palette.data, i, bytes)
         })?);
         // Update or add image to the map.
