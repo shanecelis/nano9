@@ -450,8 +450,6 @@ fn run(cli: Cli) -> io::Result<ExitCode> {
         );
     }
 
-    let nano9_plugin;
-
     let extension = script_path
         .extension()
         .and_then(|ext| ext.to_str())
@@ -472,10 +470,6 @@ fn run(cli: Cli) -> io::Result<ExitCode> {
                 eprintln!("error: {e}");
                 return Ok(ExitCode::from(2));
             }
-            nano9_plugin = Nano9Plugin {
-                // config,
-                // config_path: config_path.map(AssetPath::from_path_buf),
-            };
         }
         "p8" | "png" => {
             eprintln!("loading cart");
@@ -519,10 +513,6 @@ fn run(cli: Cli) -> io::Result<ExitCode> {
                     commands.insert_resource(Pico8Handle::from(pico8_asset));
                 },
             );
-            nano9_plugin = Nano9Plugin {
-                // config,
-                ..default()
-            };
         }
         "lua" | "p8lua" => {
             if cfg!(not(feature = "pico8-to-lua")) && extension == "p8lua" {
@@ -547,10 +537,6 @@ fn run(cli: Cli) -> io::Result<ExitCode> {
                 };
             let script_asset_path = AssetPath::from_path(&script_path);
             config.scripts = vec![script_asset_path.to_string()];
-            nano9_plugin = Nano9Plugin {
-                // config,
-                ..default()
-            };
         }
         ext => {
             eprintln!(
@@ -560,10 +546,8 @@ fn run(cli: Cli) -> io::Result<ExitCode> {
         }
     }
 
-    app.add_plugins(Nano9Plugins {
-        // config: nano9_plugin.config,
-        ..default()
-    });
+    app.add_plugins(Nano9Plugins::default())
+       .add_systems(Startup, load_and_insert_pico8(path))
 
     if pause {
         app.add_systems(PreUpdate, pause_pico8_when_loaded);

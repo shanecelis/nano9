@@ -84,8 +84,10 @@ impl super::Pico8<'_, '_> {
                                         .get_pal(self.state.palette)
                                     {
                                         if let Some(palette_image) = self.images.get(&pal.image) {
-                                            let palette_data =
-                                                crate::pico8::pal::palette_data_from_image(palette_image);
+                                            let palette_data = crate::pico8::pal::palette_data_from_image(
+                                                palette_image,
+                                                &pal.access,
+                                            );
                                             let _ = c.write_color(
                                                 &palette_data,
                                                 &self.state.pal_map,

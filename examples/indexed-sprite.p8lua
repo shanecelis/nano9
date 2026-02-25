@@ -1,18 +1,18 @@
 --[===[
 template = "pico8"
 [defaults]
-initial_palette = 1
-time_to_live = 0
-[[sprite_sheet]]
+initial-palette = 1
+time-to-live = 0
+[[sprite-sheet]]
 path = "bird-sprite-indexed.png"
-index_color = true
-sprite_size = [16, 16]
+index-color = true
+sprite-size = [16, 16]
 [[palette]]
 path = "bird-sprite-indexed.png"
-extract_index = true
+extract-index = true
 [[palette]]
 path = "red-palette.png"
-extract_index = false
+extract-index = false
 ]===]
 
 t = 0

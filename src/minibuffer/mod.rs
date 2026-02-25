@@ -47,7 +47,7 @@ fn toggle_fps(mut config: ResMut<FpsOverlayConfig>) {
 pub fn quick_plugin(app: &mut App) {
     let font: Handle<Font> = {
         if let Some(asset_server) = app.world().get_resource::<AssetServer>() {
-            asset_server.load(crate::pico8::PICO8_FONT)
+            asset_server.load(crate::config::pico8::FONT)
         } else {
             default()
         }

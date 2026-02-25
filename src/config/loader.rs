@@ -143,6 +143,8 @@ impl AssetLoader for LuaLoader {
         let _ = reader.read_to_end(&mut bytes).await?;
         let content = String::from_utf8(bytes)?;
 
+        // TODO: We should read the config.
+        // 
         // We don't need config here. We need it at the beginning during App configuration.
         //
         // let config = if let Some(front_matter) = front_matter::LUA.parse_in_place(&mut content) {

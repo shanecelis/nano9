@@ -113,7 +113,8 @@ pub(crate) fn compute_image(
     let palette_image = images
         .get(&palette.image)
         .ok_or_else(|| Error::NoSuch("palette image".into()))?;
-    let palette_data = crate::pico8::pal::palette_data_from_image(palette_image);
+    let palette_data =
+        crate::pico8::pal::palette_data_from_image(palette_image, &palette.access);
     let image_handle: Option<Handle<Image>> = pairs.get(&gfx_id).and_then(|gfx_image| {
         gfx_image
             .get(&hash)
