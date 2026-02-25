@@ -110,11 +110,19 @@ pub(crate) fn compute_image(
     let hash = hasher.finish();
     let gfx_id = gfx_handle.id();
     let palette = palettes.get_pal(gfx_material.palette)?;
-    let palette_image = images
-        .get(&palette.image)
-        .ok_or_else(|| Error::NoSuch("palette image".into()))?;
-    let palette_data =
-        crate::pico8::pal::palette_data_from_image(palette_image, &palette.access);
+    let palette_data: Vec<[u8; 4]> = if let Some(palette_image) = images.get(&palette.image) {
+        crate::pico8::pal::palette_data_from_image(palette_image, &palette.access)
+    } else {
+        trace_once!("Palette image {:?} not yet in Assets<Image>; using default palette.", &palette.image);
+        // Palette image not yet loaded (e.g. config-loaded asset); use default Pico-8 palette
+        // extended to 256 entries so pal_map indices are in range.
+        let default = crate::pico8::cart::PALETTE;
+        let mut fallback = Vec::with_capacity(256);
+        for i in 0..256 {
+            fallback.push(default[i % default.len()]);
+        }
+        fallback
+    };
     let image_handle: Option<Handle<Image>> = pairs.get(&gfx_id).and_then(|gfx_image| {
         gfx_image
             .get(&hash)
@@ -293,7 +301,7 @@ fn compute_image_on_gfx_sprite_change(
         match image_handle {
             Ok(image) => match sprite {
                 Some(mut sprite) => {
-                    trace!("updating existant sprite on {}", id);
+                    // trace!("updating existant sprite on {}", id);
                     sprite.image = image;
                 }
                 None => {

@@ -115,7 +115,10 @@ pub(crate) fn plugin(app: &mut App) {
         .init_asset_loader::<PaletteLoader>();
 }
 
-/// Build a 1×N RGBA strip image from palette data.
+/// Build a 1×N RGBA strip image from raw palette data.
+/// Only used when constructing a palette from data that is not already an image:
+/// e.g. FromIndex (extracting from an indexed PNG’s color table) or from_slice / default palette.
+/// For FromImage, FromRow, FromColumn we use the source image directly and do not create a strip.
 pub(crate) fn strip_image_from_data(data: &[[u8; 4]]) -> Image {
     let n = data.len();
     let pixel_bytes: Vec<u8> = data.iter().flat_map(|c| c.iter().copied()).collect();
@@ -156,9 +159,10 @@ impl Palette {
         &self.image
     }
 
-    /// Number of colors when read from the given image (width of a 1×N strip).
+    /// Number of colors when read from the given image according to `self.access`.
     pub fn len_in(&self, image: &Image) -> usize {
-        image.size().x as usize
+        let size = image.size();
+        palette_len(&self.access, size.x, size.y)
     }
 
     /// Get color at palette index using the loaded palette image and `self.access`.
@@ -294,6 +298,7 @@ impl AssetLoader for PaletteLoader {
             let data = Palette::from_png_palette(&bytes)?
                 .ok_or(PaletteError::NoIndex)?;
             let strip = strip_image_from_data(&data);
+            trace!("Loading palette from image for path {:?}", load_context.path());
             let image = load_context.add_labeled_asset("palette_image".into(), strip);
             return Ok(Palette {
                 image,
@@ -301,6 +306,7 @@ impl AssetLoader for PaletteLoader {
             });
         }
 
+        // Use the image as-is; access (row/column/linear) is stored on the Palette.
         let loader = bevy::image::ImageLoader::new(bevy::image::CompressedImageFormats::all());
         let mut image_settings = bevy::image::ImageLoaderSettings::default();
         if let Some(sampler) = crate::pico8::image::image_sampler() {
@@ -310,23 +316,13 @@ impl AssetLoader for PaletteLoader {
         let image = loader
             .load(reader, &image_settings, &mut image_context)
             .await?;
-        let (data, access) = match settings {
+        let access = match settings {
             PaletteSettings::FromIndex => unreachable!(),
-            PaletteSettings::FromImage => (
-                Palette::from_image(&image),
-                PaletteAccess::LinearByRow,
-            ),
-            PaletteSettings::FromRow(row) => (
-                Palette::from_image_row(&image, *row),
-                PaletteAccess::FromRow(*row),
-            ),
-            PaletteSettings::FromColumn(column) => (
-                Palette::from_image_column(&image, *column),
-                PaletteAccess::FromColumn(*column),
-            ),
+            PaletteSettings::FromImage => PaletteAccess::LinearByRow,
+            PaletteSettings::FromRow(row) => PaletteAccess::FromRow(*row),
+            PaletteSettings::FromColumn(column) => PaletteAccess::FromColumn(*column),
         };
-        let strip = strip_image_from_data(&data);
-        let image_handle = load_context.add_labeled_asset("palette_image".into(), strip);
+        let image_handle = load_context.add_labeled_asset("palette_image".into(), image);
         Ok(Palette {
             image: image_handle,
             access,

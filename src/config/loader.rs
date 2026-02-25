@@ -2,7 +2,7 @@
 use crate::level::{self};
 use crate::{
     config::{self, Mesh, *},
-    pico8::{self, MeshHandle, Pico8Asset, image::pixel_art_settings},
+    pico8::{self, MeshHandle, Pico8Asset, image::pixel_art_settings, PaletteAccess},
 };
 use bevy::{
     asset::{AssetLoader, AssetPath, LoadContext, io::Reader},
@@ -204,22 +204,38 @@ async fn into_asset(
         let mut palettes = Vec::with_capacity(config.palettes.len());
         for palette in config.palettes.iter() {
             let palette_settings = palette.into_settings().expect("palette");
-            let palette = load_context
-                .loader()
-                .immediate()
-                .with_settings(move |settings: &mut pico8::PaletteSettings| {
-                    *settings = palette_settings;
-                })
-                .load(&palette.path)
-                .await
-                .map_err(Box::new)?;
-            palettes.push(palette.take());
+            use pico8::PaletteSettings;
+            if matches!(palette_settings, PaletteSettings::FromIndex) {
+                // Extract palette from indexed PNG and add strip as direct dependency of Pico8Asset
+                // so the palette image resolves in Assets<Image>.
+                let path = AssetPath::try_parse(&palette.path)?;
+                let bytes = load_context.read_asset_bytes(path).await?;
+                let data = pico8::Palette::from_png_palette(&bytes)
+                    .map_err(ConfigError::from)?
+                    .ok_or_else(|| ConfigError::Message("No color palette, not an indexed image".into()))?;
+                let strip = pico8::strip_image_from_data(&data);
+                let label = format!("palette_{}", palettes.len());
+                let image_handle = load_context.add_labeled_asset(label.into(), strip);
+                palettes.push(pico8::Palette {
+                    image: image_handle,
+                    access: PaletteAccess::default(),
+                });
+            } else {
+                // Load palette image as a direct dependency of Pico8Asset so it resolves in Assets<Image>.
+                let path = AssetPath::try_parse(&palette.path)?;
+                let image_handle = load_context.load::<Image>(path);
+                let access = match palette_settings {
+                    PaletteSettings::FromImage => PaletteAccess::LinearByRow,
+                    PaletteSettings::FromRow(r) => PaletteAccess::FromRow(r),
+                    PaletteSettings::FromColumn(c) => PaletteAccess::FromColumn(c),
+                    PaletteSettings::FromIndex => unreachable!(),
+                };
+                palettes.push(pico8::Palette {
+                    image: image_handle,
+                    access,
+                });
+            }
             info!("added palette, now have {}", palettes.len());
-            // palettes.push(if let Some(row) = palette.row {
-            //     pico8::Palette::from_image_row(image.get(), row)
-            // } else {
-            //     pico8::Palette::from_image(image.get())
-            // });
         }
         palettes
     };

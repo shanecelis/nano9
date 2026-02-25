@@ -24,7 +24,7 @@ fn update(mut pico8: Pico8, mut t: Local<usize>, mut p: Local<usize>) {
         BVec2::new(flip_horizontal, false)
     )
     .unwrap();
-    pico8.palm(Some(*p)).unwrap();
+    pico8.palm(Some(*p % 2)).unwrap();
     *t += 1;
 }
 

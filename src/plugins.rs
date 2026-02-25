@@ -52,7 +52,7 @@ impl PluginGroup for Nano9Plugins {
                 })
                 .set(WindowPlugin {
                     primary_window: None,
-                    exit_condition: ExitCondition::DontExit,
+                    exit_condition: ExitCondition::OnPrimaryClosed,
                     ..default()
                 })
         );
