@@ -1,0 +1,14 @@
+template = "pico8"
+[defaults]
+initial-palette = 1
+time-to-live = 0
+[[sprite-sheet]]
+path = "bird-sprite-indexed.png"
+index-color = true
+sprite-size = [16, 16]
+[[palette]]
+path = "bird-sprite-indexed.png"
+extract-index = true
+[[palette]]
+path = "red-palette.png"
+extract-index = false
