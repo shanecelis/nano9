@@ -157,7 +157,7 @@ fn compute_gfx_tilemap_texture_on_asset_event(
             _ => unreachable!(),
         }
     }
-    if update_images.len() > 0 {
+    if !update_images.is_empty() {
         warn!("Had {} leftover gfx update images.", update_images.len());
     }
     update_ids.clear();

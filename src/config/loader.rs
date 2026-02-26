@@ -73,7 +73,7 @@ impl AssetLoader for ConfigLoader {
         &self,
         reader: &mut dyn Reader,
         _settings: &Self::Settings,
-        load_context: &mut LoadContext<'_>,
+        _load_context: &mut LoadContext<'_>,
     ) -> Result<Self::Asset, Self::Error> {
         let mut bytes = Vec::new();
         let _ = reader.read_to_end(&mut bytes).await?;
@@ -219,7 +219,7 @@ impl AssetLoader for P8LuaLoader {
         //
         let config = if let Some(front_matter) = front_matter::LUA.parse_in_place(&mut content) {
             let mut config: Config = toml::from_str::<Config>(&front_matter)
-                .map_err(|e| io::Error::new(io::ErrorKind::Other, format!("{e}")))?;
+                .map_err(|e| io::Error::other(format!("{e}")))?;
             let template = config.template.clone();
             config.inject_template(template.as_deref())?;
             config
@@ -292,7 +292,7 @@ async fn into_asset(
                     })?;
                 let strip = pico8::strip_image_from_data(&data);
                 let label = format!("palette_{}", palettes.len());
-                let image_handle = load_context.add_labeled_asset(label.into(), strip);
+                let image_handle = load_context.add_labeled_asset(label, strip);
                 palettes.push(pico8::Palette {
                     image: image_handle,
                     access: PaletteAccess::default(),

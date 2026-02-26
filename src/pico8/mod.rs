@@ -1,4 +1,4 @@
-use bevy::{asset::embedded_asset, prelude::*};
+use bevy::prelude::*;
 mod api;
 pub use api::*;
 // pub mod cartridge;

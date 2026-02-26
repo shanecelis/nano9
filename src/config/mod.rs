@@ -369,6 +369,7 @@ fn apply_config_to_world_and_window(
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 pub fn update_asset(
     mut reader: MessageReader<AssetEvent<crate::pico8::Pico8Asset>>,
     assets: Res<Assets<crate::pico8::Pico8Asset>>,
@@ -433,8 +434,8 @@ pub fn update_asset(
                     if pico8_handle.handle.id() != *id {
                         continue;
                     }
-                    if let Some(pico8_asset) = assets.get(*id) {
-                        if let Some(config) = configs.get(&pico8_asset.config) {
+                    if let Some(pico8_asset) = assets.get(*id)
+                        && let Some(config) = configs.get(&pico8_asset.config) {
                             info!("Config changed, re-applying to window and resources");
                             apply_config_to_world_and_window(
                                 config,
@@ -444,7 +445,6 @@ pub fn update_asset(
                             commands
                                 .insert_resource(crate::pico8::DespawnClearablesOnNextClear(true));
                         }
-                    }
                 }
             }
             _ => {}

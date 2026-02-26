@@ -17,13 +17,11 @@ pub fn pal_map_to_images(pal_map: &PalMap) -> (Image, Image) {
     let mut transparency_bytes = vec![0u8; PAL_MAP_SIZE];
     for i in 0..PAL_MAP_SIZE {
         remap_bytes[i] = pal_map.map_or_mod(i) as u8;
-        transparency_bytes[i] = pal_map
+        transparency_bytes[i] = if pal_map
             .transparency
             .get(i)
             .map(|b| *b)
-            .unwrap_or(false)
-            .then_some(255)
-            .unwrap_or(0);
+            .unwrap_or(false) { 255 } else { 0 };
     }
     let remap_image = image_from_r8(&remap_bytes);
     let transparency_image = image_from_r8(&transparency_bytes);

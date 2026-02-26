@@ -143,12 +143,11 @@ pub fn palette_data_from_image(image: &Image, access: &PaletteAccess) -> Vec<[u8
     let n = palette_len(access, size.x, size.y);
     let mut data = Vec::with_capacity(n);
     for index in 0..n {
-        if let Some((x, y)) = palette_index_to_xy(access, size.x, size.y, index) {
-            if let Ok(color) = image.get_color_at(x, y) {
+        if let Some((x, y)) = palette_index_to_xy(access, size.x, size.y, index)
+            && let Ok(color) = image.get_color_at(x, y) {
                 let srgba: Srgba = color.into();
                 data.push(srgba.to_u8_array());
             }
-        }
     }
     data
 }

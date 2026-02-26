@@ -1,5 +1,5 @@
 use crate::config::Config;
-use crate::pico8::{self, image::pixel_art_settings, *};
+use crate::pico8::{image::pixel_art_settings, *};
 use bevy::asset::{AssetLoader, LoadContext, io::Reader};
 
 use super::*;

@@ -1,7 +1,6 @@
 use crate::Nano9Plugin;
 use bevy::{
     app::{PluginGroup, PluginGroupBuilder},
-    asset::AssetPath,
     audio::{AudioPlugin, Volume},
     image::ImagePlugin,
     prelude::*,
@@ -26,7 +25,7 @@ impl PluginGroup for Nano9Plugins {
         let group = PluginGroupBuilder::start::<Self>();
         // TODO: Get rid of this n9mem directory.
         // let group = group.add(MemoryDir::new("n9mem"));
-        let nano9_plugin = Nano9Plugin::default();
+        let nano9_plugin = Nano9Plugin;
         // {
         //     config: self.config,
         //     config_path: self.config_path,
@@ -73,6 +72,6 @@ impl PluginGroup for HeadlessNano9Plugins {
             .add(bevy::state::app::StatesPlugin)
             .add(AssetPlugin::default())
             .add(ImagePlugin::default_nearest())
-            .add(Nano9Plugin::default())
+            .add(Nano9Plugin)
     }
 }

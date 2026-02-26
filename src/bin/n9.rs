@@ -8,7 +8,7 @@ use bevy::{
 use clap::{Parser, Subcommand};
 use nano9::{
     config::{
-        Config, front_matter, load_and_insert_pico8, pause_pico8_when_loaded, run_pico8_when_loaded,
+        load_and_insert_pico8, pause_pico8_when_loaded, run_pico8_when_loaded,
     },
     pico8::{CartLoaderSettings, Pico8Asset, Pico8Handle, SharedData},
     *,
@@ -419,7 +419,7 @@ fn run(cli: Cli) -> io::Result<ExitCode> {
     //   (cd examples && ... check sprite)
     let default_asset_root: Option<PathBuf> =
         if let Some(dir_name) = env::var_os("NANO9_ASSETS_DIR") {
-            let mut asset_dir: PathBuf = dir_name.into();
+            let asset_dir: PathBuf = dir_name.into();
             Some(asset_dir)
         } else if script.exists() {
             // Local path
@@ -471,7 +471,7 @@ fn run(cli: Cli) -> io::Result<ExitCode> {
             AssetSourceBuilder::platform_default(script_root.to_str().expect("script dir"), None),
         );
     }
-    app.add_plugins(Nano9Plugins::default());
+    app.add_plugins(Nano9Plugins);
 
     let path: &Path = &script_path;
     let asset_path: AssetPath<'static> = if fs::exists(path).unwrap_or(false) {
@@ -520,7 +520,7 @@ fn run(cli: Cli) -> io::Result<ExitCode> {
         "p8" | "png" => {
             eprintln!("loading cart");
 
-            let path = script_path;
+            let _path = script_path;
             app.add_systems(
                 Startup,
                 move |asset_server: Res<AssetServer>, mut commands: Commands| {

@@ -123,7 +123,7 @@ fn spawn_camera(
     canvas: Option<Res<N9Canvas>>,
     mut dolly: Query<&mut Transform, With<Dolly>>,
 ) {
-    let Some(mut canvas) = canvas else {
+    let Some(canvas) = canvas else {
         return;
     };
     if canvas.is_added() {
@@ -149,15 +149,14 @@ fn spawn_camera(
                     Position::default(),
                 ));
             });
-    } else if canvas.is_changed() {
-        if let Ok(mut transform) = dolly.single_mut() {
+    } else if canvas.is_changed()
+        && let Ok(mut transform) = dolly.single_mut() {
             *transform = Transform::from_xyz(
                 canvas.size.x as f32 / 2.0,
                 -(canvas.size.y as f32) / 2.0,
                 0.0,
             );
         }
-    }
 }
 
 pub fn sync_window_size(

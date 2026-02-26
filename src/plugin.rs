@@ -1,5 +1,5 @@
 #![allow(deprecated)]
-use bevy::{asset::AssetPath, prelude::*, reflect::Reflect, window::PresentMode};
+use bevy::{prelude::*, reflect::Reflect, window::PresentMode};
 use std::time::Duration;
 
 #[cfg(feature = "scripting")]
@@ -19,8 +19,8 @@ use bevy_mod_scripting::{
 
 use crate::{
     PColor,
-    config::{Config, DEFAULT_DECORATIONS, ResizeConstraints},
-    pico8::{self, FillPat, Pico8Asset, Pico8Handle, canvas::N9Canvas, input::fill_input},
+    config::Config,
+    pico8::{self, FillPat, Pico8Handle, input::fill_input},
     run::RunState,
     schedule,
 };

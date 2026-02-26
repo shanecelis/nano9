@@ -120,19 +120,17 @@ impl super::Pico8<'_, '_> {
                 let mut line_gfx =
                     pico8::Gfx::new(output_bitdepth, size.x as usize, size.y as usize);
 
-                for (_i, (x, y)) in bresenham::Bresenham::new(
+                for (x, y) in bresenham::Bresenham::new(
                     (c.x as isize, c.y as isize),
                     (d.x as isize, d.y as isize),
                 )
-                .enumerate()
                 {
                     let tx = m.x.rem_euclid(tex_w as i32) as u32;
                     let ty = m.y.rem_euclid(tex_h as i32) as u32;
-                    if let Some(pcolor) = self.sget(UVec2::new(tx, ty), None)? {
-                        if let PColor::Palette(i) = pcolor {
+                    if let Some(pcolor) = self.sget(UVec2::new(tx, ty), None)?
+                        && let PColor::Palette(i) = pcolor {
                             let _ = line_gfx.set(x as usize, y as usize, i as u8);
                         }
-                    }
                     m += dm;
                 }
 
@@ -169,11 +167,10 @@ impl super::Pico8<'_, '_> {
                 );
                 image.sampler = ImageSampler::nearest();
 
-                for (_i, (x, y)) in bresenham::Bresenham::new(
+                for (x, y) in bresenham::Bresenham::new(
                     (c.x as isize, c.y as isize),
                     (d.x as isize, d.y as isize),
                 )
-                .enumerate()
                 {
                     let tx = m.x.rem_euclid(tex_w as i32) as u32;
                     let ty = m.y.rem_euclid(tex_h as i32) as u32;
