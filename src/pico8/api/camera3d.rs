@@ -80,7 +80,7 @@ fn update_camera3d(
 // }
 
 pub(crate) fn plugin(app: &mut App) {
-    app//.register_type::<Nano9Camera3d>()
+    app //.register_type::<Nano9Camera3d>()
         .add_message::<Camera3dCommand>()
         .add_systems(Update, update_camera3d);
     #[cfg(feature = "scripting")]

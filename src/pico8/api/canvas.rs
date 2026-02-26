@@ -118,11 +118,11 @@ pub fn setup_canvas(
 #[derive(Component, Debug, Reflect, Clone, Copy)]
 struct Dolly;
 
-fn spawn_camera(mut commands: Commands,
-                canvas: Option<Res<N9Canvas>>,
-                mut dolly: Query<&mut Transform, With<Dolly>>,
+fn spawn_camera(
+    mut commands: Commands,
+    canvas: Option<Res<N9Canvas>>,
+    mut dolly: Query<&mut Transform, With<Dolly>>,
 ) {
-
     let Some(mut canvas) = canvas else {
         return;
     };
@@ -151,11 +151,11 @@ fn spawn_camera(mut commands: Commands,
             });
     } else if canvas.is_changed() {
         if let Ok(mut transform) = dolly.single_mut() {
-        *transform = Transform::from_xyz(
-                    canvas.size.x as f32 / 2.0,
-                    -(canvas.size.y as f32) / 2.0,
-                    0.0,
-                );
+            *transform = Transform::from_xyz(
+                canvas.size.x as f32 / 2.0,
+                -(canvas.size.y as f32) / 2.0,
+                0.0,
+            );
         }
     }
 }

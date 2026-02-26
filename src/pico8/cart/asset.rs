@@ -1,5 +1,5 @@
-use crate::pico8::{self, image::pixel_art_settings, *};
 use crate::config::Config;
+use crate::pico8::{self, image::pixel_art_settings, *};
 use bevy::asset::{AssetLoader, LoadContext, io::Reader};
 
 use super::*;
@@ -7,11 +7,9 @@ use super::*;
 use bevy_mod_scripting::asset::{Language, ScriptAsset};
 
 pub(crate) fn plugin(app: &mut App) {
-    app
-        .init_asset_loader::<PngAssetLoader>()
+    app.init_asset_loader::<PngAssetLoader>()
         // Set this one after PngAssetLoader so it's used as a last resort.
-        .init_asset_loader::<P8AssetLoader>()
-        ;
+        .init_asset_loader::<P8AssetLoader>();
 
     // #[cfg(feature = "scripting")]
     // app

@@ -3,13 +3,14 @@
 use bevy::asset::{Asset, uuid_handle};
 use bevy::reflect::Reflect;
 use bevy::render::render_resource::*;
-use bevy::sprite_render::{AlphaMode2d, Material2d, Material2dPlugin};
 use bevy::shader::Shader;
+use bevy::sprite_render::{AlphaMode2d, Material2d, Material2dPlugin};
 use bevy::{prelude::*, shader::ShaderRef};
 
 use crate::pico8::pal::{self, Palette};
 
-const GFX_PALETTE_LOOKUP_SHADER: Handle<Shader> = uuid_handle!("9f4e8a2b-1c3d-4e5f-6a7b-8c9d0e1f2a3b");
+const GFX_PALETTE_LOOKUP_SHADER: Handle<Shader> =
+    uuid_handle!("9f4e8a2b-1c3d-4e5f-6a7b-8c9d0e1f2a3b");
 
 /// Material that renders a fullscreen quad using index + palette + PalMap textures (GPU palette lookup).
 #[derive(Asset, AsBindGroup, Debug, Clone, Reflect)]

@@ -13,7 +13,7 @@ static DRAW_COUNTER: DrawCounter = DrawCounter::new(1);
 const MAX_EXPECTED_CLEARABLES: f32 = 1000.0;
 
 pub(crate) fn plugin(app: &mut App) {
-    app//.register_type::<Clearable>()
+    app //.register_type::<Clearable>()
         .init_resource::<ClearCache>()
         .init_resource::<DespawnClearablesOnNextClear>()
         .add_systems(Last, (handle_overflow).chain());

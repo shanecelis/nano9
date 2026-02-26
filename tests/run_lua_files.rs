@@ -1,6 +1,6 @@
 use std::fs;
 use std::path::{Path, PathBuf};
-use std::process::{Command};
+use std::process::Command;
 
 /// Test that all .lua and .p8lua files can be loaded and run (with a timeout)
 #[test]

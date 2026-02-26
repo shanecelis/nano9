@@ -71,8 +71,7 @@ fn test_load_sprite_config_like_example() {
         Startup,
         |asset_server: Res<AssetServer>, mut commands: Commands| {
             // Load same file as sprite example (sprite example would use embedded://...)
-            let pico8_asset: Handle<Pico8Asset> =
-                asset_server.load::<Pico8Asset>("sprite.toml");
+            let pico8_asset: Handle<Pico8Asset> = asset_server.load::<Pico8Asset>("sprite.toml");
             commands.insert_resource(Pico8Handle::from(pico8_asset));
         },
     );
@@ -99,7 +98,10 @@ fn test_load_sprite_config_like_example() {
     eprintln!("  pico8_loaded: {}", result.pico8_loaded);
     eprintln!("  updates: {}", result.updates);
     eprintln!("  pico8_failures: {:?}", result.pico8_failures);
-    eprintln!("  sprite_sheet_failures: {:?}", result.sprite_sheet_failures);
+    eprintln!(
+        "  sprite_sheet_failures: {:?}",
+        result.sprite_sheet_failures
+    );
 
     // Document what happens: with headless/minimal plugins the loader often isn't
     // selected (Extension: None in the error). The same config loaded via the full

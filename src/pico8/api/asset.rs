@@ -88,7 +88,8 @@ impl FromWorld for Pico8Asset {
             #[cfg(feature = "scripting")]
             scripts: vec![],
             palettes,
-            border: asset_server.load_with_settings(crate::config::pico8::BORDER, pixel_art_settings),
+            border: asset_server
+                .load_with_settings(crate::config::pico8::BORDER, pixel_art_settings),
             font: vec![N9Font {
                 handle: asset_server.load(crate::config::pico8::FONT),
             }],

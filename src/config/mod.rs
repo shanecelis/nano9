@@ -6,12 +6,12 @@ pub mod front_matter;
 
 pub mod pico8;
 use crate::{
-    pico8::{Pico8Handle, canvas::N9Canvas, Pico8Asset},
+    pico8::{Pico8Asset, Pico8Handle, canvas::N9Canvas},
     run::RunState,
 };
-use bevy::asset::{AssetPath, AssetLoadFailedEvent};
+use bevy::asset::{AssetLoadFailedEvent, AssetPath};
 use bevy::prelude::*;
-use bevy::window::{PrimaryWindow, PresentMode, Window, WindowResolution, WindowResizeConstraints};
+use bevy::window::{PresentMode, PrimaryWindow, Window, WindowResizeConstraints, WindowResolution};
 #[cfg(feature = "scripting")]
 use bevy_mod_scripting::{
     asset::ScriptAsset,
@@ -23,20 +23,24 @@ use serde::{Deserialize, Serialize};
 #[cfg(feature = "gameboy")]
 pub mod gameboy;
 
-
 pub const DEFAULT_CANVAS_SIZE: UVec2 = UVec2::splat(128);
 pub const DEFAULT_SCREEN_SIZE: UVec2 = UVec2::splat(512);
 pub const DEFAULT_DECORATIONS: bool = true;
 
 pub(crate) fn plugin(app: &mut App) {
-    app.add_systems(Update, (update_asset, warn_load_failed::<crate::pico8::SpriteSheet>, warn_load_failed::<crate::pico8::Pico8Asset>))
-        .add_plugins(loader::plugin);
+    app.add_systems(
+        Update,
+        (
+            update_asset,
+            warn_load_failed::<crate::pico8::SpriteSheet>,
+            warn_load_failed::<crate::pico8::Pico8Asset>,
+        ),
+    )
+    .add_plugins(loader::plugin);
     app.add_plugins(pico8::plugin);
     #[cfg(feature = "gameboy")]
     app.add_plugins(gameboy::plugin);
-    app.init_resource::<KeyBindings>()
-        .init_asset::<Config>()
-        ;
+    app.init_resource::<KeyBindings>().init_asset::<Config>();
 }
 
 /// Minimal plugin for headless tests: only asset loaders and asset types for
@@ -320,10 +324,10 @@ pub enum Mesh {
 }
 
 /// Warns when a sprite sheet fails to load (e.g. path wrong or file missing).
-fn warn_load_failed<A>(
-    mut reader: MessageReader<AssetLoadFailedEvent<A>>,
-) where A: Asset {
-
+fn warn_load_failed<A>(mut reader: MessageReader<AssetLoadFailedEvent<A>>)
+where
+    A: Asset,
+{
     for e in reader.read() {
         warn!(
             "{} failed to load at path '{}': {}",
@@ -348,8 +352,10 @@ fn apply_config_to_world_and_window(
         window.title = window_spec.title.clone();
         debug!("prior window resolution {:?}", &window.resolution);
         debug!("new window resolution {:?}", &window_spec.resolution);
-        window.resolution.set(window_spec.resolution.physical_width() as f32,
-                              window_spec.resolution.physical_height() as f32);
+        window.resolution.set(
+            window_spec.resolution.physical_width() as f32,
+            window_spec.resolution.physical_height() as f32,
+        );
         // let scale_factor = window_spec.resolution.scale_factor();
         // window.resolution = WindowResolution::new(window_spec.resolution.physical_width() * scale_factor,
         //                                           window_spec.resolution.physical_height() * scale_factor)
@@ -390,7 +396,8 @@ pub fn update_asset(
                         // XXX: It happens here too!
                         #[cfg(feature = "scripting")]
                         {
-                            if !pico8_asset.scripts.is_empty() && pico8_handle.main_script.is_none() {
+                            if !pico8_asset.scripts.is_empty() && pico8_handle.main_script.is_none()
+                            {
                                 // pico8_handle.main_script = Some(Recipients::All);
                                 // Spawn another script component for the libraries.
                                 let entity = commands
@@ -434,7 +441,8 @@ pub fn update_asset(
                                 &mut commands,
                                 &mut primary_windows,
                             );
-                            commands.insert_resource(crate::pico8::DespawnClearablesOnNextClear(true));
+                            commands
+                                .insert_resource(crate::pico8::DespawnClearablesOnNextClear(true));
                         }
                     }
                 }
@@ -444,7 +452,9 @@ pub fn update_asset(
     }
 }
 
-pub fn load_and_insert_pico8(path: impl Into<AssetPath<'static>>) -> impl Fn(Res<AssetServer>, Commands) {
+pub fn load_and_insert_pico8(
+    path: impl Into<AssetPath<'static>>,
+) -> impl Fn(Res<AssetServer>, Commands) {
     let path = path.into();
     move |asset_server: Res<AssetServer>, mut commands: Commands| {
         let pico8_asset: Handle<Pico8Asset> = asset_server.load::<Pico8Asset>(&path);
@@ -600,8 +610,7 @@ impl Config {
             .unwrap_or(ResizeConstraints::MatchScreen {
                 match_screen: false,
             });
-        let resolution =
-            WindowResolution::new(screen_size.x, screen_size.y);
+        let resolution = WindowResolution::new(screen_size.x, screen_size.y);
         let resize_constraints = match resize_constraints {
             ResizeConstraints::MatchScreen { match_screen: true } => WindowResizeConstraints {
                 min_width: resolution.width(),
@@ -631,8 +640,7 @@ impl Config {
 
     pub(crate) fn was_plugin_build(&self, commands: &mut Commands) {
         commands.insert_resource(
-            self
-                .defaults
+            self.defaults
                 .as_ref()
                 .map(crate::pico8::Defaults::from_config)
                 .unwrap_or_default(),
@@ -665,7 +673,6 @@ impl Config {
             //     1.0 / fps as f64,
             // ));
         }
-
     }
 }
 

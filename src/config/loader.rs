@@ -2,7 +2,7 @@
 use crate::level::{self};
 use crate::{
     config::{self, Mesh, *},
-    pico8::{self, MeshHandle, Pico8Asset, image::pixel_art_settings, PaletteAccess},
+    pico8::{self, MeshHandle, PaletteAccess, Pico8Asset, image::pixel_art_settings},
 };
 use bevy::{
     asset::{AssetLoader, AssetPath, LoadContext, io::Reader},
@@ -149,7 +149,7 @@ impl AssetLoader for LuaLoader {
         let content = String::from_utf8(bytes)?;
 
         // TODO: We should read the config.
-        // 
+        //
         // We don't need config here. We need it at the beginning during App configuration.
         //
         // let config = if let Some(front_matter) = front_matter::LUA.parse_in_place(&mut content) {
@@ -214,7 +214,7 @@ impl AssetLoader for P8LuaLoader {
         let mut content = String::from_utf8(bytes)?;
 
         // TODO: We should read the config.
-        // 
+        //
         // We don't need config here. We need it at the beginning during App configuration.
         //
         let config = if let Some(front_matter) = front_matter::LUA.parse_in_place(&mut content) {
@@ -246,11 +246,13 @@ impl AssetLoader for P8LuaLoader {
             warn!("Pico-8 dialect translation requested but 'pico8-to-lua' feature not active.");
         }
 
-        let script_handle = load_context
-            .add_labeled_asset("script".into(), ScriptAsset {
-            content: code.into_bytes().into_boxed_slice(),
-            language: Language::Lua,
-        });
+        let script_handle = load_context.add_labeled_asset(
+            "script".into(),
+            ScriptAsset {
+                content: code.into_bytes().into_boxed_slice(),
+                language: Language::Lua,
+            },
+        );
         asset.scripts.push(script_handle);
         Ok(asset)
     }
@@ -285,7 +287,9 @@ async fn into_asset(
                 let bytes = load_context.read_asset_bytes(path).await?;
                 let data = pico8::Palette::from_png_palette(&bytes)
                     .map_err(ConfigError::from)?
-                    .ok_or_else(|| ConfigError::Message("No color palette, not an indexed image".into()))?;
+                    .ok_or_else(|| {
+                        ConfigError::Message("No color palette, not an indexed image".into())
+                    })?;
                 let strip = pico8::strip_image_from_data(&data);
                 let label = format!("palette_{}", palettes.len());
                 let image_handle = load_context.add_labeled_asset(label.into(), strip);

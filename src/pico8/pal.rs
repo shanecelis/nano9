@@ -1,10 +1,10 @@
+use bevy::asset::RenderAssetUsages;
 use bevy::{
     asset::{AssetLoader, LoadContext, io::Reader},
     image::ImageSampler,
     prelude::*,
     render::render_resource::{Extent3d, TextureDimension, TextureFormat},
 };
-use bevy::asset::RenderAssetUsages;
 
 #[derive(Asset, Debug, Clone, Reflect)]
 pub struct Palette {
@@ -241,10 +241,7 @@ impl Palette {
     }
 
     /// Palette from slice, creating the strip image and adding it via `load_context`.
-    pub fn from_slice_with_context(
-        slice: &[[u8; 4]],
-        load_context: &mut LoadContext<'_>,
-    ) -> Self {
+    pub fn from_slice_with_context(slice: &[[u8; 4]], load_context: &mut LoadContext<'_>) -> Self {
         let strip = strip_image_from_data(slice);
         let image = load_context.add_labeled_asset("palette_image".into(), strip);
         Palette {
@@ -295,10 +292,12 @@ impl AssetLoader for PaletteLoader {
         if matches!(settings, PaletteSettings::FromIndex) {
             let mut bytes = Vec::new();
             let _ = reader.read_to_end(&mut bytes).await?;
-            let data = Palette::from_png_palette(&bytes)?
-                .ok_or(PaletteError::NoIndex)?;
+            let data = Palette::from_png_palette(&bytes)?.ok_or(PaletteError::NoIndex)?;
             let strip = strip_image_from_data(&data);
-            trace!("Loading palette from image for path {:?}", load_context.path());
+            trace!(
+                "Loading palette from image for path {:?}",
+                load_context.path()
+            );
             let image = load_context.add_labeled_asset("palette_image".into(), strip);
             return Ok(Palette {
                 image,

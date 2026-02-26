@@ -82,7 +82,6 @@ fn compute_gfx_tilemap_texture_on_asset_event(
     pico8_handle: Option<Res<Pico8Handle>>,
     pico8_assets: Res<Assets<Pico8Asset>>,
 ) {
-
     let Some(pico8_handle) = pico8_handle else {
         return;
     };
@@ -179,7 +178,6 @@ fn compute_image_on_gfx_tilemap_texture_change(
     pico8_handle: Option<Res<Pico8Handle>>,
     pico8_assets: Res<Assets<Pico8Asset>>,
 ) {
-
     let Some(pico8_handle) = pico8_handle else {
         return;
     };

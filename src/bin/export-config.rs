@@ -31,7 +31,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     #[cfg(not(feature = "gameboy"))]
     {
-        eprintln!("Built without 'gameboy' feature; only pico8 config was exported. Use --features gameboy to export both.");
+        eprintln!(
+            "Built without 'gameboy' feature; only pico8 config was exported. Use --features gameboy to export both."
+        );
     }
 
     Ok(())

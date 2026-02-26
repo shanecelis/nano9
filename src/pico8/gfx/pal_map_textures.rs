@@ -1,12 +1,12 @@
 //! Build R8 textures from PalMap for use in the GPU palette lookup shader.
 
 use crate::pico8::PalMap;
+use bevy::asset::RenderAssetUsages;
 use bevy::{
     image::ImageSampler,
     prelude::Image,
     render::render_resource::{Extent3d, TextureDimension, TextureFormat},
 };
-use bevy::asset::RenderAssetUsages;
 
 const PAL_MAP_SIZE: usize = 256;
 

@@ -1,5 +1,5 @@
-use bevy::prelude::*;
 use bevy::asset::embedded_asset;
+use bevy::prelude::*;
 use nano9::prelude::*;
 // use nano9::{cls, camera, spr, print};
 //use nano9::print;
@@ -13,7 +13,7 @@ fn update(mut pico8: Pico8, mut t: Local<usize>) {
 
     // cls!(pico8, PColor::Palette(2)).unwrap();
     // cls!(pico8, 2i32).unwrap();
-     
+
     // cls!(pico8, 2).unwrap();
     let n = ((pico8.time() * 4.0) % 8.0) + 8.0;
     let x = *t % 128;
@@ -31,11 +31,7 @@ fn update(mut pico8: Pico8, mut t: Local<usize>) {
     //         None,
     //     )
     //     .unwrap();
-    let sheet = if pico8.btn(None, None).unwrap() { 
-        1
-    } else {
-        0
-    };
+    let sheet = if pico8.btn(None, None).unwrap() { 1 } else { 0 };
     spr!(
         pico8,
         (n as usize, sheet as usize),
@@ -58,11 +54,15 @@ fn main() {
     app.add_systems(nano9::schedule::Update, update);
 
     app.add_plugins(Nano9Plugins)
-        .add_systems(Startup, move |asset_server: Res<AssetServer>, mut commands: Commands| {
-            // let pico8_asset: Handle<Pico8Asset> = asset_server.load::<Pico8Asset>("embedded://sprite/sprite.toml");
-            let pico8_asset: Handle<Pico8Asset> = asset_server.load::<Pico8Asset>("sprite.toml");
-            commands.insert_resource(Pico8Handle::from(pico8_asset));
-        })
+        .add_systems(
+            Startup,
+            move |asset_server: Res<AssetServer>, mut commands: Commands| {
+                // let pico8_asset: Handle<Pico8Asset> = asset_server.load::<Pico8Asset>("embedded://sprite/sprite.toml");
+                let pico8_asset: Handle<Pico8Asset> =
+                    asset_server.load::<Pico8Asset>("sprite.toml");
+                commands.insert_resource(Pico8Handle::from(pico8_asset));
+            },
+        )
         .add_systems(PreUpdate, run_pico8_when_loaded);
     // embedded_asset!(app, "examples", "sprite.toml");
 

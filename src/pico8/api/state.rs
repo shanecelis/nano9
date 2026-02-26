@@ -6,10 +6,8 @@ use bevy::{
 use std::hash::{BuildHasher, Hash, Hasher};
 
 pub(crate) fn plugin(app: &mut App) {
-    app
-        .add_systems(Update, ensure_pal_map_capacity_on_pico8_asset_change);
+    app.add_systems(Update, ensure_pal_map_capacity_on_pico8_asset_change);
 }
-
 
 /// When the Pico8Asset matching the current Pico8Handle is added or modified,
 /// ensure pal_map has at least as many entries as the largest palette in the asset.
@@ -26,7 +24,9 @@ pub fn ensure_pal_map_capacity_on_pico8_asset_change(
     let handle_id = pico8_handle.handle.id();
     for e in reader.read() {
         let id = match e {
-            AssetEvent::Added { id } | AssetEvent::Modified { id } | AssetEvent::LoadedWithDependencies { id } => *id,
+            AssetEvent::Added { id }
+            | AssetEvent::Modified { id }
+            | AssetEvent::LoadedWithDependencies { id } => *id,
             AssetEvent::Removed { .. } | AssetEvent::Unused { .. } => continue,
         };
         if id != handle_id {

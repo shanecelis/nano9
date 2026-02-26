@@ -19,7 +19,7 @@ use bevy_mod_scripting::{
 
 use crate::{
     PColor,
-    config::{Config, ResizeConstraints, DEFAULT_DECORATIONS},
+    config::{Config, DEFAULT_DECORATIONS, ResizeConstraints},
     pico8::{self, FillPat, Pico8Asset, Pico8Handle, canvas::N9Canvas, input::fill_input},
     run::RunState,
     schedule,
@@ -344,7 +344,7 @@ impl Plugin for Nano9Plugin {
                 16,
             )),
         })
-            .init_resource::<pico8::Defaults>()
+        .init_resource::<pico8::Defaults>()
         .add_plugins(crate::plugin);
 
         #[cfg(feature = "framepace")]

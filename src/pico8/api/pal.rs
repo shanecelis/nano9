@@ -98,12 +98,14 @@ impl super::Pico8<'_, '_> {
     pub fn paln(&self, palette_index: Option<usize>) -> Result<usize, PalError> {
         let palettes = self.palettes()?;
         match palette_index {
-            Some(index) => palettes
-                .len_in(index, &self.images)?
-                .ok_or(PalError::NoSuchPaletteColor {
-                    color: 0,
-                    palette: index,
-                }),
+            Some(index) => {
+                palettes
+                    .len_in(index, &self.images)?
+                    .ok_or(PalError::NoSuchPaletteColor {
+                        color: 0,
+                        palette: index,
+                    })
+            }
             None => Ok(palettes.len()),
         }
     }

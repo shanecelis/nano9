@@ -113,7 +113,10 @@ pub(crate) fn compute_image(
     let palette_data: Vec<[u8; 4]> = if let Some(palette_image) = images.get(&palette.image) {
         crate::pico8::pal::palette_data_from_image(palette_image, &palette.access)
     } else {
-        trace_once!("Palette image {:?} not yet in Assets<Image>; using default palette.", &palette.image);
+        trace_once!(
+            "Palette image {:?} not yet in Assets<Image>; using default palette.",
+            &palette.image
+        );
         // Palette image not yet loaded (e.g. config-loaded asset); use default Pico-8 palette
         // extended to 256 entries so pal_map indices are in range.
         let default = crate::pico8::cart::PALETTE;
@@ -186,7 +189,6 @@ fn compute_image_on_asset_event(
     pico8_assets: Res<Assets<Pico8Asset>>,
     // mut update_images: Local<Vec<(Entity, Handle<Image>)>>,
 ) {
-
     let Some(pico8_handle) = pico8_handle else {
         return;
     };

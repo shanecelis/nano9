@@ -7,7 +7,9 @@ use bevy::{
 };
 use clap::{Parser, Subcommand};
 use nano9::{
-    config::{Config, front_matter, load_and_insert_pico8, pause_pico8_when_loaded, run_pico8_when_loaded},
+    config::{
+        Config, front_matter, load_and_insert_pico8, pause_pico8_when_loaded, run_pico8_when_loaded,
+    },
     pico8::{CartLoaderSettings, Pico8Asset, Pico8Handle, SharedData},
     *,
 };
@@ -550,7 +552,6 @@ fn run(cli: Cli) -> io::Result<ExitCode> {
             return Ok(ExitCode::from(1));
         }
     }
-
 
     if pause {
         app.add_systems(PreUpdate, pause_pico8_when_loaded);

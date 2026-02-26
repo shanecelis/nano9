@@ -131,7 +131,5 @@ mod test {
         let a: Option<PColor> = Some(PColor::from(2i32));
         // let a: Option<PColor> = Some(2.into());
         assert!(matches!(a, Some(PColor::Palette(2))));
-
     }
-
 }

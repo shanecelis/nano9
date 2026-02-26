@@ -4,8 +4,8 @@ use bevy::{
     asset::AssetPath,
     audio::{AudioPlugin, Volume},
     image::ImagePlugin,
-    window::ExitCondition,
     prelude::*,
+    window::ExitCondition,
 };
 
 /// Nano-9 plugins
@@ -54,7 +54,7 @@ impl PluginGroup for Nano9Plugins {
                     primary_window: None,
                     exit_condition: ExitCondition::OnPrimaryClosed,
                     ..default()
-                })
+                }),
         );
 
         group.add(nano9_plugin)
