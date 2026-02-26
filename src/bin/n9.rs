@@ -395,7 +395,7 @@ fn run(cli: Cli) -> io::Result<ExitCode> {
     };
 
     let invocation_dir = env::current_dir()?;
-    let config_path = if script.extension() == Some(OsStr::new("Nano9.toml")) {
+    let config_path = if script.extension() == Some(OsStr::new("toml")) {
         Some(script.clone())
     } else if script.is_dir() {
         let mut path = script.clone();
@@ -405,10 +405,8 @@ fn run(cli: Cli) -> io::Result<ExitCode> {
         None
     };
     let script_path = config_path.clone().unwrap_or_else(|| script.clone());
-    let mut app = App::new();
-
-    app.add_plugins(Nano9Plugins::default());
-    // Choose the default asset root:
+    // Choose the default asset root before creating the app so we can register
+    // it before AssetPlugin (Default must be registered before AssetPlugin).
     // - If NANO9_ASSETS_DIR is set, it always wins.
     // - Otherwise, if the input is a local path, use the "game directory":
     //   - directory arg: that directory
@@ -420,14 +418,12 @@ fn run(cli: Cli) -> io::Result<ExitCode> {
     let default_asset_root: Option<PathBuf> =
         if let Some(dir_name) = env::var_os("NANO9_ASSETS_DIR") {
             let mut asset_dir: PathBuf = dir_name.into();
-            if asset_dir.is_relative() {
-                asset_dir = invocation_dir.join(&asset_dir);
-            }
             Some(asset_dir)
         } else if script.exists() {
-            // Local path.
+            // Local path
+            // TODO: Get rid of canonicalize.
             Some(fs::canonicalize(if script.is_dir() {
-                script
+                script.clone()
             } else {
                 script
                     .parent()
@@ -444,21 +440,58 @@ fn run(cli: Cli) -> io::Result<ExitCode> {
             None
         };
 
+    let assets_dir_from_env = env::var_os("NANO9_ASSETS_DIR").is_some();
+    let script_dir_root: Option<PathBuf> = if assets_dir_from_env
+        && default_asset_root.is_some()
+        && script_path.exists()
+        && script_path.is_file()
+    {
+        let parent = script_path.parent().unwrap_or(Path::new("."));
+        Some(if parent.as_os_str().is_empty() {
+            invocation_dir.clone()
+        } else {
+            invocation_dir.join(parent)
+        })
+    } else {
+        None
+    };
+
+    let mut app = App::new();
     if let Some(root) = default_asset_root.as_ref() {
         app.register_asset_source(
             &AssetSourceId::Default,
             AssetSourceBuilder::platform_default(root.to_str().expect("asset dir"), None),
         );
     }
+    if let Some(script_root) = script_dir_root.as_ref() {
+        app.register_asset_source(
+            "script_dir",
+            AssetSourceBuilder::platform_default(script_root.to_str().expect("script dir"), None),
+        );
+    }
+    app.add_plugins(Nano9Plugins::default());
 
     let path: &Path = &script_path;
-    let asset_path: AssetPath<'static> = if fs::exists(&path).unwrap_or(false) {
-        if let Some(root) = default_asset_root.as_ref()
-            && let Ok(rel) = path.strip_prefix(root)
-        {
-            AssetPath::from_path(rel)
+    let asset_path: AssetPath<'static> = if fs::exists(path).unwrap_or(false) {
+        let script_resolved = if path.is_relative() {
+            invocation_dir.join(path)
         } else {
-            AssetPath::from_path(&path)
+            path.to_path_buf()
+        };
+        match default_asset_root.as_ref() {
+            Some(root) => {
+                if let Ok(rel) = script_resolved.strip_prefix(root) {
+                    let rel_buf = PathBuf::from(rel);
+                    AssetPath::from_path(&rel_buf).clone_owned()
+                } else if assets_dir_from_env {
+                    AssetPath::from_path(Path::new(path.file_name().unwrap()))
+                        .with_source(AssetSourceId::from("script_dir"))
+                        .clone_owned()
+                } else {
+                    AssetPath::from_path(path).clone_owned()
+                }
+            }
+            None => AssetPath::from_path(path).clone_owned(),
         }
     } else if let Some(s) = path.to_str() {
         match AssetPath::try_parse(s) {

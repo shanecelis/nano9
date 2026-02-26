@@ -260,7 +260,7 @@ impl AssetLoader for P8LuaLoader {
         // loader as well, so having it here generates a warning. We don't need
         // to load .lua files ourselves, so we don't.
 
-        static EXTENSIONS: &[&str] = &["p8lua"];
+        static EXTENSIONS: &[&str] = &["p8lua", "lua"];
         EXTENSIONS
     }
 }
