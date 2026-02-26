@@ -7,7 +7,7 @@ use bevy::{
 };
 use clap::{Parser, Subcommand};
 use nano9::{
-    config::{Config, front_matter, pause_pico8_when_loaded, run_pico8_when_loaded},
+    config::{Config, front_matter, load_and_insert_pico8, pause_pico8_when_loaded, run_pico8_when_loaded},
     pico8::{CartLoaderSettings, Pico8Asset, Pico8Handle, SharedData},
     *,
 };
@@ -407,6 +407,7 @@ fn run(cli: Cli) -> io::Result<ExitCode> {
     let script_path = config_path.clone().unwrap_or_else(|| script.clone());
     let mut app = App::new();
 
+    app.add_plugins(Nano9Plugins::default());
     // Choose the default asset root:
     // - If NANO9_ASSETS_DIR is set, it always wins.
     // - Otherwise, if the input is a local path, use the "game directory":
@@ -450,56 +451,41 @@ fn run(cli: Cli) -> io::Result<ExitCode> {
         );
     }
 
+    let path: &Path = &script_path;
+    let asset_path: AssetPath<'static> = if fs::exists(&path).unwrap_or(false) {
+        if let Some(root) = default_asset_root.as_ref()
+            && let Ok(rel) = path.strip_prefix(root)
+        {
+            AssetPath::from_path(rel)
+        } else {
+            AssetPath::from_path(&path)
+        }
+    } else if let Some(s) = path.to_str() {
+        match AssetPath::try_parse(s) {
+            Ok(p) => p,
+            Err(e) => {
+                eprintln!("Cannot convert {:?} to input path: {e}", &s);
+                return Ok(ExitCode::from(9));
+            }
+        }
+    } else {
+        eprintln!(
+            "Cannot convert input path to UTF-8 string {:?}.",
+            path.display()
+        );
+        return Ok(ExitCode::from(10));
+    }
+    .clone_owned();
+
     let extension = script_path
         .extension()
         .and_then(|ext| ext.to_str())
         .unwrap_or_default();
     match extension {
-        "toml" => {
-            eprintln!("loading config");
-            let path: &Path = &script_path;
-            // OLD SHANE: Get rid of this.
-            //
-            // NEW SHANE: No. We use part of Config to configure the App and can't
-            // do that at load time.
-            let content = fs::read_to_string(path)?;
-            let mut config: Config =
-                toml::from_str::<Config>(&content).map_err(|e| io::Error::other(format!("{e}")))?;
-
-            if let Err(e) = config.inject_template(None) {
-                eprintln!("error: {e}");
-                return Ok(ExitCode::from(2));
-            }
-        }
         "p8" | "png" => {
             eprintln!("loading cart");
-            let config = Config::pico8();
 
             let path = script_path;
-            let asset_path: AssetPath<'static> = if fs::exists(&path).unwrap_or(false) {
-                if let Some(root) = default_asset_root.as_ref()
-                    && let Ok(rel) = path.strip_prefix(root)
-                {
-                    AssetPath::from_path(rel)
-                } else {
-                    AssetPath::from_path(&path)
-                }
-            } else if let Some(s) = path.to_str() {
-                match AssetPath::try_parse(s) {
-                    Ok(p) => p,
-                    Err(e) => {
-                        eprintln!("Cannot convert {:?} to input path: {e}", &s);
-                        return Ok(ExitCode::from(9));
-                    }
-                }
-            } else {
-                eprintln!(
-                    "Cannot convert input path to UTF-8 string {:?}.",
-                    path.display()
-                );
-                return Ok(ExitCode::from(10));
-            }
-            .clone_owned();
             app.add_systems(
                 Startup,
                 move |asset_server: Res<AssetServer>, mut commands: Commands| {
@@ -514,7 +500,7 @@ fn run(cli: Cli) -> io::Result<ExitCode> {
                 },
             );
         }
-        "lua" | "p8lua" => {
+        "toml" | "lua" | "p8lua" => {
             if cfg!(not(feature = "pico8-to-lua")) && extension == "p8lua" {
                 eprintln!(
                     "error: Must compile with 'pico8-to-lua' feature to handle 'p8lua' files."
@@ -522,21 +508,7 @@ fn run(cli: Cli) -> io::Result<ExitCode> {
                 return Ok(ExitCode::from(3));
             }
             eprintln!("loading lua");
-            let mut content = fs::read_to_string(&script_path)?;
-
-            let mut config =
-                if let Some(front_matter) = front_matter::LUA.parse_in_place(&mut content) {
-                    let mut config: Config = toml::from_str::<Config>(&front_matter)
-                        .map_err(|e| io::Error::other(format!("{e}")))?;
-                    config
-                        .inject_template(None)
-                        .map_err(|e| io::Error::other(format!("{e}")))?;
-                    config
-                } else {
-                    Config::pico8()
-                };
-            let script_asset_path = AssetPath::from_path(&script_path);
-            config.scripts = vec![script_asset_path.to_string()];
+            app.add_systems(Startup, load_and_insert_pico8(asset_path));
         }
         ext => {
             eprintln!(
@@ -546,8 +518,6 @@ fn run(cli: Cli) -> io::Result<ExitCode> {
         }
     }
 
-    app.add_plugins(Nano9Plugins::default())
-       .add_systems(Startup, load_and_insert_pico8(path))
 
     if pause {
         app.add_systems(PreUpdate, pause_pico8_when_loaded);
