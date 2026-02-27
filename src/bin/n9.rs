@@ -385,6 +385,15 @@ macro_rules! copy_template {
     }};
 }
 
+enum Lookup {
+    /// There are no defined asset sources.
+    Default,
+    /// There is one asset source for script and asset lookup.
+    One { path: PathBuf },
+    /// There are two asset sources, the default one and the script one.
+    Two { default: PathBuf, script: PathBuf },
+}
+
 fn run(cli: Cli) -> io::Result<ExitCode> {
     let (script, shared_data, pause, check) = match cli.command {
         Command::Run {
@@ -406,7 +415,7 @@ fn run(cli: Cli) -> io::Result<ExitCode> {
     } else {
         None
     };
-    let script_path = config_path.clone().unwrap_or_else(|| script.clone());
+    let script_path = config_path.unwrap_or_else(|| script.clone());
     // Choose the default asset root before creating the app so we can register
     // it before AssetPlugin (Default must be registered before AssetPlugin).
     // - If NANO9_ASSETS_DIR is set, it always wins.
@@ -417,15 +426,11 @@ fn run(cli: Cli) -> io::Result<ExitCode> {
     // This keeps relative asset paths (scripts, sprite sheets, etc.) resolving the same way for:
     //   (cd examples/sprite && ... check .)
     //   (cd examples && ... check sprite)
-    let default_asset_root: Option<PathBuf> =
-        if let Some(dir_name) = env::var_os("NANO9_ASSETS_DIR") {
-            let asset_dir: PathBuf = dir_name.into();
-            Some(asset_dir)
-        } else if script.exists() {
+    let env_asset_root: Option<PathBuf> = env::var_os("NANO9_ASSETS_DIR").map(PathBuf::from);
+    let script_asset_root: Option<PathBuf> = if script.exists() {
             // Local path
-            // TODO: Get rid of canonicalize.
-            Some(fs::canonicalize(if script.is_dir() {
-                script.clone()
+            Some(if script.is_dir() {
+                script
             } else {
                 script
                     .parent()
@@ -436,81 +441,78 @@ fn run(cli: Cli) -> io::Result<ExitCode> {
                             p.to_path_buf()
                         }
                     })
+                    // Should we just use "." here too?
                     .unwrap_or_else(|| invocation_dir.clone())
-            })?)
+            })
         } else {
             None
         };
 
-    let assets_dir_from_env = env::var_os("NANO9_ASSETS_DIR").is_some();
-    let script_dir_root: Option<PathBuf> = if assets_dir_from_env
-        && default_asset_root.is_some()
-        && script_path.exists()
-        && script_path.is_file()
-    {
-        let parent = script_path.parent().unwrap_or(Path::new("."));
-        Some(if parent.as_os_str().is_empty() {
-            invocation_dir.clone()
-        } else {
-            invocation_dir.join(parent)
-        })
-    } else {
-        None
+    let lookup = match (env_asset_root, script_asset_root) {
+        (None, None) => Lookup::Default,
+        (Some(path), None) => Lookup::One { path },
+        (None, Some(path)) => Lookup::One { path },
+        (Some(default), Some(script)) => Lookup::Two { default, script },
+    };
+    let mut app = App::new();
+    match lookup {
+        Lookup::One { ref path } | Lookup::Two { default: ref path, .. } => {
+            app.register_asset_source(
+                &AssetSourceId::Default,
+                AssetSourceBuilder::platform_default(path.to_str().expect("asset dir"), None),
+            );
+        }
+        _ => ()
+    }
+    let input_asset_path_stripped: Option<AssetPath<'static>> = match lookup {
+        Lookup::Default => None,
+        Lookup::One { ref path } => {
+            if let Ok(p) = script_path.strip_prefix(path) {
+                Some(AssetPath::from_path(p).clone_owned())
+            } else {
+                None
+            }
+        }
+        Lookup::Two { ref default, ref script } => {
+            if let Ok(p) = script_path.strip_prefix(default) {
+                Some(AssetPath::from_path(p).clone_owned())
+            } else if let Ok(p) = script_path.strip_prefix(script) {
+                // Okay, we need this separate asset source.
+                app.register_asset_source(
+                    "script_dir",
+                    AssetSourceBuilder::platform_default(script.to_str().expect("script dir"), None),
+                );
+                Some(AssetPath::from_path(p)
+                    .with_source(AssetSourceId::from("script_dir"))
+                    .clone_owned())
+            } else {
+                None
+            }
+        }
     };
 
-    let mut app = App::new();
-    if let Some(root) = default_asset_root.as_ref() {
-        app.register_asset_source(
-            &AssetSourceId::Default,
-            AssetSourceBuilder::platform_default(root.to_str().expect("asset dir"), None),
-        );
-    }
-    if let Some(script_root) = script_dir_root.as_ref() {
-        app.register_asset_source(
-            "script_dir",
-            AssetSourceBuilder::platform_default(script_root.to_str().expect("script dir"), None),
-        );
-    }
-    app.add_plugins(Nano9Plugins);
-
-    let path: &Path = &script_path;
-    let asset_path: AssetPath<'static> = if fs::exists(path).unwrap_or(false) {
-        let script_resolved = if path.is_relative() {
-            invocation_dir.join(path)
-        } else {
-            path.to_path_buf()
-        };
-        match default_asset_root.as_ref() {
-            Some(root) => {
-                if let Ok(rel) = script_resolved.strip_prefix(root) {
-                    let rel_buf = PathBuf::from(rel);
-                    AssetPath::from_path(&rel_buf).clone_owned()
-                } else if assets_dir_from_env {
-                    AssetPath::from_path(Path::new(path.file_name().unwrap()))
-                        .with_source(AssetSourceId::from("script_dir"))
-                        .clone_owned()
-                } else {
-                    AssetPath::from_path(path).clone_owned()
+    let input_asset_path: AssetPath<'static> =
+        match input_asset_path_stripped {
+            Some(p) => p,
+            None => if let Some(s) = script_path.to_str() {
+                match AssetPath::try_parse(s) {
+                    Ok(p) => p.clone_owned(),
+                    Err(e) => {
+                        eprintln!("Cannot convert {:?} to input path: {e}", &s);
+                        return Ok(ExitCode::from(9));
+                    }
                 }
+            } else {
+                eprintln!(
+                    "Cannot convert input path to UTF-8 string {:?}.",
+                    script_path.display()
+                );
+                return Ok(ExitCode::from(10));
             }
-            None => AssetPath::from_path(path).clone_owned(),
-        }
-    } else if let Some(s) = path.to_str() {
-        match AssetPath::try_parse(s) {
-            Ok(p) => p,
-            Err(e) => {
-                eprintln!("Cannot convert {:?} to input path: {e}", &s);
-                return Ok(ExitCode::from(9));
-            }
-        }
-    } else {
-        eprintln!(
-            "Cannot convert input path to UTF-8 string {:?}.",
-            path.display()
-        );
-        return Ok(ExitCode::from(10));
-    }
-    .clone_owned();
+
+        };
+
+    app.add_plugins(Nano9Plugins);
 
     let extension = script_path
         .extension()
@@ -526,7 +528,7 @@ fn run(cli: Cli) -> io::Result<ExitCode> {
                 move |asset_server: Res<AssetServer>, mut commands: Commands| {
                     let shared_data = shared_data.unwrap_or_default();
                     let pico8_asset: Handle<Pico8Asset> = asset_server.load_with_settings(
-                        &asset_path,
+                        &input_asset_path,
                         move |settings: &mut CartLoaderSettings| {
                             settings.shared_data = shared_data;
                         },
@@ -543,7 +545,7 @@ fn run(cli: Cli) -> io::Result<ExitCode> {
                 return Ok(ExitCode::from(3));
             }
             eprintln!("loading lua");
-            app.add_systems(Startup, load_and_insert_pico8(asset_path));
+            app.add_systems(Startup, load_and_insert_pico8(input_asset_path));
         }
         ext => {
             eprintln!(
