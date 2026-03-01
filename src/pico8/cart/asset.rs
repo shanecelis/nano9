@@ -1,6 +1,7 @@
 use crate::config::Config;
 use crate::pico8::{image::pixel_art_settings, *};
 use bevy::asset::{AssetLoader, LoadContext, io::Reader};
+use bevy::reflect::TypePath;
 
 use super::*;
 #[cfg(feature = "scripting")]
@@ -17,7 +18,7 @@ pub(crate) fn plugin(app: &mut App) {
     //     ;
 }
 
-#[derive(Default)]
+#[derive(Default, TypePath)]
 struct P8AssetLoader;
 
 impl AssetLoader for P8AssetLoader {
@@ -77,7 +78,7 @@ impl AssetLoader for P8AssetLoader {
 //         &["p8"]
 //     }
 // }
-#[derive(Default)]
+#[derive(Default, TypePath)]
 struct PngAssetLoader;
 
 impl AssetLoader for PngAssetLoader {

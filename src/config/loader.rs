@@ -61,7 +61,7 @@ pub enum ConfigError {
     AssetPath(#[from] bevy::asset::ParseAssetPathError),
 }
 
-#[derive(Default)]
+#[derive(Default, TypePath)]
 pub struct ConfigLoader;
 
 impl AssetLoader for ConfigLoader {
@@ -91,7 +91,7 @@ impl AssetLoader for ConfigLoader {
     }
 }
 
-#[derive(Default)]
+#[derive(Default, TypePath)]
 pub struct Pico8Loader;
 
 impl AssetLoader for Pico8Loader {
@@ -121,10 +121,10 @@ impl AssetLoader for Pico8Loader {
     }
 }
 
-#[derive(Default)]
+#[derive(Default, TypePath)]
 pub struct LuaLoader;
 
-#[derive(Default)]
+#[derive(Default, TypePath)]
 pub struct P8LuaLoader;
 
 #[derive(Default, serde::Serialize, serde::Deserialize)]
@@ -168,7 +168,7 @@ impl AssetLoader for LuaLoader {
         let mut code = content;
         let translate = settings
             .translate_pico8
-            .or(load_context.path().extension().map(|x| x == "p8lua"))
+            .or(load_context.path().get_full_extension().map(|x| x == "p8lua"))
             .unwrap_or(false);
         if cfg!(feature = "pico8-to-lua") {
             if translate
@@ -233,7 +233,7 @@ impl AssetLoader for P8LuaLoader {
         let mut code = content;
         let translate = settings
             .translate_pico8
-            .or(load_context.path().extension().map(|x| x == "p8lua"))
+            .or(load_context.path().get_full_extension().map(|x| x == "p8lua"))
             .unwrap_or(false);
         if cfg!(feature = "pico8-to-lua") {
             if translate

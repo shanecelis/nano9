@@ -88,7 +88,7 @@ impl AssetLoader for LdtkLoader {
                 tileset.rel_path.as_ref().map(|rel_path| {
                     (
                         tileset.uid,
-                        load_context.path().parent().unwrap().join(rel_path).into(),
+                        load_context.path().path().parent().unwrap().join(rel_path).into(),
                     )
                 })
             })

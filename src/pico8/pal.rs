@@ -251,6 +251,7 @@ impl Palette {
 }
 
 #[derive(Default)]
+#[derive(bevy::reflect::TypePath)]
 struct PaletteLoader;
 
 #[allow(clippy::enum_variant_names)]

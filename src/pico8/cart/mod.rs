@@ -3,6 +3,7 @@ use bevy::asset::{
     AssetLoader, AssetPath, LoadContext,
     io::{AssetSourceId, Reader},
 };
+use bevy::reflect::TypePath;
 use bitvec::prelude::*;
 use pico8_decompress::{decompress, extract_bits_from_png};
 use serde::{Deserialize, Serialize};
@@ -359,11 +360,11 @@ pub(crate) async fn translate_pico8_to_lua(
     if has_includes {
         // There are included files, let's read them all then add them.
         for path in include_paths.into_iter() {
-            let mut cart_path: PathBuf = load_context.path().to_owned();
+            let mut cart_path: PathBuf = load_context.path().path().to_path_buf();
             cart_path.pop();
             cart_path.push(&path);
             // dbg!(&cart_path);
-            let source: AssetSourceId<'static> = load_context.asset_path().source().clone_owned();
+            let source: AssetSourceId<'static> = load_context.path().source().clone_owned();
             let extension = cart_path.extension().and_then(|s| s.to_str()).unwrap_or("");
             match extension {
                 "p8" | "png" => {
@@ -412,7 +413,7 @@ pub(crate) async fn translate_pico8_to_lua(
     })
 }
 
-#[derive(Default)]
+#[derive(Default, TypePath)]
 struct PngCartLoader;
 
 pub(crate) fn log_lua_code(code: &str) {

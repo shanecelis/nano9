@@ -40,7 +40,7 @@ impl AssetLoader for TiledSetLoader {
         let mut bytes = Vec::new();
         reader.read_to_end(&mut bytes).await?;
 
-        let tileset_path = load_context.path().to_path_buf();
+        let tileset_path = load_context.path().path().to_path_buf();
         let tileset = {
             // Allow the loader to also load tileset images.
             let mut loader = tiled::Loader::with_cache_and_reader(

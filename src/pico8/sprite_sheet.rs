@@ -3,6 +3,7 @@ use bevy::{
     asset::{AssetLoader, LoadContext, io::Reader},
     image::{ImageLoaderSettings, ImageSampler},
     prelude::*,
+    reflect::TypePath,
 };
 
 #[derive(Debug, Clone, Reflect, Asset)]
@@ -14,7 +15,7 @@ pub struct SpriteSheet {
     pub palette: Option<Palette>,
 }
 
-#[derive(Default)]
+#[derive(Default, TypePath)]
 pub struct SpriteSheetLoader;
 
 #[derive(Default, serde::Serialize, serde::Deserialize)]
@@ -74,8 +75,7 @@ impl AssetLoader for SpriteSheetLoader {
     ) -> Result<Self::Asset, Self::Error> {
         let extension = load_context
             .path()
-            .extension()
-            .and_then(|x| x.to_str())
+            .get_full_extension()
             .unwrap_or_default();
         let index_color = settings.index_color.unwrap_or_else(|| extension == "p8");
         let mut extract_palette = None;
@@ -83,7 +83,7 @@ impl AssetLoader for SpriteSheetLoader {
         let (handle, layout_maybe, flags_maybe) = if index_color {
             let mut bytes = Vec::new();
             let _ = reader.read_to_end(&mut bytes).await?;
-            match extension {
+            match extension.as_str() {
                 "p8" => {
                     let settings = pico8::CartLoaderSettings::default();
                     let parts = pico8::Cart::from_bytes(&bytes, &settings).map_err(Box::new)?;
@@ -130,7 +130,7 @@ impl AssetLoader for SpriteSheetLoader {
                 x => {
                     panic!(
                         "Can't load {:?} with extension {x:?} as sprite sheet.",
-                        load_context.path().display()
+                        load_context.path().path().display()
                     );
                 }
             }
