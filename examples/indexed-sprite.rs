@@ -1,4 +1,3 @@
-use bevy::asset::embedded_asset;
 use bevy::prelude::*;
 use nano9::prelude::*;
 fn update(mut pico8: Pico8, mut t: Local<usize>, mut p: Local<usize>) {

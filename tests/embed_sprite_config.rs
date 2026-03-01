@@ -53,14 +53,10 @@ fn capture_sprite_load_result(
 fn test_load_sprite_config_like_example() {
     let mut app = App::new();
 
-    let examples_dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("examples");
 
     app.add_plugins(MinimalPlugins);
     app.add_plugins(bevy::state::app::StatesPlugin);
-    app.add_plugins(AssetPlugin {
-        file_path: examples_dir.to_string_lossy().into_owned(),
-        ..default()
-    });
+    app.add_plugins(AssetPlugin::default());
     app.add_plugins(ImagePlugin::default_nearest());
     app.add_plugins(headless_config_load_plugin);
     // app.add_plugins(nano9::Nano9Plugin);

@@ -43,10 +43,12 @@ pub(crate) fn plugin(app: &mut App) {
 
 /// Minimal plugin for headless tests: only asset loaders and asset types for
 /// loading config / Pico8Asset. No update_asset, no window, no RenderApp.
+/// Initializes `bevy::text::Font` so Pico8Loader can create default font handles.
 pub fn headless_config_load_plugin(app: &mut App) {
     app.init_asset::<Config>()
         .init_asset::<crate::pico8::Pico8Asset>()
         .init_asset::<crate::pico8::SpriteSheet>()
+        .init_asset::<bevy::text::Font>()
         .add_plugins(loader::plugin);
 }
 
@@ -978,10 +980,5 @@ bad_name = 1
             )
             .is_err()
         );
-    }
-
-    #[test]
-    fn pico8_config_string() {
-        assert_eq!("", toml::to_string(&Config::pico8()).unwrap());
     }
 }

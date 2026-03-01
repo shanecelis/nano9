@@ -32,7 +32,7 @@ fn main() {
             Update,
             nano9::action::toggle_pause.run_if(nano9::condition::on_just_pressed(KeyCode::KeyP)),
         );
-    #[cfg(feature = "")]
+    #[cfg(feature = "minibuffer")]
     app.add_plugins(nano9::minibuffer::quick_plugin);
     #[cfg(feature = "debugdump")]
     bevy_mod_debugdump::print_schedule_graph(&mut app, Update);

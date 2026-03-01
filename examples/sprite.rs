@@ -1,9 +1,5 @@
-use bevy::asset::embedded_asset;
 use bevy::prelude::*;
 use nano9::prelude::*;
-// use nano9::{cls, camera, spr, print};
-//use nano9::print;
-//use nano9::spr;
 
 fn update(mut pico8: Pico8, mut t: Local<usize>) {
     // pico8.cls(Some(PColor::Palette(2))).unwrap();
