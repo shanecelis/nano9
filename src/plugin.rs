@@ -6,7 +6,7 @@ use std::time::Duration;
 use bevy_mod_scripting::{
     BMSPlugin,
     asset::ScriptAsset,
-    bindings::{InteropError, function::namespace::NamespaceBuilder},
+    bindings::{CoreScriptGlobalsPlugin, InteropError, function::namespace::NamespaceBuilder},
     core::{
         callback_labels,
         event::{CallbackLabel, ScriptCallbackEvent},
@@ -332,7 +332,41 @@ impl Plugin for Nano9Plugin {
             //         },
             //     );
 
-            app.add_plugins(BMSPlugin.set(lua_scripting_plugin));
+            // Filter out config types and other duplicates so only one type per short name is registered.
+            let globals_plugin = CoreScriptGlobalsPlugin {
+                filter: |reg| {
+                    let path = reg.type_info().type_path_table().path();
+                    // Exclude config types (keep pico8/bevy runtime types for scripts).
+                    if path == crate::config::SpriteSheet::type_path()
+                        || path == crate::config::Palette::type_path()
+                        || path == crate::config::SpriteMap::type_path()
+                        || path == crate::config::Mesh::type_path()
+                        || path == crate::config::AudioBank::type_path()
+                    {
+                        return false;
+                    }
+                    // Exclude core::ops::Range so std::ops::Range is the one registered.
+                    if path.starts_with("core::ops::Range") {
+                        return false;
+                    }
+                    // Exclude Arc<StrongHandle> duplicates (alloc vs std); keep neither as global.
+                    if path.contains("StrongHandle") {
+                        return false;
+                    }
+                    // Exclude Vec<config::Palette> so only Vec<pico8::Palette> is in the types global.
+                    if path.contains("Vec<") &&
+                        (path.contains("config::Palette") || path.contains("config::SpriteMap")) {
+                        return false;
+                    }
+                    true
+                },
+                ..Default::default()
+            };
+            app.add_plugins(
+                BMSPlugin
+                    .set(globals_plugin)
+                    .set(lua_scripting_plugin),
+            );
         }
         // let resolution = settings.canvas_size.as_vec2() * settings.pixel_scale;
         app.insert_resource(bevy::winit::WinitSettings {
