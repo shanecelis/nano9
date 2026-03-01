@@ -1,5 +1,5 @@
 template = "pico8"
 scripts = [ "main.p8lua"]
-[[sprite_sheet]]
+[[sprite-sheet]]
 path = "local-bird-sprite.png"
-sprite_size = [16, 16]
+sprite-size = [16, 16]

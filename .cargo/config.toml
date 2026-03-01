@@ -1,0 +1,19 @@
+[target.armv7-unknown-linux-gnueabihf]
+# linker = "arm-linux-gnueabihf-gcc"
+linker = "arm-none-eabi-ld"
+# Optional: specify the archiver
+# ar = "arm-linux-gnueabihf-ar"
+#
+[alias]
+n9 = "run"
+
+# [source.crates-io]
+# replace-with = "vendored-sources"
+
+# [source."git+https://github.com/makspll/bevy_mod_scripting.git?branch=feat/bevy-0.17-part-2"]
+# git = "https://github.com/makspll/bevy_mod_scripting.git"
+# branch = "feat/bevy-0.17-part-2"
+# replace-with = "vendored-sources"
+
+# [source.vendored-sources]
+# directory = "../vendor_nano-9"

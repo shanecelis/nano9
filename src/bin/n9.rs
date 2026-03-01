@@ -17,7 +17,7 @@ use std::{
     env,
     ffi::OsStr,
     fs, io,
-    path::{Path, PathBuf},
+    path::PathBuf,
     process::ExitCode,
 };
 
@@ -395,7 +395,7 @@ enum Lookup {
 }
 
 fn run(cli: Cli) -> io::Result<ExitCode> {
-    let (script, shared_data, pause, check) = match cli.command {
+    let (input_path, shared_data, pause, check) = match cli.command {
         Command::Run {
             path,
             shared_data,
@@ -406,16 +406,16 @@ fn run(cli: Cli) -> io::Result<ExitCode> {
     };
 
     let invocation_dir = env::current_dir()?;
-    let config_path = if script.extension() == Some(OsStr::new("toml")) {
-        Some(script.clone())
-    } else if script.is_dir() {
-        let mut path = script.clone();
-        path.push("Nano9.toml");
-        Some(script.clone())
+    let config_path = if input_path.extension() == Some(OsStr::new("toml")) {
+        Some(input_path.clone())
+    } else if input_path.is_dir() {
+        let mut config_path = input_path.clone();
+        config_path.push("Nano9.toml");
+        Some(config_path)
     } else {
         None
     };
-    let script_path = config_path.unwrap_or_else(|| script.clone());
+    let script_path = config_path.unwrap_or_else(|| input_path.clone());
     // Choose the default asset root before creating the app so we can register
     // it before AssetPlugin (Default must be registered before AssetPlugin).
     // - If NANO9_ASSETS_DIR is set, it always wins.
@@ -427,23 +427,15 @@ fn run(cli: Cli) -> io::Result<ExitCode> {
     //   (cd examples/sprite && ... check .)
     //   (cd examples && ... check sprite)
     let env_asset_root: Option<PathBuf> = env::var_os("NANO9_ASSETS_DIR").map(PathBuf::from);
-    let script_asset_root: Option<PathBuf> = if script.exists() {
+    let script_asset_root: Option<PathBuf> = if input_path.exists() {
             // Local path
-            Some(if script.is_dir() {
-                script
+            if input_path.is_dir() {
+                Some(input_path)
             } else {
-                script
+                input_path
                     .parent()
-                    .map(|p| {
-                        if p.to_str() == Some("") {
-                            PathBuf::from(".")
-                        } else {
-                            p.to_path_buf()
-                        }
-                    })
-                    // Should we just use "." here too?
-                    .unwrap_or_else(|| invocation_dir.clone())
-            })
+                    .map(|p| p.to_path_buf())
+            }
         } else {
             None
         };
@@ -455,11 +447,15 @@ fn run(cli: Cli) -> io::Result<ExitCode> {
         (Some(default), Some(script)) => Lookup::Two { default, script },
     };
     let mut app = App::new();
+    let mut info_logs = vec![];
     match lookup {
         Lookup::One { ref path } | Lookup::Two { default: ref path, .. } => {
+            let mut abs_path = invocation_dir.clone();
+            abs_path.push(path);
+            info_logs.push(format!("The default assets directory: {:?}", abs_path.display()));
             app.register_asset_source(
                 &AssetSourceId::Default,
-                AssetSourceBuilder::platform_default(path.to_str().expect("asset dir"), None),
+                AssetSourceBuilder::platform_default(abs_path.to_str().expect("default asset dir"), None),
             );
         }
         _ => ()
@@ -478,9 +474,12 @@ fn run(cli: Cli) -> io::Result<ExitCode> {
                 Some(AssetPath::from_path(p).clone_owned())
             } else if let Ok(p) = script_path.strip_prefix(script) {
                 // Okay, we need this separate asset source.
+                let mut abs_path = invocation_dir.clone();
+                abs_path.push(script);
+                info_logs.push(format!("The 'script_dir://' assets directory: {:?}", abs_path.display()));
                 app.register_asset_source(
                     "script_dir",
-                    AssetSourceBuilder::platform_default(script.to_str().expect("script dir"), None),
+                    AssetSourceBuilder::platform_default(abs_path.to_str().expect("script dir"), None),
                 );
                 Some(AssetPath::from_path(p)
                     .with_source(AssetSourceId::from("script_dir"))
@@ -513,6 +512,12 @@ fn run(cli: Cli) -> io::Result<ExitCode> {
         };
 
     app.add_plugins(Nano9Plugins);
+    // We emit info logs now because the `LogPlugin` is now registered and they
+    // will be seen. Before adding `Nano9Plugins` no `info!` lines will be
+    // shown.
+    for log in info_logs {
+        info!("{}", &log);
+    }
 
     let extension = script_path
         .extension()
@@ -520,9 +525,6 @@ fn run(cli: Cli) -> io::Result<ExitCode> {
         .unwrap_or_default();
     match extension {
         "p8" | "png" => {
-            eprintln!("loading cart");
-
-            let _path = script_path;
             app.add_systems(
                 Startup,
                 move |asset_server: Res<AssetServer>, mut commands: Commands| {
@@ -544,7 +546,6 @@ fn run(cli: Cli) -> io::Result<ExitCode> {
                 );
                 return Ok(ExitCode::from(3));
             }
-            eprintln!("loading lua");
             app.add_systems(Startup, load_and_insert_pico8(input_asset_path));
         }
         ext => {
