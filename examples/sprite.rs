@@ -27,7 +27,7 @@ fn update(mut pico8: Pico8, mut t: Local<usize>) {
     //         None,
     //     )
     //     .unwrap();
-    let sheet = if pico8.btn(None, None).unwrap() { 1 } else { 0 };
+    let sheet = if btn!(pico8).unwrap() { 1 } else { 0 };
     spr!(
         pico8,
         (n as usize, sheet as usize),

@@ -5,6 +5,32 @@ pub(crate) fn plugin(app: &mut App) {
     lua::plugin(app);
 }
 
+bobtail::define! {
+    #[doc(hidden)]
+    pub __color => fn color(&mut self, #[tail] col: Option<PColor>) -> Result<PColor, Error>;
+    #[doc(hidden)]
+    pub __pal => fn pal_map(
+        &mut self,
+        #[tail] original_to_new: Option<(usize, usize)>,
+        mode: Option<PalModify>,
+    ) -> ();
+    #[doc(hidden)]
+    pub __palt => fn palt(
+        &mut self,
+        #[tail] c: Option<usize>,
+        t: Option<bool>,
+    ) -> ();
+    #[doc(hidden)]
+    pub __palm => fn palm(&mut self, #[tail] palette_index: Option<usize>) -> Result<usize, PalError>;
+    #[doc(hidden)]
+    pub __paln => fn paln(&self, #[tail] palette_index: Option<usize>) -> Result<usize, PalError>;
+}
+pub use __color as color;
+pub use __pal as pal;
+pub use __palt as palt;
+pub use __palm as palm;
+pub use __paln as paln;
+
 #[derive(Default, Debug, Clone)]
 pub enum PalModify {
     #[default]

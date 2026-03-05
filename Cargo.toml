@@ -90,6 +90,7 @@ user_properties = [ "bevy_ecs_tiled/user_properties" ]
 # level = [ "dep:bevy_ecs_tiled", "dep:serde_json" ]
 level = [ "dep:bevy_ecs_tiled", "dep:serde_json", "dep:futures-lite", "tiled", "scripting" ]
 web = []
+dev-tools = []
 
 
 [dev-dependencies]
@@ -106,6 +107,7 @@ required-features = [ "cli" ]
 name = "export-config"
 test = false
 bench = false
+required-features = [ "dev-tools" ]
 
 [patch.crates-io]
 # bobtail = { path = "../bobtail" }

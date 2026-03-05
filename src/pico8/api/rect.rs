@@ -6,6 +6,30 @@ pub(crate) fn plugin(app: &mut App) {
     lua::plugin(app);
 }
 
+bobtail::define! {
+    #[doc(hidden)]
+    pub __rect => fn rect(
+        &mut self,
+        upper_left: Vec2,
+        lower_right: Vec2,
+        #[tail]
+        color: Option<PColor>,
+    ) -> Result<Entity, Error>;
+    #[doc(hidden)]
+    pub __rectfill => fn rectfill(
+        &mut self,
+        upper_left: Vec2,
+        lower_right: Vec2,
+        #[tail]
+        color: Option<FillColor>,
+    ) -> Result<Entity, Error>;
+    #[doc(hidden)]
+    pub __fillp => fn fillp(&mut self, #[tail] pattern: Option<u16>) -> u16;
+}
+pub use __rect as rect;
+pub use __rectfill as rectfill;
+pub use __fillp as fillp;
+
 impl super::Pico8<'_, '_> {
     pub fn rectfill(
         &mut self,

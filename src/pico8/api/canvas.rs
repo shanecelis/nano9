@@ -21,11 +21,13 @@ pub struct Background;
 pub struct OneColorBackground;
 
 bobtail::define! {
-
     #[doc(hidden)]
     pub __cls => fn cls(&mut self, #[tail] color: Option<PColor>) -> Result<(), Error>;
+    #[doc(hidden)]
+    pub __pset => fn pset(&mut self, pos: UVec2, #[tail] color: Option<PColor>) -> Result<(), Error>;
 }
 pub use __cls as cls;
+pub use __pset as pset;
 
 pub(crate) fn plugin(app: &mut App) {
     // app.register_type::<OneColorBackground>()

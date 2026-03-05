@@ -8,6 +8,40 @@ pub(crate) fn plugin(app: &mut App) {
     #[cfg(feature = "scripting")]
     lua::plugin(app);
 }
+
+bobtail::define! {
+    #[doc(hidden)]
+    pub __map => fn map(
+        &mut self,
+        map_pos: UVec2,
+        screen_start: Vec2,
+        size: UVec2,
+        #[tail]
+        mask: Option<u8>,
+        map_index: Option<usize>,
+    ) -> Result<Entity, Error>;
+    #[doc(hidden)]
+    pub __mget => fn mget(
+        &self,
+        pos: Vec2,
+        #[tail]
+        map_index: Option<usize>,
+        _layer_index: Option<usize>,
+    ) -> Result<usize, Error>;
+    #[doc(hidden)]
+    pub __mset => fn mset(
+        &mut self,
+        pos: Vec2,
+        sprite_index: usize,
+        #[tail]
+        map_index: Option<usize>,
+        _layer_index: Option<usize>,
+    ) -> Result<(), Error>;
+}
+pub use __map as map;
+pub use __mget as mget;
+pub use __mset as mset;
+
 impl super::Pico8<'_, '_> {
     fn sprite_map(&self, map_index: Option<usize>) -> Result<&SpriteMap, Error> {
         let index = map_index.unwrap_or(0);

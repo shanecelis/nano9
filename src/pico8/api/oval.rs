@@ -6,6 +6,27 @@ pub(crate) fn plugin(app: &mut App) {
     lua::plugin(app);
 }
 
+bobtail::define! {
+    #[doc(hidden)]
+    pub __oval => fn oval(
+        &mut self,
+        upper_left: Vec2,
+        lower_right: Vec2,
+        #[tail]
+        color: Option<PColor>,
+    ) -> Result<Entity, Error>;
+    #[doc(hidden)]
+    pub __ovalfill => fn ovalfill(
+        &mut self,
+        upper_left: Vec2,
+        lower_right: Vec2,
+        #[tail]
+        color: Option<PColor>,
+    ) -> Result<Entity, Error>;
+}
+pub use __oval as oval;
+pub use __ovalfill as ovalfill;
+
 impl super::Pico8<'_, '_> {
     pub fn ovalfill(
         &mut self,

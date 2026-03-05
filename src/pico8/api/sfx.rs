@@ -8,6 +8,30 @@ pub(crate) fn plugin(app: &mut App) {
     lua::plugin(app);
 }
 
+bobtail::define! {
+    #[doc(hidden)]
+    pub __sfx => fn sfx(
+        &mut self,
+        n: impl Into<SfxCommand>,
+        #[tail]
+        channel: Option<u8>,
+        offset: Option<u8>,
+        length: Option<u8>,
+        bank: Option<u8>,
+    ) -> Result<(), Error>;
+    #[doc(hidden)]
+    pub __music => fn music(
+        &mut self,
+        n: impl Into<SfxCommand>,
+        #[tail]
+        _fade_ms: Option<u32>,
+        channel_mask: Option<u8>,
+        bank: Option<u8>,
+    ) -> Result<(), Error>;
+}
+pub use __sfx as sfx;
+pub use __music as music;
+
 #[derive(Debug, Clone, Copy)]
 pub enum SfxCommand {
     Play(u8),

@@ -8,7 +8,11 @@ pub use super::{
     run::RunState,
 };
 
-// Bobtail macros
-pub use crate::pico8::{camera, canvas::cls, print::print, spr};
+// Bobtail macros (Pico-8 style)
+pub use crate::pico8::{
+    btn, btnp, camera, canvas::cls, canvas::pset, circ, circfill, color, fillp, fget, fset, line,
+    map, mget, mset, music, oval, ovalfill, pal, palm, paln, palt, print::cursor, print::print, rect,
+    rectfill, sget, spr, sset, sfx, sspr,
+};
 
 pub use std::str::FromStr;

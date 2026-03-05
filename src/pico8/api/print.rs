@@ -10,7 +10,13 @@ pub(crate) fn plugin(app: &mut App) {
 }
 
 bobtail::define! {
-
+    #[doc(hidden)]
+    pub __cursor => fn cursor(
+        &mut self,
+        #[tail]
+        pos: Option<Vec2>,
+        color: Option<PColor>,
+    ) -> (Vec2, PColor);
     #[doc(hidden)]
     pub __print => fn print(
         &mut self,
@@ -23,6 +29,8 @@ bobtail::define! {
     ) -> Result<Entity, Error>;
 }
 
+#[allow(unused_imports)]
+pub use __cursor as cursor;
 pub use __print as print;
 
 impl super::Pico8<'_, '_> {

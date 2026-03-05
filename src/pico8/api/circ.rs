@@ -6,6 +6,27 @@ pub(crate) fn plugin(app: &mut App) {
     lua::plugin(app);
 }
 
+bobtail::define! {
+    #[doc(hidden)]
+    pub __circ => fn circ(
+        &mut self,
+        pos: Vec2,
+        r: impl Into<UVec2>,
+        #[tail]
+        color: Option<PColor>,
+    ) -> Result<Entity, Error>;
+    #[doc(hidden)]
+    pub __circfill => fn circfill(
+        &mut self,
+        pos: Vec2,
+        r: impl Into<UVec2>,
+        #[tail]
+        color: Option<PColor>,
+    ) -> Result<Entity, Error>;
+}
+pub use __circ as circ;
+pub use __circfill as circfill;
+
 impl super::Pico8<'_, '_> {
     pub fn circfill(
         &mut self,

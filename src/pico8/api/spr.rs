@@ -42,9 +42,54 @@ bobtail::define! {
         flip: Option<BVec2>,
         turns: Option<f32>,
     ) -> Result<Entity, Error>;
+    #[doc(hidden)]
+    pub __sspr => fn sspr(
+        &mut self,
+        sprite_rect: Rect,
+        screen_pos: Vec2,
+        #[tail]
+        screen_size: Option<Vec2>,
+        flip: Option<BVec2>,
+        sheet_index: Option<usize>,
+    ) -> Result<Entity, Error>;
+    #[doc(hidden)]
+    pub __sget => fn sget(
+        &mut self,
+        pos: UVec2,
+        #[tail]
+        sheet_index: Option<usize>,
+    ) -> Result<Option<PColor>, Error>;
+    #[doc(hidden)]
+    pub __sset => fn sset(
+        &mut self,
+        pos: UVec2,
+        #[tail]
+        color: Option<PColor>,
+        sheet_index: Option<usize>,
+    ) -> Result<(), Error>;
+    #[doc(hidden)]
+    pub __fget => fn fget(
+        &self,
+        #[tail]
+        index: Option<usize>,
+        flag_index: Option<u8>,
+    ) -> Result<u8, Error>;
+    #[doc(hidden)]
+    pub __fset => fn fset(
+        &mut self,
+        index: usize,
+        #[tail]
+        flag_index: Option<u8>,
+        value: u8,
+    ) -> Result<(), Error>;
 }
 
 pub use __spr as spr;
+pub use __sspr as sspr;
+pub use __sget as sget;
+pub use __sset as sset;
+pub use __fget as fget;
+pub use __fset as fset;
 
 #[cfg(feature = "scripting")]
 impl FromScript for Spr {

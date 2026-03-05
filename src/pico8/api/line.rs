@@ -6,6 +6,18 @@ pub(crate) fn plugin(app: &mut App) {
     lua::plugin(app);
 }
 
+bobtail::define! {
+    #[doc(hidden)]
+    pub __line => fn line(
+        &mut self,
+        a: IVec2,
+        b: IVec2,
+        #[tail]
+        color: Option<PColor>,
+    ) -> Result<Entity, Error>;
+}
+pub use __line as line;
+
 impl super::Pico8<'_, '_> {
     pub fn line(&mut self, a: IVec2, b: IVec2, color: Option<PColor>) -> Result<Entity, Error> {
         let color = self.get_color(color)?;

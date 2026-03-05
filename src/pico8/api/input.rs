@@ -7,6 +7,15 @@ pub(crate) fn plugin(app: &mut App) {
     lua::plugin(app);
 }
 
+bobtail::define! {
+    #[doc(hidden)]
+    pub __btn => fn btn(&self, #[tail] i: Option<u8>, p: Option<u8>) -> Result<bool, Error>;
+    #[doc(hidden)]
+    pub __btnp => fn btnp(&self, #[tail] i: Option<u8>, p: Option<u8>) -> Result<bool, Error>;
+}
+pub use __btn as btn;
+pub use __btnp as btnp;
+
 #[derive(Default, Debug, Clone)]
 pub struct Buttons {
     from: Option<Entity>,
