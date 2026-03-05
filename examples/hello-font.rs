@@ -1,14 +1,17 @@
 use bevy::prelude::*;
 use nano9::prelude::*;
+// It's necessary to import Nano-9's `print!` directly to avoid ambiguity with
+// `print!` in std.
+use nano9::prelude::print;
 
 fn draw(mut pico8: Pico8) -> Result<(), BevyError> {
     cls!(pico8)?;
     let t = pico8.time();
     let size = (t / 3.0 % 10.0 + 4.0).floor();
     let font = (t % 2.0) as usize;
-    crate::print!(pico8, "hello world", _, _, Some(size), Some(font))?;
+    print!(pico8, "hello world", _, _, Some(size), Some(font))?;
 
-    crate::print!(
+    print!(
         pico8,
         format!("font {} size {:.1} ", &font, &size),
         Vec2::new(0.0, 20.0),

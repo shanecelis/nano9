@@ -1,6 +1,9 @@
 //! This example is the canonical draw a sprite example. It uses bobtail macros.
 use bevy::prelude::*;
 use nano9::prelude::*;
+// It's necessary to import Nano-9's `print!` directly to avoid ambiguity with
+// `print!` in std.
+use nano9::prelude::print;
 
 fn update(mut pico8: Pico8, mut t: Local<usize>) -> Result<(), BevyError> {
     cls!(pico8)?;
@@ -16,8 +19,7 @@ fn update(mut pico8: Pico8, mut t: Local<usize>) -> Result<(), BevyError> {
         _,
         BVec2::new(true, false)
     )?;
-    // It's necessary to use `nano9::print!` since `print!` is in std.
-    crate::print!(pico8, "hello world")?;
+    print!(pico8, "hello world")?;
     *t += 1;
     Ok(())
 }

@@ -1,5 +1,9 @@
 use bevy::prelude::*;
 use nano9::prelude::*;
+// It's necessary to import Nano-9's `print!` directly to avoid ambiguity with
+// `print!` in std.
+use nano9::prelude::print;
+
 fn update(mut pico8: Pico8, mut t: Local<usize>, mut p: Local<usize>) -> Result<(), BevyError> {
     cls!(pico8)?;
 
@@ -20,7 +24,7 @@ fn update(mut pico8: Pico8, mut t: Local<usize>, mut p: Local<usize>) -> Result<
     )?;
     palm!(pico8, *p % 2)?;
     *t += 1;
-    crate::print!(pico8, "hit a button to change the palette.", Vec2::new(0.0, 120.0), PColor::Palette(7))?;
+    print!(pico8, "hit a button to change the palette.", Vec2::new(0.0, 120.0), PColor::Palette(7))?;
     Ok(())
 }
 

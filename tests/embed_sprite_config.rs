@@ -73,7 +73,7 @@ fn test_load_sprite_config_like_example() {
     app.add_systems(Update, capture_sprite_load_result);
 
     // Run until the asset has time to load (and a bit more for failures).
-    for _ in 0..50 {
+    for _ in 0..10 {
         app.update();
         let result = app.world().get_resource::<SpriteLoadResult>().cloned();
         if let Some(r) = result {

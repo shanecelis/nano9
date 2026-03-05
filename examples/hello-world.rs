@@ -1,8 +1,9 @@
 use bevy::prelude::*;
 use nano9::prelude::*;
+use nano9::prelude::print;
 
 fn init(mut pico8: Pico8) {
-    let _ = crate::print!(pico8, "hello world");
+    let _ = print!(pico8, "hello world");
 }
 
 fn main() {
