@@ -354,19 +354,16 @@ impl Plugin for Nano9Plugin {
                         return false;
                     }
                     // Exclude Vec<config::Palette> so only Vec<pico8::Palette> is in the types global.
-                    if path.contains("Vec<") &&
-                        (path.contains("config::Palette") || path.contains("config::SpriteMap")) {
+                    if path.contains("Vec<")
+                        && (path.contains("config::Palette") || path.contains("config::SpriteMap"))
+                    {
                         return false;
                     }
                     true
                 },
                 ..Default::default()
             };
-            app.add_plugins(
-                BMSPlugin
-                    .set(globals_plugin)
-                    .set(lua_scripting_plugin),
-            );
+            app.add_plugins(BMSPlugin.set(globals_plugin).set(lua_scripting_plugin));
         }
         // let resolution = settings.canvas_size.as_vec2() * settings.pixel_scale;
         app.insert_resource(bevy::winit::WinitSettings {

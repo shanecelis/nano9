@@ -7,19 +7,11 @@ use bevy::{
 };
 use clap::{Parser, Subcommand};
 use nano9::{
-    config::{
-        load_and_insert_pico8, pause_pico8_when_loaded, run_pico8_when_loaded,
-    },
+    config::{load_and_insert_pico8, pause_pico8_when_loaded, run_pico8_when_loaded},
     pico8::{CartLoaderSettings, Pico8Asset, Pico8Handle, SharedData},
     *,
 };
-use std::{
-    env,
-    ffi::OsStr,
-    fs, io,
-    path::PathBuf,
-    process::ExitCode,
-};
+use std::{env, ffi::OsStr, fs, io, path::PathBuf, process::ExitCode};
 
 #[derive(Parser)]
 #[command(version, about, long_about, disable_help_subcommand = true,
@@ -428,17 +420,15 @@ fn run(cli: Cli) -> io::Result<ExitCode> {
     //   (cd examples && ... check sprite)
     let env_asset_root: Option<PathBuf> = env::var_os("NANO9_ASSETS_DIR").map(PathBuf::from);
     let script_asset_root: Option<PathBuf> = if input_path.exists() {
-            // Local path
-            if input_path.is_dir() {
-                Some(input_path)
-            } else {
-                input_path
-                    .parent()
-                    .map(|p| p.to_path_buf())
-            }
+        // Local path
+        if input_path.is_dir() {
+            Some(input_path)
         } else {
-            None
-        };
+            input_path.parent().map(|p| p.to_path_buf())
+        }
+    } else {
+        None
+    };
 
     let lookup = match (env_asset_root, script_asset_root) {
         (None, None) => Lookup::Default,
@@ -449,16 +439,25 @@ fn run(cli: Cli) -> io::Result<ExitCode> {
     let mut app = App::new();
     let mut info_logs = vec![];
     match lookup {
-        Lookup::One { ref path } | Lookup::Two { default: ref path, .. } => {
+        Lookup::One { ref path }
+        | Lookup::Two {
+            default: ref path, ..
+        } => {
             let mut abs_path = invocation_dir.clone();
             abs_path.push(path);
-            info_logs.push(format!("The default assets directory: {:?}", abs_path.display()));
+            info_logs.push(format!(
+                "The default assets directory: {:?}",
+                abs_path.display()
+            ));
             app.register_asset_source(
                 &AssetSourceId::Default,
-                AssetSourceBuilder::platform_default(abs_path.to_str().expect("default asset dir"), None),
+                AssetSourceBuilder::platform_default(
+                    abs_path.to_str().expect("default asset dir"),
+                    None,
+                ),
             );
         }
-        _ => ()
+        _ => (),
     }
     let input_asset_path_stripped: Option<AssetPath<'static>> = match lookup {
         Lookup::Default => None,
@@ -469,31 +468,42 @@ fn run(cli: Cli) -> io::Result<ExitCode> {
                 None
             }
         }
-        Lookup::Two { ref default, ref script } => {
+        Lookup::Two {
+            ref default,
+            ref script,
+        } => {
             if let Ok(p) = script_path.strip_prefix(default) {
                 Some(AssetPath::from_path(p).clone_owned())
             } else if let Ok(p) = script_path.strip_prefix(script) {
                 // Okay, we need this separate asset source.
                 let mut abs_path = invocation_dir.clone();
                 abs_path.push(script);
-                info_logs.push(format!("The 'script_dir://' assets directory: {:?}", abs_path.display()));
+                info_logs.push(format!(
+                    "The 'script_dir://' assets directory: {:?}",
+                    abs_path.display()
+                ));
                 app.register_asset_source(
                     "script_dir",
-                    AssetSourceBuilder::platform_default(abs_path.to_str().expect("script dir"), None),
+                    AssetSourceBuilder::platform_default(
+                        abs_path.to_str().expect("script dir"),
+                        None,
+                    ),
                 );
-                Some(AssetPath::from_path(p)
-                    .with_source(AssetSourceId::from("script_dir"))
-                    .clone_owned())
+                Some(
+                    AssetPath::from_path(p)
+                        .with_source(AssetSourceId::from("script_dir"))
+                        .clone_owned(),
+                )
             } else {
                 None
             }
         }
     };
 
-    let input_asset_path: AssetPath<'static> =
-        match input_asset_path_stripped {
-            Some(p) => p,
-            None => if let Some(s) = script_path.to_str() {
+    let input_asset_path: AssetPath<'static> = match input_asset_path_stripped {
+        Some(p) => p,
+        None => {
+            if let Some(s) = script_path.to_str() {
                 match AssetPath::try_parse(s) {
                     Ok(p) => p.clone_owned(),
                     Err(e) => {
@@ -508,8 +518,8 @@ fn run(cli: Cli) -> io::Result<ExitCode> {
                 );
                 return Ok(ExitCode::from(10));
             }
-
-        };
+        }
+    };
 
     app.add_plugins(Nano9Plugins);
     // We emit info logs now because the `LogPlugin` is now registered and they

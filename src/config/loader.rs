@@ -168,7 +168,10 @@ impl AssetLoader for LuaLoader {
         let mut code = content;
         let translate = settings
             .translate_pico8
-            .or(load_context.path().get_full_extension().map(|x| x == "p8lua"))
+            .or(load_context
+                .path()
+                .get_full_extension()
+                .map(|x| x == "p8lua"))
             .unwrap_or(false);
         if cfg!(feature = "pico8-to-lua") {
             if translate
@@ -233,7 +236,10 @@ impl AssetLoader for P8LuaLoader {
         let mut code = content;
         let translate = settings
             .translate_pico8
-            .or(load_context.path().get_full_extension().map(|x| x == "p8lua"))
+            .or(load_context
+                .path()
+                .get_full_extension()
+                .map(|x| x == "p8lua"))
             .unwrap_or(false);
         if cfg!(feature = "pico8-to-lua") {
             if translate

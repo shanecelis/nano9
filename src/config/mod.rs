@@ -435,16 +435,16 @@ pub fn update_asset(
                         continue;
                     }
                     if let Some(pico8_asset) = assets.get(*id)
-                        && let Some(config) = configs.get(&pico8_asset.config) {
-                            info!("Config changed, re-applying to window and resources");
-                            apply_config_to_world_and_window(
-                                config,
-                                &mut commands,
-                                &mut primary_windows,
-                            );
-                            commands
-                                .insert_resource(crate::pico8::DespawnClearablesOnNextClear(true));
-                        }
+                        && let Some(config) = configs.get(&pico8_asset.config)
+                    {
+                        info!("Config changed, re-applying to window and resources");
+                        apply_config_to_world_and_window(
+                            config,
+                            &mut commands,
+                            &mut primary_windows,
+                        );
+                        commands.insert_resource(crate::pico8::DespawnClearablesOnNextClear(true));
+                    }
                 }
             }
             _ => {}

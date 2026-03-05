@@ -53,7 +53,6 @@ fn capture_sprite_load_result(
 fn test_load_sprite_config_like_example() {
     let mut app = App::new();
 
-
     app.add_plugins(MinimalPlugins);
     app.add_plugins(bevy::state::app::StatesPlugin);
     app.add_plugins(AssetPlugin::default());

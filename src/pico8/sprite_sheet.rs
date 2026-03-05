@@ -73,10 +73,7 @@ impl AssetLoader for SpriteSheetLoader {
         settings: &Self::Settings,
         load_context: &mut LoadContext<'_>,
     ) -> Result<Self::Asset, Self::Error> {
-        let extension = load_context
-            .path()
-            .get_full_extension()
-            .unwrap_or_default();
+        let extension = load_context.path().get_full_extension().unwrap_or_default();
         let index_color = settings.index_color.unwrap_or_else(|| extension == "p8");
         let mut extract_palette = None;
         let mut sprite_size = settings.sprite_size;

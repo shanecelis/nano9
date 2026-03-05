@@ -144,10 +144,11 @@ pub fn palette_data_from_image(image: &Image, access: &PaletteAccess) -> Vec<[u8
     let mut data = Vec::with_capacity(n);
     for index in 0..n {
         if let Some((x, y)) = palette_index_to_xy(access, size.x, size.y, index)
-            && let Ok(color) = image.get_color_at(x, y) {
-                let srgba: Srgba = color.into();
-                data.push(srgba.to_u8_array());
-            }
+            && let Ok(color) = image.get_color_at(x, y)
+        {
+            let srgba: Srgba = color.into();
+            data.push(srgba.to_u8_array());
+        }
     }
     data
 }
@@ -250,8 +251,7 @@ impl Palette {
     }
 }
 
-#[derive(Default)]
-#[derive(bevy::reflect::TypePath)]
+#[derive(Default, bevy::reflect::TypePath)]
 struct PaletteLoader;
 
 #[allow(clippy::enum_variant_names)]

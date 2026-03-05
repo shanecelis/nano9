@@ -150,13 +150,14 @@ fn spawn_camera(
                 ));
             });
     } else if canvas.is_changed()
-        && let Ok(mut transform) = dolly.single_mut() {
-            *transform = Transform::from_xyz(
-                canvas.size.x as f32 / 2.0,
-                -(canvas.size.y as f32) / 2.0,
-                0.0,
-            );
-        }
+        && let Ok(mut transform) = dolly.single_mut()
+    {
+        *transform = Transform::from_xyz(
+            canvas.size.x as f32 / 2.0,
+            -(canvas.size.y as f32) / 2.0,
+            0.0,
+        );
+    }
 }
 
 pub fn sync_window_size(
