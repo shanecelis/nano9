@@ -235,7 +235,7 @@ fn new(cli: Cli) -> io::Result<ExitCode> {
                             cargo new $path;
                             cd $path;
                             cargo add bevy@0.15;
-                            cargo add nano9 --git "https://github.com/shanecelis/nano-9.git" --branch dev --no-default-features --features $feature;
+                            cargo add nano9 --git "https://github.com/shanecelis/nano9.git" --branch dev --no-default-features --features $feature;
                         ) {
                             Ok(_) => {
                                 // Copy files

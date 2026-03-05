@@ -21,7 +21,7 @@ The goals and anti-goals for this project are [down below](#goals).
 Recommended to easily exercise the examples.
 
 ``` sh
-git clone https://github.com/shanecelis/nano-9.git
+git clone https://github.com/shanecelis/nano9.git
 ```
 
 ### As a library

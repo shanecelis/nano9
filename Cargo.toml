@@ -14,7 +14,7 @@ categories = [
 ]
 readme = "README.md"
 license = "MIT OR Apache-2.0"
-repository = "https://github.com/shanecelis/nano-9"
+repository = "https://github.com/shanecelis/nano9"
 exclude = [
     "assets/*.glb",
     "potato",
