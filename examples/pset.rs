@@ -1,15 +1,17 @@
 use bevy::prelude::*;
 use nano9::prelude::*;
 
-fn init(mut pico8: Pico8) {
-    pico8.cls(None).unwrap();
+fn init(mut pico8: Pico8) -> Result<(), BevyError> {
+    cls!(pico8)?;
+    Ok(())
 }
 
-fn update(mut pico8: Pico8) {
+fn update(mut pico8: Pico8) -> Result<(), BevyError> {
     let x = pico8.rnd(128);
     let y = pico8.rnd(128);
     let c = pico8.rnd(16);
-    let _ = pico8.pset(UVec2::new(x, y), Some(PColor::Palette(c)));
+    pset!(pico8, UVec2::new(x, y), PColor::Palette(c))?;
+    Ok(())
 }
 
 fn main() {

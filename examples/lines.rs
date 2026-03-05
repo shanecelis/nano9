@@ -1,26 +1,25 @@
 use bevy::prelude::*;
 use nano9::prelude::*;
 
-fn init(mut pico8: Pico8) {
-    pico8.cls(None).unwrap();
+fn init(mut pico8: Pico8) -> Result<(), BevyError> {
+    cls!(pico8)?;
+    Ok(())
 }
 
-fn draw_pico8(mut pico8: Pico8) {
+fn draw_pico8(mut pico8: Pico8) -> Result<(), BevyError> {
     let x = pico8.rnd(128);
     let y = pico8.rnd(128);
     let c = pico8.rnd(16);
-    pico8
-        .line(IVec2::ZERO, IVec2::new(x, y), Some(PColor::Palette(c)))
-        .unwrap();
+    crate::line!(pico8, IVec2::ZERO, IVec2::new(x, y), PColor::Palette(c))?;
+    Ok(())
 }
 
-fn draw_gameboy(mut pico8: Pico8) {
+fn draw_gameboy(mut pico8: Pico8) -> Result<(), BevyError> {
     let x = pico8.rnd(160);
     let y = pico8.rnd(144);
     let c = pico8.rnd(4);
-    pico8
-        .line(IVec2::ZERO, IVec2::new(x, y), Some(PColor::Palette(c)))
-        .unwrap();
+    crate::line!(pico8, IVec2::ZERO, IVec2::new(x, y), PColor::Palette(c))?;
+    Ok(())
 }
 
 fn main() {

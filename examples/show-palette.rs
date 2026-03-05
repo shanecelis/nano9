@@ -3,9 +3,9 @@ use bevy::prelude::*;
 use nano9::prelude::*;
 use std::{io, process::ExitCode};
 
-fn init(mut pico8: Pico8) {
-    pico8.cls(None).unwrap();
-    let n = pico8.paln(Some(0)).unwrap();
+fn init(mut pico8: Pico8) -> Result<(), BevyError> {
+    cls!(pico8)?;
+    let n = paln!(pico8, 0)?;
 
     let UVec2 {
         x: width,
@@ -14,14 +14,14 @@ fn init(mut pico8: Pico8) {
     let dw = width as f32 / n as f32;
 
     for i in 0..n {
-        pico8
-            .rectfill(
-                Vec2::new(i as f32 * dw, 0.0),
-                Vec2::new((i + 1) as f32 * dw, height as f32),
-                Some(i.into()),
-            )
-            .unwrap();
+        rectfill!(
+            pico8,
+            Vec2::new(i as f32 * dw, 0.0),
+            Vec2::new((i + 1) as f32 * dw, height as f32),
+            Some(i.into())
+        )?;
     }
+    Ok(())
 }
 
 fn main() -> io::Result<ExitCode> {

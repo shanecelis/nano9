@@ -1,3 +1,5 @@
+//! This example is the same as `sprite.rs` but it doesn't use any bobtail
+//! macros.
 use bevy::prelude::*;
 use nano9::prelude::*;
 

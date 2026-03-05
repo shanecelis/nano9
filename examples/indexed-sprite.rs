@@ -1,30 +1,27 @@
 use bevy::prelude::*;
 use nano9::prelude::*;
-fn update(mut pico8: Pico8, mut t: Local<usize>, mut p: Local<usize>) {
-    cls!(pico8).unwrap();
+fn update(mut pico8: Pico8, mut t: Local<usize>, mut p: Local<usize>) -> Result<(), BevyError> {
+    cls!(pico8)?;
 
-    // cls!(pico8, PColor::Palette(2)).unwrap();
-    // cls!(pico8, 2i32).unwrap();
-
-    // cls!(pico8, 2).unwrap();
     let n = ((pico8.time() * 4.0) % 8.0) + 8.0;
     let x = *t % 128;
     let y = *t / 128;
     let flip_horizontal = true;
 
-    if pico8.btnp(None, None).unwrap() {
+    if btnp!(pico8)? {
         *p += 1;
     }
     spr!(
         pico8,
         n as usize,
-        (0.0 * x as f32, y as f32),
+        (x as f32, y as f32),
         _,
         BVec2::new(flip_horizontal, false)
-    )
-    .unwrap();
-    pico8.palm(Some(*p % 2)).unwrap();
+    )?;
+    palm!(pico8, *p % 2)?;
     *t += 1;
+    crate::print!(pico8, "hit a button to change the palette.", Vec2::new(0.0, 120.0), PColor::Palette(7))?;
+    Ok(())
 }
 
 fn main() {

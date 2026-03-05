@@ -1,47 +1,25 @@
+//! This example is the canonical draw a sprite example. It uses bobtail macros.
 use bevy::prelude::*;
 use nano9::prelude::*;
 
-fn update(mut pico8: Pico8, mut t: Local<usize>) {
-    // pico8.cls(Some(PColor::Palette(2))).unwrap();
-    //pico8.cls(Some(2)).unwrap();
-    //pico8.cls(Some(2)).unwrap();
-    cls!(pico8).unwrap();
+fn update(mut pico8: Pico8, mut t: Local<usize>) -> Result<(), BevyError> {
+    cls!(pico8)?;
 
-    // cls!(pico8, PColor::Palette(2)).unwrap();
-    // cls!(pico8, 2i32).unwrap();
-
-    // cls!(pico8, 2).unwrap();
     let n = ((pico8.time() * 4.0) % 8.0) + 8.0;
     let x = *t % 128;
     let y = *t / 128;
 
-    // pico8.camera(Some((-(x as f32), 0.0)));
-    // camera!(pico8, Vec2::new(-(x as f32), 0.0));
-    camera!(pico8, Vec2::new(-(x as f32), 0.0));
-    // pico8
-    //     .spr(
-    //         n as usize,
-    //         Vec2::new(0.0 * x as f32, y as f32),
-    //         None,
-    //         Some(BVec2::new(true, false)),
-    //         None,
-    //     )
-    //     .unwrap();
-    let sheet = if btn!(pico8).unwrap() { 1 } else { 0 };
     spr!(
         pico8,
-        (n as usize, sheet as usize),
-        // Vec2::new(0.0 * x as f32, y as f32),
-        (0.0 * x as f32, y as f32),
+        n as usize,
+        (x as f32, y as f32),
         _,
         BVec2::new(true, false)
-    )
-    .unwrap();
-    // pico8.camera(Some(Vec2::ZERO));
-    camera!(pico8, Vec2::ZERO);
-    // pico8.print("hello world", Some(Vec2::ZERO), None, None, None).unwrap();
-    crate::print!(pico8, "hello world", Vec2::ZERO).unwrap();
+    )?;
+    // It's necessary to use `nano9::print!` since `print!` is in std.
+    crate::print!(pico8, "hello world")?;
     *t += 1;
+    Ok(())
 }
 
 fn main() {

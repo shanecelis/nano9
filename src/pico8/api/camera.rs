@@ -24,19 +24,19 @@ fn change_camera_position(
 
 bobtail::define! {
     #[doc(hidden)]
-    pub __camera => fn camera(&mut self, #[tail] pos: Option<Vec2>) -> Vec2;
+    pub __camera => fn camera(&mut self, #[tail] pos: Option<Vec2>) -> Result<Vec2, Error>;
 }
 pub use __camera as camera;
 
 impl super::Pico8<'_, '_> {
-    pub fn camera(&mut self, pos: Option<Vec2>) -> Vec2 {
+    pub fn camera(&mut self, pos: Option<Vec2>) -> Result<Vec2, Error> {
         if let Some(pos) = pos {
             let last = std::mem::replace(&mut self.state.draw_state.camera_position, pos);
             self.commands
                 .run_system_cached_with(change_camera_position, pos);
-            last
+            Ok(last)
         } else {
-            self.state.draw_state.camera_position
+            Ok(self.state.draw_state.camera_position)
         }
     }
 }
@@ -58,7 +58,7 @@ mod lua {
             |ctx: FunctionCallContext, x: Option<f32>, y: Option<f32>| {
                 with_pico8(&ctx, move |pico8| {
                     let arg = x.map(|x| Vec2::new(x, y.unwrap_or(0.0)));
-                    Ok(pico8.camera(arg))
+                    pico8.camera(arg)
                 })
                 .map(|last_pos| (last_pos.x, last_pos.y))
             },

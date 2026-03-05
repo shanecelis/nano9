@@ -1,24 +1,20 @@
 use bevy::prelude::*;
 use nano9::prelude::*;
 
-fn draw(mut pico8: Pico8) {
-    pico8.cls(None).unwrap();
+fn draw(mut pico8: Pico8) -> Result<(), BevyError> {
+    cls!(pico8)?;
     let t = pico8.time();
     let size = (t / 3.0 % 10.0 + 4.0).floor();
     let font = (t % 2.0) as usize;
-    pico8
-        .print("hello world", None, None, Some(size), Some(font))
-        .unwrap();
+    crate::print!(pico8, "hello world", _, _, Some(size), Some(font))?;
 
-    pico8
-        .print(
-            format!("font {} size {:.1} ", &font, &size),
-            Some(Vec2::new(0.0, 20.0)),
-            Some(PColor::Palette(12)),
-            None,
-            None,
-        )
-        .unwrap();
+    crate::print!(
+        pico8,
+        format!("font {} size {:.1} ", &font, &size),
+        Vec2::new(0.0, 20.0),
+        PColor::Palette(12)
+    )?;
+    Ok(())
 }
 
 fn main() {
