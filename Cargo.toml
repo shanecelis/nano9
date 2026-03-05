@@ -26,12 +26,11 @@ bevy = { version = "0.18", features = [ "bevy_dev_tools", "asset_processor", "se
 bevy_mod_scripting = { version = "0.19", features = ["lua54", "core_functions"], default-features = false, optional = true }
 bytemuck = "1.16.3"
 thiserror = "1.0.63"
-bevy_minibuffer = { version = "0.5", optional = true }
-bevy_minibuffer_inspector = { version = "0.3", optional = true }
+bevy_minibuffer = { version = "0.6", optional = true }
+bevy_minibuffer_inspector = { version = "0.4", optional = true }
 bevy_egui = { version = "0.39", optional = true }
 serde = { version = "1.0.228", features = ["derive"] }
 bevy_ecs_tilemap = "0.18"
-keyseq = { version = "0.7.0", features = ["bevy"], optional = true }
 dasp = { version = "0.11.0", features = ["all"] }
 bresenham = "0.1.1"
 rand = { version = "0.9.2", optional = true }
@@ -69,7 +68,7 @@ lua-lib = [ "rust-lib", "pico8-to-lua", "scripting", "rand", "framepace" ]
 rust-lib = [ "negate-y", "fixed-point", "pixel-snap", "rand", "framepace" ]
 negate-y = []
 inspector = [ "minibuffer", "dep:bevy_minibuffer_inspector", "dep:bevy_egui" ]
-minibuffer = [ "dep:bevy_minibuffer", "dep:keyseq" ]
+minibuffer = [ "dep:bevy_minibuffer" ]
 debugdump = [ "dep:bevy_mod_debugdump" ]
 pico8-to-lua = [ "dep:pico8-to-lua" ]
 fixed-point = [ "dep:fixed" ]
@@ -78,6 +77,7 @@ web-asset = [ "bevy/http", "bevy/https" ]
 watcher = [ "bevy/file_watcher" ]
 framepace = [ "dep:bevy_framepace" ]
 pixel-snap = []
+# cpu-render = []
 gameboy = []
 tiled = [ "dep:tiled" ]
 mute = []
@@ -109,11 +109,11 @@ bench = false
 
 [patch.crates-io]
 # bobtail = { path = "../bobtail" }
-# bevy_minibuffer = { path = "../bevy_minibuffer" }
-# bevy_minibuffer_inspector = { path = "../bevy_minibuffer_inspector" }
-# bevy_asky = { path = "../bevy_asky" }
-# bevy-input-sequence = { path = "../bevy-input-sequence" }
-# keyseq = { path = "../keyseq" }
+bevy_minibuffer = { path = "../bevy_minibuffer" }
+bevy_minibuffer_inspector = { path = "../bevy_minibuffer_inspector" }
+bevy_asky = { path = "../bevy_asky" }
+bevy-input-sequence = { path = "../bevy-input-sequence" }
+keyseq = { path = "../keyseq" }
 # mashmap = { git = "https://github.com/shanecelis/mashmap.git", branch = "drain_key_if" }
 # pico8-to-lua = { path = "../pico8-to-lua" }
 # bevy = { path = "../bevy-0.16" }
