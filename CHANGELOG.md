@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 ## [unreleased]
 
+## [0.1.0-alpha.7] - 2026-03-07
+- feat: Add [bobtail](https://github.com/shanecelis/bobtail) macros for Pico-8 functions.
+- feat: Hot-reload config at runtime.
+- chore: Change repo name from "nano-9" to "nano9".
+- feat: Add indexed-sprite Rust example.
+- refactor: Use kebab-case in Nano9.toml.
+- feat: Report asset load failures.
+- fix: Handle palettes over 16 colors.
+
 ## [0.1.0-alpha.6] - 2026-02-07
 - bug: Fix handling of URLs on CLI.
 - excise: Cannot use `Option<impl T>` for anything.

@@ -28,10 +28,10 @@ fn main() {
     app.add_systems(nano9::schedule::Init, init);
     let path = if gameboy {
         app.add_systems(nano9::schedule::Draw, draw_gameboy);
-        config::gameboy::CONFIG
+        nano9::config::gameboy::CONFIG
     } else {
         app.add_systems(nano9::schedule::Draw, draw_pico8);
-        config::pico8::CONFIG
+        nano9::config::pico8::CONFIG
     };
 
     app.add_plugins(Nano9Plugins::default())

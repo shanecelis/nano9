@@ -1,5 +1,5 @@
 template = "pico8"
-name = "ohii"
+name = "Sprite Example"
 [screen]
 decorations = true
 canvas-size = [128, 128]
