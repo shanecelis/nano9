@@ -29,8 +29,8 @@ bobtail::define! {
         bank: Option<u8>,
     ) -> Result<(), Error>;
 }
-pub use __sfx as sfx;
 pub use __music as music;
+pub use __sfx as sfx;
 
 #[derive(Debug, Clone, Copy)]
 pub enum SfxCommand {

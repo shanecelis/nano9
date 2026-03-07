@@ -84,12 +84,12 @@ bobtail::define! {
     ) -> Result<(), Error>;
 }
 
-pub use __spr as spr;
-pub use __sspr as sspr;
-pub use __sget as sget;
-pub use __sset as sset;
 pub use __fget as fget;
 pub use __fset as fset;
+pub use __sget as sget;
+pub use __spr as spr;
+pub use __sset as sset;
+pub use __sspr as sspr;
 
 #[cfg(feature = "scripting")]
 impl FromScript for Spr {

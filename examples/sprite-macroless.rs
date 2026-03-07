@@ -8,14 +8,13 @@ fn update(mut pico8: Pico8, mut t: Local<usize>) -> Result<(), BevyError> {
     let n = ((pico8.time() * 4.0) % 8.0) + 8.0;
     let x = *t % 128;
     let y = *t / 128;
-    pico8
-        .spr(
-            n as usize,
-            Vec2::new(x as f32, y as f32),
-            None,
-            Some(BVec2::new(true, false)),
-            None,
-        )?;
+    pico8.spr(
+        n as usize,
+        Vec2::new(x as f32, y as f32),
+        None,
+        Some(BVec2::new(true, false)),
+        None,
+    )?;
     pico8.print("hello world", Some(Vec2::ZERO), None, None, None)?;
     *t += 1;
     Ok(())

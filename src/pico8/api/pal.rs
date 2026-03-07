@@ -27,9 +27,9 @@ bobtail::define! {
 }
 pub use __color as color;
 pub use __pal as pal;
-pub use __palt as palt;
 pub use __palm as palm;
 pub use __paln as paln;
+pub use __palt as palt;
 
 #[derive(Default, Debug, Clone)]
 pub enum PalModify {

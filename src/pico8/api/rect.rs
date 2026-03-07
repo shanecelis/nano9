@@ -26,9 +26,9 @@ bobtail::define! {
     #[doc(hidden)]
     pub __fillp => fn fillp(&mut self, #[tail] pattern: Option<u16>) -> u16;
 }
+pub use __fillp as fillp;
 pub use __rect as rect;
 pub use __rectfill as rectfill;
-pub use __fillp as fillp;
 
 impl super::Pico8<'_, '_> {
     pub fn rectfill(

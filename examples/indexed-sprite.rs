@@ -24,7 +24,12 @@ fn update(mut pico8: Pico8, mut t: Local<usize>, mut p: Local<usize>) -> Result<
     )?;
     palm!(pico8, *p % 2)?;
     *t += 1;
-    print!(pico8, "hit a button to change the palette.", Vec2::new(0.0, 120.0), PColor::Palette(7))?;
+    print!(
+        pico8,
+        "hit a button to change the palette.",
+        Vec2::new(0.0, 120.0),
+        PColor::Palette(7)
+    )?;
     Ok(())
 }
 
