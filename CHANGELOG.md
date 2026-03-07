@@ -6,6 +6,19 @@ All notable changes to this project will be documented in this file.
 
 ## [0.1.0-alpha.7] - 2026-03-07
 - feat: Add [bobtail](https://github.com/shanecelis/bobtail) macros for Pico-8 functions.
+``` rust
+// In Lua you'd write: spr(n, x, y)
+// In Rust you would have written this:
+// pico8.spr(
+//     n,
+//     Vec2::new(x, y),
+//     None,
+//     None,
+//     None,
+// )?;
+// But now you can write this:
+```
+spr!(pico8, n, Vec2::new(x,y))?;
 - feat: Hot-reload config at runtime.
 - chore: Change repo name from "nano-9" to "nano9".
 - chore: Rename `NANO9_ASSETS_DIR` to `NANO9_ASSETS`.
