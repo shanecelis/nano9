@@ -75,7 +75,7 @@ print("hello world")
 
 To run the Lua version:
 ``` sh
-cargo run examples/hello-world.lua
+cargo run assets/hello-world.lua
 ```
 #### Rust 
 In Rust it's not a one-liner but its comparable. Nano-9 uses
@@ -97,7 +97,7 @@ cargo run --example hello-world
 
 This example sets a random pixel to a random color each frame.
 ``` sh
-cargo run examples/pset.lua
+cargo run assets/pset.lua
 ```
 OR
 ``` sh
@@ -109,7 +109,7 @@ cargo run --example pset; # Rust
 
 This example draws a line from the top-left to a random position with a random color.
 ``` sh
-cargo run examples/lines.lua
+cargo run assets/lines.lua
 ```
 OR
 ``` sh
@@ -193,7 +193,7 @@ must be exactly as they are in order for Nano-9 to process it as TOML
 configuration data. The assets must come from an "assets" directory.
 
 ``` sh
-cargo run examples/sprite.p8lua
+cargo run assets/sprite.p8lua
 ```
 
 #### sprite.rs
@@ -225,18 +225,16 @@ cargo install --path .
 Once installed you can run an example like so:
 
 ``` sh
-n9 examples/line.lua
+n9 assets/line.lua
 ```
 
-However, the "sprite" example will probably produce an error saying it could not
-find an asset in your "$HOME/.cargo/bin/assets" directory. This is due to Bevy's
-standard behavior of looking for an "assets" directory where the executable is
-stored. We can override that behavior by setting the NANO9_ASSETS_DIR environment
-variable.
+The `n9` binary sets the default assets directory to the parent of its PATH
+argument, e.g., the command "n9 run my-game/main.lua" will use "my-game" as its
+default assets directory. However, one can override that behavior by setting the
+NANO9_ASSETS environment variable.
 
 ``` sh
-cd nano-9
-NANO9_ASSETS_DIR=assets n9 examples/sprite.p8lua
+NANO9_ASSETS=assets n9 run my-game/main.lua
 ```
 
 ## API Extensions

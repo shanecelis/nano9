@@ -1,9 +1,17 @@
+### Nano-9 Config for Pico-8
+
+## Info
+# name = "My Nano-9 Game"
+# description = "A first-person pixeler"
+# author = "Jane Doe <jane.doe@blah.com>"
+# license = "MIT"
+# template = "pico8"
 frames-per-second = 30
-sprite-sheet = []
-scripts = []
-audio-bank = []
-map = []
-mesh = []
+# sprite-sheet = []
+# scripts = []
+# audio-bank = []
+# map = []
+# mesh = []
 
 [screen]
 canvas-size = [
@@ -29,6 +37,7 @@ path = "embedded://nano9/config/pico8/pico-8-palette.png"
 [[font]]
 path = "embedded://nano9/config/pico8/pico-8.ttf"
 
+## Pico-8 key bindings for player 1
 [[key-bindings.players]]
 left = ["ArrowLeft"]
 right = ["ArrowRight"]
@@ -47,6 +56,7 @@ x = [
     "Numpad8",
 ]
 
+## Pico-8 key bindings for player 2
 [[key-bindings.players]]
 left = ["KeyS"]
 right = ["KeyF"]

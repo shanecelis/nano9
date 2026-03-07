@@ -8,6 +8,7 @@ All notable changes to this project will be documented in this file.
 - feat: Add [bobtail](https://github.com/shanecelis/bobtail) macros for Pico-8 functions.
 - feat: Hot-reload config at runtime.
 - chore: Change repo name from "nano-9" to "nano9".
+- chore: Rename `NANO9_ASSETS_DIR` to `NANO9_ASSETS`.
 - feat: Add indexed-sprite Rust example.
 - refactor: Use kebab-case in Nano9.toml.
 - feat: Report asset load failures.

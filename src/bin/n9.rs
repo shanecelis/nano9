@@ -40,8 +40,9 @@ enum Command {
     ///
     /// Environment variables:
     ///
-    /// NANO9_ASSETS_DIR - override the assets directory
-    /// NANO9_LUA_CODE   - log the translated code to file
+    /// NANO9_ASSETS   - override the assets directory
+    /// 
+    /// NANO9_LUA_CODE - log the translated code to file
     Run {
         /// Run path.
         path: PathBuf,
@@ -57,7 +58,7 @@ enum Command {
     ///
     /// Environment variables:
     ///
-    /// NANO9_ASSETS_DIR - override the assets directory
+    /// NANO9_ASSETS - override the assets directory
     /// NANO9_LUA_CODE   - log the translated code to file
     Check {
         /// Run path.
@@ -410,7 +411,7 @@ fn run(cli: Cli) -> io::Result<ExitCode> {
     let script_path = config_path.unwrap_or_else(|| input_path.clone());
     // Choose the default asset root before creating the app so we can register
     // it before AssetPlugin (Default must be registered before AssetPlugin).
-    // - If NANO9_ASSETS_DIR is set, it always wins.
+    // - If NANO9_ASSETS is set, it always wins.
     // - Otherwise, if the input is a local path, use the "game directory":
     //   - directory arg: that directory
     //   - file arg: parent directory
@@ -418,7 +419,7 @@ fn run(cli: Cli) -> io::Result<ExitCode> {
     // This keeps relative asset paths (scripts, sprite sheets, etc.) resolving the same way for:
     //   (cd examples/sprite && ... check .)
     //   (cd examples && ... check sprite)
-    let env_asset_root: Option<PathBuf> = env::var_os("NANO9_ASSETS_DIR").map(PathBuf::from);
+    let env_asset_root: Option<PathBuf> = env::var_os("NANO9_ASSETS").map(PathBuf::from);
     let script_asset_root: Option<PathBuf> = if input_path.exists() {
         // Local path
         if input_path.is_dir() {

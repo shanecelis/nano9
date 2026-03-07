@@ -5,12 +5,12 @@
 # description = "A first-person pixeler"
 # author = "Jane Doe <jane.doe@blah.com>"
 # license = "MIT"
-# frames_per_second = 30
+# frames-per-second = 30
 template = "pico8"
 scripts = [ "main.lua" ]
 
 ## Pico-8 key bindings
-[pico8.key_bindings.player0]
+[pico8.key-bindings.player0]
 left = ["ArrowLeft"]
 right = ["ArrowRight"]
 up = ["ArrowUp"]
@@ -18,7 +18,7 @@ down = ["ArrowDown"]
 o = ["KeyZ", "KeyC", "KeyN", "NumpadSubtract"]
 x = ["KeyX", "KeyV", "KeyM", "Numpad8"]
 
-[pico8.key_bindings.player1]
+[pico8.key-bindings.player1]
 left = ["KeyS"]
 right = ["KeyF"]
 up = ["KeyE"]
@@ -28,15 +28,15 @@ x = ["KeyA", "KeyQ"]
 
 ## Screen
 # [screen]
-# canvas_size = [128, 128]
-# screen_size = [512, 512]
+# canvas-size = [128, 128]
+# screen-size = [512, 512]
 
 ## Defaults
 # [defaults]
-# font_size = 5
-# initial_pen_color = 6
-# initial_transparent_color = 7
-# clear_color = 8
+# font-size = 5
+# initial-pen-color = 6
+# initial-transparent-color = 7
+# clear-color = 8
 
 ## Fonts
 # [[font]] # 0
@@ -53,22 +53,22 @@ x = ["KeyA", "KeyQ"]
 # path = "dawn-palette.png"
 
 ## Images and sprite sheets
-# [[sprite_sheet]] # 0
+# [[sprite-sheet]] # 0
 # path = "sprite-sheet.png"
-# sprite_size = [8, 8]
+# sprite-size = [8, 8]
 # indexed = true # An indexed image
-# [[sprite_sheet]] # 1
+# [[sprite-sheet]] # 1
 # path = "main-character.png"
-# sprite_counts = [13, 1]
+# sprite-counts = [13, 1]
 
 ## Audio banks
-# [[audio_bank]] #0
+# [[audio-bank]] #0
 # paths = ["boop.ogg", #0
 # "beep.ogg",          #1
 # "bonk.ogg",          #2
 # ]
 # Use the first 10 sfx from sounds.p8.
-# [[audio_bank]]
+# [[audio-bank]]
 # p8 = "sounds.p8"
 # count = 10
 

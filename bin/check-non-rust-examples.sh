@@ -39,7 +39,7 @@ for path in "${PATHS[@]}"; do
   if [[ "$path" =~ \.toml$ ]] || [ -d "$path" ]; then
     output=$(cargo run --bin n9 --features "cli,scripting" -- check "$path" 2>&1)
   else
-    output=$(NANO9_ASSETS_DIR=assets cargo run --bin n9 --features "cli,scripting" -- check "$path" 2>&1)
+    output=$(NANO9_ASSETS=assets cargo run --bin n9 --features "cli,scripting" -- check "$path" 2>&1)
   fi
   exit_code=$?
   if [[ $exit_code -ne 0 ]]; then

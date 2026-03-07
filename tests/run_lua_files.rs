@@ -33,7 +33,7 @@ fn test_run_lua_files() {
                 file.to_str().expect("path should be valid UTF-8"),
             ])
             .current_dir(env!("CARGO_MANIFEST_DIR"))
-            // .env("NANO9_ASSETS_DIR", Path::new(env!("CARGO_MANIFEST_DIR")).join("tests"))
+            // .env("NANO9_ASSETS", Path::new(env!("CARGO_MANIFEST_DIR")).join("tests"))
             ;
         // println!("The command {command:?}");
 
