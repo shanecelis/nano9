@@ -17,8 +17,8 @@ All notable changes to this project will be documented in this file.
 //     None,
 // )?;
 // But now you can write this:
-```
 spr!(pico8, n, Vec2::new(x,y))?;
+```
 - feat: Hot-reload config at runtime.
 - chore: Change repo name from "nano-9" to "nano9".
 - chore: Rename `NANO9_ASSETS_DIR` to `NANO9_ASSETS`.
