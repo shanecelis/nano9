@@ -1,3 +1,5 @@
+<img align="right" width="300" alt="Nano-9 color logo" src="https://github.com/user-attachments/assets/4a7b491e-b93c-4ee7-8541-df0425390df2" />
+
 # Nano-9
 
 Nano-9 is Bevy in [Pico-8](https://www.lexaloffle.com/pico-8.php) clothing.
