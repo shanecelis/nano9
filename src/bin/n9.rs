@@ -210,7 +210,7 @@ fn new(cli: Cli) -> io::Result<ExitCode> {
                 match extension {
                     "lua" | "p8lua" => {
                         // Copy the p8lua template.
-                        let content = include_str!("../../examples/pset.lua");
+                        let content = include_str!("../../assets/pset.lua");
                         fs::write(path, content)?;
                         Ok(ExitCode::from(0))
                     }

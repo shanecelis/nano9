@@ -66,6 +66,12 @@ pub struct Pico8State {
 impl FromWorld for Pico8State {
     fn from_world(world: &mut World) -> Self {
         let defaults = world.resource::<pico8::Defaults>();
+        Pico8State::from(defaults)
+    }
+}
+
+impl From<&pico8::Defaults> for Pico8State {
+    fn from(defaults: &pico8::Defaults) -> Self {
         let mut pal_map = PalMap::default();
         if let Some(trans) = defaults.initial_transparent_color {
             pal_map.transparency.set(trans, true);

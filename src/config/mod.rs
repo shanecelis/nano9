@@ -344,6 +344,7 @@ fn apply_config_to_world_and_window(
     config: &Config,
     commands: &mut Commands,
     primary_windows: &mut Query<&mut Window, With<PrimaryWindow>>,
+    defaults: Option<&crate::pico8::Defaults>,
 ) {
     config.was_plugin_build(commands);
     let window_spec = config.to_window();
@@ -366,11 +367,17 @@ fn apply_config_to_world_and_window(
         trace!("Spawning window");
         debug!("spawn with window resolution {:?}", &window_spec.resolution);
         commands.spawn((window_spec, PrimaryWindow));
+        if let Some(defaults) = defaults {
+            commands.insert_resource(crate::pico8::Pico8State::from(defaults));
+        }
     }
 }
 
 #[allow(clippy::too_many_arguments)]
-pub fn update_asset(
+pub fn update_asset
+
+
+(
     mut reader: MessageReader<AssetEvent<crate::pico8::Pico8Asset>>,
     assets: Res<Assets<crate::pico8::Pico8Asset>>,
     configs: Res<Assets<Config>>,
@@ -412,11 +419,19 @@ pub fn update_asset(
                             }
                         }
                         if let Some(config) = configs.get(&pico8_asset.config) {
+
+                            let defaults = config.defaults
+                                    .as_ref()
+                                    .map(crate::pico8::Defaults::from_config);
                             apply_config_to_world_and_window(
                                 config,
                                 &mut commands,
                                 &mut primary_windows,
+                                defaults.as_ref()
                             );
+                            if let Some(defaults) = defaults {
+                                commands.insert_resource(defaults);
+                            }
                         }
                         info!("Goto Loaded state");
                         next_state.set(RunState::Loaded);
@@ -442,6 +457,7 @@ pub fn update_asset(
                             config,
                             &mut commands,
                             &mut primary_windows,
+                            None,
                         );
                         commands.insert_resource(crate::pico8::DespawnClearablesOnNextClear(true));
                     }
