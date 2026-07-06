@@ -234,7 +234,7 @@ pub(crate) fn clear_screen(
 
     // Clear the background if needed.
     if gfx_dirty.0 {
-        if let Some(gfx) = gfxs.get_mut(&gfx_sprite.image) {
+        if let Some(mut gfx) = gfxs.get_mut(&gfx_sprite.image) {
             trace!("Clearing Background pixels.");
             gfx.data.set_elements(0x00);
         }

@@ -47,11 +47,15 @@ fn mode_eq(a: PlaybackMode, b: PlaybackMode) -> bool {
 
 #[cfg(feature = "mute")]
 impl Command for AudioCommand {
+    type Out = ();
+
     fn apply(self, world: &mut World) {}
 }
 
 #[cfg(not(feature = "mute"))]
 impl Command for AudioCommand {
+    type Out = ();
+
     fn apply(self, world: &mut World) {
         match self {
             AudioCommand::Stop(sfx_channel, mode) => {

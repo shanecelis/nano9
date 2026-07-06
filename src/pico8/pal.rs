@@ -243,7 +243,7 @@ impl Palette {
     /// Palette from slice, creating the strip image and adding it via `load_context`.
     pub fn from_slice_with_context(slice: &[[u8; 4]], load_context: &mut LoadContext<'_>) -> Self {
         let strip = strip_image_from_data(slice);
-        let image = load_context.add_labeled_asset("palette_image".into(), strip);
+        let image = load_context.add_labeled_asset("palette_image", strip);
         Palette {
             image,
             access: PaletteAccess::default(),
@@ -298,7 +298,7 @@ impl AssetLoader for PaletteLoader {
                 "Loading palette from image for path {:?}",
                 load_context.path()
             );
-            let image = load_context.add_labeled_asset("palette_image".into(), strip);
+            let image = load_context.add_labeled_asset("palette_image", strip);
             return Ok(Palette {
                 image,
                 access: PaletteAccess::default(),
@@ -321,7 +321,7 @@ impl AssetLoader for PaletteLoader {
             PaletteSettings::FromRow(row) => PaletteAccess::FromRow(*row),
             PaletteSettings::FromColumn(column) => PaletteAccess::FromColumn(*column),
         };
-        let image_handle = load_context.add_labeled_asset("palette_image".into(), image);
+        let image_handle = load_context.add_labeled_asset("palette_image", image);
         Ok(Palette {
             image: image_handle,
             access,

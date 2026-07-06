@@ -178,7 +178,7 @@ impl super::Pico8<'_, '_> {
         let map = self.sprite_map(map_index)?.clone();
         match map {
             SpriteMap::P8(handle) => {
-                let map = self
+                let mut map = self
                     .p8_maps
                     .get_mut(&handle)
                     .ok_or_else(|| Error::NoSuch("map for handle".into()))?;
@@ -202,9 +202,8 @@ mod lua {
     use crate::{DropPolicy, N9Entity, pico8::lua::with_pico8};
 
     use bevy_mod_scripting::bindings::{
-        ReflectReference,
+        InteropError, ScriptValue,
         function::{
-            into_ref::IntoScriptRef,
             namespace::{GlobalNamespace, NamespaceBuilder},
             script_function::FunctionCallContext,
         },
@@ -249,7 +248,8 @@ mod lua {
                  celw: Option<u32>,
                  celh: Option<u32>,
                  layer: Option<u8>,
-                 map_index: Option<usize>| {
+                 map_index: Option<usize>|
+                 -> Result<ScriptValue, InteropError> {
                     let id = with_pico8(&ctx, move |pico8| {
                         pico8.map(
                             UVec2::new(celx.unwrap_or(0), cely.unwrap_or(0)),
@@ -265,12 +265,7 @@ mod lua {
                         drop: DropPolicy::Nothing,
                     };
                     let world = ctx.world()?;
-                    let reference = {
-                        let allocator = world.allocator();
-                        let mut allocator = allocator.write();
-                        ReflectReference::new_allocated(entity, &mut allocator)
-                    };
-                    ReflectReference::into_script_ref(reference, world)
+                    entity.into_script_ref(world)
                 },
             );
     }

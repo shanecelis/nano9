@@ -1,20 +1,23 @@
 use bevy::prelude::*;
+use bevy::reflect::TypeRegistry;
 
 use crate::{
     pico8::Clearable,
     translate::{Position, Rotation},
 };
-use bevy_mod_scripting::{
-    bindings::function::{
-        from::Val, namespace::NamespaceBuilder, script_function::FunctionCallContext,
-    },
-    lua::mlua::{self, FromLua, Lua, UserData, Value},
+use bevy_mod_scripting::bindings::function::{
+    namespace::NamespaceBuilder, script_function::FunctionCallContext,
 };
+use bevy_mod_scripting::lua::mlua::{self, FromLua, Lua, UserData, Value};
 
 #[cfg(feature = "scripting")]
 use bevy_mod_scripting::{
-    bindings::{InteropError, IntoScriptRef, ReflectReference, WorldAccessGuard},
-    prelude::ScriptValue,
+    ArgMeta, FromScript, GetTypeDependencies, IntoScript, TypedThrough,
+    bindings::{
+        InteropError, ReflectReference, ScriptValue, WorldAccessGuard, WorldExtensions,
+        docgen::typed_through::{ThroughTypeInfo, TypedThrough},
+        function::into_ref::IntoScriptRef,
+    },
 };
 
 #[derive(Debug, Clone, Copy, Reflect)]
@@ -43,9 +46,20 @@ impl Drop for N9Entity {
 }
 
 #[derive(Clone, Reflect)]
+#[cfg_attr(
+    feature = "scripting",
+    derive(FromScript, IntoScript, GetTypeDependencies, ArgMeta)
+)]
 pub struct N9Entity {
     pub entity: Entity,
     pub drop: DropPolicy,
+}
+
+#[cfg(feature = "scripting")]
+impl TypedThrough for N9Entity {
+    fn through_type_info() -> ThroughTypeInfo {
+        ThroughTypeInfo::TypeInfo(<Self as bevy::reflect::Typed>::type_info())
+    }
 }
 
 impl N9Entity {
@@ -56,7 +70,7 @@ impl N9Entity {
             let mut allocator = allocator.write();
             ReflectReference::new_allocated(self, &mut allocator)
         };
-        ReflectReference::into_script_ref(reference, world)
+        <ReflectReference as IntoScriptRef>::into_script_ref(reference, world)
     }
 }
 
@@ -64,14 +78,12 @@ pub(crate) fn plugin(app: &mut App) {
     NamespaceBuilder::<N9Entity>::new(app.world_mut())
         .register(
             "retain",
-            |ctx: FunctionCallContext, this: Val<N9Entity>, _z: Option<f32>| {
+            |ctx: FunctionCallContext, this: N9Entity, _z: Option<f32>| {
                 let world = ctx.world()?;
-                world.with_global_access(|world| {
+                world.with_world_mut_access_and_then(|world| -> Result<(), InteropError> {
                     let mut commands = world.commands();
                     commands.entity(this.entity).remove::<Clearable>();
-                    // if let Some(mut transform) = world.get_mut::<Transform>(this.entity) {
-                    //     transform.translation.z = z.unwrap_or(0.0);
-                    // }
+                    Ok(())
                 })?;
                 Ok(this)
             },
@@ -79,15 +91,13 @@ pub(crate) fn plugin(app: &mut App) {
         .register(
             "pos",
             |ctx: FunctionCallContext,
-             this: Val<N9Entity>,
+             this: N9Entity,
              x: Option<f32>,
-             y: Option<f32>,
-             // z: Option<f32>
-                | {
+             y: Option<f32>| {
                 let world = ctx.world()?;
-                let pos = world.with_global_access(|world| {
+                let pos = world.with_world_mut_access_and_then(|world| -> Result<_, InteropError> {
                     if x.is_some() || y.is_some() {
-                        world
+                        Ok(world
                             .get_mut::<Position>(this.entity)
                             .map(|mut position| {
                                 let last = position.0;
@@ -98,11 +108,11 @@ pub(crate) fn plugin(app: &mut App) {
                                     position.0.y = y;
                                 }
                                 last
-                            })
+                            }))
                     } else {
-                        world
+                        Ok(world
                             .get::<Position>(this.entity)
-                            .map(|position| position.0)
+                            .map(|position| position.0))
                     }
                 })?;
                 if let Some(pos) = pos {
@@ -115,16 +125,15 @@ pub(crate) fn plugin(app: &mut App) {
         .register(
             "rot",
             |ctx: FunctionCallContext,
-             this: Val<N9Entity>,
+             this: N9Entity,
              z: Option<f32>,
              y: Option<f32>,
              x: Option<f32>| {
                 let world = ctx.world()?;
-                let rot = world.with_global_access(|world| {
+                let rot = world.with_world_mut_access_and_then(|world| -> Result<_, InteropError> {
                     if x.is_some() || y.is_some() || z.is_some() {
-                        world.get_mut::<Rotation>(this.entity).map(|mut rotation| {
+                        Ok(world.get_mut::<Rotation>(this.entity).map(|mut rotation| {
                             let last = rotation.0;
-                            // let last = transform.rotation.to_euler(EulerRot::ZYX);
                             let mut turns = last;
                             if let Some(z) = z {
                                 turns.z = z;
@@ -136,14 +145,12 @@ pub(crate) fn plugin(app: &mut App) {
                                 turns.x = x;
                             }
                             rotation.0 = turns;
-                            // transform.rotation =
-                            //     Quat::from_euler(EulerRot::ZYX, turns.0, turns.1, turns.2);
                             last
-                        })
+                        }))
                     } else {
-                        world
+                        Ok(world
                             .get::<Rotation>(this.entity)
-                            .map(|rotation| rotation.0)
+                            .map(|rotation| rotation.0))
                     }
                 })?;
                 if let Some(rot) = rot {
@@ -155,50 +162,50 @@ pub(crate) fn plugin(app: &mut App) {
         )
         .register(
             "name",
-            |ctx: FunctionCallContext, this: Val<N9Entity>, new_name: Option<String>| {
+            |ctx: FunctionCallContext, this: N9Entity, new_name: Option<String>| {
                 let world = ctx.world()?;
-                world.with_global_access(|world| {
+                world.with_world_mut_access_and_then(|world| -> Result<_, InteropError> {
                     if let Some(name) = new_name {
                         let mut commands = world.commands();
                         commands.entity(this.entity).insert(Name::new(name));
-                        None
+                        Ok(None)
                     } else {
-                        world
+                        Ok(world
                             .get::<Name>(this.entity)
-                            .map(|n| n.as_str().to_string())
+                            .map(|n| n.as_str().to_string()))
                     }
                 })
             },
         )
         .register(
             "vis",
-            |ctx: FunctionCallContext, this: Val<N9Entity>, vis: Option<bool>| {
+            |ctx: FunctionCallContext, this: N9Entity, vis: Option<bool>| {
                 let world = ctx.world()?;
-                world.with_global_access(|world| {
+                world.with_world_mut_access_and_then(|world| -> Result<_, InteropError> {
                     if let Some(vis) = vis {
                         if let Some(mut visible) = world.get_mut::<Visibility>(this.entity) {
                             *visible = match vis {
-                                // None => Visibility::Inherited,
                                 true => Visibility::Visible,
                                 false => Visibility::Hidden,
                             };
                         }
-                        None
+                        Ok(None)
                     } else {
-                        world
+                        Ok(world
                             .get::<Visibility>(this.entity)
-                            .map(|v| !matches!(v, Visibility::Hidden))
+                            .map(|v| !matches!(v, Visibility::Hidden)))
                     }
                 })
             },
         )
         .register(
             "despawn",
-            |ctx: FunctionCallContext, this: Val<N9Entity>| {
+            |ctx: FunctionCallContext, this: N9Entity| {
                 let world = ctx.world()?;
-                world.with_global_access(|world| {
+                world.with_world_mut_access_and_then(|world| -> Result<(), InteropError> {
                     let mut commands = world.commands();
                     commands.entity(this.entity).despawn();
+                    Ok(())
                 })?;
                 Ok(())
             },

@@ -62,7 +62,7 @@ impl super::Pico8<'_, '_> {
                     //     materials.add(Color::srgb(0.8, 0.7, 0.6))
                     // };
                     world.entity_mut(id).insert((
-                        SceneRoot(scene),
+                        WorldAssetRoot(scene),
                         clearable,
                         // MeshMaterial3d(material),
                         Transform::from_translation(pos).with_scale(scale),

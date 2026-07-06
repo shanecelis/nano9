@@ -370,10 +370,8 @@ pub(crate) async fn translate_pico8_to_lua(
                 "p8" | "png" => {
                     let include_path = AssetPath::from(cart_path).with_source(source); //.with_label("lua");
                     let pico8_asset = load_context
-                        .loader()
-                        .immediate()
-                        // .load::<bevy_mod_scripting::prelude::ScriptAsset>(include_path)
-                        .load::<Pico8Asset>(include_path)
+                        .load_builder()
+                        .load_value::<Pico8Asset>(include_path)
                         .await
                         .map_err(Box::new)?;
                     let script = pico8_asset

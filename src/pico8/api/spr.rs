@@ -171,7 +171,7 @@ impl super::Pico8<'_, '_> {
     pub fn sprite_sheet_mut(
         &mut self,
         sheet_index: Option<usize>,
-    ) -> Result<&mut SpriteSheet, Error> {
+    ) -> Result<bevy::asset::AssetMut<'_, SpriteSheet>, Error> {
         let sheet_index = sheet_index.unwrap_or(0);
         let handle = self
             .pico8_asset()?
@@ -412,7 +412,7 @@ impl super::Pico8<'_, '_> {
                         "Cannot write pen `Color` to Gfx asset".into(),
                     )),
                 }?;
-                let gfx = self
+                let mut gfx = self
                     .gfxs
                     .get_mut(&handle)
                     .ok_or(Error::NoSuch("Gfx".into()))?;
@@ -420,7 +420,7 @@ impl super::Pico8<'_, '_> {
             }
             SprHandle::Image(handle) => {
                 let c = self.get_color(color)?;
-                let image = self
+                let mut image = self
                     .images
                     .get_mut(&handle)
                     .ok_or(Error::NoAsset("canvas".into()))?;
@@ -508,10 +508,9 @@ mod lua {
     use crate::{DropPolicy, N9Entity, pico8::lua::with_pico8};
 
     use bevy_mod_scripting::bindings::{
-        ReflectReference,
+        WorldExtensions,
         function::{
             from::FromScript,
-            into_ref::IntoScriptRef,
             namespace::{GlobalNamespace, NamespaceBuilder},
             script_function::FunctionCallContext,
         },
@@ -532,7 +531,8 @@ mod lua {
                  h: Option<f32>,
                  flip_x: Option<bool>,
                  flip_y: Option<bool>,
-                 turns: Option<f32>| {
+                 turns: Option<f32>|
+                 -> Result<ScriptValue, InteropError> {
                     let pos = Vec2::new(x.unwrap_or(0.0), y.unwrap_or(0.0));
                     let flip = (flip_x.is_some() || flip_y.is_some())
                         .then(|| BVec2::new(flip_x.unwrap_or(false), flip_y.unwrap_or(false)));
@@ -549,13 +549,7 @@ mod lua {
                         drop: DropPolicy::Nothing,
                     };
                     let world = ctx.world()?;
-                    let reference = {
-                        let allocator = world.allocator();
-                        let mut allocator = allocator.write();
-                        ReflectReference::new_allocated(entity, &mut allocator)
-                    };
-                    ReflectReference::into_script_ref(reference, world)
-                    // Ok(())
+                    entity.into_script_ref(world)
                 },
             )
             // sspr( sx, sy, sw, sh, dx, dy, [dw,] [dh,] [flip_x,] [flip_y,] [sheet_index] )

@@ -102,7 +102,7 @@ impl AssetLoader for PngAssetLoader {
 
 fn to_asset(cart: Cart, load_context: &mut LoadContext) -> Result<Pico8Asset, CartLoaderError> {
     let layout = load_context.add_labeled_asset(
-        "atlas".into(),
+        "atlas",
         TextureAtlasLayout::from_grid(
             PICO8_SPRITE_SIZE,
             PICO8_TILE_COUNT.x,
@@ -113,10 +113,10 @@ fn to_asset(cart: Cart, load_context: &mut LoadContext) -> Result<Pico8Asset, Ca
     );
     let sprite_sheets: Vec<_> = cart
         .gfx
-        .map(|gfx| load_context.add_labeled_asset("gfx".into(), gfx))
+        .map(|gfx| load_context.add_labeled_asset("gfx", gfx))
         .map(|gfx_handle| {
             load_context.add_labeled_asset(
-                "sprite_sheet".into(),
+                "sprite_sheet",
                 SpriteSheet {
                     handle: SprHandle::Gfx(gfx_handle),
                     palette: None,
@@ -134,7 +134,7 @@ fn to_asset(cart: Cart, load_context: &mut LoadContext) -> Result<Pico8Asset, Ca
         #[cfg(feature = "scripting")]
         scripts: if cfg!(feature = "scripting") {
             vec![load_context.add_labeled_asset(
-                "lua".into(),
+                "lua",
                 ScriptAsset {
                     content: code.into_bytes().into_boxed_slice(),
                     language: Language::Lua,
@@ -144,14 +144,14 @@ fn to_asset(cart: Cart, load_context: &mut LoadContext) -> Result<Pico8Asset, Ca
             vec![]
         },
         palettes: vec![Palette::from_slice_with_context(&PALETTE, load_context)].into(),
-        border: load_context
-            .loader()
-            .with_settings(pixel_art_settings)
-            .load(crate::config::pico8::BORDER),
+            border: load_context
+                .load_builder()
+                .with_settings(pixel_art_settings)
+                .load(crate::config::pico8::BORDER),
         maps: vec![
             load_context
                 .add_labeled_asset(
-                    "map".to_string(),
+                    "map",
                     P8Map {
                         entries: cart.map.clone(),
                     },
@@ -168,14 +168,14 @@ fn to_asset(cart: Cart, load_context: &mut LoadContext) -> Result<Pico8Asset, Ca
                     })
                     .collect(),
             );
-            load_context.add_labeled_asset("audio_bank".into(), bank)
+            load_context.add_labeled_asset("audio_bank", bank)
         }],
         sprite_sheets,
         font: vec![N9Font {
-            handle: load_context.load(crate::config::pico8::FONT),
+            source: load_context.load(crate::config::pico8::FONT).into(),
         }],
         meshes: vec![],
-        config: load_context.add_labeled_asset("config".into(), Config::pico8()),
+        config: load_context.add_labeled_asset("config", Config::pico8()),
     };
     Ok(asset)
 }

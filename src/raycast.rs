@@ -91,7 +91,9 @@ impl Plugin for RaycastPlugin {
                                 ]
                             })
                             .collect();
-                        Ok(ScriptValue::List(ids_dists))
+                        Ok(ScriptValue::List(
+                            std::collections::VecDeque::from(ids_dists),
+                        ))
                     })
                 },
             )

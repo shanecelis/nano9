@@ -2,9 +2,10 @@
 
 use crate::pico8::cart::{to_byte, to_nybble};
 use bevy::{
-    audio::{AddAudioSource, Source},
+    audio::{AddAudioSource, Decodable, Source},
     prelude::*,
 };
+use std::num::NonZero;
 use dasp::{
     Signal,
     signal::{self, Noise, Phase, Step, noise},
@@ -697,16 +698,16 @@ impl Iterator for SfxDecoder {
 }
 
 impl Source for SfxDecoder {
-    fn current_frame_len(&self) -> Option<usize> {
+    fn current_span_len(&self) -> Option<usize> {
         None
     }
 
-    fn channels(&self) -> u16 {
-        1
+    fn channels(&self) -> NonZero<u16> {
+        NonZero::new(1).unwrap()
     }
 
-    fn sample_rate(&self) -> u32 {
-        SAMPLE_RATE
+    fn sample_rate(&self) -> NonZero<u32> {
+        NonZero::new(SAMPLE_RATE).unwrap()
     }
 
     fn total_duration(&self) -> Option<Duration> {
@@ -715,8 +716,6 @@ impl Source for SfxDecoder {
 }
 
 impl Decodable for Sfx {
-    type DecoderItem = <SfxDecoder as Iterator>::Item;
-
     type Decoder = SfxDecoder;
 
     fn decoder(&self) -> Self::Decoder {

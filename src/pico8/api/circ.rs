@@ -160,9 +160,8 @@ mod lua {
     use crate::{DropPolicy, N9Entity, pico8::lua::with_pico8};
 
     use bevy_mod_scripting::bindings::{
-        ReflectReference,
+        InteropError, ScriptValue,
         function::{
-            into_ref::IntoScriptRef,
             namespace::{GlobalNamespace, NamespaceBuilder},
             script_function::FunctionCallContext,
         },
@@ -177,7 +176,8 @@ mod lua {
                  x0: Option<f32>,
                  y0: Option<f32>,
                  r: Option<u32>,
-                 c: Option<PColor>| {
+                 c: Option<PColor>|
+                 -> Result<ScriptValue, InteropError> {
                     let id = with_pico8(&ctx, move |pico8| {
                         pico8.circfill(
                             Vec2::new(x0.unwrap_or(0.0), y0.unwrap_or(0.0)),
@@ -191,12 +191,7 @@ mod lua {
                         drop: DropPolicy::Nothing,
                     };
                     let world = ctx.world()?;
-                    let reference = {
-                        let allocator = world.allocator();
-                        let mut allocator = allocator.write();
-                        ReflectReference::new_allocated(entity, &mut allocator)
-                    };
-                    ReflectReference::into_script_ref(reference, world)
+                    entity.into_script_ref(world)
                 },
             )
             .register(

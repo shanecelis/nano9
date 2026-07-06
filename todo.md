@@ -14,7 +14,7 @@
 - [ ] Fix tiled import for lilly's house inside
 
 ## Nano-9
-- [ ] Remove extract palette (too messy)
+- [x] Remove extract palette (too messy)
 - [ ] Make Gfx Handles work with Maps.
 - [ ] Remove the other .p8 loader?
 - [x] cls() should be a trigger
@@ -27,14 +27,14 @@
 - [x] Use Gfx for background pset() colors.
       Don't overwrite all colors unless it's marked dirty.
 - [x] Use a 1x1 image for total background.
-- [ ] Make pico-8 dialect work in .lua files.
+- [/] Make pico-8 dialect work in .lua files.
 - [x] try not to clone palettes (introduced during Pico8Asset refactor)
       Extract palettes to GfxHandler?
 - [x] Add the ScriptComponent once
 - [x] Load .p8 and .p8.png as a Pico8Asset in addition to Cart.
 - [x] Remove error after reload
 - [x] Make generic wrt palette bit-depth (at compile-time)
-- [ ] Make generic wrt palette bit-depth at runtime
+- [x] Make generic wrt palette bit-depth at runtime
 - [x] Allow multiple palettes
 - [ ] Check collisions example
 - [ ] make sprite flags generic

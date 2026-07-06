@@ -9,9 +9,9 @@ use bevy_mod_scripting::{
     bindings::{CoreScriptGlobalsPlugin, InteropError, function::namespace::NamespaceBuilder},
     core::{
         callback_labels,
-        event::{CallbackLabel, ScriptCallbackEvent},
+        event::{CallbackLabel, IntoCallbackLabel, ScriptCallbackEvent},
         handler::event_handler,
-        script::{ContextPolicy, ScriptContext},
+        script::{ContextPolicy, ScriptContexts},
     },
     lua::LuaScriptingPlugin,
     prelude::ScriptAttachment,
@@ -301,7 +301,7 @@ impl Plugin for Nano9Plugin {
         // }
         #[cfg(feature = "scripting")]
         {
-            app.insert_resource(ScriptContext::<LuaScriptingPlugin>::new(
+            app.insert_resource(ScriptContexts::<LuaScriptingPlugin>::new(
                 ContextPolicy::shared(),
             ));
             let mut lua_scripting_plugin = LuaScriptingPlugin::default();

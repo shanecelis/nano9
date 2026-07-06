@@ -240,7 +240,7 @@ impl super::Pico8<'_, '_> {
     pub fn pset(&mut self, pos: UVec2, color: Option<PColor>) -> Result<(), Error> {
         match color.unwrap_or(self.state.draw_state.pen) {
             PColor::Palette(p) => {
-                let gfx = self
+                let mut gfx = self
                     .gfxs
                     .get_mut(&self.canvas.gfx_handle)
                     .ok_or(Error::NoAsset("gfx".into()))?;

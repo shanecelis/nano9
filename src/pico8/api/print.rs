@@ -163,7 +163,7 @@ impl super::Pico8<'_, '_> {
             .font
             .get(font_index.unwrap_or(0))
             .ok_or(Error::NoSuch("font".into()))?
-            .handle
+            .source
             .clone();
         let pcolor = color.unwrap_or(state.draw_state.pen);
         let c: Color = {
@@ -198,7 +198,7 @@ impl super::Pico8<'_, '_> {
             TextFont {
                 font,
                 font_smoothing: bevy::text::FontSmoothing::None,
-                font_size,
+                font_size: FontSize::Px(font_size),
                 ..default()
             },
             Anchor::TOP_LEFT,
@@ -243,7 +243,6 @@ mod lua {
         bindings::InteropError,
         bindings::{
             IntoScript,
-            access_map::ReflectAccessId,
             function::{
                 namespace::{GlobalNamespace, NamespaceBuilder},
                 script_function::FunctionCallContext,
@@ -314,29 +313,21 @@ mod lua {
                     let clearable = Clearable::new(ttl).with_hash(hash);
 
                     let world_guard = ctx.world()?;
-                    let raid = ReflectAccessId::for_global();
-                    if world_guard.claim_global_access() {
-                        let world = world_guard.as_unsafe_world_cell()?;
-                        let world = unsafe { world.world_mut() };
-                        let r = Pico8::print_world(
-                            world,
-                            None,
-                            text.to_string(),
-                            Some(pos),
-                            c,
-                            font_size,
-                            font_index,
-                            Some(clearable),
-                        );
-                        unsafe { world_guard.release_global_access() };
-                        r.map_err(|e| InteropError::external(Box::new(e)))
-                    } else {
-                        Err(InteropError::cannot_claim_access(
-                            raid,
-                            world_guard.get_access_location(raid),
-                            "print",
-                        ))
-                    }
+                    world_guard
+                        .with_world_mut_access_and_then(|world| {
+                            Pico8::print_world(
+                                world,
+                                None,
+                                text.to_string(),
+                                Some(pos),
+                                c,
+                                font_size,
+                                font_index,
+                                Some(clearable),
+                            )
+                            .map_err(|e| InteropError::external(Box::new(e)))
+                        })
+                        .map_err(Into::into)
                 },
             )
             .register(
@@ -354,11 +345,13 @@ mod lua {
 
                         Ok(pico8.cursor(pos, color))
                     })?;
-                    Ok(ScriptValue::List(vec![
-                        ScriptValue::Float(last_pos.x as f64),
-                        ScriptValue::Float(last_pos.y as f64),
-                        last_color.into_script(ctx.world()?)?,
-                    ]))
+                    Ok(ScriptValue::List(
+                        std::collections::VecDeque::from([
+                            ScriptValue::Float(last_pos.x as f64),
+                            ScriptValue::Float(last_pos.y as f64),
+                            last_color.into_script(ctx.world()?)?,
+                        ]),
+                    ))
                 },
             )
             .register("sub", |s: String, start: isize, end: Option<isize>| {

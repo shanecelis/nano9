@@ -80,7 +80,7 @@ impl AssetLoader for SpriteSheetLoader {
         let (handle, layout_maybe, flags_maybe) = if index_color {
             let mut bytes = Vec::new();
             let _ = reader.read_to_end(&mut bytes).await?;
-            match extension.as_str() {
+            match extension.as_ref() {
                 "p8" => {
                     let settings = pico8::CartLoaderSettings::default();
                     let parts = pico8::Cart::from_bytes(&bytes, &settings).map_err(Box::new)?;

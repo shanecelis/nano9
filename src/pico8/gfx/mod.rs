@@ -135,7 +135,7 @@ pub(crate) fn compute_image(
                         info_span!("gfx::compute_image", name = "update image").entered();
                     let gfx = gfxs.get(gfx_id);
                     // Update existing image.
-                    if let Some((gfx, image)) = gfx.zip(images.get_mut(*handle)) {
+                    if let Some((gfx, mut image)) = gfx.zip(images.get_mut(*handle)) {
                         trace!("updating image for gfx {}", gfx_id);
                         if let Some(data) = &mut image.data {
                             if let Err(e) = gfx.try_write_bytes(data, |i, _, bytes| {

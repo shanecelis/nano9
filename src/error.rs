@@ -114,7 +114,7 @@ pub fn add_messages(
         for e in r.read() {
             // eprintln!("XXXX\n\n err {}", e.error);
 
-            let error_style = TextFont::default().with_font_size(FONT_SIZE);
+            let error_style = TextFont::default().with_font_size(FontSize::Px(FONT_SIZE));
             // let msg = match &e.error {
             //     ScriptError::FailedToLoad { script: _, msg } => msg.clone(),
             //     x => format!("{}", &x.error),

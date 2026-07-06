@@ -20,7 +20,7 @@ pub struct Pico8Asset {
 
 #[derive(Clone, Debug, Reflect)]
 pub struct N9Font {
-    pub handle: Handle<Font>,
+    pub source: FontSource,
 }
 
 impl Pico8Asset {
@@ -91,7 +91,7 @@ impl FromWorld for Pico8Asset {
             border: asset_server
                 .load_with_settings(crate::config::pico8::BORDER, pixel_art_settings),
             font: vec![N9Font {
-                handle: asset_server.load(crate::config::pico8::FONT),
+                source: asset_server.load(crate::config::pico8::FONT).into(),
             }],
             audio_banks: Vec::new(),
             sprite_sheets: Vec::new(),

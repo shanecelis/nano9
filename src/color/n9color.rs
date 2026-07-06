@@ -1,8 +1,8 @@
 use super::PColor;
 use bevy::prelude::*;
+use bevy::reflect::TypeRegistry;
 use std::any::TypeId;
 
-use bevy::reflect::TypeRegistry;
 #[cfg(feature = "scripting")]
 use bevy_mod_scripting::{
     GetTypeDependencies,

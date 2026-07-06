@@ -253,10 +253,10 @@ impl AssetLoader for P8LuaLoader {
         }
 
         let script_handle = load_context.add_labeled_asset(
-            "script".into(),
-            ScriptAsset {
+            "script",
+            bevy_mod_scripting::asset::ScriptAsset {
                 content: code.into_bytes().into_boxed_slice(),
-                language: Language::Lua,
+                language: bevy_mod_scripting::asset::Language::Lua,
             },
         );
         asset.scripts.push(script_handle);
@@ -332,11 +332,11 @@ async fn into_asset(
             .unwrap_or(false)
         {
             load_context
-                .loader()
+                .load_builder()
                 .load::<pico8::SpriteSheet>(&asset_path)
         } else {
             load_context
-                .loader()
+                .load_builder()
                 .with_settings(move |settings: &mut pico8::SpriteSheetSettings| {
                     settings.index_color = sheet.index_color;
                     settings.sprite_size = sheet.sprite_size;
@@ -395,11 +395,9 @@ async fn into_asset(
         for (j, p) in bank.paths().enumerate() {
             let mut asset_path = AssetPath::try_parse(p)?.into_owned();
             let label = asset_path.take_label();
-            let erased_loaded = load_context
-                .loader()
-                .with_unknown_type()
-                .immediate()
-                .load(&asset_path)
+              let erased_loaded = load_context
+                .load_builder()
+                .load_untyped_value(&asset_path)
                 .await
                 .map_err(Box::new)?;
             match erased_loaded.downcast::<pico8::audio::AudioBank>() {
@@ -465,8 +463,8 @@ async fn into_asset(
         #[cfg(feature = "scripting")]
         scripts,
         palettes: palettes.into(),
-        border: load_context
-            .loader()
+          border: load_context
+            .load_builder()
             .with_settings(pixel_art_settings)
             .load(crate::config::pico8::BORDER),
         maps,
@@ -477,10 +475,10 @@ async fn into_asset(
             .into_iter()
             .map(|font| match font {
                 config::Font::Default { default: yes } if yes => pico8::N9Font {
-                    handle: TextFont::default().font,
+                    source: TextFont::default().font,
                 },
                 config::Font::Path { path, height: _ } => pico8::N9Font {
-                    handle: load_context.load(path),
+                    source: load_context.load(path).into(),
                 },
                 config::Font::Default { .. } => {
                     panic!("Must use a path if not default font.")
@@ -488,7 +486,7 @@ async fn into_asset(
             })
             .collect::<Vec<_>>(),
         meshes,
-        config: load_context.add_labeled_asset("config".into(), whole_config),
+        config: load_context.add_labeled_asset("config", whole_config),
     };
     Ok(state)
 }
