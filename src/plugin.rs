@@ -1,7 +1,12 @@
 #![allow(deprecated)]
-use bevy::{prelude::*, reflect::Reflect, window::PresentMode};
+use bevy::{app::PluginGroup, prelude::*, reflect::Reflect, window::PresentMode};
 use std::time::Duration;
 
+#[cfg(feature = "scripting")]
+use bevy::ecs::{
+    message::MessageCursor,
+    system::{Local, SystemState},
+};
 #[cfg(feature = "scripting")]
 use bevy_mod_scripting::{
     BMSPlugin,
@@ -390,14 +395,18 @@ impl Plugin for Nano9Plugin {
                 fill_input,
                 (send(call::Init), schedule::run_schedule(schedule::Init))
                     .run_if(init_when::<ScriptAsset>()),
-                event_handler::<call::Init, LuaScriptingPlugin>,
+                // lua_event_handler::<call::Init, LuaScriptingPlugin>,
+                lua_event_handler::<call::Init>,
                 (send(call::Update), schedule::run_schedule(schedule::Update))
                     .run_if(in_state(RunState::Run)),
-                event_handler::<call::Update, LuaScriptingPlugin>,
-                event_handler::<call::Eval, LuaScriptingPlugin>,
+                // lua_event_handler::<call::Update, LuaScriptingPlugin>,
+                lua_event_handler::<call::Update>,
+                // lua_event_handler::<call::Eval, LuaScriptingPlugin>,
+                lua_event_handler::<call::Eval>,
                 (send(call::Draw), schedule::run_schedule(schedule::Draw))
                     .run_if(in_state(RunState::Run)),
-                event_handler::<call::Draw, LuaScriptingPlugin>,
+                // lua_event_handler::<call::Draw, LuaScriptingPlugin>,
+                lua_event_handler::<call::Draw>,
             )
                 .chain(),
         );
@@ -512,8 +521,10 @@ pub fn info_on_asset_event<T: Asset>() -> impl FnMut(MessageReader<AssetEvent<T>
     }
 }
 
+// TODO: This is weird. Why do I _have_ to use this instead of just
+// `event_handler::<L, LuaScriptingPlugin>`?
 #[cfg(feature = "scripting")]
-fn run_script_event_handler<L: IntoCallbackLabel>(
+fn lua_event_handler<L: IntoCallbackLabel>(
     world: &mut World,
     state: &mut SystemState<Local<MessageCursor<ScriptCallbackEvent>>>,
 ) -> Result<(), BevyError> {
