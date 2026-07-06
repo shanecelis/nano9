@@ -508,7 +508,6 @@ mod lua {
     use crate::{DropPolicy, N9Entity, pico8::lua::with_pico8};
 
     use bevy_mod_scripting::bindings::{
-        WorldExtensions,
         function::{
             from::FromScript,
             namespace::{GlobalNamespace, NamespaceBuilder},

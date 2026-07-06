@@ -12,7 +12,7 @@ use bevy_mod_scripting::lua::mlua::{self, FromLua, Lua, UserData, Value};
 
 #[cfg(feature = "scripting")]
 use bevy_mod_scripting::{
-    ArgMeta, FromScript, GetTypeDependencies, IntoScript, TypedThrough,
+    ArgMeta, FromScript, GetTypeDependencies, IntoScript,
     bindings::{
         InteropError, ReflectReference, ScriptValue, WorldAccessGuard, WorldExtensions,
         docgen::typed_through::{ThroughTypeInfo, TypedThrough},

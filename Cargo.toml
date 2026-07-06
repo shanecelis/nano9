@@ -146,34 +146,3 @@ keyseq = { path = "../keyseq" }
 # tiled = { git = "https://github.com/mapeditor/rs-tiled.git", rev = "c434e1be8904917bacc1286c5334b721f1f6deef", features = ["world"] }
 
 
-# To use vendored sources, add this to your .cargo/config.toml for this project:
-
-[source.crates-io]
-replace-with = "vendored-sources"
-
-[source."git+https://github.com/bevyengine/bevy"]
-git = "https://github.com/bevyengine/bevy"
-replace-with = "vendored-sources"
-
-[source."git+https://github.com/hacknus/bevy_framepace.git?branch=bevy_0.19"]
-git = "https://github.com/hacknus/bevy_framepace.git"
-branch = "bevy_0.19"
-replace-with = "vendored-sources"
-
-[source."git+https://github.com/jakobhellermann/bevy_mod_debugdump.git?branch=bevy-main"]
-git = "https://github.com/jakobhellermann/bevy_mod_debugdump.git"
-branch = "bevy-main"
-replace-with = "vendored-sources"
-
-[source."git+https://github.com/makspll/bevy_mod_scripting.git?branch=feat/bevy-0.19"]
-git = "https://github.com/makspll/bevy_mod_scripting.git"
-branch = "feat/bevy-0.19"
-replace-with = "vendored-sources"
-
-[source."git+https://github.com/oliver-dew/bevy_vox_scene.git?branch=feature/bevy-0.19"]
-git = "https://github.com/oliver-dew/bevy_vox_scene.git"
-branch = "feature/bevy-0.19"
-replace-with = "vendored-sources"
-
-[source.vendored-sources]
-directory = "../vendor_nano-9"

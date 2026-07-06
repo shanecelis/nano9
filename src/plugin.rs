@@ -511,3 +511,12 @@ pub fn info_on_asset_event<T: Asset>() -> impl FnMut(MessageReader<AssetEvent<T>
         }
     }
 }
+
+#[cfg(feature = "scripting")]
+fn run_script_event_handler<L: IntoCallbackLabel>(
+    world: &mut World,
+    state: &mut SystemState<Local<MessageCursor<ScriptCallbackEvent>>>,
+) -> Result<(), BevyError> {
+    let _ = event_handler::<L, LuaScriptingPlugin>(world, state)?;
+    Ok(())
+}

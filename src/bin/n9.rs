@@ -540,12 +540,13 @@ fn run(cli: Cli) -> io::Result<ExitCode> {
                 Startup,
                 move |asset_server: Res<AssetServer>, mut commands: Commands| {
                     let shared_data = shared_data.unwrap_or_default();
-                    let pico8_asset: Handle<Pico8Asset> = asset_server.load_with_settings(
-                        &input_asset_path,
+                    let pico8_asset: Handle<Pico8Asset> = asset_server
+                        .load_builder()
+                        .with_settings(
                         move |settings: &mut CartLoaderSettings| {
                             settings.shared_data = shared_data;
-                        },
-                    );
+                        })
+                        .load(&input_asset_path);
                     commands.insert_resource(Pico8Handle::from(pico8_asset));
                 },
             );
