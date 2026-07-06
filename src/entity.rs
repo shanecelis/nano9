@@ -90,16 +90,12 @@ pub(crate) fn plugin(app: &mut App) {
         )
         .register(
             "pos",
-            |ctx: FunctionCallContext,
-             this: N9Entity,
-             x: Option<f32>,
-             y: Option<f32>| {
+            |ctx: FunctionCallContext, this: N9Entity, x: Option<f32>, y: Option<f32>| {
                 let world = ctx.world()?;
-                let pos = world.with_world_mut_access_and_then(|world| -> Result<_, InteropError> {
-                    if x.is_some() || y.is_some() {
-                        Ok(world
-                            .get_mut::<Position>(this.entity)
-                            .map(|mut position| {
+                let pos =
+                    world.with_world_mut_access_and_then(|world| -> Result<_, InteropError> {
+                        if x.is_some() || y.is_some() {
+                            Ok(world.get_mut::<Position>(this.entity).map(|mut position| {
                                 let last = position.0;
                                 if let Some(x) = x {
                                     position.0.x = x;
@@ -109,12 +105,12 @@ pub(crate) fn plugin(app: &mut App) {
                                 }
                                 last
                             }))
-                    } else {
-                        Ok(world
-                            .get::<Position>(this.entity)
-                            .map(|position| position.0))
-                    }
-                })?;
+                        } else {
+                            Ok(world
+                                .get::<Position>(this.entity)
+                                .map(|position| position.0))
+                        }
+                    })?;
                 if let Some(pos) = pos {
                     Ok(Some(vec![pos.x, pos.y]))
                 } else {
@@ -130,29 +126,30 @@ pub(crate) fn plugin(app: &mut App) {
              y: Option<f32>,
              x: Option<f32>| {
                 let world = ctx.world()?;
-                let rot = world.with_world_mut_access_and_then(|world| -> Result<_, InteropError> {
-                    if x.is_some() || y.is_some() || z.is_some() {
-                        Ok(world.get_mut::<Rotation>(this.entity).map(|mut rotation| {
-                            let last = rotation.0;
-                            let mut turns = last;
-                            if let Some(z) = z {
-                                turns.z = z;
-                            }
-                            if let Some(y) = y {
-                                turns.y = y;
-                            }
-                            if let Some(x) = x {
-                                turns.x = x;
-                            }
-                            rotation.0 = turns;
-                            last
-                        }))
-                    } else {
-                        Ok(world
-                            .get::<Rotation>(this.entity)
-                            .map(|rotation| rotation.0))
-                    }
-                })?;
+                let rot =
+                    world.with_world_mut_access_and_then(|world| -> Result<_, InteropError> {
+                        if x.is_some() || y.is_some() || z.is_some() {
+                            Ok(world.get_mut::<Rotation>(this.entity).map(|mut rotation| {
+                                let last = rotation.0;
+                                let mut turns = last;
+                                if let Some(z) = z {
+                                    turns.z = z;
+                                }
+                                if let Some(y) = y {
+                                    turns.y = y;
+                                }
+                                if let Some(x) = x {
+                                    turns.x = x;
+                                }
+                                rotation.0 = turns;
+                                last
+                            }))
+                        } else {
+                            Ok(world
+                                .get::<Rotation>(this.entity)
+                                .map(|rotation| rotation.0))
+                        }
+                    })?;
                 if let Some(rot) = rot {
                     Ok(Some(vec![rot.z, rot.y, rot.x]))
                 } else {
@@ -198,16 +195,13 @@ pub(crate) fn plugin(app: &mut App) {
                 })
             },
         )
-        .register(
-            "despawn",
-            |ctx: FunctionCallContext, this: N9Entity| {
-                let world = ctx.world()?;
-                world.with_world_mut_access_and_then(|world| -> Result<(), InteropError> {
-                    let mut commands = world.commands();
-                    commands.entity(this.entity).despawn();
-                    Ok(())
-                })?;
+        .register("despawn", |ctx: FunctionCallContext, this: N9Entity| {
+            let world = ctx.world()?;
+            world.with_world_mut_access_and_then(|world| -> Result<(), InteropError> {
+                let mut commands = world.commands();
+                commands.entity(this.entity).despawn();
                 Ok(())
-            },
-        );
+            })?;
+            Ok(())
+        });
 }

@@ -41,7 +41,7 @@ enum Command {
     /// Environment variables:
     ///
     /// NANO9_ASSETS   - override the assets directory
-    /// 
+    ///
     /// NANO9_LUA_CODE - log the translated code to file
     Run {
         /// Run path.
@@ -542,8 +542,7 @@ fn run(cli: Cli) -> io::Result<ExitCode> {
                     let shared_data = shared_data.unwrap_or_default();
                     let pico8_asset: Handle<Pico8Asset> = asset_server
                         .load_builder()
-                        .with_settings(
-                        move |settings: &mut CartLoaderSettings| {
+                        .with_settings(move |settings: &mut CartLoaderSettings| {
                             settings.shared_data = shared_data;
                         })
                         .load(&input_asset_path);

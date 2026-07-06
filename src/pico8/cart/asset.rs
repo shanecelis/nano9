@@ -144,10 +144,10 @@ fn to_asset(cart: Cart, load_context: &mut LoadContext) -> Result<Pico8Asset, Ca
             vec![]
         },
         palettes: vec![Palette::from_slice_with_context(&PALETTE, load_context)].into(),
-            border: load_context
-                .load_builder()
-                .with_settings(pixel_art_settings)
-                .load(crate::config::pico8::BORDER),
+        border: load_context
+            .load_builder()
+            .with_settings(pixel_art_settings)
+            .load(crate::config::pico8::BORDER),
         maps: vec![
             load_context
                 .add_labeled_asset(

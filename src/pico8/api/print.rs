@@ -345,13 +345,11 @@ mod lua {
 
                         Ok(pico8.cursor(pos, color))
                     })?;
-                    Ok(ScriptValue::List(
-                        std::collections::VecDeque::from([
-                            ScriptValue::Float(last_pos.x as f64),
-                            ScriptValue::Float(last_pos.y as f64),
-                            last_color.into_script(ctx.world()?)?,
-                        ]),
-                    ))
+                    Ok(ScriptValue::List(std::collections::VecDeque::from([
+                        ScriptValue::Float(last_pos.x as f64),
+                        ScriptValue::Float(last_pos.y as f64),
+                        last_color.into_script(ctx.world()?)?,
+                    ])))
                 },
             )
             .register("sub", |s: String, start: isize, end: Option<isize>| {

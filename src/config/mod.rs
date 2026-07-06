@@ -374,10 +374,7 @@ fn apply_config_to_world_and_window(
 }
 
 #[allow(clippy::too_many_arguments)]
-pub fn update_asset
-
-
-(
+pub fn update_asset(
     mut reader: MessageReader<AssetEvent<crate::pico8::Pico8Asset>>,
     assets: Res<Assets<crate::pico8::Pico8Asset>>,
     configs: Res<Assets<Config>>,
@@ -419,15 +416,15 @@ pub fn update_asset
                             }
                         }
                         if let Some(config) = configs.get(&pico8_asset.config) {
-
-                            let defaults = config.defaults
-                                    .as_ref()
-                                    .map(crate::pico8::Defaults::from_config);
+                            let defaults = config
+                                .defaults
+                                .as_ref()
+                                .map(crate::pico8::Defaults::from_config);
                             apply_config_to_world_and_window(
                                 config,
                                 &mut commands,
                                 &mut primary_windows,
-                                defaults.as_ref()
+                                defaults.as_ref(),
                             );
                             if let Some(defaults) = defaults {
                                 commands.insert_resource(defaults);

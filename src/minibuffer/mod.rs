@@ -54,14 +54,12 @@ pub fn quick_plugin(app: &mut App) {
     };
     app.add_plugins(FpsOverlayPlugin {
         config: FpsOverlayConfig {
-                // Here we define size of our overlay
-                font_size: FontSize::Px(24.0),
-                // If we want, we can use a custom font
-                font: font.into(),
-                // We could also disable font smoothing.
-                font_smoothing: FontSmoothing::None,
-                ..default()
-            },
+            // Here we define size of our overlay
+            font_size: FontSize::Px(24.0),
+            // If we want, we can use a custom font
+            font: font.into(),
+            // We could also disable font smoothing.
+            font_smoothing: FontSmoothing::None,
             // We can also change color of the overlay
             text_color: Color::WHITE,
             enabled: false,

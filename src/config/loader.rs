@@ -395,7 +395,7 @@ async fn into_asset(
         for (j, p) in bank.paths().enumerate() {
             let mut asset_path = AssetPath::try_parse(p)?.into_owned();
             let label = asset_path.take_label();
-              let erased_loaded = load_context
+            let erased_loaded = load_context
                 .load_builder()
                 .load_untyped_value(&asset_path)
                 .await
@@ -463,7 +463,7 @@ async fn into_asset(
         #[cfg(feature = "scripting")]
         scripts,
         palettes: palettes.into(),
-          border: load_context
+        border: load_context
             .load_builder()
             .with_settings(pixel_art_settings)
             .load(crate::config::pico8::BORDER),
