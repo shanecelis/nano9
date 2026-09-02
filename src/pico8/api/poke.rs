@@ -1,5 +1,4 @@
 use super::*;
-use crate::translate::negate_y;
 
 #[cfg(feature = "scripting")]
 use bevy_mod_scripting::bindings::script_value::ScriptValue;
@@ -41,7 +40,7 @@ impl super::Pico8<'_, '_> {
             }),
             32 => Ok(ScriptValue::Float(self.mouse_input.position.x as f64)),
             33 => Ok(ScriptValue::Float(
-                negate_y(self.mouse_input.position.y) as f64
+                self.defaults.apply_negate_y(self.mouse_input.position.y) as f64,
             )),
             34 => Ok(ScriptValue::Integer(self.mouse_input.buttons as i64)),
             100 => Ok(ScriptValue::String(

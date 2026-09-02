@@ -78,6 +78,8 @@ pub struct Config {
     pub license: Option<String>,
     /// Screen config
     pub screen: Option<Screen>,
+    /// If true, audio commands are no-ops. Omitted: true on wasm, false on native.
+    pub mute: Option<bool>,
     /// Defaults
     pub defaults: Option<Defaults>,
     /// Bit depth
@@ -236,6 +238,10 @@ pub struct Screen {
     pub resize_constraints: Option<ResizeConstraints>,
     /// Include title bar
     pub decorations: Option<bool>,
+    /// Flip Y so Pico-8's positive-y is down. Omitted: true.
+    pub negate_y: Option<bool>,
+    /// Floor drawn positions to the pixel grid. Omitted: true.
+    pub pixel_snap: Option<bool>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default, Merge, Reflect)]
@@ -425,20 +431,15 @@ pub fn update_asset(
                             }
                         }
                         if let Some(config) = configs.get(&pico8_asset.config) {
-                            let defaults = config
-                                .defaults
-                                .as_ref()
-                                .map(crate::pico8::Defaults::from_config);
+                            let defaults = crate::pico8::Defaults::from_config(config);
                             apply_config_to_world_and_window(
                                 config,
                                 &mut commands,
                                 &mut primary_windows,
-                                defaults.as_ref(),
+                                Some(&defaults),
                                 headless.is_some(),
                             );
-                            if let Some(defaults) = defaults {
-                                commands.insert_resource(defaults);
-                            }
+                            commands.insert_resource(defaults);
                         }
                         info!("Goto Loaded state");
                         next_state.set(RunState::Loaded);
@@ -535,6 +536,8 @@ impl Config {
                 screen_size: Some(UVec2::splat(512)),
                 decorations: Some(true),
                 resize_constraints: None,
+                negate_y: Some(true),
+                pixel_snap: Some(true),
             }),
             palettes: vec![Palette {
                 path: crate::config::pico8::PALETTE.into(),
@@ -569,6 +572,8 @@ impl Config {
                 screen_size: Some(4 * UVec2::new(160, 144)),
                 decorations: Some(true),
                 resize_constraints: None,
+                negate_y: Some(true),
+                pixel_snap: Some(true),
             }),
             palettes: vec![Palette {
                 path: gameboy::PALETTES.into(),
@@ -668,12 +673,7 @@ impl Config {
     }
 
     pub(crate) fn was_plugin_build(&self, commands: &mut Commands) {
-        commands.insert_resource(
-            self.defaults
-                .as_ref()
-                .map(crate::pico8::Defaults::from_config)
-                .unwrap_or_default(),
-        );
+        commands.insert_resource(crate::pico8::Defaults::from_config(self));
 
         commands.insert_resource(self.key_bindings.clone().unwrap_or_default());
 
@@ -881,6 +881,44 @@ screen-size = [512, 512]
         let screen = config.screen.unwrap();
         assert_eq!(screen.canvas_size, UVec2::splat(128));
         assert_eq!(screen.screen_size, Some(UVec2::splat(512)));
+        assert_eq!(screen.negate_y, None);
+        assert_eq!(screen.pixel_snap, None);
+        assert_eq!(config.mute, None);
+    }
+
+    #[test]
+    fn test_compat_flags() {
+        let config: Config = toml::from_str(
+            r#"
+mute = false
+[screen]
+canvas-size = [128, 128]
+negate-y = false
+pixel-snap = false
+"#,
+        )
+        .unwrap();
+        assert_eq!(config.mute, Some(false));
+        let screen = config.screen.as_ref().unwrap();
+        assert_eq!(screen.negate_y, Some(false));
+        assert_eq!(screen.pixel_snap, Some(false));
+        let defaults = crate::pico8::Defaults::from_config(&config);
+        assert!(!defaults.mute);
+        assert!(!defaults.negate_y);
+        assert!(!defaults.pixel_snap);
+    }
+
+    #[test]
+    fn test_compat_flags_omitted() {
+        let defaults = crate::pico8::Defaults::from_config(&Config::default());
+        assert!(defaults.negate_y);
+        assert!(defaults.pixel_snap);
+        assert_eq!(defaults.mute, cfg!(target_arch = "wasm32"));
+
+        let defaults = crate::pico8::Defaults::from_config(&Config::pico8());
+        assert!(defaults.negate_y);
+        assert!(defaults.pixel_snap);
+        assert_eq!(defaults.mute, cfg!(target_arch = "wasm32"));
     }
 
     #[test]

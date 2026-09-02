@@ -190,8 +190,6 @@ fn info(_cli: Cli) -> io::Result<ExitCode> {
                                     - [ ] disabled and disabled by default"#
     );
     feature_info!("scripting", "for Lua scripting", true);
-    feature_info!("negate-y", "uses Pico-8's positive-y is downward", true);
-    feature_info!("pixel-snap", "applies floor to pixel locations", true);
     feature_info!("pico8-to-lua", "converts Pico-8's dialect to Lua", true);
     feature_info!(
         "fixed-point",

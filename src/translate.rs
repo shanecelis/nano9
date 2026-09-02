@@ -1,3 +1,4 @@
+use crate::pico8::Defaults;
 use crate::pico8::Clearable;
 use bevy::prelude::*;
 
@@ -26,27 +27,20 @@ pub(crate) fn plugin(app: &mut App) {
         );
 }
 
-fn apply_translation(mut query: Query<(&Position, &mut Transform, Option<&Clearable>)>) {
+fn apply_translation(
+    mut query: Query<(&Position, &mut Transform, Option<&Clearable>)>,
+    defaults: Option<Res<Defaults>>,
+) {
+    let negate_y = defaults.as_ref().is_none_or(|d| d.negate_y);
+    let pixel_snap = defaults.as_ref().is_none_or(|d| d.pixel_snap);
     for (position, mut transform, clearable_maybe) in &mut query {
         let mut v = position.0;
-        v = pixel_snap(v);
-        v.y = negate_y(v.y);
+        if pixel_snap {
+            v = v.floor();
+        }
+        if negate_y {
+            v.y = -v.y;
+        }
         transform.translation = v.extend(clearable_maybe.map(|c| c.suggest_z()).unwrap_or(0.0));
-    }
-}
-
-/// Negates y IF the feature "negate-y" is enabled.
-#[inline]
-pub fn negate_y(y: f32) -> f32 {
-    if cfg!(feature = "negate-y") { -y } else { y }
-}
-
-/// Snap to pixel IF the feature "pixel-snap" is enabled.
-#[inline]
-fn pixel_snap(v: Vec2) -> Vec2 {
-    if cfg!(feature = "pixel-snap") {
-        v.floor()
-    } else {
-        v
     }
 }

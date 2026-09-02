@@ -291,12 +291,6 @@ runtime at all.
 ### "scripting" (enabled by default)
 Enables Lua scripting.
 
-### "negate-y" (enabled by default)
-Pico-8's positive y-axis points down the screen. Bevy's positive y-axis points
-up by convention. This feature ensures that conversion happens. If it's
-disabled, there will be no conversion, so it would be like using Pico-8 but with
-y = 0 being the top of the screen and y = -127 being the bottom of the screen.
-
 ### "fixed-point" (enabled by default)
 Pico-8's numbers are all 32-bit fixed-point numbers. Nano-9 uses `f32`
 generally. Bit-twiddling functions like `shl()`, `shr()`, `lshr()`, `rotr()`,
@@ -307,10 +301,6 @@ operations are simply not available (but perhaps they should be in the future).
 
 ### "pico8-to-lua" (enabled by default)
 This enables conversion of Pico-8's dialect to regular Lua code.
-
-### "pixel-snap" (enabled by default)
-This applies a floor to screen positions when enabled, such that the pixels will
-"snap" to the grid.
 
 ### "web-asset" (disabled by default)
 This enables one to place "http[s]://" URLs that will be resolved in the
@@ -328,6 +318,22 @@ for the "n9" CLI tool. It only has a few key bindings:
 ### "inspector" (disabled by default)
 This enables
 [bevy_minibuffer_inspector](https://github.com/shanecelis/bevy_minibuffer_inspector) which allows one initiate [bevy-inspector-egui](https://github.com/jakobhellermann/bevy-inspector-egui) from Minibuffer.
+
+## Nano9.toml
+
+Carts can set these in `Nano9.toml` or in p8lua front matter:
+
+``` toml
+# Audio commands are no-ops when true. Omitted: true on wasm, false on native.
+mute = false
+
+[screen]
+canvas-size = [128, 128]
+# Pico-8's positive y is down. Omitted: true.
+negate-y = true
+# Floor drawn positions to the pixel grid. Omitted: true.
+pixel-snap = true
+```
 
 ## Goals
 
@@ -437,9 +443,10 @@ crate, so Pico-8 carts can target the browser:
 trunk serve --config web/Trunk.toml
 ```
 
-That example (`examples/web_cart.rs`) needs a 16MB wasm stack and
+That example (`src/bin/web_cart.rs`) needs a 16MB wasm stack and
 `AssetMetaCheck::Never` (both set in this repo). Audio on wasm is not soaked
-yet; the `web` feature mutes by default.
+yet; omit `mute` (or set `mute = true`) in Nano9.toml to keep it silent. Set
+`mute = false` to enable playback.
 
 Some game developers have the technical wherewithal to rebuild their game in
 another engine like the celebrated story of 

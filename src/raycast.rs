@@ -4,7 +4,7 @@ use bevy::{
     prelude::*,
 };
 
-use crate::pico8::Error;
+use crate::pico8::{Defaults, Error};
 #[cfg(feature = "scripting")]
 use crate::pico8::lua::with_system_param;
 #[cfg(feature = "scripting")]
@@ -118,6 +118,7 @@ pub struct Place(pub String);
 pub struct Rays<'w, 's> {
     covers: Query<'w, 's, (Entity, &'static Cover, &'static GlobalTransform)>,
     places: Query<'w, 's, (&'static Place, &'static GlobalTransform)>,
+    defaults: Res<'w, Defaults>,
 }
 
 #[cfg(feature = "scripting")]
@@ -169,7 +170,7 @@ impl Rays<'_, '_> {
         shape: Option<Aabb2d>,
     ) -> Vec<(Entity, f32)> {
         let mut v = dir.as_vec2();
-        if cfg!(feature = "negate-y") {
+        if self.defaults.negate_y {
             v.y = -v.y;
             pos.y = -pos.y;
         }
@@ -220,7 +221,7 @@ impl Rays<'_, '_> {
         for (place, transform) in &self.places {
             if place.0 == name {
                 let mut r = transform.translation().xy();
-                if cfg!(feature = "negate-y") {
+                if self.defaults.negate_y {
                     r.y = -r.y;
                 }
                 return Some(r);

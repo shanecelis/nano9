@@ -45,18 +45,16 @@ fn mode_eq(a: PlaybackMode, b: PlaybackMode) -> bool {
     std::mem::discriminant(&a) == std::mem::discriminant(&b)
 }
 
-#[cfg(feature = "mute")]
-impl Command for AudioCommand {
-    type Out = ();
-
-    fn apply(self, world: &mut World) {}
-}
-
-#[cfg(not(feature = "mute"))]
 impl Command for AudioCommand {
     type Out = ();
 
     fn apply(self, world: &mut World) {
+        if world
+            .get_resource::<crate::pico8::Defaults>()
+            .is_some_and(|d| d.mute)
+        {
+            return;
+        }
         match self {
             AudioCommand::Stop(sfx_channel, mode) => {
                 match sfx_channel {

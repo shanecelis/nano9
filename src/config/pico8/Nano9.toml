@@ -23,6 +23,8 @@ screen-size = [
     512,
 ]
 decorations = true
+negate-y = true
+pixel-snap = true
 
 [defaults]
 initial-pen-color = 6

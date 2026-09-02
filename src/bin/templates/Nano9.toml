@@ -8,6 +8,7 @@
 # frames-per-second = 30
 template = "pico8"
 scripts = [ "main.lua" ]
+# mute = false
 
 ## Pico-8 key bindings
 [pico8.key-bindings.player0]
@@ -30,6 +31,8 @@ x = ["KeyA", "KeyQ"]
 # [screen]
 # canvas-size = [128, 128]
 # screen-size = [512, 512]
+# negate-y = true
+# pixel-snap = true
 
 ## Defaults
 # [defaults]
