@@ -1,5 +1,5 @@
 [workspace]
-members = [".", "crates/bevy_mod_scripting_luars"]
+members = ["."]
 resolver = "2"
 
 [package]
@@ -28,8 +28,8 @@ default-run = "n9"
 [dependencies]
 bevy = { version = "0.19.1", features = [ "bevy_dev_tools", "asset_processor", "serialize", "audio" ] }
 # BMS without lua54/mlua: Lua is provided by bevy_mod_scripting_luars (luars 0.26.2).
-bevy_mod_scripting = { git = "https://github.com/makspll/bevy_mod_scripting.git", branch = "feat/bevy-0.19", features = ["core_functions"], default-features = false, optional = true }
-bevy_mod_scripting_luars = { path = "crates/bevy_mod_scripting_luars", optional = true }
+bevy_mod_scripting = { version = "0.20", features = ["core_functions"], default-features = false, optional = true }
+bevy_mod_scripting_luars = { path = "../bevy_mod_scripting_luars", optional = true }
 bytemuck = "1.16.3"
 thiserror = "1.0.63"
 bevy_minibuffer = { version = "0.7", optional = true }
@@ -148,6 +148,17 @@ bevy_mod_debugdump = { git = "https://github.com/jakobhellermann/bevy_mod_debugd
 bevy_asky = { path = "../bevy_asky" }
 bevy-input-sequence = { path = "../bevy-input-sequence" }
 keyseq = { path = "../keyseq" }
+bevy_mod_scripting = { git = "https://github.com/makspll/bevy_mod_scripting.git", branch = "feat/bevy-0.19" }
+bevy_mod_scripting_asset = { git = "https://github.com/makspll/bevy_mod_scripting.git", branch = "feat/bevy-0.19" }
+bevy_mod_scripting_bindings = { git = "https://github.com/makspll/bevy_mod_scripting.git", branch = "feat/bevy-0.19" }
+bevy_mod_scripting_bindings_domain = { git = "https://github.com/makspll/bevy_mod_scripting.git", branch = "feat/bevy-0.19" }
+bevy_mod_scripting_core = { git = "https://github.com/makspll/bevy_mod_scripting.git", branch = "feat/bevy-0.19" }
+bevy_mod_scripting_derive = { git = "https://github.com/makspll/bevy_mod_scripting.git", branch = "feat/bevy-0.19" }
+bevy_mod_scripting_display = { git = "https://github.com/makspll/bevy_mod_scripting.git", branch = "feat/bevy-0.19" }
+bevy_mod_scripting_functions = { git = "https://github.com/makspll/bevy_mod_scripting.git", branch = "feat/bevy-0.19" }
+bevy_mod_scripting_script = { git = "https://github.com/makspll/bevy_mod_scripting.git", branch = "feat/bevy-0.19" }
+bevy_mod_scripting_world = { git = "https://github.com/makspll/bevy_mod_scripting.git", branch = "feat/bevy-0.19" }
+bevy_system_reflection = { git = "https://github.com/makspll/bevy_mod_scripting.git", branch = "feat/bevy-0.19" }
 # mashmap = { git = "https://github.com/shanecelis/mashmap.git", branch = "drain_key_if" }
 # pico8-to-lua = { path = "../pico8-to-lua" }
 # bevy = { path = "../bevy-0.16" }
