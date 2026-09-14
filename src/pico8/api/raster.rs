@@ -1,9 +1,8 @@
 //! Pixel plots for Pico-8 shape primitives. Colors are baked as sRGB bytes
 //! (sprite tint round-trips through linear and lands 1/255 dark).
 //!
-//! Drawing walks the CPU buffer directly. Circle outlines use inherent
-//! `Circle::for_each`; ellipse outlines use `Iterator::for_each`. Fills join
-//! each symmetric pair with an `hline`.
+//! Drawing walks the CPU buffer directly. Outlines use inherent `for_each`.
+//! Fills walk `Fill::fill` spans into `hline`.
 
 use bevy::{
     asset::RenderAssetUsages,
@@ -11,7 +10,7 @@ use bevy::{
     prelude::*,
     render::render_resource::{Extent3d, TextureDimension, TextureFormat},
 };
-use bresenham::{Bresenham, Circle, EllipseRect};
+use nano9_raster::{Circle, Ellipse, Fill, Inclusive, Line};
 
 const BPP: usize = 4;
 
@@ -20,9 +19,12 @@ pub struct Raster {
     pub pen: [u8; 4],
 }
 
-/// Inclusive line. `Bresenham::new` yields both endpoints.
-pub(crate) fn bresenham_inclusive(start: (isize, isize), end: (isize, isize)) -> Bresenham {
-    Bresenham::new(start, end)
+/// Inclusive line. `Line` is half-open; `.inclusive()` yields both endpoints.
+pub(crate) fn bresenham_inclusive(
+    start: (isize, isize),
+    end: (isize, isize),
+) -> impl Iterator<Item = (isize, isize)> {
+    Line::new(start, end).inclusive()
 }
 
 impl Raster {
@@ -99,15 +101,24 @@ impl Raster {
     pub fn circfill(&mut self, ox: i32, oy: i32, r: i32) {
         let pen = self.pen;
         let (data, size) = self.buf();
-        Circle::new((ox as isize, oy as isize), r as isize).for_each_hline(|x0, x1, y| {
-            fill_hline(data, size, x0 as i32, x1 as i32, y as i32, pen);
-        });
+        Circle::new((ox as isize, oy as isize), r as isize)
+            .fill()
+            .for_each(|span| {
+                fill_hline(
+                    data,
+                    size,
+                    span.x0 as i32,
+                    span.x1 as i32,
+                    span.y as i32,
+                    pen,
+                );
+            });
     }
 
     pub fn oval(&mut self, x0: i32, y0: i32, x1: i32, y1: i32) {
         let pen = self.pen;
         let (data, size) = self.buf();
-        EllipseRect::new((x0 as isize, y0 as isize), (x1 as isize, y1 as isize)).for_each(
+        Ellipse::from_rect((x0 as isize, y0 as isize), (x1 as isize, y1 as isize)).for_each(
             |(x, y)| {
                 put_clip(data, size, x as i32, y as i32, pen);
             },
@@ -117,11 +128,18 @@ impl Raster {
     pub fn ovalfill(&mut self, x0: i32, y0: i32, x1: i32, y1: i32) {
         let pen = self.pen;
         let (data, size) = self.buf();
-        EllipseRect::new((x0 as isize, y0 as isize), (x1 as isize, y1 as isize)).for_each_hline(
-            |x0, x1, y| {
-                fill_hline_clip(data, size, x0 as i32, x1 as i32, y as i32, pen);
-            },
-        );
+        Ellipse::from_rect((x0 as isize, y0 as isize), (x1 as isize, y1 as isize))
+            .fill()
+            .for_each(|span| {
+                fill_hline_clip(
+                    data,
+                    size,
+                    span.x0 as i32,
+                    span.x1 as i32,
+                    span.y as i32,
+                    pen,
+                );
+            });
     }
 }
 

@@ -279,6 +279,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "arraydeque"
+version = "0.5.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7d902e3d592a523def97af8f317b08ce16b7ab854c1985a0c671e6f15cebc236"
+
+[[package]]
 name = "arrayref"
 version = "0.3.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1630,14 +1636,14 @@ version = "0.20.0"
 source = "git+https://github.com/makspll/bevy_mod_scripting.git?branch=feat%2Fbevy-0.19#24f3eb68337676cd80b40f453bdd0caad8163dcf"
 dependencies = [
  "bevy_app 0.19.1",
- "bevy_mod_scripting_asset",
- "bevy_mod_scripting_bindings",
- "bevy_mod_scripting_bindings_domain",
- "bevy_mod_scripting_core",
- "bevy_mod_scripting_derive",
- "bevy_mod_scripting_display",
+ "bevy_mod_scripting_asset 0.20.0",
+ "bevy_mod_scripting_bindings 0.20.0",
+ "bevy_mod_scripting_bindings_domain 0.20.0",
+ "bevy_mod_scripting_core 0.20.0",
+ "bevy_mod_scripting_derive 0.20.0",
+ "bevy_mod_scripting_display 0.20.0",
  "bevy_mod_scripting_functions",
- "bevy_mod_scripting_script",
+ "bevy_mod_scripting_script 0.20.0",
 ]
 
 [[package]]
@@ -1647,8 +1653,22 @@ source = "git+https://github.com/makspll/bevy_mod_scripting.git?branch=feat%2Fbe
 dependencies = [
  "bevy_asset",
  "bevy_log 0.19.1",
- "bevy_mod_scripting_derive",
- "bevy_mod_scripting_display",
+ "bevy_mod_scripting_derive 0.20.0",
+ "bevy_mod_scripting_display 0.20.0",
+ "bevy_reflect 0.19.1",
+ "serde",
+]
+
+[[package]]
+name = "bevy_mod_scripting_asset"
+version = "0.21.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "760f9bb7a771110a9602bd441b38df2f37b4fbd2ade285a8f315eca3b715b551"
+dependencies = [
+ "bevy_asset",
+ "bevy_log 0.19.1",
+ "bevy_mod_scripting_derive 0.21.0",
+ "bevy_mod_scripting_display 0.21.0",
  "bevy_reflect 0.19.1",
  "serde",
 ]
@@ -1663,15 +1683,44 @@ dependencies = [
  "bevy_diagnostic",
  "bevy_ecs 0.19.1",
  "bevy_log 0.19.1",
- "bevy_mod_scripting_asset",
- "bevy_mod_scripting_bindings_domain",
- "bevy_mod_scripting_derive",
- "bevy_mod_scripting_display",
- "bevy_mod_scripting_script",
- "bevy_mod_scripting_world",
+ "bevy_mod_scripting_asset 0.20.0",
+ "bevy_mod_scripting_bindings_domain 0.20.0",
+ "bevy_mod_scripting_derive 0.20.0",
+ "bevy_mod_scripting_display 0.20.0",
+ "bevy_mod_scripting_script 0.20.0",
+ "bevy_mod_scripting_world 0.20.0",
  "bevy_platform 0.19.1",
  "bevy_reflect 0.19.1",
- "bevy_system_reflection",
+ "bevy_system_reflection 0.20.0",
+ "itertools 0.14.0",
+ "nonmax",
+ "parking_lot",
+ "profiling",
+ "serde",
+ "smallvec",
+ "variadics_please 1.1.0",
+]
+
+[[package]]
+name = "bevy_mod_scripting_bindings"
+version = "0.21.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "82eb4ef4c37193e926b3c8a5af6f60d918297bb93cdf31dd12060091a6643cad"
+dependencies = [
+ "bevy_app 0.19.1",
+ "bevy_asset",
+ "bevy_diagnostic",
+ "bevy_ecs 0.19.1",
+ "bevy_log 0.19.1",
+ "bevy_mod_scripting_asset 0.21.0",
+ "bevy_mod_scripting_bindings_domain 0.21.0",
+ "bevy_mod_scripting_derive 0.21.0",
+ "bevy_mod_scripting_display 0.21.0",
+ "bevy_mod_scripting_script 0.21.0",
+ "bevy_mod_scripting_world 0.21.0",
+ "bevy_platform 0.19.1",
+ "bevy_reflect 0.19.1",
+ "bevy_system_reflection 0.21.0",
  "itertools 0.14.0",
  "nonmax",
  "parking_lot",
@@ -1686,8 +1735,19 @@ name = "bevy_mod_scripting_bindings_domain"
 version = "0.20.0"
 source = "git+https://github.com/makspll/bevy_mod_scripting.git?branch=feat%2Fbevy-0.19#24f3eb68337676cd80b40f453bdd0caad8163dcf"
 dependencies = [
- "bevy_mod_scripting_derive",
- "bevy_mod_scripting_display",
+ "bevy_mod_scripting_derive 0.20.0",
+ "bevy_mod_scripting_display 0.20.0",
+ "serde",
+]
+
+[[package]]
+name = "bevy_mod_scripting_bindings_domain"
+version = "0.21.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2c0f387efdd493cbf4e7e32ad9b3bbd0aaa10802e4ef065374e80238ab198c9a"
+dependencies = [
+ "bevy_mod_scripting_derive 0.21.0",
+ "bevy_mod_scripting_display 0.21.0",
  "serde",
 ]
 
@@ -1701,15 +1761,46 @@ dependencies = [
  "bevy_diagnostic",
  "bevy_ecs 0.19.1",
  "bevy_log 0.19.1",
- "bevy_mod_scripting_asset",
- "bevy_mod_scripting_bindings",
- "bevy_mod_scripting_derive",
- "bevy_mod_scripting_display",
- "bevy_mod_scripting_script",
- "bevy_mod_scripting_world",
+ "bevy_mod_scripting_asset 0.20.0",
+ "bevy_mod_scripting_bindings 0.20.0",
+ "bevy_mod_scripting_derive 0.20.0",
+ "bevy_mod_scripting_display 0.20.0",
+ "bevy_mod_scripting_script 0.20.0",
+ "bevy_mod_scripting_world 0.20.0",
  "bevy_platform 0.19.1",
  "bevy_reflect 0.19.1",
- "bevy_system_reflection",
+ "bevy_system_reflection 0.20.0",
+ "bevy_utils 0.19.1",
+ "fixedbitset",
+ "itertools 0.14.0",
+ "parking_lot",
+ "profiling",
+ "serde",
+ "smallvec",
+ "uuid",
+ "variadics_please 1.1.0",
+]
+
+[[package]]
+name = "bevy_mod_scripting_core"
+version = "0.21.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d10d009ca1a954d552ff3ee9ff29dd8d70f49bc3eb6cca2b12f5a9fd0e32c54d"
+dependencies = [
+ "bevy_app 0.19.1",
+ "bevy_asset",
+ "bevy_diagnostic",
+ "bevy_ecs 0.19.1",
+ "bevy_log 0.19.1",
+ "bevy_mod_scripting_asset 0.21.0",
+ "bevy_mod_scripting_bindings 0.21.0",
+ "bevy_mod_scripting_derive 0.21.0",
+ "bevy_mod_scripting_display 0.21.0",
+ "bevy_mod_scripting_script 0.21.0",
+ "bevy_mod_scripting_world 0.21.0",
+ "bevy_platform 0.19.1",
+ "bevy_reflect 0.19.1",
+ "bevy_system_reflection 0.21.0",
  "bevy_utils 0.19.1",
  "fixedbitset",
  "itertools 0.14.0",
@@ -1732,13 +1823,39 @@ dependencies = [
 ]
 
 [[package]]
+name = "bevy_mod_scripting_derive"
+version = "0.21.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "53e0ab785e212cc0a151c9f37b6423e4b58b38b2226fd1ebc91e5a259fb9cf8a"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.119",
+]
+
+[[package]]
 name = "bevy_mod_scripting_display"
 version = "0.20.0"
 source = "git+https://github.com/makspll/bevy_mod_scripting.git?branch=feat%2Fbevy-0.19#24f3eb68337676cd80b40f453bdd0caad8163dcf"
 dependencies = [
  "bevy_asset",
  "bevy_ecs 0.19.1",
- "bevy_mod_scripting_world",
+ "bevy_mod_scripting_world 0.20.0",
+ "bevy_platform 0.19.1",
+ "bevy_reflect 0.19.1",
+ "bevy_utils 0.19.1",
+ "parking_lot",
+]
+
+[[package]]
+name = "bevy_mod_scripting_display"
+version = "0.21.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d80ab5ec211a018461043fe669aed56bfd31219ea457ec9099f5f9f768f2a116"
+dependencies = [
+ "bevy_asset",
+ "bevy_ecs 0.19.1",
+ "bevy_mod_scripting_world 0.21.0",
  "bevy_platform 0.19.1",
  "bevy_reflect 0.19.1",
  "bevy_utils 0.19.1",
@@ -1754,16 +1871,16 @@ dependencies = [
  "bevy_asset",
  "bevy_ecs 0.19.1",
  "bevy_log 0.19.1",
- "bevy_mod_scripting_asset",
- "bevy_mod_scripting_bindings",
- "bevy_mod_scripting_core",
- "bevy_mod_scripting_derive",
- "bevy_mod_scripting_display",
- "bevy_mod_scripting_script",
- "bevy_mod_scripting_world",
+ "bevy_mod_scripting_asset 0.20.0",
+ "bevy_mod_scripting_bindings 0.20.0",
+ "bevy_mod_scripting_core 0.20.0",
+ "bevy_mod_scripting_derive 0.20.0",
+ "bevy_mod_scripting_display 0.20.0",
+ "bevy_mod_scripting_script 0.20.0",
+ "bevy_mod_scripting_world 0.20.0",
  "bevy_platform 0.19.1",
  "bevy_reflect 0.19.1",
- "bevy_system_reflection",
+ "bevy_system_reflection 0.20.0",
  "profiling",
 ]
 
@@ -1775,13 +1892,13 @@ dependencies = [
  "bevy_asset",
  "bevy_ecs 0.19.1",
  "bevy_log 0.19.1",
- "bevy_mod_scripting_asset",
- "bevy_mod_scripting_bindings",
- "bevy_mod_scripting_bindings_domain",
- "bevy_mod_scripting_core",
- "bevy_mod_scripting_display",
- "bevy_mod_scripting_script",
- "bevy_mod_scripting_world",
+ "bevy_mod_scripting_asset 0.21.0",
+ "bevy_mod_scripting_bindings 0.21.0",
+ "bevy_mod_scripting_bindings_domain 0.21.0",
+ "bevy_mod_scripting_core 0.21.0",
+ "bevy_mod_scripting_display 0.21.0",
+ "bevy_mod_scripting_script 0.21.0",
+ "bevy_mod_scripting_world 0.21.0",
  "bevy_platform 0.19.1",
  "getrandom 0.3.4",
  "js-sys",
@@ -1795,8 +1912,21 @@ source = "git+https://github.com/makspll/bevy_mod_scripting.git?branch=feat%2Fbe
 dependencies = [
  "bevy_asset",
  "bevy_ecs 0.19.1",
- "bevy_mod_scripting_asset",
- "bevy_mod_scripting_display",
+ "bevy_mod_scripting_asset 0.20.0",
+ "bevy_mod_scripting_display 0.20.0",
+ "bevy_reflect 0.19.1",
+]
+
+[[package]]
+name = "bevy_mod_scripting_script"
+version = "0.21.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "425823577ae8ab296979c750d90a8d87c0fe8be45c3b4b78debd0ffc964e827d"
+dependencies = [
+ "bevy_asset",
+ "bevy_ecs 0.19.1",
+ "bevy_mod_scripting_asset 0.21.0",
+ "bevy_mod_scripting_display 0.21.0",
  "bevy_reflect 0.19.1",
 ]
 
@@ -1804,6 +1934,22 @@ dependencies = [
 name = "bevy_mod_scripting_world"
 version = "0.20.0"
 source = "git+https://github.com/makspll/bevy_mod_scripting.git?branch=feat%2Fbevy-0.19#24f3eb68337676cd80b40f453bdd0caad8163dcf"
+dependencies = [
+ "bevy_ecs 0.19.1",
+ "bevy_log 0.19.1",
+ "bevy_platform 0.19.1",
+ "bevy_reflect 0.19.1",
+ "fixedbitset",
+ "parking_lot",
+ "profiling",
+ "smallvec",
+]
+
+[[package]]
+name = "bevy_mod_scripting_world"
+version = "0.21.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3f142b03ea119a50b48dd2179209184410f1e355d176b889f385106dcdd56c11"
 dependencies = [
  "bevy_ecs 0.19.1",
  "bevy_log 0.19.1",
@@ -2292,6 +2438,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "bevy_system_reflection"
+version = "0.21.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c80112c0ab2fc4be02135e61da4499d8448e5931e51f771198dd2678614671fe"
+dependencies = [
+ "bevy_ecs 0.19.1",
+ "bevy_log 0.19.1",
+ "bevy_platform 0.19.1",
+ "bevy_reflect 0.19.1",
+ "dot-writer",
+]
+
+[[package]]
 name = "bevy_tasks"
 version = "0.19.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2716,12 +2875,6 @@ dependencies = [
  "quote",
  "syn 1.0.109",
 ]
-
-[[package]]
-name = "bresenham"
-version = "0.1.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bfc1116225f66d2ea341a26503f83a6b1205070a6f7199ce1f1550ead91f6fd7"
 
 [[package]]
 name = "bstr"
@@ -5431,7 +5584,6 @@ dependencies = [
  "bitflags 2.13.1",
  "bitvec",
  "bobtail",
- "bresenham",
  "bytemuck",
  "clap",
  "criterion",
@@ -5444,6 +5596,7 @@ dependencies = [
  "log",
  "mashmap",
  "merge2",
+ "nano9_raster",
  "num-traits",
  "pico8-to-lua",
  "pico8_decompress",
@@ -5457,6 +5610,13 @@ dependencies = [
  "toml 0.8.23",
  "version-sync",
  "web-sys",
+]
+
+[[package]]
+name = "nano9_raster"
+version = "0.2.0"
+dependencies = [
+ "arraydeque",
 ]
 
 [[package]]
@@ -9272,7 +9432,3 @@ checksum = "27bc9d5b815bc103f142aa054f561d9187d191692ec7c2d1e2b4737f8dbd7296"
 dependencies = [
  "zune-core",
 ]
-
-[[patch.unused]]
-name = "bresenham"
-version = "0.2.0"
