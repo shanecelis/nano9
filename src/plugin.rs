@@ -22,7 +22,7 @@ use bevy_mod_scripting::{
 };
 #[cfg(feature = "scripting")]
 use bevy_mod_scripting_luars::{
-    LuarsContext, LuarsScriptingPlugin, into_bms_error,
+    LuarsContext, LuarsScriptingPlugin,
     luars::{self, IntoLua, LuaApi},
 };
 
@@ -290,28 +290,24 @@ fn context_initializer(
     _script_attachment: &ScriptAttachment,
     context: &mut LuarsContext,
 ) -> Result<(), InteropError> {
-    let eval = context
-        .lua
-        .global_state_mut()
-        .create_closure(|state| {
+    let eval = {
+        let result = context.global_state_mut().create_closure(|state| {
             let expr: String = state.get_arg_as(1)?.unwrap_or_default();
             let src = format!("tostring({expr})");
             match <luars::LuaState as LuaApi>::eval::<String>(state, &src) {
                 Ok(s) => s.into_lua(state).map_err(|m| state.error(m)),
                 Err(e) => Err(e),
             }
-        })
-        .map_err(|e| into_bms_error(&mut context.lua, e))?;
-    context
-        .lua
-        .set_global("_eval_string", eval)
-        .map_err(|e| into_bms_error(&mut context.lua, e))?;
-    context
-        .lua
+        });
+        context.map_lua(result)?
+    };
+    let result = context.set_global("_eval_string", eval);
+    context.map_lua(result)?;
+    let result = context
         .load(include_str!("builtin.lua"))
         .set_name("builtin.lua")
-        .exec()
-        .map_err(|e| into_bms_error(&mut context.lua, e))?;
+        .exec();
+    context.map_lua(result)?;
     Ok(())
 }
 
