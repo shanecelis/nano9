@@ -21,9 +21,11 @@ use std::{
 };
 
 mod command;
+mod record;
 pub use command::*;
+pub use record::{AudioRecorder, write_wav};
 
-const SAMPLE_RATE: u32 = 22_050;
+pub(crate) const SAMPLE_RATE: u32 = 22_050;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum WaveForm {
@@ -553,9 +555,8 @@ pub struct NoteIter {
 impl Iterator for NoteIter {
     type Item = Pico8Note;
     fn next(&mut self) -> Option<Pico8Note> {
-        let result = self.sfx.notes.get(self.index).copied();
         if let Some(ref loop_maybe) = self.sfx.loop_maybe {
-            match loop_maybe {
+            let (start, end, released) = match loop_maybe {
                 Loop::Unstoppable { .. } => {
                     panic!("Cannot stop a unstoppable sfx.");
                 }
@@ -563,36 +564,34 @@ impl Iterator for NoteIter {
                     start,
                     end,
                     release,
-                } => 'block: {
-                    if let Some(end) = end
-                        && *end as usize == self.index
-                        && !release.load(Ordering::Relaxed)
-                    {
-                        self.index = start.unwrap_or(0) as usize;
-                        break 'block;
-                    }
-                    self.index += 1;
+                } => (
+                    start.unwrap_or(0) as usize,
+                    *end,
+                    release.load(Ordering::Relaxed),
+                ),
+            };
+            // Pico-8 wraps when the playhead reaches loop end. The p8 text
+            // parser trims trailing rest notes, so `end` can sit at `notes.len()`
+            // and must wrap rather than yield None.
+            let past_end = end.is_some_and(|e| self.index >= e as usize);
+            let past_notes = self.index >= self.sfx.notes.len();
+            if past_end || past_notes {
+                if released {
+                    return None;
                 }
+                self.index = start;
             }
-        } else {
-            self.index += 1;
         }
-        result
+        let result = self.sfx.notes.get(self.index).copied()?;
+        self.index += 1;
+        Some(result)
     }
 }
 
 impl From<Sfx> for NoteIter {
     fn from(sfx: Sfx) -> Self {
-        NoteIter {
-            index: sfx
-                .loop_maybe
-                .as_ref()
-                .and_then(|l| match *l {
-                    Loop::Unstoppable { start, .. } | Loop::Stoppable { start, .. } => start,
-                })
-                .unwrap_or(0) as usize,
-            sfx,
-        }
+        // Pico-8 always starts at note 0; `loop_start` is only the wrap target.
+        NoteIter { sfx, index: 0 }
     }
 }
 
@@ -729,6 +728,7 @@ impl Decodable for Sfx {
 pub(crate) fn plugin(app: &mut App) {
     app //.register_type::<Sfx>()
         //.register_type::<Loop>()
+        .init_resource::<AudioRecorder>()
         .add_plugins(command::plugin)
         .add_systems(PreStartup, add_channels)
         .add_audio_source::<Sfx>();
@@ -869,5 +869,30 @@ mod test {
     fn note_wave() {
         let note = Pico8Note::new(37, WaveForm::Noise, 7, Effect::None);
         assert_eq!(note.wave(), WaveForm::Noise);
+    }
+
+    #[test]
+    fn sfx_loop_wraps_from_zero_until_release() {
+        let s = "000801080d0700f070110701207014070160701807019070000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000";
+        let mut sfx = Sfx::try_from(s).unwrap();
+        let release = Arc::new(AtomicBool::new(false));
+        sfx.loop_maybe = Some(Loop::Stoppable {
+            start: Some(1),
+            end: Some(8),
+            release: release.clone(),
+        });
+        let pitches: Vec<u8> = NoteIter::from(sfx.clone())
+            .take(16)
+            .map(|n| n.pitch())
+            .collect();
+        // Play 0..7, wrap to 1, then 1..7, wrap to 1.
+        assert_eq!(
+            pitches,
+            vec![48, 50, 52, 53, 55, 57, 59, 60, 50, 52, 53, 55, 57, 59, 60, 50]
+        );
+
+        release.store(true, Ordering::Relaxed);
+        let leftover: Vec<u8> = NoteIter::from(sfx).map(|n| n.pitch()).collect();
+        assert_eq!(leftover, vec![48, 50, 52, 53, 55, 57, 59, 60]);
     }
 }

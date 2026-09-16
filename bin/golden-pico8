@@ -1,13 +1,18 @@
 #!/usr/bin/env bash
-# Run one Pico-8 cart and write its screenshot to -o.
+# Run one Pico-8 cart and write its screenshot or audio capture to -o.
 # Requires a Pico-8 binary. Default: `p8` on PATH (e.g. $HOME/bin/p8).
 #
 #   bin/golden-pico8 tests/golden/line.p8 -o tests/golden/line-expected.png
+#   bin/golden-pico8 tests/golden/sfx/sfx-triangle.p8 -o tests/golden/sfx/sfx-triangle-expected.wav
 #
+# PNG goldens use `pico8 -x` (headless). WAV goldens use `pico8 -run` with
+# `extcmd("audio_rec")` / `audio_end` because `-export *.wav` writes silence
+# and `-x` does not mix audio. `-home` is a temp dir so config.txt is not
+# overwritten.
 set -euo pipefail
 
 usage() {
-  echo "usage: $0 CART -o SCREENSHOT" >&2
+  echo "usage: $0 CART -o OUTPUT.png|OUTPUT.wav" >&2
   exit 2
 }
 
@@ -70,38 +75,84 @@ if ! PICO8_BIN="$(resolve_exe "$PICO8_CMD")"; then
   exit 1
 fi
 
+# If `p8` is a wrapper, still run the real binary so -home/-desktop apply
+# to Pico-8 itself. resolve_exe already followed the wrapper's destination
+# when it is a symlink; a script named p8 is resolved as itself, so fall
+# back to the Mac app when that happens.
+if [[ "$PICO8_BIN" == *"/p8" ]] && [[ -x /Applications/PICO-8.app/Contents/MacOS/pico8 ]]; then
+  PICO8_BIN="/Applications/PICO-8.app/Contents/MacOS/pico8"
+fi
+
 name="$(basename "$cart")"
 name="${name%.p8}"
 name="${name%.P8}"
+cart="$(cd "$(dirname "$cart")" && pwd -P)/$(basename "$cart")"
+ext="${output##*.}"
 
 tmp="$(mktemp -d)"
 trap 'rm -rf "$tmp"' EXIT
 
 echo "using $PICO8_BIN"
-"$PICO8_BIN" -x "$cart" -p headless -screenshot_scale 1 -root_path "$tmp" -windowed 1
 
-src=""
-if [[ -f "$tmp/${name}.png" ]]; then
-  src="$tmp/${name}.png"
-else
+find_output() {
+  local needle="$1"
+  if [[ -f "$tmp/$needle" ]]; then
+    echo "$tmp/$needle"
+    return 0
+  fi
   shopt -s nullglob
-  pngs=("$tmp"/*.png)
+  local files=("$tmp"/*."$ext")
   shopt -u nullglob
-  if [[ ${#pngs[@]} -eq 1 ]]; then
-    src="${pngs[0]}"
+  if [[ ${#files[@]} -eq 1 ]]; then
+    echo "${files[0]}"
+    return 0
+  fi
+  return 1
+}
+
+if [[ "$ext" == "wav" ]]; then
+  # `-x` writes a header-only wav. `-export` writes silence. `-run` mixes.
+  "$PICO8_BIN" -run "$cart" -p headless -windowed 1 -volume 256 \
+    -home "$tmp" -root_path "$tmp" -desktop "$tmp" &
+  pid=$!
+  src=""
+  for _ in $(seq 1 80); do
+    if src="$(find_output "${name}.wav")" && [[ "$(wc -c < "$src")" -gt 44 ]]; then
+      sleep 0.4
+      break
+    fi
+    if ! kill -0 "$pid" 2>/dev/null; then
+      break
+    fi
+    sleep 0.25
+  done
+  if kill -0 "$pid" 2>/dev/null; then
+    kill "$pid" 2>/dev/null || true
+    wait "$pid" 2>/dev/null || true
+  fi
+  if [[ -z "$src" ]]; then
+    src="$(find_output "${name}.wav" || true)"
+  fi
+else
+  "$PICO8_BIN" -x "$cart" -p headless -screenshot_scale 1 -root_path "$tmp" -windowed 1
+  src=""
+  if [[ -f "$tmp/${name}.png" ]]; then
+    src="$tmp/${name}.png"
+  else
+    shopt -s nullglob
+    pngs=("$tmp"/*.png)
+    shopt -u nullglob
+    if [[ ${#pngs[@]} -eq 1 ]]; then
+      src="${pngs[0]}"
+    fi
   fi
 fi
 
-if [[ -z "$src" ]]; then
-  echo "error: Pico-8 did not write a screenshot for $cart" >&2
+if [[ -z "${src:-}" || ! -f "$src" ]]; then
+  echo "error: Pico-8 did not write a ${ext} for $cart" >&2
   exit 1
 fi
 
-if [ -f "$src" ]; then
-    mkdir -p "$(dirname "$output")"
-    mv "$src" "$output"
-    echo "wrote $output"
-else
-    echo "warn: no screenshot output at '$src'." >&2;
-    exit 2;
-fi
+mkdir -p "$(dirname "$output")"
+mv "$src" "$output"
+echo "wrote $output"

@@ -114,6 +114,11 @@ criterion = "0.5"
 name = "golden"
 harness = false
 
+[[test]]
+name = "sfx"
+path = "tests/sfx.rs"
+harness = false
+
 [[bench]]
 name = "raster"
 harness = false

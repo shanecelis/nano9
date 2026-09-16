@@ -1,8 +1,8 @@
-use bevy::{audio::PlaybackMode, prelude::*};
+use bevy::{audio::PlaybackMode, diagnostic::FrameCount, prelude::*};
 
 use bitvec::prelude::*;
 
-use crate::pico8::audio::{Sfx, SfxChannels};
+use crate::pico8::audio::{AudioRecorder, Sfx, SfxChannels};
 
 use std::sync::{
     Arc,
@@ -49,17 +49,17 @@ impl Command for AudioCommand {
     type Out = ();
 
     fn apply(self, world: &mut World) {
-        if world
+        let muted = world
             .get_resource::<crate::pico8::Defaults>()
-            .is_some_and(|d| d.mute)
-        {
-            return;
-        }
+            .is_some_and(|d| d.mute);
         match self {
             AudioCommand::Stop(sfx_channel, mode) => {
                 match sfx_channel {
                     SfxDest::All => {
-                        // TODO: Consider using smallvec for channels.
+                        record_stop_all(world);
+                        if muted {
+                            return;
+                        }
                         let channels: Vec<Entity> = (*world.resource::<SfxChannels>()).clone();
                         for chan in channels {
                             if let Some(mode) = mode
@@ -84,6 +84,10 @@ impl Command for AudioCommand {
                         }
                     }
                     SfxDest::Channel(chan) => {
+                        record_stop(world, chan);
+                        if muted {
+                            return;
+                        }
                         let id = world
                             .get_resource::<SfxChannels>()
                             .and_then(|sfx_channels| sfx_channels.get(chan as usize));
@@ -96,6 +100,12 @@ impl Command for AudioCommand {
                         }
                     }
                     SfxDest::ChannelMask(channel_mask) => {
+                        for i in channel_mask.view_bits::<Lsb0>().iter_ones() {
+                            record_stop(world, i as u8);
+                        }
+                        if muted {
+                            return;
+                        }
                         for i in channel_mask.view_bits::<Lsb0>().iter_ones() {
                             let id = world
                                 .get_resource::<SfxChannels>()
@@ -124,6 +134,10 @@ impl Command for AudioCommand {
             }
             AudioCommand::Release(sfx_channel) => match sfx_channel {
                 SfxDest::Channel(channel) => {
+                    record_release(world, channel);
+                    if muted {
+                        return;
+                    }
                     let id = world
                         .get_resource::<SfxChannels>()
                         .and_then(|sfx_channels| sfx_channels.get(channel as usize));
@@ -137,24 +151,37 @@ impl Command for AudioCommand {
                         warn!("Could not find audio channel {channel}");
                     }
                 }
-                SfxDest::Any => {}
-                SfxDest::All => {}
-                SfxDest::ChannelMask(_) => {}
+                SfxDest::Any => {
+                    record_release_all(world);
+                }
+                SfxDest::All => {
+                    record_release_all(world);
+                }
+                SfxDest::ChannelMask(mask) => {
+                    for i in mask.view_bits::<Lsb0>().iter_ones() {
+                        record_release(world, i as u8);
+                    }
+                }
             },
             AudioCommand::Play(audio, sfx_channel, playback_settings) => {
                 match sfx_channel {
                     SfxDest::Any => {
-                        if let Some(available_channel) = world
+                        if let Some((index, available_channel)) = world
                             .resource::<SfxChannels>()
                             .iter()
-                            .find(|id| {
+                            .enumerate()
+                            .find(|(_, id)| {
                                 world
                                     .get::<AudioSink>(**id)
                                     .map(|s| s.is_paused() || s.empty())
                                     .unwrap_or(true)
                             })
-                            .copied()
+                            .map(|(i, id)| (i as u8, *id))
                         {
+                            record_play(world, index, &audio);
+                            if muted {
+                                return;
+                            }
                             match audio {
                                 Audio::Sfx(sfx) => {
                                     let (sfx, release) = Sfx::get_stoppable_handle(sfx, world);
@@ -186,7 +213,7 @@ impl Command for AudioCommand {
 
                     SfxDest::ChannelMask(mask) => {
                         let mask_bits = mask.view_bits::<Lsb0>();
-                        if let Some(available_channel) = world
+                        if let Some((index, available_channel)) = world
                             .resource::<SfxChannels>()
                             .iter()
                             .enumerate()
@@ -196,10 +223,13 @@ impl Command for AudioCommand {
                                         .get::<AudioSink>(*id)
                                         .map(|s| s.is_paused() || s.empty())
                                         .unwrap_or(true))
-                                .then_some(id)
+                                .then_some((i as u8, *id))
                             })
-                            .copied()
                         {
+                            record_play(world, index, &audio);
+                            if muted {
+                                return;
+                            }
                             match audio {
                                 Audio::Sfx(sfx) => {
                                     let (sfx, release) = Sfx::get_stoppable_handle(sfx, world);
@@ -229,19 +259,28 @@ impl Command for AudioCommand {
                         }
                     }
                     SfxDest::Channel(chan) => {
+                        record_play(world, chan, &audio);
+                        if muted {
+                            return;
+                        }
                         let id = world
                             .get_resource::<SfxChannels>()
                             .and_then(|sfx_channels| sfx_channels.get(chan as usize))
                             .copied();
-                        let mut commands = world.commands();
                         if let Some(id) = id {
                             match audio {
                                 Audio::Sfx(sfx) => {
+                                    let (sfx, release) = Sfx::get_stoppable_handle(sfx, world);
+                                    let mut commands = world.commands();
+                                    if let Some(release) = release {
+                                        commands.entity(id).insert(SfxRelease(release));
+                                    }
                                     commands
                                         .entity(id)
-                                        .insert((AudioPlayer(sfx.clone()), playback_settings));
+                                        .insert((AudioPlayer(sfx), playback_settings));
                                 }
                                 Audio::AudioSource(source) => {
+                                    let mut commands = world.commands();
                                     commands
                                         .entity(id)
                                         .insert((AudioPlayer(source), playback_settings));
@@ -257,6 +296,53 @@ impl Command for AudioCommand {
                 }
             }
         }
+    }
+}
+
+fn record_frame(world: &World) -> u32 {
+    world
+        .get_resource::<FrameCount>()
+        .map(|f| f.0)
+        .unwrap_or(0)
+}
+
+fn record_play(world: &mut World, channel: u8, audio: &Audio) {
+    let sfx = match audio {
+        Audio::Sfx(handle) => world.resource::<Assets<Sfx>>().get(handle).cloned(),
+        Audio::AudioSource(_) => None,
+    };
+    let Some(sfx) = sfx else {
+        return;
+    };
+    let frame = record_frame(world);
+    if let Some(mut rec) = world.get_resource_mut::<AudioRecorder>() {
+        rec.play(frame, channel, sfx);
+    }
+}
+
+fn record_stop(world: &mut World, channel: u8) {
+    let frame = record_frame(world);
+    if let Some(mut rec) = world.get_resource_mut::<AudioRecorder>() {
+        rec.stop(frame, channel);
+    }
+}
+
+fn record_stop_all(world: &mut World) {
+    for channel in 0..4 {
+        record_stop(world, channel);
+    }
+}
+
+fn record_release(world: &mut World, channel: u8) {
+    let frame = record_frame(world);
+    if let Some(mut rec) = world.get_resource_mut::<AudioRecorder>() {
+        rec.release(frame, channel);
+    }
+}
+
+fn record_release_all(world: &mut World) {
+    for channel in 0..4 {
+        record_release(world, channel);
     }
 }
 

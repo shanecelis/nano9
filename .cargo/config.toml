@@ -7,6 +7,7 @@ linker = "arm-none-eabi-ld"
 [alias]
 n9 = "run"
 test-golden = "test --test golden -- --nocapture --test-threads=1"
+test-sfx = "test --test sfx -- --nocapture --test-threads=1"
 bench-raster = "bench --bench raster --"
 
 # Bevy + luars on wasm: getrandom 0.3 needs an explicit JS backend, and BMS

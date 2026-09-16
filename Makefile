@@ -1,9 +1,21 @@
 GOLDEN_DIR := tests/golden
-CARTS := $(wildcard $(GOLDEN_DIR)/*.p8)
-EXPECTED := $(patsubst $(GOLDEN_DIR)/%.p8,$(GOLDEN_DIR)/%-expected.png,$(CARTS))
+SFX_DIR := $(GOLDEN_DIR)/sfx
+IMAGE_CARTS := $(wildcard $(GOLDEN_DIR)/*.p8)
+SFX_CARTS := $(wildcard $(SFX_DIR)/*.p8)
+MUSIC_CARTS := $(wildcard $(GOLDEN_DIR)/music-*.p8)
+EXPECTED := \
+	$(patsubst $(GOLDEN_DIR)/%.p8,$(GOLDEN_DIR)/%-expected.png,$(IMAGE_CARTS)) \
+	$(patsubst $(SFX_DIR)/%.p8,$(SFX_DIR)/%-expected.wav,$(SFX_CARTS)) \
+	$(patsubst $(GOLDEN_DIR)/%.p8,$(GOLDEN_DIR)/%-expected.wav,$(MUSIC_CARTS))
 
 .PHONY: golden
 golden: $(EXPECTED)
 
 $(GOLDEN_DIR)/%-expected.png: $(GOLDEN_DIR)/%.p8
+	bin/golden-pico8 $< -o $@
+
+$(SFX_DIR)/%-expected.wav: $(SFX_DIR)/%.p8
+	bin/golden-pico8 $< -o $@
+
+$(GOLDEN_DIR)/%-expected.wav: $(GOLDEN_DIR)/%.p8
 	bin/golden-pico8 $< -o $@

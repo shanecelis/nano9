@@ -225,7 +225,7 @@ impl super::Pico8<'_, '_> {
 
     /// Pico-8 `extcmd(cmd, [p1], [p2])`.
     ///
-    /// Supported: `set_filename`, `screen`, `shutdown`.
+    /// Supported: `set_filename`, `screen`, `audio_rec`, `audio_end`, `shutdown`.
     pub fn extcmd(&mut self, cmd: &str, p1: Option<&str>, p2: Option<f32>) -> Result<(), Error> {
         match cmd {
             "set_filename" => {
@@ -237,12 +237,50 @@ impl super::Pico8<'_, '_> {
             "screen" => {
                 let _scale = p1.and_then(|s| s.parse::<f32>().ok()).or(p2);
                 let _save_to_folder = p2;
-                let path = self.screenshot_path();
+                let path = self.capture_path("png");
                 if let Some(parent) = path.parent() {
                     let _ = std::fs::create_dir_all(parent);
                 }
                 self.commands
                     .write_message(ExtcmdRequest::StartScreenshot(path));
+                Ok(())
+            }
+            "audio_rec" => {
+                self.commands.queue(|world: &mut World| {
+                    let frame = world
+                        .get_resource::<bevy::diagnostic::FrameCount>()
+                        .map(|f| f.0)
+                        .unwrap_or(0);
+                    if let Some(mut rec) = world.get_resource_mut::<crate::pico8::audio::AudioRecorder>()
+                    {
+                        rec.start(frame);
+                    }
+                });
+                Ok(())
+            }
+            "audio_end" => {
+                let path = self.capture_path("wav");
+                if let Some(parent) = path.parent() {
+                    let _ = std::fs::create_dir_all(parent);
+                }
+                self.commands.queue(move |world: &mut World| {
+                    let end_frame = world
+                        .get_resource::<bevy::diagnostic::FrameCount>()
+                        .map(|f| f.0)
+                        .unwrap_or(0);
+                    let Some(recording) = world
+                        .get_resource_mut::<crate::pico8::audio::AudioRecorder>()
+                        .and_then(|mut rec| rec.take())
+                    else {
+                        warn!("extcmd(\"audio_end\") with no active audio_rec");
+                        return;
+                    };
+                    let pcm = recording.render(end_frame);
+                    match crate::pico8::audio::write_wav(&path, &pcm) {
+                        Ok(()) => info!("Audio saved to {}", path.display()),
+                        Err(e) => error!("extcmd(\"audio_end\") failed: {e}"),
+                    }
+                });
                 Ok(())
             }
             "shutdown" => {
@@ -283,7 +321,7 @@ impl super::Pico8<'_, '_> {
         Ok(())
     }
 
-    fn screenshot_path(&self) -> PathBuf {
+    fn capture_path(&self, ext: &str) -> PathBuf {
         let stem = self
             .state
             .screenshot_filename
@@ -292,7 +330,7 @@ impl super::Pico8<'_, '_> {
         let mut path = std::env::var_os("NANO9_SCREENSHOT_DIR")
             .map(PathBuf::from)
             .unwrap_or_else(|| std::env::current_dir().unwrap_or_else(|_| PathBuf::from(".")));
-        path.push(format!("{stem}.png"));
+        path.push(format!("{stem}.{ext}"));
         path
     }
 }

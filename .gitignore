@@ -9,3 +9,6 @@
 /tests/golden/*-expected.png
 /tests/golden/*-headless.png
 /tests/golden/*-windowed.png
+/tests/golden/**/*-actual.wav
+/tests/golden/**/*-expected.wav
+/tests/golden/**/*-compare.png
