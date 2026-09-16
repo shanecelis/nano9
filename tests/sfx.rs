@@ -14,7 +14,8 @@
 //!
 //! `cargo test sfx` also selects this target (and any other tests whose names
 //! contain `sfx`). Carts write `{name}-expected.wav` via `extcmd("audio_rec")`
-//! and `{name}-actual.wav` from Nano-9's offline mixdown.
+//! and `{name}-actual.wav` from Nano-9's offline mixdown (`-p headless` mutes
+//! the speaker; the WAV is mixed from play events, not captured from the device).
 
 mod common;
 

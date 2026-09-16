@@ -123,7 +123,7 @@ impl PluginGroup for HeadlessNano9Plugins {
                     .set(ImagePlugin::default_nearest())
                     .set(AudioPlugin {
                         global_volume: GlobalVolume {
-                            volume: Volume::Linear(0.4),
+                            volume: Volume::Linear(0.0),
                         },
                         ..default()
                     })

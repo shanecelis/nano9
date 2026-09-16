@@ -49,9 +49,9 @@ impl Command for AudioCommand {
     type Out = ();
 
     fn apply(self, world: &mut World) {
-        let muted = world
-            .get_resource::<crate::pico8::Defaults>()
-            .is_some_and(|d| d.mute);
+        // Mixdown still logs Play/Stop/Release. The device is skipped when
+        // muted, `--headless`, or `-p headless` (golden tests).
+        let muted = skip_device(world);
         match self {
             AudioCommand::Stop(sfx_channel, mode) => {
                 match sfx_channel {
@@ -297,6 +297,21 @@ impl Command for AudioCommand {
             }
         }
     }
+}
+
+fn skip_device(world: &World) -> bool {
+    if world
+        .get_resource::<crate::pico8::Defaults>()
+        .is_some_and(|d| d.mute)
+    {
+        return true;
+    }
+    if world.contains_resource::<crate::Headless>() {
+        return true;
+    }
+    world
+        .get_resource::<crate::pico8::CartArgs>()
+        .is_some_and(|args| args.param == "headless")
 }
 
 fn record_frame(world: &World) -> u32 {
