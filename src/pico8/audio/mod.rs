@@ -27,6 +27,8 @@ const SAMPLES_PER_TICK: u32 = 183;
 const DT: f32 = 1.0 / SAMPLE_RATE as f32;
 const ANTICLICK_RAMP: f32 = 0.0025;
 const NOISE_CUTOFF_SCALE: f32 = 8.858923;
+/// Pico-8 WAV export is silent for this many samples before the oscillator.
+const ONSET_DELAY: u32 = 21;
 
 /// Pitch 33 is A-4 = 440 Hz (Pico-8 key 0..=63).
 fn key_to_freq(key: f32) -> f32 {
@@ -405,6 +407,11 @@ impl Sfx {
         }
     }
 
+    /// Sample-accurate 22050 Hz mono decoder (Pico-8 tracker).
+    pub fn decode(&self) -> SfxDecoder {
+        SfxDecoder::new(self.clone())
+    }
+
     pub fn with_speed(mut self, speed: u8) -> Self {
         self.speed = speed;
         self
@@ -519,6 +526,7 @@ pub struct SfxDecoder {
     t: f32,
     noise: u32,
     noise_level: f32,
+    lead: u32,
 }
 
 impl SfxDecoder {
@@ -537,15 +545,16 @@ impl SfxDecoder {
             step,
             pos: 0,
             note_len,
-            // First sample is taken after advancing (matches Pico-8's attack).
-            phase: 0.4,
-            phase_b: 0.4 * 109.0 / 110.0,
+            // Positive peak: export's first half-cycle is short (amp still ramping).
+            phase: 0.5,
+            phase_b: 0.5 * 109.0 / 110.0,
             prev_key,
             prev_vol,
             amp: 0.0,
             t: 0.0,
             noise: 0x1234_5678,
             noise_level: 0.0,
+            lead: ONSET_DELAY,
         }
     }
 }
@@ -554,6 +563,14 @@ impl Iterator for SfxDecoder {
     type Item = f32;
 
     fn next(&mut self) -> Option<Self::Item> {
+        if self.lead > 0 {
+            self.lead -= 1;
+            return if self.current.is_some() {
+                Some(0.0)
+            } else {
+                None
+            };
+        }
         let note = self.current?;
         let note_len = self.note_len.max(1);
         let frac = self.pos as f32 / note_len as f32;

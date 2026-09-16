@@ -1,21 +1,21 @@
-//! Compare Nano-9 SFX mixdowns against Pico-8 goldens in `tests/golden/sfx/`.
+//! Compare Nano-9 SFX against Pico-8 goldens.
 //!
-//! Generate goldens (Pico-8 required):
-//! ```sh
-//! make golden
-//! ```
+//! Two tiers:
+//! - `tests/golden/synth/`: tracker render vs `EXPORT SYNTH%D.WAV` (`make golden-synth`)
+//! - `tests/golden/sfx/`: playback mix vs `audio_rec` (`make golden`)
 //!
 //! Run:
 //! ```sh
 //! cargo test --test sfx
 //! cargo test --test sfx -- triangle
 //! cargo test-sfx
+//! cargo test-sfx synth
 //! ```
 //!
 //! `cargo test sfx` also selects this target (and any other tests whose names
-//! contain `sfx`). Carts write `{name}-expected.wav` via `extcmd("audio_rec")`
-//! and `{name}-actual.wav` from Nano-9's offline mixdown (`-p headless` mutes
-//! the speaker; the WAV is mixed from play events, not captured from the device).
+//! contain `sfx`). Synth slots are rendered in-process from `Sfx::decode`.
+//! Playback carts write `{name}-actual.wav` from Nano-9's offline mixdown
+//! (`-p headless` mutes the speaker).
 
 mod common;
 

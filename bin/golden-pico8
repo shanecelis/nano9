@@ -3,12 +3,13 @@
 # Requires a Pico-8 binary. Default: `p8` on PATH (e.g. $HOME/bin/p8).
 #
 #   bin/golden-pico8 tests/golden/line.p8 -o tests/golden/line-expected.png
-#   bin/golden-pico8 tests/golden/sfx/sfx-triangle.p8 -o tests/golden/sfx/sfx-triangle-expected.wav
+#   bin/golden-pico8 tests/golden/sfx/sfx-loop.p8 -o tests/golden/sfx/sfx-loop-expected.wav
 #
-# PNG goldens use `pico8 -x` (headless). WAV goldens use `pico8 -run` with
-# `extcmd("audio_rec")` / `audio_end` because `-export *.wav` writes silence
-# and `-x` does not mix audio. `-home` is a temp dir so config.txt is not
-# overwritten.
+# PNG goldens use `pico8 -x` (headless). Playback WAV goldens use `pico8 -run`
+# with `extcmd("audio_rec")` / `audio_end` because `-x` does not mix audio.
+# Synth-shape goldens (waveforms, effects) use `bin/golden-synth` instead:
+# headless `-export *.wav` writes silence, so that path is interactive.
+# `-home` is a temp dir so config.txt is not overwritten.
 set -euo pipefail
 
 usage() {

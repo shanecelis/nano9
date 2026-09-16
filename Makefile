@@ -8,8 +8,12 @@ EXPECTED := \
 	$(patsubst $(SFX_DIR)/%.p8,$(SFX_DIR)/%-expected.wav,$(SFX_CARTS)) \
 	$(patsubst $(GOLDEN_DIR)/%.p8,$(GOLDEN_DIR)/%-expected.wav,$(MUSIC_CARTS))
 
-.PHONY: golden
+.PHONY: golden golden-synth
 golden: $(EXPECTED)
+
+# Interactive: opens Pico-8; type `EXPORT SYNTH%D.WAV` then `SHUTDOWN`.
+golden-synth:
+	bin/golden-synth
 
 $(GOLDEN_DIR)/%-expected.png: $(GOLDEN_DIR)/%.p8
 	bin/golden-pico8 $< -o $@

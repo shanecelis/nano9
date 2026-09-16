@@ -1,10 +1,16 @@
 //! Shared Pico-8 golden harness for image and sfx carts.
 
+use nano9::pico8::audio::{write_wav, Sfx};
+use nano9::pico8::{Cart, CartLoaderSettings};
 use std::fs::{self, File};
 use std::io::{BufWriter, Read, Write};
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 use std::time::Duration;
+
+/// Pico-8 tracker tick: 183 samples at 22050 Hz.
+const SAMPLES_PER_TICK: usize = 183;
+const EXPORT_NOTES: usize = 32;
 
 pub fn golden_dir() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/golden")
@@ -14,14 +20,37 @@ pub fn sfx_dir() -> PathBuf {
     golden_dir().join("sfx")
 }
 
+pub fn synth_dir() -> PathBuf {
+    golden_dir().join("synth")
+}
+
 #[allow(dead_code)]
 pub fn run_image_suite() {
-    run_suite(&golden_dir(), Kind::Image, "tests/golden/*.p8");
+    let mut rows = Vec::new();
+    let mut failed = Vec::new();
+    collect_suite(
+        &golden_dir(),
+        Kind::Image,
+        "tests/golden/*.p8",
+        &mut rows,
+        &mut failed,
+    );
+    finish_suite(rows, failed);
 }
 
 #[allow(dead_code)]
 pub fn run_sfx_suite() {
-    run_suite(&sfx_dir(), Kind::Audio, "tests/golden/sfx/*.p8");
+    let mut rows = Vec::new();
+    let mut failed = Vec::new();
+    collect_suite(
+        &sfx_dir(),
+        Kind::Audio,
+        "tests/golden/sfx/*.p8",
+        &mut rows,
+        &mut failed,
+    );
+    collect_synth(&mut rows, &mut failed);
+    finish_suite(rows, failed);
 }
 
 #[allow(dead_code)]
@@ -35,7 +64,13 @@ enum CartResult {
     Differ { detail: String, compare: PathBuf },
 }
 
-fn run_suite(dir: &Path, kind: Kind, glob: &str) {
+fn collect_suite(
+    dir: &Path,
+    kind: Kind,
+    glob: &str,
+    rows: &mut Vec<(String, String)>,
+    failed: &mut Vec<String>,
+) {
     let all = cart_names(dir);
     assert!(!all.is_empty(), "no {glob} carts found");
     let names: Vec<String> = match filter_arg() {
@@ -45,31 +80,20 @@ fn run_suite(dir: &Path, kind: Kind, glob: &str) {
             .collect(),
         None => all,
     };
-    if names.is_empty() {
-        println!("0 golden carts matched");
-        return;
-    }
-
-    let mut rows: Vec<(String, String)> = Vec::new();
-    let mut failed: Vec<String> = Vec::new();
     for name in &names {
         let result = match kind {
             Kind::Image => check_image_cart(dir, name),
             Kind::Audio => check_audio_cart(dir, name),
         };
-        match result {
-            Ok(CartResult::Match) => rows.push((name.clone(), "match".into())),
-            Ok(CartResult::Differ { detail, compare }) => {
-                rows.push((name.clone(), format!("{detail}  {}", compare.display())));
-                failed.push(name.clone());
-            }
-            Err(err) => {
-                rows.push((name.clone(), format!("error: {err}")));
-                failed.push(name.clone());
-            }
-        }
+        push_result(rows, failed, name, result);
     }
+}
 
+fn finish_suite(rows: Vec<(String, String)>, failed: Vec<String>) {
+    if rows.is_empty() {
+        println!("0 golden carts matched");
+        return;
+    }
     let width = rows.iter().map(|(n, _)| n.len()).max().unwrap_or(8);
     println!("\n=== golden summary ===");
     for (name, status) in &rows {
@@ -81,9 +105,31 @@ fn run_suite(dir: &Path, kind: Kind, glob: &str) {
         panic!(
             "{} / {} carts differ: {}",
             failed.len(),
-            names.len(),
+            rows.len(),
             failed.join(", ")
         );
+    }
+}
+
+fn push_result(
+    rows: &mut Vec<(String, String)>,
+    failed: &mut Vec<String>,
+    name: &str,
+    result: Result<CartResult, String>,
+) {
+    match result {
+        Ok(CartResult::Match) => rows.push((name.to_string(), "match".into())),
+        Ok(CartResult::Differ { detail, compare }) => {
+            rows.push((
+                name.to_string(),
+                format!("{detail}  {}", compare.display()),
+            ));
+            failed.push(name.to_string());
+        }
+        Err(err) => {
+            rows.push((name.to_string(), format!("error: {err}")));
+            failed.push(name.to_string());
+        }
     }
 }
 
@@ -193,16 +239,154 @@ fn check_audio_cart(dir: &Path, name: &str) -> Result<CartResult, String> {
 
     let expected_pcm = load_wav(&expected);
     let actual_pcm = load_wav(&actual);
+    let note_len = SAMPLES_PER_TICK * 8; // playback carts use speed 8 unless noted
+    Ok(compare_wav(
+        name,
+        dir,
+        &expected,
+        &actual,
+        &expected_pcm,
+        &actual_pcm,
+        note_len,
+        true,
+    ))
+}
+
+fn collect_synth(rows: &mut Vec<(String, String)>, failed: &mut Vec<String>) {
+    let dir = synth_dir();
+    let cart_path = dir.join("synth.p8");
+    if !cart_path.exists() {
+        return;
+    }
+    let slots = match synth_slots(&cart_path, &dir) {
+        Ok(slots) => slots,
+        Err(err) => {
+            push_result(rows, failed, "synth", Err(err));
+            return;
+        }
+    };
+    if slots.is_empty() {
+        if filter_arg().is_none() {
+            println!("no synth-NN-expected.wav (run make golden-synth)");
+        }
+        return;
+    }
+    for slot in slots {
+        let name = format!("synth-{:02}-{}", slot.index, slot.name);
+        let result = check_synth_slot(&dir, &slot);
+        push_result(rows, failed, &name, result);
+    }
+}
+
+struct SynthSlot {
+    index: usize,
+    name: String,
+    sfx: Sfx,
+}
+
+fn synth_slots(cart_path: &Path, dir: &Path) -> Result<Vec<SynthSlot>, String> {
+    let source = fs::read_to_string(cart_path).map_err(|e| e.to_string())?;
+    let cart = Cart::from_str(&source, &CartLoaderSettings::default()).map_err(|e| e.to_string())?;
+    let names = parse_synth_names(&cart.lua);
+    let mut slots = Vec::new();
+    for (index, sfx) in cart.sfx.into_iter().enumerate() {
+        let expected = dir.join(format!("synth-{index:02}-expected.wav"));
+        if !expected.exists() {
+            continue;
+        }
+        let name = names
+            .get(&index)
+            .cloned()
+            .unwrap_or_else(|| "slot".to_string());
+        slots.push(SynthSlot { index, name, sfx });
+    }
+    if let Some(filter) = filter_arg() {
+        slots.retain(|slot| {
+            format!("synth-{:02}-{}", slot.index, slot.name).contains(&filter)
+        });
+    }
+    Ok(slots)
+}
+
+fn parse_synth_names(lua: &str) -> std::collections::HashMap<usize, String> {
+    let mut names = std::collections::HashMap::new();
+    for line in lua.lines() {
+        let line = line.trim();
+        let Some(rest) = line.strip_prefix("-- sfx ") else {
+            continue;
+        };
+        let Some((idx, name)) = rest.split_once(':') else {
+            continue;
+        };
+        let Ok(index) = idx.trim().parse::<usize>() else {
+            continue;
+        };
+        let name = name.trim();
+        if !name.is_empty() {
+            names.insert(index, name.to_string());
+        }
+    }
+    names
+}
+
+fn check_synth_slot(dir: &Path, slot: &SynthSlot) -> Result<CartResult, String> {
+    let expected = dir.join(format!("synth-{:02}-expected.wav", slot.index));
+    let actual = dir.join(format!("synth-{:02}-actual.wav", slot.index));
+    let pcm = render_sfx(&slot.sfx);
+    write_wav(&actual, &pcm)?;
+    let expected_pcm = load_wav(&expected);
+    let note_len = slot.sfx.speed.max(1) as usize * SAMPLES_PER_TICK;
+    Ok(compare_wav(
+        &format!("synth-{:02}-{}", slot.index, slot.name),
+        dir,
+        &expected,
+        &actual,
+        &expected_pcm,
+        &pcm,
+        note_len,
+        false,
+    ))
+}
+
+fn render_sfx(sfx: &Sfx) -> Vec<i16> {
+    let export_len = EXPORT_NOTES * sfx.speed.max(1) as usize * SAMPLES_PER_TICK;
+    let mut pcm: Vec<i16> = sfx
+        .decode()
+        .take(export_len)
+        .map(|s| (s.clamp(-1.0, 1.0) * 32767.0) as i16)
+        .collect();
+    pcm.resize(export_len, 0);
+    pcm
+}
+
+fn compare_wav(
+    name: &str,
+    dir: &Path,
+    expected_path: &Path,
+    actual_path: &Path,
+    expected_pcm: &[i16],
+    actual_pcm: &[i16],
+    note_len: usize,
+    align_onset: bool,
+) -> CartResult {
     const THRESHOLD: i16 = 64;
-    let e_on = onset_index(&expected_pcm, THRESHOLD).unwrap_or(0);
-    let a_on = onset_index(&actual_pcm, THRESHOLD).unwrap_or(0);
+    let e_on = if align_onset {
+        onset_index(expected_pcm, THRESHOLD).unwrap_or(0)
+    } else {
+        0
+    };
+    let a_on = if align_onset {
+        onset_index(actual_pcm, THRESHOLD).unwrap_or(0)
+    } else {
+        0
+    };
     let aligned_e = &expected_pcm[e_on..];
     let aligned_a = &actual_pcm[a_on..];
-    let n = aligned_e.len().min(aligned_a.len());
     if aligned_e == aligned_a {
-        return Ok(CartResult::Match);
+        return CartResult::Match;
     }
 
+    let n = aligned_e.len().min(aligned_a.len());
     let e_cmp = &aligned_e[..n];
     let a_cmp = &aligned_a[..n];
     let mut diffs = Vec::with_capacity(n);
@@ -215,12 +399,12 @@ fn check_audio_cart(dir: &Path, name: &str) -> Result<CartResult, String> {
         }
     }
     let rms_diff = rms(&diffs);
-    let note_len = 183 * 8; // one note at speed 8
     let mut pitch_rows = String::new();
     let mut i = 0;
     let mut note_i = 0;
+    let step = note_len.max(1);
     while i < n {
-        let end = (i + note_len).min(n);
+        let end = (i + step).min(n);
         let e_hz = zero_cross_hz(&e_cmp[i..end], 22_050.0);
         let a_hz = zero_cross_hz(&a_cmp[i..end], 22_050.0);
         pitch_rows.push_str(&format!(
@@ -244,26 +428,31 @@ fn check_audio_cart(dir: &Path, name: &str) -> Result<CartResult, String> {
         (changed as f64) * 100.0 / n as f64
     };
     let onset_delta = a_on as i64 - e_on as i64;
+    let len_note = if aligned_e.len() == aligned_a.len() {
+        String::new()
+    } else {
+        format!(", len {} vs {}", aligned_e.len(), aligned_a.len())
+    };
     println!("\n=== {name}: {changed}/{n} samples differ ({pct:.2}%) ===");
     println!(
-        "onset Pico-8 {e_on} Nano-9 {a_on} (delta {onset_delta}), lens {} vs {}, RMS diff {rms_diff:.1}, peak {} vs {}",
+        "onset Pico-8 {e_on} Nano-9 {a_on} (delta {onset_delta}), lens {} vs {}, RMS diff {rms_diff:.1}, peak {} vs {}{len_note}",
         aligned_e.len(),
         aligned_a.len(),
         peak(aligned_e),
         peak(aligned_a)
     );
     print!("{pitch_rows}");
-    println!("Pico-8:  {}", expected.display());
-    println!("Nano-9:  {}", actual.display());
+    println!("Pico-8:  {}", expected_path.display());
+    println!("Nano-9:  {}", actual_path.display());
     println!("compare: {}", compare_path.display());
     let _ = std::io::stdout().flush();
     show_image(&format!("{name}: Pico-8 | Nano-9 | diff"), &compare_path);
-    Ok(CartResult::Differ {
+    CartResult::Differ {
         detail: format!(
             "{changed}/{n} samples ({pct:.2}%), RMS {rms_diff:.1}, onset {onset_delta}"
         ),
         compare: compare_path,
-    })
+    }
 }
 
 /// Positional args after skipping libtest flags. First one is the substring filter.

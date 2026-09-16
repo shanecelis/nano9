@@ -12,3 +12,5 @@
 /tests/golden/**/*-actual.wav
 /tests/golden/**/*-expected.wav
 /tests/golden/**/*-compare.png
+# Synth goldens come from a manual Pico-8 EXPORT and should be committed.
+!/tests/golden/synth/*-expected.wav
