@@ -5,10 +5,6 @@ use bevy::{
     audio::{AddAudioSource, Decodable, Source},
     prelude::*,
 };
-use dasp::{
-    Signal,
-    signal::{self, Noise, Phase, Step, noise},
-};
 use std::num::NonZero;
 use std::time::Duration;
 use std::{
@@ -26,6 +22,57 @@ pub use command::*;
 pub use record::{AudioRecorder, write_wav};
 
 pub(crate) const SAMPLE_RATE: u32 = 22_050;
+/// Pico-8 tracker tick: 183 samples at 22050 Hz (~120.49 Hz), not 22050/120.
+const SAMPLES_PER_TICK: u32 = 183;
+const DT: f32 = 1.0 / SAMPLE_RATE as f32;
+const ANTICLICK_RAMP: f32 = 0.0025;
+const NOISE_CUTOFF_SCALE: f32 = 8.858923;
+
+/// Pitch 33 is A-4 = 440 Hz (Pico-8 key 0..=63).
+fn key_to_freq(key: f32) -> f32 {
+    440.0 * f32::exp2((key - 33.0) / 12.0)
+}
+
+/// One sample of a built-in waveform. `t` / `t_phaser` are phases in `[0, 1)`.
+/// Amplitudes from zepto-8, measured against Pico-8 WAV exports.
+fn tonal_wave(wave: WaveForm, t: f32, t_phaser: f32) -> f32 {
+    match wave {
+        WaveForm::Triangle => (1.0 - (4.0 * t - 2.0).abs()) * 0.5,
+        WaveForm::TiltedSaw => {
+            let a = 0.875;
+            let ret = if t < a {
+                2.0 * t / a - 1.0
+            } else {
+                2.0 * (1.0 - t) / (1.0 - a) - 1.0
+            };
+            ret * 0.5
+        }
+        WaveForm::Saw => {
+            let ret = if t < 0.5 { t } else { t - 1.0 };
+            0.653 * ret
+        }
+        WaveForm::Square => {
+            if t < 0.5 { 0.25 } else { -0.25 }
+        }
+        WaveForm::Pulse => {
+            if t < 0.316 { 0.25 } else { -0.25 }
+        }
+        WaveForm::Organ => {
+            let ret = if t < 0.5 {
+                3.0 - (24.0 * t - 6.0).abs()
+            } else {
+                1.0 - (16.0 * t - 12.0).abs()
+            };
+            ret / 9.0
+        }
+        WaveForm::Phaser => {
+            let mut ret = 2.0 - (8.0 * t - 4.0).abs();
+            ret += 1.0 - (4.0 * t_phaser - 2.0).abs();
+            ret / 6.0
+        }
+        WaveForm::Noise | WaveForm::Custom(_) => 0.0,
+    }
+}
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum WaveForm {
@@ -38,149 +85,6 @@ pub enum WaveForm {
     Noise,
     Phaser,
     Custom(u8),
-}
-
-pub struct Triangle<S> {
-    phase: Phase<S>,
-}
-
-impl<S> Signal for Triangle<S>
-where
-    S: Step,
-{
-    type Frame = f64;
-
-    /// Make a triangle wave that starts and ends at zero.
-    #[inline]
-    fn next(&mut self) -> Self::Frame {
-        let phase = self.phase.next_phase();
-        let a = 4.0 * phase;
-        if phase < 0.25 {
-            a
-        } else if phase < 0.75 {
-            -a + 2.0
-        } else {
-            a - 4.0
-        }
-    }
-}
-
-const DEFAULT_KNEE: f64 = 0.9;
-
-pub struct TiltedSaw<S> {
-    /// Where the saw turns downward. If `knee` is 1, it degrades into [Saw].
-    knee: f64,
-    phase: Phase<S>,
-}
-
-impl<S> Signal for TiltedSaw<S>
-where
-    S: Step,
-{
-    type Frame = f64;
-
-    /// Make a triangle wave that starts and ends at zero.
-    #[inline]
-    fn next(&mut self) -> Self::Frame {
-        let phase = self.phase.next_phase();
-
-        if phase < self.knee {
-            2.0 * phase / self.knee - 1.0
-        } else {
-            (-2.0 * phase + self.knee + 1.0) / (1.0 - self.knee)
-        }
-    }
-}
-
-pub struct Saw<S> {
-    phase: Phase<S>,
-}
-
-impl<S> Signal for Saw<S>
-where
-    S: Step,
-{
-    type Frame = f64;
-
-    /// Make a triangle wave that starts and ends at zero.
-    #[inline]
-    fn next(&mut self) -> Self::Frame {
-        let phase = self.phase.next_phase();
-        phase * 2.0 - 1.0
-    }
-}
-
-const MINOR_HEIGHT: f64 = 1.1;
-
-pub struct Organ<S> {
-    phase: Phase<S>,
-    minor_height: f64,
-}
-
-impl<S> Signal for Organ<S>
-where
-    S: Step,
-{
-    type Frame = f64;
-
-    /// Make a major and minor triangle wave.
-    #[inline]
-    fn next(&mut self) -> Self::Frame {
-        let phase = self.phase.next_phase();
-        if phase < 0.25 {
-            8.0 * phase - 1.0
-        } else if phase < 0.5 {
-            3.0 - 8.0 * phase
-        } else if phase < 0.75 {
-            self.minor_height * (4.0 * phase - 2.0) - 1.0
-        } else {
-            self.minor_height * (4.0 - 4.0 * phase) - 1.0
-        }
-    }
-}
-
-const PULSE_WIDTH: f64 = 0.375;
-
-pub struct Pulse<S> {
-    phase: Phase<S>,
-    width: f64,
-}
-
-impl<S> Signal for Pulse<S>
-where
-    S: Step,
-{
-    type Frame = f64;
-
-    #[inline]
-    fn next(&mut self) -> Self::Frame {
-        let phase = self.phase.next_phase();
-        if phase < self.width { 1.0 } else { -1.0 }
-    }
-}
-
-const DRUNK_PACE: f64 = 0.1;
-
-pub struct DrunkNoise {
-    noise: Noise,
-    pace: f64,
-    current: f64,
-}
-
-impl Signal for DrunkNoise {
-    type Frame = f64;
-
-    #[inline]
-    fn next(&mut self) -> Self::Frame {
-        let step = self.pace * self.noise.next();
-        self.current += step;
-        if self.current > 1.0 {
-            self.current -= 2.0 * step.abs();
-        } else if self.current < -1.0 {
-            self.current += 2.0 * step.abs();
-        }
-        self.current
-    }
 }
 
 #[derive(Resource, Debug, Reflect, Deref)]
@@ -316,6 +220,11 @@ impl Pico8Note {
                 | ((u8::from(effect) as u16 & 0b111) << 12),
         )
     }
+
+    /// Tracker key 0..=63 (C-0 .. D#-5). Pitch 33 is A-4.
+    pub fn key(&self) -> u8 {
+        (self.0 & 0b0011_1111) as u8
+    }
 }
 
 // impl From<u8> for Pico8Note {
@@ -409,7 +318,7 @@ const PITCH_OFFSET: u8 = 35;
 
 impl Note for Pico8Note {
     fn pitch(&self) -> u8 {
-        (self.0 & 0b0011_1111) as u8 + PITCH_OFFSET
+        self.key() + PITCH_OFFSET
     }
 
     fn wave(&self) -> WaveForm {
@@ -596,103 +505,121 @@ impl From<Sfx> for NoteIter {
 }
 
 pub struct SfxDecoder {
-    sfx_notes: NoteIter,
-    samples: Option<Box<dyn Iterator<Item = f32> + Sync + Send + 'static>>,
+    sfx: Sfx,
+    notes: NoteIter,
+    current: Option<Pico8Note>,
+    step: usize,
+    pos: u32,
+    note_len: u32,
+    phase: f32,
+    phase_b: f32,
+    prev_key: f32,
+    prev_vol: f32,
+    amp: f32,
+    t: f32,
+    noise: u32,
+    noise_level: f32,
+}
+
+impl SfxDecoder {
+    fn new(sfx: Sfx) -> Self {
+        let speed = sfx.speed.max(1);
+        let note_len = speed as u32 * SAMPLES_PER_TICK;
+        let mut notes = NoteIter::from(sfx.clone());
+        let current = notes.next();
+        let step = notes.index.saturating_sub(1);
+        let prev_key = current.map(|n| n.key() as f32).unwrap_or(0.0);
+        let prev_vol = current.map(|n| n.volume()).unwrap_or(0.0);
+        Self {
+            sfx,
+            notes,
+            current,
+            step,
+            pos: 0,
+            note_len,
+            // First sample is taken after advancing (matches Pico-8's attack).
+            phase: 0.4,
+            phase_b: 0.4 * 109.0 / 110.0,
+            prev_key,
+            prev_vol,
+            amp: 0.0,
+            t: 0.0,
+            noise: 0x1234_5678,
+            noise_level: 0.0,
+        }
+    }
 }
 
 impl Iterator for SfxDecoder {
     type Item = f32;
 
     fn next(&mut self) -> Option<Self::Item> {
-        let mut result = None;
-        if let Some(samples) = &mut self.samples {
-            result = samples.next();
-            if result.is_none() {
-                self.samples = None; // Will create one for the next note.
+        let note = self.current?;
+        let note_len = self.note_len.max(1);
+        let frac = self.pos as f32 / note_len as f32;
+        let base_key = note.key() as f32;
+        let mut key = base_key;
+        let mut vol = note.volume();
+        match note.effect() {
+            Effect::None => {}
+            Effect::Slide => {
+                key = self.prev_key + (base_key - self.prev_key) * frac;
+                vol = self.prev_vol + (vol - self.prev_vol) * frac;
+            }
+            Effect::Vibrato => {
+                key += 0.25 * (self.t * 2.0 * std::f32::consts::PI * 8.0).sin();
+            }
+            Effect::Drop => {
+                key = base_key * (1.0 - frac);
+            }
+            Effect::FadeIn => vol *= frac,
+            Effect::FadeOut => vol *= 1.0 - frac,
+            Effect::ArpFast | Effect::ArpSlow => {
+                let spd = self.sfx.speed.max(1);
+                let ticks_per = match (note.effect(), spd <= 8) {
+                    (Effect::ArpFast, true) => 2,
+                    (Effect::ArpSlow, true) => 4,
+                    (Effect::ArpFast, false) => 4,
+                    _ => 8,
+                };
+                let tick = (self.t * SAMPLE_RATE as f32 / SAMPLES_PER_TICK as f32) as u32;
+                let idx = ((tick / ticks_per) % 4) as usize;
+                let group = (self.step / 4) * 4;
+                if let Some(n) = self.sfx.notes.get(group + idx) {
+                    key = n.key() as f32;
+                }
             }
         }
-        if self.samples.is_none() {
-            self.samples = self.sfx_notes.next().map(|note| {
-                // midi pitch to frequency equation.
-                // https://www.music.mcgill.ca/~gary/307/week1/node28.html
-                let freq = 440.0 * f32::exp2((note.pitch() as i8 - 69) as f32 / 12.0);
-                // dbg!(note.pitch(), freq);
-                let hz = signal::rate(SAMPLE_RATE as f64).const_hz(freq as f64);
-                let duration = (self.sfx_notes.sfx.speed as f32 / 120.0) * SAMPLE_RATE as f32;
-                let volume: f32 = note.volume();
-                match note.wave() {
-                    WaveForm::Triangle => {
-                        let synth = Triangle { phase: hz.phase() }
-                            .map(|x| x as f32)
-                            .scale_amp(volume);
-                        Box::new(synth.take(duration as usize))
-                            as Box<dyn Iterator<Item = f32> + Sync + Send + 'static>
-                    }
-                    WaveForm::TiltedSaw => {
-                        let synth = TiltedSaw {
-                            phase: hz.phase(),
-                            knee: DEFAULT_KNEE,
-                        }
-                        .map(|x| x as f32)
-                        .scale_amp(volume);
-                        Box::new(synth.take(duration as usize))
-                            as Box<dyn Iterator<Item = f32> + Sync + Send + 'static>
-                    }
-                    WaveForm::Saw => {
-                        let synth = Saw { phase: hz.phase() }
-                            .map(|x| x as f32)
-                            .scale_amp(volume);
-                        Box::new(synth.take(duration as usize))
-                            as Box<dyn Iterator<Item = f32> + Sync + Send + 'static>
-                    }
-                    WaveForm::Square => {
-                        // let synth = TiltedSaw { phase: hz.phase(),
-                        //                         knee: DEFAULT_KNEE }
-                        let synth = hz.square().map(|x| x as f32).scale_amp(volume);
-                        Box::new(synth.take(duration as usize))
-                            as Box<dyn Iterator<Item = f32> + Sync + Send + 'static>
-                    }
-                    WaveForm::Pulse => {
-                        let synth = Pulse {
-                            phase: hz.phase(),
-                            width: PULSE_WIDTH,
-                        }
-                        .map(|x| x as f32)
-                        .scale_amp(volume);
-                        Box::new(synth.take(duration as usize))
-                            as Box<dyn Iterator<Item = f32> + Sync + Send + 'static>
-                    }
-                    WaveForm::Organ => {
-                        let synth = Organ {
-                            phase: hz.phase(),
-                            minor_height: MINOR_HEIGHT,
-                        }
-                        .map(|x| x as f32)
-                        .scale_amp(volume);
-                        Box::new(synth.take(duration as usize))
-                            as Box<dyn Iterator<Item = f32> + Sync + Send + 'static>
-                    }
-                    WaveForm::Noise => {
-                        let synth = DrunkNoise {
-                            noise: noise(0),
-                            pace: DRUNK_PACE,
-                            current: 0.0,
-                        }
-                        .map(|x| x as f32)
-                        .scale_amp(volume);
-                        Box::new(synth.take(duration as usize))
-                            as Box<dyn Iterator<Item = f32> + Sync + Send + 'static>
-                    }
-                    WaveForm::Phaser => {
-                        let synth = hz.sine().map(|x| x as f32).scale_amp(volume);
-                        Box::new(synth.take(duration as usize))
-                            as Box<dyn Iterator<Item = f32> + Sync + Send + 'static>
-                    }
-                    x => todo!("WaveForm {x:?} not supported yet"),
-                }
-            });
+
+        let freq = key_to_freq(key.max(0.0));
+        self.phase = (self.phase + freq * DT).fract();
+        self.phase_b = (self.phase_b + freq * (109.0 / 110.0) * DT).fract();
+
+        let raw = if matches!(note.wave(), WaveForm::Noise) {
+            self.noise = self.noise.wrapping_mul(1_664_525).wrapping_add(1_013_904_223);
+            let white = (self.noise >> 16) as f32 / 32768.0 - 1.0;
+            let scale = freq * DT * NOISE_CUTOFF_SCALE;
+            self.noise_level = (self.noise_level + scale * white) / (1.0 + scale);
+            let factor = 1.0 - key / 63.0;
+            self.noise_level * 1.5 * (1.0 + factor * factor)
+        } else {
+            tonal_wave(note.wave(), self.phase, self.phase_b)
+        };
+
+        let max_step = DT / ANTICLICK_RAMP;
+        self.amp += (vol - self.amp).clamp(-max_step, max_step);
+        let out = (raw * self.amp).clamp(-1.0, 1.0);
+
+        self.t += DT;
+        self.pos += 1;
+        if self.pos >= note_len {
+            self.prev_key = base_key;
+            self.prev_vol = note.volume();
+            self.current = self.notes.next();
+            self.step = self.notes.index.saturating_sub(1);
+            self.pos = 0;
         }
-        result.or_else(|| self.samples.as_mut().and_then(|samples| samples.next()))
+        Some(out)
     }
 }
 
@@ -718,10 +645,7 @@ impl Decodable for Sfx {
     type Decoder = SfxDecoder;
 
     fn decoder(&self) -> Self::Decoder {
-        SfxDecoder {
-            sfx_notes: self.clone().into(),
-            samples: None,
-        }
+        SfxDecoder::new(self.clone())
     }
 }
 
@@ -894,5 +818,13 @@ mod test {
         release.store(true, Ordering::Relaxed);
         let leftover: Vec<u8> = NoteIter::from(sfx).map(|n| n.pitch()).collect();
         assert_eq!(leftover, vec![48, 50, 52, 53, 55, 57, 59, 60]);
+    }
+
+    #[test]
+    fn key_33_is_a4() {
+        let note = Pico8Note::new(33 + PITCH_OFFSET, WaveForm::Triangle, 7, Effect::None);
+        assert_eq!(note.key(), 33);
+        let freq = key_to_freq(note.key() as f32);
+        assert!((freq - 440.0).abs() < 0.01);
     }
 }
