@@ -13,11 +13,13 @@
 //! ```
 //!
 //! `cargo test sfx` also selects this target (and any other tests whose names
-//! contain `sfx`). Synth slots are rendered in-process from
-//! `Sfx::decode_with_phase`, with a different start phase per slot
-//! (`EXPORT_OSC_PHASE` then `Sfx::phase_after_export`). Playback carts write
-//! `{name}-actual.wav` from Nano-9's offline mixdown (`-p headless` mutes the
-//! speaker).
+//! contain `sfx`). Synth slots are rendered in-process from `Sfx::decode()`,
+//! except export goldens start the oscillator at Pico-8's leftover EXPORT
+//! phase (test-only). Pico-8 `EXPORT %d.wav` also writes a silent pad before
+//! the wave (osc-02 is 93 samples / 0.0042s); Nano-9 does not, and the
+//! harness strips that pad from the expected file when comparing. Playback
+//! carts write `{name}-actual.wav` from Nano-9's offline mixdown (`-p
+//! headless` mutes the speaker).
 
 mod common;
 

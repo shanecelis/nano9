@@ -1,6 +1,6 @@
 //! Shared Pico-8 golden harness for image and sfx carts.
 
-use nano9::pico8::audio::{write_wav, Sfx, EXPORT_OSC_PHASE};
+use nano9::pico8::audio::{write_wav, Note, Pico8Note, Sfx};
 use nano9::pico8::{Cart, CartLoaderSettings};
 use std::fs::{self, File};
 use std::io::{BufWriter, Read, Write};
@@ -11,6 +11,10 @@ use std::time::Duration;
 /// Pico-8 tracker tick: 183 samples at 22050 Hz.
 const SAMPLES_PER_TICK: usize = 183;
 const EXPORT_NOTES: usize = 32;
+/// Pico-8 `EXPORT %d.wav` leftover oscillator at slot 0. Not used for playback.
+const PICO8_EXPORT_OSC_PHASE: f32 = 0.39;
+/// Samples with |s| <= this count as Pico-8's EXPORT lead-in pad.
+const EXPORT_PAD_THRESHOLD: i16 = 64;
 
 pub fn golden_dir() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/golden")
@@ -51,6 +55,7 @@ pub fn run_sfx_suite() {
     );
     collect_export_cart(&synth_dir(), "synth.p8", "synth", &mut rows, &mut failed);
     collect_export_cart(&synth_dir(), "oscillator.p8", "osc", &mut rows, &mut failed);
+    check_pico8_export_phase_walk();
     finish_suite(rows, failed);
 }
 
@@ -282,7 +287,7 @@ fn collect_export_cart(
     };
     let names = parse_synth_names(&cart.lua);
     let filter = filter_arg();
-    let phases = Sfx::export_phases(&cart.sfx, EXPORT_OSC_PHASE);
+    let phases = pico8_export_phases(&cart.sfx, PICO8_EXPORT_OSC_PHASE);
     let mut any = false;
     for (index, sfx) in cart.sfx.iter().enumerate() {
         let expected = dir.join(format!("{prefix}-{index:02}-expected.wav"));
@@ -297,7 +302,7 @@ fn collect_export_cart(
         };
         if expected.exists() && wanted {
             any = true;
-            let phase = phases.get(index).copied().unwrap_or(EXPORT_OSC_PHASE);
+            let phase = phases.get(index).copied().unwrap_or(PICO8_EXPORT_OSC_PHASE);
             let result = check_synth_slot(dir, prefix, index, &name, sfx, phase);
             push_result(rows, failed, &label, result);
         }
@@ -339,6 +344,9 @@ fn check_synth_slot(
     let expected = dir.join(format!("{prefix}-{index:02}-expected.wav"));
     let actual = dir.join(format!("{prefix}-{index:02}-actual.wav"));
     let expected_pcm = load_wav(&expected);
+    // Nano-9 starts at sample 0. Pico-8 EXPORT often writes a silent pad
+    // first (osc-02 is 93 samples / 0.0042s). Keep that pad on expected and
+    // strip it only when comparing.
     let pcm = render_sfx(sfx, phase);
     write_wav(&actual, &pcm)?;
     let note_len = sfx.speed.max(1) as usize * SAMPLES_PER_TICK;
@@ -367,6 +375,62 @@ fn render_sfx(sfx: &Sfx, phase: f32) -> Vec<i16> {
     pcm
 }
 
+/// Pico-8 `EXPORT %d.wav` leftover oscillator after one 32-note slot.
+///
+/// Empty tail notes keep the last sounding key at volume 0. Measured on 64
+/// identical triangle-scale exports: Δφ ≈ 0.125 per slot, repeating every 8.
+fn pico8_phase_after_export(sfx: &Sfx, phase: f32) -> f32 {
+    let mut sfx = sfx.clone();
+    if let Some(last) = sfx.notes.iter().rev().copied().find(|n| n.volume() > 0.0) {
+        let held = Pico8Note(last.key() as u16);
+        sfx.notes.truncate(EXPORT_NOTES);
+        sfx.notes.resize(EXPORT_NOTES, held);
+    }
+    let n = EXPORT_NOTES * sfx.speed.max(1) as usize * SAMPLES_PER_TICK;
+    let mut decoder = sfx.decode_with_phase(phase);
+    for _ in 0..n {
+        if decoder.next().is_none() {
+            break;
+        }
+    }
+    decoder.phase()
+}
+
+fn pico8_export_phases<'a, I>(sfxs: I, phase0: f32) -> Vec<f32>
+where
+    I: IntoIterator<Item = &'a Sfx>,
+{
+    let mut phase = phase0.fract().rem_euclid(1.0);
+    let mut out = Vec::new();
+    for sfx in sfxs {
+        out.push(phase);
+        phase = pico8_phase_after_export(sfx, phase);
+    }
+    out
+}
+
+fn check_pico8_export_phase_walk() {
+    // Same triangle scale as tests/golden/synth/oscillator.p8.
+    let sfx = Sfx::try_from(
+        "000800000d0700f070110701207014070160701807019070000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    )
+    .unwrap();
+    let delta = (pico8_phase_after_export(&sfx, 0.39) - 0.39).rem_euclid(1.0);
+    assert!(
+        (delta - 0.125).abs() < 0.002,
+        "Pico-8 EXPORT Δφ={delta} (expected ~0.125)"
+    );
+    let phases = pico8_export_phases(std::iter::repeat(&sfx).take(16), PICO8_EXPORT_OSC_PHASE);
+    assert!((phases[0] - PICO8_EXPORT_OSC_PHASE).abs() < 0.001);
+    assert!(((phases[1] - phases[0]).rem_euclid(1.0) - 0.125).abs() < 0.002);
+    assert!(
+        (phases[8] - phases[0]).abs() < 0.02,
+        "slot 8 should match slot 0, got {} vs {}",
+        phases[8],
+        phases[0]
+    );
+}
+
 fn compare_wav(
     name: &str,
     dir: &Path,
@@ -379,14 +443,13 @@ fn compare_wav(
     align_actual_onset: bool,
     osc_phase: Option<f32>,
 ) -> CartResult {
-    const THRESHOLD: i16 = 64;
     let e_on = if align_expected_onset {
-        onset_index(expected_pcm, THRESHOLD).unwrap_or(0)
+        onset_index(expected_pcm, EXPORT_PAD_THRESHOLD).unwrap_or(0)
     } else {
         0
     };
     let a_on = if align_actual_onset {
-        onset_index(actual_pcm, THRESHOLD).unwrap_or(0)
+        onset_index(actual_pcm, EXPORT_PAD_THRESHOLD).unwrap_or(0)
     } else {
         0
     };
@@ -449,7 +512,8 @@ fn compare_wav(
     };
     println!("\n=== {name}: {changed}/{n} samples |diff|>{SAMPLE_EPS} ({pct:.2}%) ===");
     println!(
-        "onset Pico-8 {e_on} Nano-9 {a_on} (delta {onset_delta}), lens {} vs {}, RMS diff {rms_diff:.1}, peak {} vs {}{len_note}",
+        "onset Pico-8 {e_on} ({:.4}s pad) Nano-9 {a_on} (delta {onset_delta}), lens {} vs {}, RMS diff {rms_diff:.1}, peak {} vs {}{len_note}",
+        e_on as f64 / 22_050.0,
         aligned_e.len(),
         aligned_a.len(),
         peak(aligned_e),

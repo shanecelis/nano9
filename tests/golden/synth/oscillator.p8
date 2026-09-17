@@ -8,8 +8,9 @@ __lua__
 --   cd oscillator
 --   export osc%d.wav
 --
--- osc0/1/2 already share a 155-sample (~7ms) lead-in but
--- the first peak walks ~20 samples earlier each slot.
+-- pico-8 export pads ~19-93 silent samples before the wave
+-- (osc-02 is 0.0042s). nano-9 starts at sample 0; tests strip
+-- that pad. leftover oscillator phase is a test-only match.
 -- a full bank lets us find the period, if any (osc0 == osc N).
 function _draw()
   cls(1)

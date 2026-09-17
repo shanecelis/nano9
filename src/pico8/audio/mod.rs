@@ -29,11 +29,6 @@ const ANTICLICK_RAMP: f32 = 0.0025;
 const NOISE_CUTOFF_SCALE: f32 = 8.858923;
 /// Pico-8 WAV exports peak ~1.6% below a full 0.5-amplitude triangle.
 const OUTPUT_GAIN: f32 = 16125.0 / 16383.5;
-/// Oscillator phase at the first slot of Pico-8 `EXPORT %d.wav`.
-///
-/// Later slots continue from [`Sfx::phase_after_export`]. Measured from 64
-/// identical triangle-scale exports: slot 0 ≈ 0.39, then Δφ ≈ 0.125 per slot.
-pub const EXPORT_OSC_PHASE: f32 = 0.39;
 
 /// Pitch 33 is A-4 = 440 Hz (Pico-8 key 0..=63).
 fn key_to_freq(key: f32) -> f32 {
@@ -414,8 +409,7 @@ impl Sfx {
 
     /// Sample-accurate 22050 Hz mono decoder (Pico-8 tracker).
     ///
-    /// Playback starts at oscillator phase 0. Pico-8 `EXPORT %d.wav` does not;
-    /// use [`decode_with_phase`] / [`phase_after_export`] for those goldens.
+    /// Oscillator phase starts at 0. There is no leading pad.
     pub fn decode(&self) -> SfxDecoder {
         SfxDecoder::new(self.clone())
     }
@@ -423,44 +417,6 @@ impl Sfx {
     /// Same as [`decode`], with a starting oscillator phase in `[0, 1)`.
     pub fn decode_with_phase(&self, phase: f32) -> SfxDecoder {
         SfxDecoder::with_phase(self.clone(), phase)
-    }
-
-    /// Oscillator phase after a 32-note WAV export starting at `phase`.
-    ///
-    /// Pico-8 writes 32 notes even when the SFX is shorter. Empty tail notes
-    /// do not re-key the oscillator: it keeps the last sounding frequency
-    /// (volume 0). Measured on 64 identical triangle-scale exports: Δφ ≈ 0.125
-    /// per slot, repeating every 8.
-    pub fn phase_after_export(&self, phase: f32) -> f32 {
-        const EXPORT_NOTES: usize = 32;
-        let mut sfx = self.clone();
-        if let Some(last) = sfx.notes.iter().rev().copied().find(|n| n.volume() > 0.0) {
-            let held = Pico8Note(last.key() as u16);
-            sfx.notes.truncate(EXPORT_NOTES);
-            sfx.notes.resize(EXPORT_NOTES, held);
-        }
-        let n = EXPORT_NOTES * sfx.speed.max(1) as usize * SAMPLES_PER_TICK as usize;
-        let mut decoder = SfxDecoder::with_phase(sfx, phase);
-        for _ in 0..n {
-            if decoder.next().is_none() {
-                break;
-            }
-        }
-        decoder.phase()
-    }
-
-    /// Start phase of each SFX in an `EXPORT %d.wav` sequence, beginning at `phase0`.
-    pub fn export_phases<'a, I>(sfxs: I, phase0: f32) -> Vec<f32>
-    where
-        I: IntoIterator<Item = &'a Sfx>,
-    {
-        let mut phase = phase0.fract().rem_euclid(1.0);
-        let mut out = Vec::new();
-        for sfx in sfxs {
-            out.push(phase);
-            phase = sfx.phase_after_export(phase);
-        }
-        out
     }
 
     pub fn with_speed(mut self, speed: u8) -> Self {
@@ -894,31 +850,12 @@ mod test {
     }
 
     #[test]
-    fn export_holds_last_key_through_silent_tail() {
-        // Same triangle scale as tests/golden/synth/oscillator.p8.
+    fn decode_starts_at_phase_zero() {
         let sfx = Sfx::try_from(
             "000800000d0700f070110701207014070160701807019070000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
         )
         .unwrap();
-        let delta = (sfx.phase_after_export(0.39) - 0.39).rem_euclid(1.0);
-        // 64 identical Pico-8 exports advanced ~0.125 per slot.
-        assert!(
-            (delta - 0.125).abs() < 0.002,
-            "Δφ={delta} (expected ~0.125)"
-        );
-
-        let phases = Sfx::export_phases(std::iter::repeat(&sfx).take(16), EXPORT_OSC_PHASE);
-        assert!((phases[0] - EXPORT_OSC_PHASE).abs() < 0.001);
-        assert!(((phases[1] - phases[0]).rem_euclid(1.0) - 0.125).abs() < 0.002);
-        assert!(
-            (phases[8] - phases[0]).abs() < 0.02,
-            "slot 8 should match slot 0, got {} vs {}",
-            phases[8],
-            phases[0]
-        );
-        assert!(
-            (phases[1] - phases[0]).abs() > 0.05,
-            "adjacent slots must start on different phases"
-        );
+        assert!(sfx.decode().phase().abs() < 0.001);
+        assert!((sfx.decode_with_phase(0.39).phase() - 0.39).abs() < 0.001);
     }
 }
