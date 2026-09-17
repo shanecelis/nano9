@@ -17,8 +17,7 @@ fn main() {
         usage();
     }
     let pcm = audio_ogg::load_wav(Path::new(&input));
-    let pcm = audio_ogg::strip_leading_silence(&pcm);
-    audio_ogg::write_ogg(Path::new(&output), pcm).unwrap_or_else(|e| {
+    audio_ogg::write_ogg(Path::new(&output), &pcm).unwrap_or_else(|e| {
         eprintln!("error: {e}");
         std::process::exit(1);
     });

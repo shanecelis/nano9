@@ -16,8 +16,6 @@ use vorbis_rs::{VorbisBitrateManagementStrategy, VorbisEncoderBuilder};
 pub const SAMPLE_RATE: u32 = 22_050;
 /// Vorbis `-q` (pinned so ingest and tests match). libvorbis quality is q/10.
 pub const VORBIS_Q: f32 = 4.0;
-/// Samples with |s| <= this count as Pico-8 EXPORT / capture lead-in.
-pub const SILENCE_THRESHOLD: i16 = 64;
 const STREAM_SERIAL: i32 = 1;
 const ENCODE_BLOCK: usize = 1024;
 
@@ -60,15 +58,6 @@ fn decode_wav(bytes: &[u8], path: &Path) -> Vec<i16> {
     pcm.chunks_exact(2)
         .map(|c| i16::from_le_bytes([c[0], c[1]]))
         .collect()
-}
-
-/// Drop Pico-8's silent EXPORT / audio_rec lead-in so it is not smeared by Vorbis.
-pub fn strip_leading_silence(samples: &[i16]) -> &[i16] {
-    let start = samples
-        .iter()
-        .position(|s| s.abs() > SILENCE_THRESHOLD)
-        .unwrap_or(0);
-    &samples[start..]
 }
 
 pub fn encode_ogg(pcm: &[i16]) -> Result<Vec<u8>, String> {
