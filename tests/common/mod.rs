@@ -1,6 +1,6 @@
 //! Shared Pico-8 golden harness for image and sfx carts.
 
-use nano9::pico8::audio::{write_wav, Sfx};
+use nano9::pico8::audio::{write_wav, Sfx, EXPORT_OSC_PHASE};
 use nano9::pico8::{Cart, CartLoaderSettings};
 use std::fs::{self, File};
 use std::io::{BufWriter, Read, Write};
@@ -49,7 +49,8 @@ pub fn run_sfx_suite() {
         &mut rows,
         &mut failed,
     );
-    collect_synth(&mut rows, &mut failed);
+    collect_export_cart(&synth_dir(), "synth.p8", "synth", &mut rows, &mut failed);
+    collect_export_cart(&synth_dir(), "oscillator.p8", "osc", &mut rows, &mut failed);
     finish_suite(rows, failed);
 }
 
@@ -254,53 +255,55 @@ fn check_audio_cart(dir: &Path, name: &str) -> Result<CartResult, String> {
     ))
 }
 
-fn collect_synth(rows: &mut Vec<(String, String)>, failed: &mut Vec<String>) {
-    let dir = synth_dir();
-    let cart_path = dir.join("synth.p8");
+fn collect_export_cart(
+    dir: &Path,
+    cart_name: &str,
+    prefix: &str,
+    rows: &mut Vec<(String, String)>,
+    failed: &mut Vec<String>,
+) {
+    let cart_path = dir.join(cart_name);
     if !cart_path.exists() {
         return;
     }
     let source = match fs::read_to_string(&cart_path) {
         Ok(s) => s,
         Err(err) => {
-            push_result(rows, failed, "synth", Err(err.to_string()));
+            push_result(rows, failed, prefix, Err(err.to_string()));
             return;
         }
     };
     let cart = match Cart::from_str(&source, &CartLoaderSettings::default()) {
         Ok(cart) => cart,
         Err(err) => {
-            push_result(rows, failed, "synth", Err(err.to_string()));
+            push_result(rows, failed, prefix, Err(err.to_string()));
             return;
         }
     };
     let names = parse_synth_names(&cart.lua);
     let filter = filter_arg();
-    // Pico-8 `EXPORT %d.wav` starts around this phase and does not reset
-    // between slots. Later slots continue from `Sfx::phase_after_export`.
-    const EXPORT_OSC_PHASE: f32 = 0.39;
-    let mut phase = EXPORT_OSC_PHASE;
+    let phases = Sfx::export_phases(&cart.sfx, EXPORT_OSC_PHASE);
     let mut any = false;
-    for (index, sfx) in cart.sfx.into_iter().enumerate() {
-        let expected = dir.join(format!("synth-{index:02}-expected.wav"));
+    for (index, sfx) in cart.sfx.iter().enumerate() {
+        let expected = dir.join(format!("{prefix}-{index:02}-expected.wav"));
         let name = names
             .get(&index)
             .cloned()
             .unwrap_or_else(|| "slot".to_string());
-        let label = format!("synth-{index:02}-{name}");
+        let label = format!("{prefix}-{index:02}-{name}");
         let wanted = match &filter {
             None => true,
-            Some(f) => label.contains(f),
+            Some(f) => label.contains(f) || prefix.contains(f.as_str()),
         };
         if expected.exists() && wanted {
             any = true;
-            let result = check_synth_slot(&dir, index, &name, &sfx, phase);
+            let phase = phases.get(index).copied().unwrap_or(EXPORT_OSC_PHASE);
+            let result = check_synth_slot(dir, prefix, index, &name, sfx, phase);
             push_result(rows, failed, &label, result);
         }
-        phase = sfx.phase_after_export(phase);
     }
     if !any && filter.is_none() {
-        println!("no synth-NN-expected.wav (run make golden-synth)");
+        println!("no {prefix}-NN-expected.wav");
     }
 }
 
@@ -327,19 +330,20 @@ fn parse_synth_names(lua: &str) -> std::collections::HashMap<usize, String> {
 
 fn check_synth_slot(
     dir: &Path,
+    prefix: &str,
     index: usize,
     name: &str,
     sfx: &Sfx,
     phase: f32,
 ) -> Result<CartResult, String> {
-    let expected = dir.join(format!("synth-{index:02}-expected.wav"));
-    let actual = dir.join(format!("synth-{index:02}-actual.wav"));
+    let expected = dir.join(format!("{prefix}-{index:02}-expected.wav"));
+    let actual = dir.join(format!("{prefix}-{index:02}-actual.wav"));
     let expected_pcm = load_wav(&expected);
     let pcm = render_sfx(sfx, phase);
     write_wav(&actual, &pcm)?;
     let note_len = sfx.speed.max(1) as usize * SAMPLES_PER_TICK;
     Ok(compare_wav(
-        &format!("synth-{index:02}-{name}"),
+        &format!("{prefix}-{index:02}-{name}"),
         dir,
         &expected,
         &actual,

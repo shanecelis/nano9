@@ -29,6 +29,11 @@ const ANTICLICK_RAMP: f32 = 0.0025;
 const NOISE_CUTOFF_SCALE: f32 = 8.858923;
 /// Pico-8 WAV exports peak ~1.6% below a full 0.5-amplitude triangle.
 const OUTPUT_GAIN: f32 = 16125.0 / 16383.5;
+/// Oscillator phase at the first slot of Pico-8 `EXPORT %d.wav`.
+///
+/// Later slots continue from [`Sfx::phase_after_export`]. Measured from 64
+/// identical triangle-scale exports: slot 0 ≈ 0.39, then Δφ ≈ 0.125 per slot.
+pub const EXPORT_OSC_PHASE: f32 = 0.39;
 
 /// Pitch 33 is A-4 = 440 Hz (Pico-8 key 0..=63).
 fn key_to_freq(key: f32) -> f32 {
@@ -442,6 +447,20 @@ impl Sfx {
             }
         }
         decoder.phase()
+    }
+
+    /// Start phase of each SFX in an `EXPORT %d.wav` sequence, beginning at `phase0`.
+    pub fn export_phases<'a, I>(sfxs: I, phase0: f32) -> Vec<f32>
+    where
+        I: IntoIterator<Item = &'a Sfx>,
+    {
+        let mut phase = phase0.fract().rem_euclid(1.0);
+        let mut out = Vec::new();
+        for sfx in sfxs {
+            out.push(phase);
+            phase = sfx.phase_after_export(phase);
+        }
+        out
     }
 
     pub fn with_speed(mut self, speed: u8) -> Self {
@@ -886,6 +905,20 @@ mod test {
         assert!(
             (delta - 0.125).abs() < 0.002,
             "Δφ={delta} (expected ~0.125)"
+        );
+
+        let phases = Sfx::export_phases(std::iter::repeat(&sfx).take(16), EXPORT_OSC_PHASE);
+        assert!((phases[0] - EXPORT_OSC_PHASE).abs() < 0.001);
+        assert!(((phases[1] - phases[0]).rem_euclid(1.0) - 0.125).abs() < 0.002);
+        assert!(
+            (phases[8] - phases[0]).abs() < 0.02,
+            "slot 8 should match slot 0, got {} vs {}",
+            phases[8],
+            phases[0]
+        );
+        assert!(
+            (phases[1] - phases[0]).abs() > 0.05,
+            "adjacent slots must start on different phases"
         );
     }
 }

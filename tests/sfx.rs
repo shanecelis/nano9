@@ -13,9 +13,11 @@
 //! ```
 //!
 //! `cargo test sfx` also selects this target (and any other tests whose names
-//! contain `sfx`). Synth slots are rendered in-process from `Sfx::decode`.
-//! Playback carts write `{name}-actual.wav` from Nano-9's offline mixdown
-//! (`-p headless` mutes the speaker).
+//! contain `sfx`). Synth slots are rendered in-process from
+//! `Sfx::decode_with_phase`, with a different start phase per slot
+//! (`EXPORT_OSC_PHASE` then `Sfx::phase_after_export`). Playback carts write
+//! `{name}-actual.wav` from Nano-9's offline mixdown (`-p headless` mutes the
+//! speaker).
 
 mod common;
 
