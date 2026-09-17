@@ -39,7 +39,7 @@ keyseq = { version = "0.9.0", features = ["bevy"], optional = true }
 serde = { version = "1.0.228", features = ["derive"] }
 bevy_ecs_tilemap = "0.19"
 dasp = { version = "0.11.0", features = ["all"] }
-nano9_raster = { path = "../nano9_raster", features = ["circle", "ellipse", "fill", "inclusive"] }
+nano9_raster = { path = "../nano9_raster", features = ["circle", "ellipse", "fill", "inclusive", "round-rect"] }
 rand = { version = "0.10", optional = true }
 rand_core = "0.10"
 toml = "0.8.19"

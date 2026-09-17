@@ -10,7 +10,7 @@ use bevy::{
     prelude::*,
     render::render_resource::{Extent3d, TextureDimension, TextureFormat},
 };
-use nano9_raster::{Circle, Ellipse, Fill, Inclusive, Line};
+use nano9_raster::{Circle, Ellipse, Fill, Inclusive, Line, RoundRect};
 
 const BPP: usize = 4;
 
@@ -140,6 +140,40 @@ impl Raster {
                     pen,
                 );
             });
+    }
+
+    pub fn rrect(&mut self, x0: i32, y0: i32, x1: i32, y1: i32, r: i32) {
+        let pen = self.pen;
+        let (data, size) = self.buf();
+        RoundRect::new(
+            (x0 as isize, y0 as isize),
+            (x1 as isize, y1 as isize),
+            r as isize,
+        )
+        .for_each(|(x, y)| {
+            put_clip(data, size, x as i32, y as i32, pen);
+        });
+    }
+
+    pub fn rrectfill(&mut self, x0: i32, y0: i32, x1: i32, y1: i32, r: i32) {
+        let pen = self.pen;
+        let (data, size) = self.buf();
+        RoundRect::new(
+            (x0 as isize, y0 as isize),
+            (x1 as isize, y1 as isize),
+            r as isize,
+        )
+        .fill()
+        .for_each(|span| {
+            fill_hline_clip(
+                data,
+                size,
+                span.x0 as i32,
+                span.x1 as i32,
+                span.y as i32,
+                pen,
+            );
+        });
     }
 }
 

@@ -30,6 +30,8 @@ Parameters shown in italics are extensions to the Pico-8 API.
 - [x] pset(x, y, [c])
 - [x] rect(x0, y0, x1, y1, [col])
 - [x] rectfill(x0, y0, x1, y1, [col])
+- [x] rrect(x, y, w, h, [r,] [col])
+- [x] rrectfill(x, y, w, h, [r,] [col])
 - [x] sget(x, y)
 - [x] spr(n, x, y, [w,] [h,] [flip_x,] [flip_y,] *[turns]*)
 - [x] sset(x, y, [c])

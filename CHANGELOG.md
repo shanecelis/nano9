@@ -3,6 +3,7 @@
 All notable changes to this project will be documented in this file.
 
 ## [unreleased]
+- feat: Add Pico-8 `rrect` / `rrectfill` (Rust macros and Lua).
 - feat: Run Lua via luars 0.26.2 (Lua 5.5) instead of mlua, including `wasm32-unknown-unknown`. Trunk example: `trunk serve --config web/Trunk.toml`.
 - feat: Add Pico-8 `stat(6)` / `stat(100)` and CLI `-p` for the load parameter string and breadcrumb. Golden carts screenshot and exit when `-p headless`; otherwise they keep running.
 

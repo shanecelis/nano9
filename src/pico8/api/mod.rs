@@ -28,6 +28,8 @@ mod map;
 pub use map::*;
 mod oval;
 pub use oval::*;
+mod rrect;
+pub use rrect::*;
 mod pal;
 pub(crate) mod print;
 mod rect;
@@ -99,6 +101,7 @@ pub(crate) fn plugin(app: &mut App) {
             rect::plugin,
             circ::plugin,
             oval::plugin,
+            rrect::plugin,
             pal::plugin,
             bit_ops::plugin,
             line::plugin,
