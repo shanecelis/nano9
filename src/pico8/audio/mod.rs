@@ -27,8 +27,8 @@ const SAMPLES_PER_TICK: u32 = 183;
 const DT: f32 = 1.0 / SAMPLE_RATE as f32;
 const ANTICLICK_RAMP: f32 = 0.0025;
 const NOISE_CUTOFF_SCALE: f32 = 8.858923;
-/// Pico-8 WAV export is silent for this many samples before the oscillator.
-const ONSET_DELAY: u32 = 21;
+/// Pico-8 WAV exports peak ~1.6% below a full 0.5-amplitude triangle.
+const OUTPUT_GAIN: f32 = 16125.0 / 16383.5;
 
 /// Pitch 33 is A-4 = 440 Hz (Pico-8 key 0..=63).
 fn key_to_freq(key: f32) -> f32 {
@@ -408,8 +408,40 @@ impl Sfx {
     }
 
     /// Sample-accurate 22050 Hz mono decoder (Pico-8 tracker).
+    ///
+    /// Playback starts at oscillator phase 0. Pico-8 `EXPORT %d.wav` does not;
+    /// use [`decode_with_phase`] / [`phase_after_export`] for those goldens.
     pub fn decode(&self) -> SfxDecoder {
         SfxDecoder::new(self.clone())
+    }
+
+    /// Same as [`decode`], with a starting oscillator phase in `[0, 1)`.
+    pub fn decode_with_phase(&self, phase: f32) -> SfxDecoder {
+        SfxDecoder::with_phase(self.clone(), phase)
+    }
+
+    /// Oscillator phase after a 32-note WAV export starting at `phase`.
+    ///
+    /// Pico-8 writes 32 notes even when the SFX is shorter. Empty tail notes
+    /// do not re-key the oscillator: it keeps the last sounding frequency
+    /// (volume 0). Measured on 64 identical triangle-scale exports: Δφ ≈ 0.125
+    /// per slot, repeating every 8.
+    pub fn phase_after_export(&self, phase: f32) -> f32 {
+        const EXPORT_NOTES: usize = 32;
+        let mut sfx = self.clone();
+        if let Some(last) = sfx.notes.iter().rev().copied().find(|n| n.volume() > 0.0) {
+            let held = Pico8Note(last.key() as u16);
+            sfx.notes.truncate(EXPORT_NOTES);
+            sfx.notes.resize(EXPORT_NOTES, held);
+        }
+        let n = EXPORT_NOTES * sfx.speed.max(1) as usize * SAMPLES_PER_TICK as usize;
+        let mut decoder = SfxDecoder::with_phase(sfx, phase);
+        for _ in 0..n {
+            if decoder.next().is_none() {
+                break;
+            }
+        }
+        decoder.phase()
     }
 
     pub fn with_speed(mut self, speed: u8) -> Self {
@@ -526,11 +558,14 @@ pub struct SfxDecoder {
     t: f32,
     noise: u32,
     noise_level: f32,
-    lead: u32,
 }
 
 impl SfxDecoder {
     fn new(sfx: Sfx) -> Self {
+        Self::with_phase(sfx, 0.0)
+    }
+
+    fn with_phase(sfx: Sfx, phase: f32) -> Self {
         let speed = sfx.speed.max(1);
         let note_len = speed as u32 * SAMPLES_PER_TICK;
         let mut notes = NoteIter::from(sfx.clone());
@@ -538,6 +573,7 @@ impl SfxDecoder {
         let step = notes.index.saturating_sub(1);
         let prev_key = current.map(|n| n.key() as f32).unwrap_or(0.0);
         let prev_vol = current.map(|n| n.volume()).unwrap_or(0.0);
+        let phase = phase.fract().rem_euclid(1.0);
         Self {
             sfx,
             notes,
@@ -545,17 +581,20 @@ impl SfxDecoder {
             step,
             pos: 0,
             note_len,
-            // Positive peak: export's first half-cycle is short (amp still ramping).
-            phase: 0.5,
-            phase_b: 0.5 * 109.0 / 110.0,
+            phase,
+            phase_b: phase * 109.0 / 110.0,
             prev_key,
             prev_vol,
             amp: 0.0,
             t: 0.0,
             noise: 0x1234_5678,
             noise_level: 0.0,
-            lead: ONSET_DELAY,
         }
+    }
+
+    /// Current oscillator phase in `[0, 1)`.
+    pub fn phase(&self) -> f32 {
+        self.phase
     }
 }
 
@@ -563,14 +602,6 @@ impl Iterator for SfxDecoder {
     type Item = f32;
 
     fn next(&mut self) -> Option<Self::Item> {
-        if self.lead > 0 {
-            self.lead -= 1;
-            return if self.current.is_some() {
-                Some(0.0)
-            } else {
-                None
-            };
-        }
         let note = self.current?;
         let note_len = self.note_len.max(1);
         let frac = self.pos as f32 / note_len as f32;
@@ -592,15 +623,13 @@ impl Iterator for SfxDecoder {
             Effect::FadeIn => vol *= frac,
             Effect::FadeOut => vol *= 1.0 - frac,
             Effect::ArpFast | Effect::ArpSlow => {
-                let spd = self.sfx.speed.max(1);
-                let ticks_per = match (note.effect(), spd <= 8) {
-                    (Effect::ArpFast, true) => 2,
-                    (Effect::ArpSlow, true) => 4,
-                    (Effect::ArpFast, false) => 4,
-                    _ => 8,
+                // Pico-8: fast ~32 Hz, slow ~16 Hz over groups of four notes.
+                let rate = if matches!(note.effect(), Effect::ArpFast) {
+                    32.0
+                } else {
+                    16.0
                 };
-                let tick = (self.t * SAMPLE_RATE as f32 / SAMPLES_PER_TICK as f32) as u32;
-                let idx = ((tick / ticks_per) % 4) as usize;
+                let idx = (self.t * rate) as usize % 4;
                 let group = (self.step / 4) * 4;
                 if let Some(n) = self.sfx.notes.get(group + idx) {
                     key = n.key() as f32;
@@ -625,7 +654,7 @@ impl Iterator for SfxDecoder {
 
         let max_step = DT / ANTICLICK_RAMP;
         self.amp += (vol - self.amp).clamp(-max_step, max_step);
-        let out = (raw * self.amp).clamp(-1.0, 1.0);
+        let out = (raw * self.amp * OUTPUT_GAIN).clamp(-1.0, 1.0);
 
         self.t += DT;
         self.pos += 1;
@@ -843,5 +872,20 @@ mod test {
         assert_eq!(note.key(), 33);
         let freq = key_to_freq(note.key() as f32);
         assert!((freq - 440.0).abs() < 0.01);
+    }
+
+    #[test]
+    fn export_holds_last_key_through_silent_tail() {
+        // Same triangle scale as tests/golden/synth/oscillator.p8.
+        let sfx = Sfx::try_from(
+            "000800000d0700f070110701207014070160701807019070000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        )
+        .unwrap();
+        let delta = (sfx.phase_after_export(0.39) - 0.39).rem_euclid(1.0);
+        // 64 identical Pico-8 exports advanced ~0.125 per slot.
+        assert!(
+            (delta - 0.125).abs() < 0.002,
+            "Δφ={delta} (expected ~0.125)"
+        );
     }
 }

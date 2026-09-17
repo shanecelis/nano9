@@ -18,15 +18,22 @@ __lua__
 -- sfx 12: fade-out
 -- sfx 13: arpeggio-fast
 -- sfx 14: arpeggio-slow
-function _init()
-end
-function _update()
-end
-function _draw()
-  cls(1)
-  print("synth goldens", 4, 4, 7)
-  print("export synth%d.wav", 4, 12, 6)
-end
+-- function _init()
+-- end
+-- function _update()
+-- end
+-- function _draw()
+  cls(0)
+  print("synth goldens")
+  print("")
+  print("please type the following:")
+  print("  mkdir synth")
+  print("  cd synth")
+  print("  export synth%d.wav")
+-- end
+-- export("synth0.wav")
+-- export("synth1.wav")
+-- export("synth2.wav")
 __sfx__
 000800000d0700f070110701207014070160701807019070000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 001000001907019170192701937019470195701967019770000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000

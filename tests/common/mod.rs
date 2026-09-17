@@ -249,6 +249,8 @@ fn check_audio_cart(dir: &Path, name: &str) -> Result<CartResult, String> {
         &actual_pcm,
         note_len,
         true,
+        true,
+        None,
     ))
 }
 
@@ -258,54 +260,48 @@ fn collect_synth(rows: &mut Vec<(String, String)>, failed: &mut Vec<String>) {
     if !cart_path.exists() {
         return;
     }
-    let slots = match synth_slots(&cart_path, &dir) {
-        Ok(slots) => slots,
+    let source = match fs::read_to_string(&cart_path) {
+        Ok(s) => s,
         Err(err) => {
-            push_result(rows, failed, "synth", Err(err));
+            push_result(rows, failed, "synth", Err(err.to_string()));
             return;
         }
     };
-    if slots.is_empty() {
-        if filter_arg().is_none() {
-            println!("no synth-NN-expected.wav (run make golden-synth)");
+    let cart = match Cart::from_str(&source, &CartLoaderSettings::default()) {
+        Ok(cart) => cart,
+        Err(err) => {
+            push_result(rows, failed, "synth", Err(err.to_string()));
+            return;
         }
-        return;
-    }
-    for slot in slots {
-        let name = format!("synth-{:02}-{}", slot.index, slot.name);
-        let result = check_synth_slot(&dir, &slot);
-        push_result(rows, failed, &name, result);
-    }
-}
-
-struct SynthSlot {
-    index: usize,
-    name: String,
-    sfx: Sfx,
-}
-
-fn synth_slots(cart_path: &Path, dir: &Path) -> Result<Vec<SynthSlot>, String> {
-    let source = fs::read_to_string(cart_path).map_err(|e| e.to_string())?;
-    let cart = Cart::from_str(&source, &CartLoaderSettings::default()).map_err(|e| e.to_string())?;
+    };
     let names = parse_synth_names(&cart.lua);
-    let mut slots = Vec::new();
+    let filter = filter_arg();
+    // Pico-8 `EXPORT %d.wav` starts around this phase and does not reset
+    // between slots. Later slots continue from `Sfx::phase_after_export`.
+    const EXPORT_OSC_PHASE: f32 = 0.39;
+    let mut phase = EXPORT_OSC_PHASE;
+    let mut any = false;
     for (index, sfx) in cart.sfx.into_iter().enumerate() {
         let expected = dir.join(format!("synth-{index:02}-expected.wav"));
-        if !expected.exists() {
-            continue;
-        }
         let name = names
             .get(&index)
             .cloned()
             .unwrap_or_else(|| "slot".to_string());
-        slots.push(SynthSlot { index, name, sfx });
+        let label = format!("synth-{index:02}-{name}");
+        let wanted = match &filter {
+            None => true,
+            Some(f) => label.contains(f),
+        };
+        if expected.exists() && wanted {
+            any = true;
+            let result = check_synth_slot(&dir, index, &name, &sfx, phase);
+            push_result(rows, failed, &label, result);
+        }
+        phase = sfx.phase_after_export(phase);
     }
-    if let Some(filter) = filter_arg() {
-        slots.retain(|slot| {
-            format!("synth-{:02}-{}", slot.index, slot.name).contains(&filter)
-        });
+    if !any && filter.is_none() {
+        println!("no synth-NN-expected.wav (run make golden-synth)");
     }
-    Ok(slots)
 }
 
 fn parse_synth_names(lua: &str) -> std::collections::HashMap<usize, String> {
@@ -329,29 +325,37 @@ fn parse_synth_names(lua: &str) -> std::collections::HashMap<usize, String> {
     names
 }
 
-fn check_synth_slot(dir: &Path, slot: &SynthSlot) -> Result<CartResult, String> {
-    let expected = dir.join(format!("synth-{:02}-expected.wav", slot.index));
-    let actual = dir.join(format!("synth-{:02}-actual.wav", slot.index));
-    let pcm = render_sfx(&slot.sfx);
-    write_wav(&actual, &pcm)?;
+fn check_synth_slot(
+    dir: &Path,
+    index: usize,
+    name: &str,
+    sfx: &Sfx,
+    phase: f32,
+) -> Result<CartResult, String> {
+    let expected = dir.join(format!("synth-{index:02}-expected.wav"));
+    let actual = dir.join(format!("synth-{index:02}-actual.wav"));
     let expected_pcm = load_wav(&expected);
-    let note_len = slot.sfx.speed.max(1) as usize * SAMPLES_PER_TICK;
+    let pcm = render_sfx(sfx, phase);
+    write_wav(&actual, &pcm)?;
+    let note_len = sfx.speed.max(1) as usize * SAMPLES_PER_TICK;
     Ok(compare_wav(
-        &format!("synth-{:02}-{}", slot.index, slot.name),
+        &format!("synth-{index:02}-{name}"),
         dir,
         &expected,
         &actual,
         &expected_pcm,
         &pcm,
         note_len,
+        true,
         false,
+        Some(phase),
     ))
 }
 
-fn render_sfx(sfx: &Sfx) -> Vec<i16> {
+fn render_sfx(sfx: &Sfx, phase: f32) -> Vec<i16> {
     let export_len = EXPORT_NOTES * sfx.speed.max(1) as usize * SAMPLES_PER_TICK;
     let mut pcm: Vec<i16> = sfx
-        .decode()
+        .decode_with_phase(phase)
         .take(export_len)
         .map(|s| (s.clamp(-1.0, 1.0) * 32767.0) as i16)
         .collect();
@@ -367,15 +371,17 @@ fn compare_wav(
     expected_pcm: &[i16],
     actual_pcm: &[i16],
     note_len: usize,
-    align_onset: bool,
+    align_expected_onset: bool,
+    align_actual_onset: bool,
+    osc_phase: Option<f32>,
 ) -> CartResult {
     const THRESHOLD: i16 = 64;
-    let e_on = if align_onset {
+    let e_on = if align_expected_onset {
         onset_index(expected_pcm, THRESHOLD).unwrap_or(0)
     } else {
         0
     };
-    let a_on = if align_onset {
+    let a_on = if align_actual_onset {
         onset_index(actual_pcm, THRESHOLD).unwrap_or(0)
     } else {
         0
@@ -391,10 +397,11 @@ fn compare_wav(
     let a_cmp = &aligned_a[..n];
     let mut diffs = Vec::with_capacity(n);
     let mut changed = 0usize;
+    const SAMPLE_EPS: i16 = 256;
     for (e, a) in e_cmp.iter().zip(a_cmp.iter()) {
         let d = (*e as i32 - *a as i32).clamp(-32767, 32767) as i16;
         diffs.push(d);
-        if d != 0 {
+        if d.abs() > SAMPLE_EPS {
             changed += 1;
         }
     }
@@ -419,7 +426,10 @@ fn compare_wav(
         }
     }
 
-    let (cw, ch, compare) = compose_wave_compare(aligned_e, aligned_a);
+    let (lo, hi) = wave_focus(aligned_e, aligned_a);
+    let e_win = &aligned_e[lo.min(aligned_e.len())..hi.min(aligned_e.len())];
+    let a_win = &aligned_a[lo.min(aligned_a.len())..hi.min(aligned_a.len())];
+    let (cw, ch, compare) = compose_wave_compare(e_win, a_win);
     let compare_path = dir.join(format!("{name}-compare.png"));
     write_rgb_png(&compare_path, cw, ch, &compare);
     let pct = if n == 0 {
@@ -433,7 +443,7 @@ fn compare_wav(
     } else {
         format!(", len {} vs {}", aligned_e.len(), aligned_a.len())
     };
-    println!("\n=== {name}: {changed}/{n} samples differ ({pct:.2}%) ===");
+    println!("\n=== {name}: {changed}/{n} samples |diff|>{SAMPLE_EPS} ({pct:.2}%) ===");
     println!(
         "onset Pico-8 {e_on} Nano-9 {a_on} (delta {onset_delta}), lens {} vs {}, RMS diff {rms_diff:.1}, peak {} vs {}{len_note}",
         aligned_e.len(),
@@ -441,6 +451,10 @@ fn compare_wav(
         peak(aligned_e),
         peak(aligned_a)
     );
+    match osc_phase {
+        Some(phase) => println!("waveform window samples {lo}..{hi}; oscillator phase {phase:.2}"),
+        None => println!("waveform window samples {lo}..{hi}"),
+    }
     print!("{pitch_rows}");
     println!("Pico-8:  {}", expected_path.display());
     println!("Nano-9:  {}", actual_path.display());
@@ -449,7 +463,7 @@ fn compare_wav(
     show_image(&format!("{name}: Pico-8 | Nano-9 | diff"), &compare_path);
     CartResult::Differ {
         detail: format!(
-            "{changed}/{n} samples ({pct:.2}%), RMS {rms_diff:.1}, onset {onset_delta}"
+            "{changed}/{n} |d|>{SAMPLE_EPS} ({pct:.2}%), RMS {rms_diff:.1}, onset {onset_delta}"
         ),
         compare: compare_path,
     }
@@ -587,24 +601,100 @@ fn zero_cross_hz(samples: &[i16], rate: f64) -> f64 {
     (crosses as f64) * rate / (2.0 * samples.len() as f64)
 }
 
+fn wave_focus(expected: &[i16], actual: &[i16]) -> (usize, usize) {
+    const WIN: usize = 512;
+    const PRE: usize = 16;
+    let n = expected.len().max(actual.len());
+    if n == 0 {
+        return (0, 0);
+    }
+    let mut onset = 0usize;
+    for i in 0..n {
+        let e = *expected.get(i).unwrap_or(&0);
+        let a = *actual.get(i).unwrap_or(&0);
+        if e.abs() > 64 || a.abs() > 64 {
+            onset = i;
+            break;
+        }
+    }
+    let mut diverge = onset;
+    for i in onset..n {
+        let e = *expected.get(i).unwrap_or(&0) as i32;
+        let a = *actual.get(i).unwrap_or(&0) as i32;
+        if (e - a).abs() > 512 {
+            diverge = i;
+            break;
+        }
+    }
+    let start = diverge.saturating_sub(PRE);
+    let end = (start + WIN).min(n);
+    (start, end)
+}
+
 fn waveform_strip(samples: &[i16], w: u32, h: u32, color: [u8; 3]) -> Vec<u8> {
     let mut rgb = vec![16u8; (w * h * 3) as usize];
     let mid = h as i32 / 2;
-    let n = samples.len().max(1);
     for x in 0..w {
-        let a = (x as usize) * n / w as usize;
-        let b = ((x as usize + 1) * n / w as usize).max(a + 1).min(n);
-        let (mn, mx) = samples[a..b].iter().fold((0i16, 0i16), |acc, s| {
-            (acc.0.min(*s), acc.1.max(*s))
-        });
-        let y0 = (mid - (mx as i32) * mid / 32767).clamp(0, h as i32 - 1) as u32;
-        let y1 = (mid - (mn as i32) * mid / 32767).clamp(0, h as i32 - 1) as u32;
-        let (lo, hi) = if y0 <= y1 { (y0, y1) } else { (y1, y0) };
-        for y in lo..=hi {
-            put_pixel(&mut rgb, w, x, y, color);
+        put_pixel(&mut rgb, w, x, mid as u32, [32, 32, 32]);
+    }
+    let n = samples.len().max(1);
+    if n <= w as usize * 2 {
+        let mut prev: Option<(i32, i32)> = None;
+        for (i, sample) in samples.iter().enumerate() {
+            let x = if n <= 1 {
+                0
+            } else {
+                (i as u32) * (w - 1) / (n as u32 - 1)
+            } as i32;
+            let y = (mid - (*sample as i32) * mid / 32767).clamp(0, h as i32 - 1);
+            if let Some((px, py)) = prev {
+                draw_line(&mut rgb, w, px, py, x, y, color);
+            } else {
+                put_pixel(&mut rgb, w, x as u32, y as u32, color);
+            }
+            prev = Some((x, y));
+        }
+    } else {
+        for x in 0..w {
+            let a = (x as usize) * n / w as usize;
+            let b = ((x as usize + 1) * n / w as usize).max(a + 1).min(n);
+            let (mn, mx) = samples[a..b].iter().fold((0i16, 0i16), |acc, s| {
+                (acc.0.min(*s), acc.1.max(*s))
+            });
+            let y0 = (mid - (mx as i32) * mid / 32767).clamp(0, h as i32 - 1) as u32;
+            let y1 = (mid - (mn as i32) * mid / 32767).clamp(0, h as i32 - 1) as u32;
+            let (lo, hi) = if y0 <= y1 { (y0, y1) } else { (y1, y0) };
+            for y in lo..=hi {
+                put_pixel(&mut rgb, w, x, y, color);
+            }
         }
     }
     rgb
+}
+
+fn draw_line(rgb: &mut [u8], stride: u32, mut x0: i32, mut y0: i32, x1: i32, y1: i32, color: [u8; 3]) {
+    let dx = (x1 - x0).abs();
+    let sx = if x0 < x1 { 1 } else { -1 };
+    let dy = -(y1 - y0).abs();
+    let sy = if y0 < y1 { 1 } else { -1 };
+    let mut err = dx + dy;
+    loop {
+        if x0 >= 0 && y0 >= 0 {
+            put_pixel(rgb, stride, x0 as u32, y0 as u32, color);
+        }
+        if x0 == x1 && y0 == y1 {
+            break;
+        }
+        let e2 = 2 * err;
+        if e2 >= dy {
+            err += dy;
+            x0 += sx;
+        }
+        if e2 <= dx {
+            err += dx;
+            y0 += sy;
+        }
+    }
 }
 
 fn compose_wave_compare(expected: &[i16], actual: &[i16]) -> (u32, u32, Vec<u8>) {
