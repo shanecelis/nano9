@@ -106,6 +106,8 @@ dev-tools = []
 bevy = "0.19"
 version-sync = "0.9.5"
 png = "0.17.16"
+lewton = "0.10"
+vorbis_rs = "0.5"
 
 [target.'cfg(not(target_arch = "wasm32"))'.dev-dependencies]
 criterion = "0.5"

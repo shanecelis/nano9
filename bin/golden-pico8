@@ -3,17 +3,20 @@
 # Requires a Pico-8 binary. Default: `p8` on PATH (e.g. $HOME/bin/p8).
 #
 #   bin/golden-pico8 tests/golden/line.p8 -o tests/golden/line-expected.png
-#   bin/golden-pico8 tests/golden/sfx/sfx-loop.p8 -o tests/golden/sfx/sfx-loop-expected.wav
+#   bin/golden-pico8 tests/golden/sfx/sfx-loop.p8 -o tests/golden/sfx/sfx-loop-expected.ogg
 #
-# PNG goldens use `pico8 -x` (headless). Playback WAV goldens use `pico8 -run`
+# PNG goldens use `pico8 -x` (headless). Playback goldens use `pico8 -run`
 # with `extcmd("audio_rec")` / `audio_end` because `-x` does not mix audio.
+# Pico-8 still writes WAV; this script converts it to Ogg Vorbis q4.
 # Synth-shape goldens (waveforms, effects) use `bin/golden-synth` instead:
 # headless `-export *.wav` writes silence, so that path is interactive.
 # `-home` is a temp dir so config.txt is not overwritten.
 set -euo pipefail
 
+ROOT="$(cd "$(dirname "$0")/.." && pwd -P)"
+
 usage() {
-  echo "usage: $0 CART -o OUTPUT.png|OUTPUT.wav" >&2
+  echo "usage: $0 CART -o OUTPUT.png|OUTPUT.ogg" >&2
   exit 2
 }
 
@@ -89,6 +92,11 @@ name="${name%.p8}"
 name="${name%.P8}"
 cart="$(cd "$(dirname "$cart")" && pwd -P)/$(basename "$cart")"
 ext="${output##*.}"
+case "$ext" in
+  ogg) capture_ext="wav" ;;
+  png) capture_ext="png" ;;
+  *) usage ;;
+esac
 
 tmp="$(mktemp -d)"
 trap 'rm -rf "$tmp"' EXIT
@@ -102,7 +110,7 @@ find_output() {
     return 0
   fi
   shopt -s nullglob
-  local files=("$tmp"/*."$ext")
+  local files=("$tmp"/*."$capture_ext")
   shopt -u nullglob
   if [[ ${#files[@]} -eq 1 ]]; then
     echo "${files[0]}"
@@ -111,7 +119,7 @@ find_output() {
   return 1
 }
 
-if [[ "$ext" == "wav" ]]; then
+if [[ "$capture_ext" == "wav" ]]; then
   # `-x` writes a header-only wav. `-export` writes silence. `-run` mixes.
   "$PICO8_BIN" -run "$cart" -p headless -windowed 1 -volume 256 \
     -home "$tmp" -root_path "$tmp" -desktop "$tmp" &
@@ -150,10 +158,14 @@ else
 fi
 
 if [[ -z "${src:-}" || ! -f "$src" ]]; then
-  echo "error: Pico-8 did not write a ${ext} for $cart" >&2
+  echo "error: Pico-8 did not write a ${capture_ext} for $cart" >&2
   exit 1
 fi
 
 mkdir -p "$(dirname "$output")"
-mv "$src" "$output"
+if [[ "$ext" == "ogg" ]]; then
+  "$ROOT/bin/wav-to-ogg" "$src" "$output"
+else
+  mv "$src" "$output"
+fi
 echo "wrote $output"

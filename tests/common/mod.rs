@@ -1,9 +1,12 @@
 //! Shared Pico-8 golden harness for image and sfx carts.
 
-use nano9::pico8::audio::{write_wav, Note, Pico8Note, Sfx};
+mod audio_ogg;
+
+use audio_ogg::{load_ogg, load_wav, write_ogg};
+use nano9::pico8::audio::{Note, Pico8Note, Sfx};
 use nano9::pico8::{Cart, CartLoaderSettings};
 use std::fs::{self, File};
-use std::io::{BufWriter, Read, Write};
+use std::io::{BufWriter, Write};
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 use std::time::Duration;
@@ -126,10 +129,7 @@ fn push_result(
     match result {
         Ok(CartResult::Match) => rows.push((name.to_string(), "match".into())),
         Ok(CartResult::Differ { detail, compare }) => {
-            rows.push((
-                name.to_string(),
-                format!("{detail}  {}", compare.display()),
-            ));
+            rows.push((name.to_string(), format!("{detail}  {}", compare.display())));
             failed.push(name.to_string());
         }
         Err(err) => {
@@ -219,9 +219,10 @@ fn check_image_cart(dir: &Path, name: &str) -> Result<CartResult, String> {
 
 fn check_audio_cart(dir: &Path, name: &str) -> Result<CartResult, String> {
     let cart = dir.join(format!("{name}.p8"));
-    let expected = dir.join(format!("{name}-expected.wav"));
+    let expected = dir.join(format!("{name}-expected.ogg"));
     let written = dir.join(format!("{name}.wav"));
-    let actual = dir.join(format!("{name}-actual.wav"));
+    let actual_wav = dir.join(format!("{name}-actual.wav"));
+    let actual = dir.join(format!("{name}-actual.ogg"));
 
     if !cart.exists() {
         return Err(format!("missing cart {}", cart.display()));
@@ -234,17 +235,25 @@ fn check_audio_cart(dir: &Path, name: &str) -> Result<CartResult, String> {
     }
 
     let _ = fs::remove_file(&written);
+    let _ = fs::remove_file(&actual_wav);
     let _ = fs::remove_file(&actual);
     run_n9(&cart, dir)?;
-    if written.exists() {
-        fs::rename(&written, &actual).map_err(|e| e.to_string())?;
-    }
-    if !actual.exists() {
-        return Err(format!("n9 did not write {}", actual.display()));
+    let wav = if written.exists() {
+        written.clone()
+    } else {
+        actual_wav.clone()
+    };
+    if !wav.exists() {
+        return Err(format!("n9 did not write {}", written.display()));
     }
 
-    let expected_pcm = load_wav(&expected);
-    let actual_pcm = load_wav(&actual);
+    let pcm = load_wav(&wav);
+    write_ogg(&actual, &pcm)?;
+    let _ = fs::remove_file(&written);
+    let _ = fs::remove_file(&actual_wav);
+
+    let expected_pcm = load_ogg(&expected);
+    let actual_pcm = load_ogg(&actual);
     let note_len = SAMPLES_PER_TICK * 8; // playback carts use speed 8 unless noted
     Ok(compare_wav(
         name,
@@ -290,7 +299,7 @@ fn collect_export_cart(
     let phases = pico8_export_phases(&cart.sfx, PICO8_EXPORT_OSC_PHASE);
     let mut any = false;
     for (index, sfx) in cart.sfx.iter().enumerate() {
-        let expected = dir.join(format!("{prefix}-{index:02}-expected.wav"));
+        let expected = dir.join(format!("{prefix}-{index:02}-expected.ogg"));
         let name = names
             .get(&index)
             .cloned()
@@ -308,7 +317,7 @@ fn collect_export_cart(
         }
     }
     if !any && filter.is_none() {
-        println!("no {prefix}-NN-expected.wav");
+        println!("no {prefix}-NN-expected.ogg");
     }
 }
 
@@ -341,14 +350,16 @@ fn check_synth_slot(
     sfx: &Sfx,
     phase: f32,
 ) -> Result<CartResult, String> {
-    let expected = dir.join(format!("{prefix}-{index:02}-expected.wav"));
-    let actual = dir.join(format!("{prefix}-{index:02}-actual.wav"));
-    let expected_pcm = load_wav(&expected);
+    let expected = dir.join(format!("{prefix}-{index:02}-expected.ogg"));
+    let actual = dir.join(format!("{prefix}-{index:02}-actual.ogg"));
     // Nano-9 starts at sample 0. Pico-8 EXPORT often writes a silent pad
     // first (osc-02 is 93 samples / 0.0042s). Keep that pad on expected and
-    // strip it only when comparing.
+    // strip it only when comparing. Encode both sides so Vorbis error is
+    // symmetric.
     let pcm = render_sfx(sfx, phase);
-    write_wav(&actual, &pcm)?;
+    write_ogg(&actual, &pcm)?;
+    let expected_pcm = load_ogg(&expected);
+    let actual_pcm = load_ogg(&actual);
     let note_len = sfx.speed.max(1) as usize * SAMPLES_PER_TICK;
     Ok(compare_wav(
         &format!("{prefix}-{index:02}-{name}"),
@@ -356,7 +367,7 @@ fn check_synth_slot(
         &expected,
         &actual,
         &expected_pcm,
-        &pcm,
+        &actual_pcm,
         note_len,
         true,
         false,
@@ -611,33 +622,6 @@ fn write_rgb_png(path: &Path, width: u32, height: u32, rgb: &[u8]) {
     writer.write_image_data(rgb).unwrap();
 }
 
-fn load_wav(path: &Path) -> Vec<i16> {
-    let mut file = File::open(path).unwrap_or_else(|e| panic!("open {}: {e}", path.display()));
-    let mut bytes = Vec::new();
-    file.read_to_end(&mut bytes)
-        .unwrap_or_else(|e| panic!("read {}: {e}", path.display()));
-    assert!(
-        bytes.len() >= 44 && &bytes[0..4] == b"RIFF" && &bytes[8..12] == b"WAVE",
-        "{}: not a WAVE file",
-        path.display()
-    );
-    let channels = u16::from_le_bytes(bytes[22..24].try_into().unwrap());
-    let rate = u32::from_le_bytes(bytes[24..28].try_into().unwrap());
-    let bits = u16::from_le_bytes(bytes[34..36].try_into().unwrap());
-    assert_eq!(channels, 1, "{}: expected mono, got {channels}", path.display());
-    assert_eq!(rate, 22_050, "{}: expected 22050 Hz, got {rate}", path.display());
-    assert_eq!(bits, 16, "{}: expected 16-bit, got {bits}", path.display());
-    let Some(data_at) = bytes.windows(4).position(|w| w == b"data") else {
-        panic!("{}: missing data chunk", path.display());
-    };
-    let size = u32::from_le_bytes(bytes[data_at + 4..data_at + 8].try_into().unwrap()) as usize;
-    let start = data_at + 8;
-    let pcm = &bytes[start..start + size.min(bytes.len().saturating_sub(start))];
-    pcm.chunks_exact(2)
-        .map(|c| i16::from_le_bytes([c[0], c[1]]))
-        .collect()
-}
-
 fn onset_index(samples: &[i16], threshold: i16) -> Option<usize> {
     samples.iter().position(|s| s.abs() > threshold)
 }
@@ -726,9 +710,9 @@ fn waveform_strip(samples: &[i16], w: u32, h: u32, color: [u8; 3]) -> Vec<u8> {
         for x in 0..w {
             let a = (x as usize) * n / w as usize;
             let b = ((x as usize + 1) * n / w as usize).max(a + 1).min(n);
-            let (mn, mx) = samples[a..b].iter().fold((0i16, 0i16), |acc, s| {
-                (acc.0.min(*s), acc.1.max(*s))
-            });
+            let (mn, mx) = samples[a..b]
+                .iter()
+                .fold((0i16, 0i16), |acc, s| (acc.0.min(*s), acc.1.max(*s)));
             let y0 = (mid - (mx as i32) * mid / 32767).clamp(0, h as i32 - 1) as u32;
             let y1 = (mid - (mn as i32) * mid / 32767).clamp(0, h as i32 - 1) as u32;
             let (lo, hi) = if y0 <= y1 { (y0, y1) } else { (y1, y0) };
@@ -740,7 +724,15 @@ fn waveform_strip(samples: &[i16], w: u32, h: u32, color: [u8; 3]) -> Vec<u8> {
     rgb
 }
 
-fn draw_line(rgb: &mut [u8], stride: u32, mut x0: i32, mut y0: i32, x1: i32, y1: i32, color: [u8; 3]) {
+fn draw_line(
+    rgb: &mut [u8],
+    stride: u32,
+    mut x0: i32,
+    mut y0: i32,
+    x1: i32,
+    y1: i32,
+    color: [u8; 3],
+) {
     let dx = (x1 - x0).abs();
     let sx = if x0 < x1 { 1 } else { -1 };
     let dy = -(y1 - y0).abs();
