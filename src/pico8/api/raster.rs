@@ -10,7 +10,7 @@ use bevy::{
     prelude::*,
     render::render_resource::{Extent3d, TextureDimension, TextureFormat},
 };
-use nano9_raster::{Circle, Ellipse, Fill, Inclusive, Line, RoundRect};
+use nano9_raster::{Circle, CircleFill, Ellipse, EllipseFill, Fill, Inclusive, Line, RoundRect};
 
 const BPP: usize = 4;
 
@@ -101,8 +101,7 @@ impl Raster {
     pub fn circfill(&mut self, ox: i32, oy: i32, r: i32) {
         let pen = self.pen;
         let (data, size) = self.buf();
-        Circle::new((ox as isize, oy as isize), r as isize)
-            .fill()
+        CircleFill::new((ox as isize, oy as isize), r as isize)
             .for_each(|span| {
                 fill_hline(
                     data,
@@ -128,8 +127,7 @@ impl Raster {
     pub fn ovalfill(&mut self, x0: i32, y0: i32, x1: i32, y1: i32) {
         let pen = self.pen;
         let (data, size) = self.buf();
-        Ellipse::from_rect((x0 as isize, y0 as isize), (x1 as isize, y1 as isize))
-            .fill()
+        EllipseFill::from_rect((x0 as isize, y0 as isize), (x1 as isize, y1 as isize))
             .for_each(|span| {
                 fill_hline_clip(
                     data,
