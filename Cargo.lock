@@ -5248,7 +5248,9 @@ dependencies = [
 
 [[package]]
 name = "nano9_raster"
-version = "0.2.0"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1aa772441adfe4d81344914d4dcf0d93a76011d7fab78fad27e4142c22616e76"
 dependencies = [
  "arraydeque",
 ]
