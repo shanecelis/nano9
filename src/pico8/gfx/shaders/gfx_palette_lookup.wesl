@@ -1,6 +1,7 @@
-#import bevy_sprite::{
-    mesh2d_vertex_output::VertexOutput,
-}
+import bevy_sprite_render::{
+    mesh2d::vertex_output::VertexOutput,
+    sprite_mesh::functions as sprite_fn,
+};
 
 // access_kind: 0 = LinearByRow, 1 = LinearByColumn, 2 = FromRow, 3 = FromColumn
 struct GfxPaletteLookupMaterial {
@@ -11,12 +12,11 @@ struct GfxPaletteLookupMaterial {
     access_param: u32,
 }
 
-@group(#{MATERIAL_BIND_GROUP}) @binding(0) var index_texture: texture_2d<f32>;
-@group(#{MATERIAL_BIND_GROUP}) @binding(1) var palette_texture: texture_2d<f32>;
-@group(#{MATERIAL_BIND_GROUP}) @binding(2) var remap_texture: texture_2d<f32>;
-@group(#{MATERIAL_BIND_GROUP}) @binding(3) var transparency_texture: texture_2d<f32>;
-@group(#{MATERIAL_BIND_GROUP}) @binding(4) var tex_sampler: sampler;
-@group(#{MATERIAL_BIND_GROUP}) @binding(5) var<uniform> material: GfxPaletteLookupMaterial;
+@group(constants::MATERIAL_BIND_GROUP) @binding(20) var palette_texture: texture_2d<f32>;
+@group(constants::MATERIAL_BIND_GROUP) @binding(21) var remap_texture: texture_2d<f32>;
+@group(constants::MATERIAL_BIND_GROUP) @binding(22) var transparency_texture: texture_2d<f32>;
+@group(constants::MATERIAL_BIND_GROUP) @binding(23) var tex_sampler: sampler;
+@group(constants::MATERIAL_BIND_GROUP) @binding(24) var<uniform> material: GfxPaletteLookupMaterial;
 
 fn palette_index_to_uv(index: u32) -> vec2<f32> {
     let w = max(u32(material.palette_width), 1u);
@@ -44,9 +44,9 @@ fn palette_index_to_uv(index: u32) -> vec2<f32> {
 }
 
 @fragment
-fn fragment(mesh: VertexOutput) -> @location(0) vec4<f32> {
-    let uv = mesh.uv;
-    let index_float = textureSample(index_texture, tex_sampler, uv).r;
+fn fragment(input: VertexOutput) -> @location(0) vec4<f32> {
+    // The sprite image is an R8 index texture.
+    let index_float = sprite_fn::sample_sprite_texture(input.uv, input.instance_index).r;
     let index_u = u32(round(index_float * 255.0));
     let index_f = f32(index_u) / 256.0;
 
@@ -60,5 +60,5 @@ fn fragment(mesh: VertexOutput) -> @location(0) vec4<f32> {
     if trans > 0.5 {
         color.a = 0.0;
     }
-    return color;
+    return sprite_fn::get_final_color(color, input.instance_index);
 }

@@ -87,7 +87,7 @@ mod lua {
             match value {
                 ScriptValue::String(n) => Ok(PropBy::Name(n)),
                 ScriptValue::List(l) => {
-                    let x = l.first().and_then(ValueExt::to_f32).unwrap_or(0.0);
+                    let x = l.front().and_then(ValueExt::to_f32).unwrap_or(0.0);
                     let y = l.get(1).and_then(ValueExt::to_f32).unwrap_or(0.0);
                     Ok(PropBy::Pos(Vec2::new(x, y)))
                 }
@@ -156,6 +156,9 @@ mod lua {
             PropertyValue::StringValue(s) => Some(ScriptValue::String(s.to_owned().into())),
             PropertyValue::FileValue(f) => Some(ScriptValue::String(f.to_owned().into())),
             PropertyValue::ObjectValue(_number) => None,
+            PropertyValue::ListValue(values) => Some(ScriptValue::List(
+                values.iter().filter_map(from_property).collect(),
+            )),
             PropertyValue::ClassValue {
                 property_type,
                 properties,

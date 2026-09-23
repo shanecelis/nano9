@@ -1,10 +1,10 @@
-//! Custom Material2d that samples an index texture and palette texture with PalMap remap/transparency.
+//! Sprite material that samples an index texture and palette texture with PalMap remap/transparency.
 
 use bevy::asset::{Asset, uuid_handle};
 use bevy::reflect::Reflect;
 use bevy::render::render_resource::*;
 use bevy::shader::Shader;
-use bevy::sprite_render::{AlphaMode2d, Material2d, Material2dPlugin};
+use bevy::sprite_render::{AlphaMode2d, MaterialExtension2d, SpriteMaterialPlugin};
 use bevy::{prelude::*, shader::ShaderRef};
 
 use crate::pico8::pal::{self, Palette};
@@ -12,61 +12,62 @@ use crate::pico8::pal::{self, Palette};
 const GFX_PALETTE_LOOKUP_SHADER: Handle<Shader> =
     uuid_handle!("9f4e8a2b-1c3d-4e5f-6a7b-8c9d0e1f2a3b");
 
-/// Material that renders a fullscreen quad using index + palette + PalMap textures (GPU palette lookup).
+/// Extension sampled by the sprite renderer. The sprite's image is the R8 index texture.
+/// Bindings start at 20 so they do not collide with the sprite material.
 #[derive(Asset, AsBindGroup, Debug, Clone, Reflect)]
 #[reflect(Debug)]
 pub struct GfxPaletteLookupMaterial {
-    #[texture(0)]
-    #[sampler(4)]
-    pub index_texture: Handle<Image>,
-    #[texture(1)]
+    #[texture(20)]
+    #[sampler(23)]
     pub palette_texture: Handle<Image>,
-    #[texture(2)]
+    #[texture(21)]
     pub remap_texture: Handle<Image>,
-    #[texture(3)]
+    #[texture(22)]
     pub transparency_texture: Handle<Image>,
-    #[uniform(5)]
+    #[uniform(24)]
     pub palette_size: f32,
-    #[uniform(5)]
+    #[uniform(24)]
     pub palette_width: f32,
-    #[uniform(5)]
+    #[uniform(24)]
     pub palette_height: f32,
-    #[uniform(5)]
+    #[uniform(24)]
     pub access_kind: u32,
-    #[uniform(5)]
+    #[uniform(24)]
     pub access_param: u32,
 }
 
-impl Material2d for GfxPaletteLookupMaterial {
-    fn fragment_shader() -> ShaderRef {
-        ShaderRef::Handle(GFX_PALETTE_LOOKUP_SHADER.clone())
+impl MaterialExtension2d for GfxPaletteLookupMaterial {
+    fn fragment_shader() -> Option<ShaderRef> {
+        Some(ShaderRef::Handle(GFX_PALETTE_LOOKUP_SHADER.clone()))
     }
 
-    fn alpha_mode(&self) -> AlphaMode2d {
-        AlphaMode2d::Blend
+    fn alpha_mode(&self) -> Option<AlphaMode2d> {
+        Some(AlphaMode2d::Blend)
     }
 }
 
-/// Build a GfxPaletteLookupMaterial from index, palette, remap, and transparency images.
-/// Uses `palette` and `palette_image` to set palette dimensions and access mode for the shader.
+/// Build a palette-lookup sprite extension from palette, remap, and transparency images.
 pub fn build_palette_lookup_material(
-    index_image: Handle<Image>,
     palette_image: Handle<Image>,
     remap_image: Handle<Image>,
     transparency_image: Handle<Image>,
     palette: &Palette,
-    palette_image_ref: &Image,
+    palette_image_ref: Option<&Image>,
 ) -> GfxPaletteLookupMaterial {
-    let size = palette_image_ref.size();
+    let (width, height, len) = if let Some(image) = palette_image_ref {
+        let size = image.size();
+        (size.x as f32, size.y as f32, palette.len_in(image) as f32)
+    } else {
+        (16.0, 1.0, 16.0)
+    };
     let (access_kind, access_param) = pal::palette_access_to_gpu(&palette.access);
     GfxPaletteLookupMaterial {
-        index_texture: index_image,
         palette_texture: palette_image,
         remap_texture: remap_image,
         transparency_texture: transparency_image,
-        palette_size: palette.len_in(palette_image_ref) as f32,
-        palette_width: size.x as f32,
-        palette_height: size.y as f32,
+        palette_size: len,
+        palette_width: width,
+        palette_height: height,
         access_kind,
         access_param,
     }
@@ -77,11 +78,11 @@ pub(crate) fn gfx_palette_lookup_material_plugin(app: &mut App) {
     shaders
         .insert(
             GFX_PALETTE_LOOKUP_SHADER.id(),
-            Shader::from_wgsl(
-                include_str!("shaders/gfx_palette_lookup.wgsl"),
-                "shaders/gfx_palette_lookup.wgsl",
+            Shader::from_wesl(
+                include_str!("shaders/gfx_palette_lookup.wesl"),
+                "shaders/gfx_palette_lookup.wesl",
             ),
         )
         .unwrap();
-    app.add_plugins(Material2dPlugin::<GfxPaletteLookupMaterial>::default());
+    app.add_plugins(SpriteMaterialPlugin::<GfxPaletteLookupMaterial>::default());
 }

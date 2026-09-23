@@ -3,8 +3,10 @@ pub mod pal_map_textures;
 pub mod palette_lookup_material;
 mod var_bitdepth;
 use crate::{one_or_map::OneOrMap, pico8::*};
-use bevy::asset::AssetEventSystems;
+use bevy::asset::{AssetEventSystems, AssetId};
 use bevy::platform::collections::{HashMap, HashSet};
+use bevy::sprite_render::SpriteMaterial;
+use palette_lookup_material::{GfxPaletteLookupMaterial, build_palette_lookup_material};
 use std::{
     collections::VecDeque,
     hash::{DefaultHasher, Hash, Hasher},
@@ -20,6 +22,8 @@ pub(crate) fn plugin(app: &mut App) {
         // .register_type::<GfxMaterial>()
         .register_asset_reflect::<GfxMaterial>()
         .init_resource::<GfxImageMap>()
+        .init_resource::<IndexImageMap>()
+        .init_resource::<GfxGpuMaterialMap>()
         .init_asset::<Gfx>()
         .init_asset::<GfxMaterial>()
         .add_systems(
@@ -48,6 +52,83 @@ pub struct GfxMaterial {
 
 #[derive(Resource, Default, Reflect, Deref, DerefMut)]
 pub struct GfxImageMap(HashMap<AssetId<Gfx>, GfxImage>);
+
+#[derive(Resource, Default, Deref, DerefMut)]
+struct IndexImageMap(HashMap<AssetId<Gfx>, Handle<Image>>);
+
+#[derive(Resource, Default)]
+struct GfxGpuMaterialMap(HashMap<AssetId<GfxMaterial>, (u64, Handle<GfxPaletteLookupMaterial>)>);
+
+fn material_hash(gfx_material: &GfxMaterial) -> u64 {
+    let mut hasher = DefaultHasher::new();
+    gfx_material.pal_map.hash(&mut hasher);
+    gfx_material.palette.hash(&mut hasher);
+    hasher.finish()
+}
+
+/// Index-image sprite plus a [`SpriteMaterial`] that does palette lookup on the GPU.
+/// Canvases with per-pixel occupancy stay on the CPU path.
+fn gpu_sprite_assets(
+    gfx_handle: &Handle<Gfx>,
+    gfx_changed: bool,
+    gfx_material_handle: &Handle<GfxMaterial>,
+    gfx_material: &GfxMaterial,
+    gfxs: &Assets<Gfx>,
+    images: &mut Assets<Image>,
+    palette_materials: &mut Assets<GfxPaletteLookupMaterial>,
+    palettes: &Palettes,
+    index_images: &mut IndexImageMap,
+    gpu_materials: &mut GfxGpuMaterialMap,
+    image_events: &mut MessageWriter<AssetEvent<Image>>,
+) -> Result<(Handle<Image>, Handle<GfxPaletteLookupMaterial>), Error> {
+    let gfx_id = gfx_handle.id();
+    let gfx = gfxs.get(gfx_id).ok_or(Error::NoSuch("gfx image".into()))?;
+    let index = if let Some(handle) = index_images.get(&gfx_id).cloned() {
+        if gfx_changed && let Some(image) = images.get_mut_untracked(&handle) {
+            *image = gfx.to_index_image();
+            image_events.write(AssetEvent::Modified { id: handle.id() });
+        }
+        handle
+    } else {
+        let handle = images.add(gfx.to_index_image());
+        image_events.write(AssetEvent::Added { id: handle.id() });
+        index_images.insert(gfx_id, handle.clone());
+        handle
+    };
+
+    let hash = material_hash(gfx_material);
+    let material_id = gfx_material_handle.id();
+    if let Some((cached_hash, handle)) = gpu_materials.0.get(&material_id).cloned()
+        && cached_hash == hash
+    {
+        return Ok((index, handle));
+    }
+
+    let palette = palettes.get_pal(gfx_material.palette)?;
+    let (remap, transparency) = pal_map_textures::pal_map_to_images(&gfx_material.pal_map);
+    let remap = images.add(remap);
+    let transparency = images.add(transparency);
+    let palette_image_ref = images.get(&palette.image);
+    let material = build_palette_lookup_material(
+        palette.image().clone(),
+        remap,
+        transparency,
+        palette,
+        palette_image_ref,
+    );
+    let handle = if let Some((_, handle)) = gpu_materials.0.get(&material_id).cloned() {
+        if let Some(mut existing) = palette_materials.get_mut(&handle) {
+            *existing = material;
+        }
+        gpu_materials.0.insert(material_id, (hash, handle.clone()));
+        handle
+    } else {
+        let handle = palette_materials.add(material);
+        gpu_materials.0.insert(material_id, (hash, handle.clone()));
+        handle
+    };
+    Ok((index, handle))
+}
 
 #[derive(Component, Debug, Default)]
 pub struct GfxDirty(pub bool);
@@ -109,9 +190,9 @@ fn write_gfx_pixel(
         .write_color(palette_data, color_index, bytes)
 }
 
-/// Uses the CPU path (Gfx::try_to_image + PalMap::write_color). A GPU path is available
-/// via Gfx::to_index_image(), palette.image(), pal_map_textures::pal_map_to_images(), and
-/// GfxPaletteLookupMaterial with a camera or render-graph node that draws a fullscreen quad.
+/// Uses the CPU path when the gfx has per-pixel occupancy (screen canvases).
+/// Otherwise the sprite image is an R8 index texture and [`GfxPaletteLookupMaterial`]
+/// looks up the palette in the sprite shader.
 pub(crate) fn compute_image(
     gfx_handle: &Handle<Gfx>,
     gfx_changed: bool,
@@ -205,6 +286,9 @@ fn compute_image_on_asset_event(
     mut commands: Commands,
     mut events: MessageReader<AssetEvent<Gfx>>,
     mut images: ResMut<Assets<Image>>,
+    mut palette_materials: ResMut<Assets<GfxPaletteLookupMaterial>>,
+    mut index_images: ResMut<IndexImageMap>,
+    mut gpu_materials: ResMut<GfxGpuMaterialMap>,
     gfxs: Res<Assets<Gfx>>,
     gfx_materials: Res<Assets<GfxMaterial>>,
     _state: Res<Pico8State>,
@@ -227,6 +311,7 @@ fn compute_image_on_asset_event(
             AssetEvent::Added { id } | AssetEvent::Modified { id } => Some(*id),
             AssetEvent::Removed { id } => {
                 pairs.remove(id);
+                index_images.remove(id);
                 None
             }
             _ => None,
@@ -247,6 +332,43 @@ fn compute_image_on_asset_event(
             warn!("No pico8 asset setup during clear event.");
             return;
         };
+        if gfxs
+            .get(&gfx_sprite.image)
+            .is_some_and(|gfx| gfx.occupancy.is_none())
+        {
+            match gpu_sprite_assets(
+                &gfx_sprite.image,
+                true,
+                &gfx_sprite.material,
+                gfx_material,
+                &gfxs,
+                &mut images,
+                &mut palette_materials,
+                &pico8_asset.palettes,
+                &mut index_images,
+                &mut gpu_materials,
+                &mut image_events,
+            ) {
+                Ok((image, material)) => {
+                    commands.entity(id).insert(SpriteMaterial(material));
+                    match sprite {
+                        Some(sprite) => {
+                            if sprite.image != image {
+                                update_ids.push(id);
+                                update_images.push_back(image);
+                            }
+                        }
+                        None => {
+                            commands.entity(id).insert(Sprite::from_image(image));
+                        }
+                    }
+                }
+                Err(e) => {
+                    warn!("Unable to update gfx {}: {e}", gfx_sprite.image.id());
+                }
+            }
+            continue;
+        }
         let image_handle = compute_image(
             &gfx_sprite.image,
             true,
@@ -280,7 +402,7 @@ fn compute_image_on_asset_event(
         }
     }
     // Try not to trigger a sprite change if we don't have to.
-    let mut iter = sprites.iter_many_mut(update_ids.iter());
+    let mut iter = sprites.iter_many_mut(update_ids.iter()).matched();
     while let Some((_, _, sprite)) = iter.fetch_next() {
         match sprite {
             Some(mut sprite) => {
@@ -295,6 +417,9 @@ fn compute_image_on_asset_event(
 fn compute_image_on_gfx_sprite_change(
     mut commands: Commands,
     mut images: ResMut<Assets<Image>>,
+    mut palette_materials: ResMut<Assets<GfxPaletteLookupMaterial>>,
+    mut index_images: ResMut<IndexImageMap>,
+    mut gpu_materials: ResMut<GfxGpuMaterialMap>,
     gfxs: Res<Assets<Gfx>>,
     gfx_materials: Res<Assets<GfxMaterial>>,
     _state: Res<Pico8State>,
@@ -321,6 +446,40 @@ fn compute_image_on_gfx_sprite_change(
             warn!("No pico8 asset setup during gfx sprite change.");
             return;
         };
+        if gfxs
+            .get(&gfx_sprite.image)
+            .is_some_and(|gfx| gfx.occupancy.is_none())
+        {
+            match gpu_sprite_assets(
+                &gfx_sprite.image,
+                false,
+                &gfx_sprite.material,
+                gfx_material,
+                &gfxs,
+                &mut images,
+                &mut palette_materials,
+                &pico8_asset.palettes,
+                &mut index_images,
+                &mut gpu_materials,
+                &mut image_events,
+            ) {
+                Ok((image, material)) => {
+                    commands.entity(id).insert(SpriteMaterial(material));
+                    match sprite {
+                        Some(mut sprite) => {
+                            sprite.image = image;
+                        }
+                        None => {
+                            commands.entity(id).insert(Sprite::from_image(image));
+                        }
+                    }
+                }
+                Err(e) => {
+                    warn!("Unable to update gfx {}: {e}", gfx_sprite.image.id());
+                }
+            }
+            continue;
+        }
         let image_handle = compute_image(
             &gfx_sprite.image,
             false,

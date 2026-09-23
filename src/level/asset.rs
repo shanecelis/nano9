@@ -23,7 +23,7 @@ pub enum TiledSetLoaderError {
 
 #[derive(TypePath, Asset, Debug)]
 pub struct TiledSet(pub tiled::Tileset);
-#[derive(Default, Debug, Clone, Copy)]
+#[derive(Default, Debug, Clone, Copy, TypePath)]
 pub struct TiledSetLoader;
 
 impl AssetLoader for TiledSetLoader {

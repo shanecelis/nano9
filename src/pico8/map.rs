@@ -150,7 +150,7 @@ fn compute_gfx_tilemap_texture_on_asset_event(
         }
     }
     // Try not to trigger a sprite change if we don't have to.
-    let mut iter = textures.iter_many_mut(update_ids.iter());
+    let mut iter = textures.iter_many_mut(update_ids.iter()).matched();
     while let Some((id, _, tilemap_texture)) = iter.fetch_next() {
         match tilemap_texture {
             Some(mut tilemap_texture) => {

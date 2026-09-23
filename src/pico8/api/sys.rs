@@ -57,7 +57,7 @@ pub enum ExtcmdRequest {
 struct ReadyQueue(VecDeque<ExtcmdRequest>);
 
 fn queue_startup_window(
-    add: On<Add, PrimaryWindow>,
+    add: On<Add<PrimaryWindow>>,
     mut writer: MessageWriter<ExtcmdRequest>,
     mut commands: Commands,
 ) {
@@ -251,7 +251,8 @@ impl super::Pico8<'_, '_> {
                         .get_resource::<bevy::diagnostic::FrameCount>()
                         .map(|f| f.0)
                         .unwrap_or(0);
-                    if let Some(mut rec) = world.get_resource_mut::<crate::pico8::audio::AudioRecorder>()
+                    if let Some(mut rec) =
+                        world.get_resource_mut::<crate::pico8::audio::AudioRecorder>()
                     {
                         rec.start(frame);
                     }
