@@ -202,6 +202,10 @@ impl super::Pico8<'_, '_> {
                 ..default()
             },
             Anchor::TOP_LEFT,
+            // Layout needs this entity in the camera's visible set. A freshly
+            // spawned `Text2d` has a zero AABB on the canvas corner, which the
+            // frustum test rejects, so the glyphs are never built.
+            bevy::camera::visibility::NoFrustumCulling,
             clearable,
         ));
         Ok((id, add_newline))
