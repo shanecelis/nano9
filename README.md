@@ -517,6 +517,7 @@ The more popular the memory-mapped feature is, the more likely it'll be supporte
 
 | nano9         | bevy |
 |---------------|------|
+| 0.1.0-alpha.8 | 0.19 |
 | 0.1.0-alpha.7 | 0.18 |
 | 0.1.0-alpha.6 | 0.17 |
 | 0.1.0-alpha.5 | 0.17 |
