@@ -2,6 +2,8 @@ import bevy_sprite_render::{
     mesh2d::vertex_output::VertexOutput,
     sprite_mesh::functions as sprite_fn,
 };
+@if(SRGB_OUTPUT)
+import bevy_render::color_operations::linear_to_srgb;
 
 // access_kind: 0 = LinearByRow, 1 = LinearByColumn, 2 = FromRow, 3 = FromColumn
 struct GfxPaletteLookupMaterial {
@@ -60,5 +62,8 @@ fn fragment(input: VertexOutput) -> @location(0) vec4<f32> {
     if trans > 0.5 {
         color.a = 0.0;
     }
-    return sprite_fn::get_final_color(color, input.instance_index);
+    var output_color = sprite_fn::get_final_color(color, input.instance_index);
+@if(SRGB_OUTPUT)
+    output_color = vec4(linear_to_srgb(output_color.rgb), output_color.a);
+    return output_color;
 }
