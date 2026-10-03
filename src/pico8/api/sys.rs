@@ -6,8 +6,6 @@ use bevy::camera::{ImageRenderTarget, RenderTarget};
 use bevy::diagnostic::FrameCount;
 use bevy::render::render_resource::TextureFormat;
 use bevy::render::view::screenshot::{Screenshot, ScreenshotCaptured};
-use bevy::sprite::Text2d;
-use bevy::text::TextLayoutInfo;
 use bevy::window::PrimaryWindow;
 use std::collections::VecDeque;
 use std::path::{Path, PathBuf};
@@ -95,39 +93,12 @@ fn handle_load_cart(
     next_state.set(RunState::Uninit);
 }
 
-fn cart_assets_loaded(
-    asset_server: &AssetServer,
-    pico8_handle: Option<&Pico8Handle>,
-    pico8_assets: &Assets<Pico8Asset>,
-) -> bool {
-    let Some(pico8_handle) = pico8_handle else {
-        return false;
-    };
-    asset_server.is_loaded_with_dependencies(&pico8_handle.handle)
-        && pico8_assets.get(&pico8_handle.handle).is_some()
-}
-
-/// `print` glyphs are built after the font asset is in `Assets<Font>` and after
-/// a layout pass. Screenshot on the same `_draw` as `print` is otherwise blank.
-fn text_layout_ready(texts: &Query<(&Text2d, Option<&TextLayoutInfo>)>) -> bool {
-    for (text, layout) in texts.iter() {
-        if text.0.is_empty() {
-            continue;
-        }
-        match layout {
-            Some(info) if !info.glyphs.is_empty() => {}
-            _ => return false,
-        }
-    }
-    true
-}
-
 fn pump_ready_queue(
     mut incoming: MessageReader<ExtcmdRequest>,
     mut queue: ResMut<ReadyQueue>,
     mut current: Local<Option<ExtcmdRequest>>,
-    // Frame when a screenshot became ready. Capture runs the frame after, so
-    // sprite index images and palette LUTs have been uploaded.
+    // Capture the frame after the request, so text glyphs and sprite textures
+    // have been uploaded.
     mut screenshot_ready_frame: Local<Option<u32>>,
     run_state: Res<State<RunState>>,
     frame_count: Res<FrameCount>,
@@ -136,10 +107,6 @@ fn pump_ready_queue(
     canvas: Option<Res<N9Canvas>>,
     headless: Option<Res<Headless>>,
     canvas_target: Option<Res<CanvasRenderTarget>>,
-    asset_server: Res<AssetServer>,
-    pico8_handle: Option<Res<Pico8Handle>>,
-    pico8_assets: Res<Assets<Pico8Asset>>,
-    texts: Query<(&Text2d, Option<&TextLayoutInfo>)>,
 ) {
     queue.0.extend(incoming.read().cloned());
     loop {
@@ -149,15 +116,8 @@ fn pump_ready_queue(
         let Some(item) = current.clone() else {
             return;
         };
-        let cart_ready = cart_assets_loaded(
-            &asset_server,
-            pico8_handle.as_deref(),
-            &pico8_assets,
-        );
         let done = match item {
-            ExtcmdRequest::WaitTilReady => {
-                matches!(**run_state, RunState::Run | RunState::Pause) && cart_ready
-            }
+            ExtcmdRequest::WaitTilReady => matches!(**run_state, RunState::Run | RunState::Pause),
             ExtcmdRequest::RevealWindow(entity) => match windows.get_mut(entity) {
                 Ok(mut window) => {
                     if window.visible {
@@ -173,10 +133,7 @@ fn pump_ready_queue(
                 }
             },
             ExtcmdRequest::StartScreenshot(path) => {
-                if !cart_ready || !text_layout_ready(&texts) {
-                    *screenshot_ready_frame = None;
-                    false
-                } else if screenshot_ready_frame.is_none_or(|frame| frame_count.0 <= frame) {
+                if screenshot_ready_frame.is_none_or(|frame| frame_count.0 <= frame) {
                     if screenshot_ready_frame.is_none() {
                         *screenshot_ready_frame = Some(frame_count.0);
                     }
