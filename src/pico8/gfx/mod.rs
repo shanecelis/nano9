@@ -24,6 +24,7 @@ pub(crate) fn plugin(app: &mut App) {
         .init_resource::<GfxImageMap>()
         .init_resource::<IndexImageMap>()
         .init_resource::<GfxGpuMaterialMap>()
+        .init_resource::<PalMapLutCache>()
         .init_asset::<Gfx>()
         .init_asset::<GfxMaterial>()
         .add_systems(
@@ -59,11 +60,32 @@ struct IndexImageMap(HashMap<AssetId<Gfx>, Handle<Image>>);
 #[derive(Resource, Default)]
 struct GfxGpuMaterialMap(HashMap<AssetId<GfxMaterial>, (u64, Handle<GfxPaletteLookupMaterial>)>);
 
+/// One LUT image per distinct [`PalMap`], shared by every [`GfxMaterial`] that uses it.
+#[derive(Resource, Default)]
+struct PalMapLutCache(HashMap<u64, Handle<Image>>);
+
+fn pal_map_hash(pal_map: &PalMap) -> u64 {
+    let mut hasher = DefaultHasher::new();
+    pal_map.hash(&mut hasher);
+    hasher.finish()
+}
+
 fn material_hash(gfx_material: &GfxMaterial) -> u64 {
     let mut hasher = DefaultHasher::new();
-    gfx_material.pal_map.hash(&mut hasher);
+    // Split from [`pal_map_hash`] so a palette-index change does not rebuild the LUT.
+    hasher.write_u64(pal_map_hash(&gfx_material.pal_map));
     gfx_material.palette.hash(&mut hasher);
     hasher.finish()
+}
+
+fn lut_image(pal_map: &PalMap, images: &mut Assets<Image>, cache: &mut PalMapLutCache) -> Handle<Image> {
+    let key = pal_map_hash(pal_map);
+    if let Some(handle) = cache.0.get(&key) {
+        return handle.clone();
+    }
+    let handle = images.add(pal_map_textures::pal_map_to_lut_image(pal_map));
+    cache.0.insert(key, handle.clone());
+    handle
 }
 
 /// Index-image sprite plus a [`SpriteMaterial`] that does palette lookup on the GPU.
@@ -79,6 +101,7 @@ fn gpu_sprite_assets(
     palettes: &Palettes,
     index_images: &mut IndexImageMap,
     gpu_materials: &mut GfxGpuMaterialMap,
+    lut_cache: &mut PalMapLutCache,
     image_events: &mut MessageWriter<AssetEvent<Image>>,
 ) -> Result<(Handle<Image>, Handle<GfxPaletteLookupMaterial>), Error> {
     let gfx_id = gfx_handle.id();
@@ -105,14 +128,11 @@ fn gpu_sprite_assets(
     }
 
     let palette = palettes.get_pal(gfx_material.palette)?;
-    let (remap, transparency) = pal_map_textures::pal_map_to_images(&gfx_material.pal_map);
-    let remap = images.add(remap);
-    let transparency = images.add(transparency);
+    let lut = lut_image(&gfx_material.pal_map, images, lut_cache);
     let palette_image_ref = images.get(&palette.image);
     let material = build_palette_lookup_material(
         palette.image().clone(),
-        remap,
-        transparency,
+        lut,
         palette,
         palette_image_ref,
     );
@@ -289,9 +309,9 @@ fn compute_image_on_asset_event(
     mut palette_materials: ResMut<Assets<GfxPaletteLookupMaterial>>,
     mut index_images: ResMut<IndexImageMap>,
     mut gpu_materials: ResMut<GfxGpuMaterialMap>,
+    mut lut_cache: ResMut<PalMapLutCache>,
     gfxs: Res<Assets<Gfx>>,
     gfx_materials: Res<Assets<GfxMaterial>>,
-    _state: Res<Pico8State>,
     mut sprites: Query<(Entity, &GfxSprite, Option<&mut Sprite>)>,
     mut pairs: ResMut<GfxImageMap>,
     mut update_ids: Local<Vec<Entity>>,
@@ -347,6 +367,7 @@ fn compute_image_on_asset_event(
                 &pico8_asset.palettes,
                 &mut index_images,
                 &mut gpu_materials,
+                &mut lut_cache,
                 &mut image_events,
             ) {
                 Ok((image, material)) => {
@@ -420,9 +441,9 @@ fn compute_image_on_gfx_sprite_change(
     mut palette_materials: ResMut<Assets<GfxPaletteLookupMaterial>>,
     mut index_images: ResMut<IndexImageMap>,
     mut gpu_materials: ResMut<GfxGpuMaterialMap>,
+    mut lut_cache: ResMut<PalMapLutCache>,
     gfxs: Res<Assets<Gfx>>,
     gfx_materials: Res<Assets<GfxMaterial>>,
-    _state: Res<Pico8State>,
     mut sprites: Query<(Entity, &GfxSprite, Option<&mut Sprite>), Changed<GfxSprite>>,
     mut pairs: ResMut<GfxImageMap>,
     pico8_handle: Option<Res<Pico8Handle>>,
@@ -461,6 +482,7 @@ fn compute_image_on_gfx_sprite_change(
                 &pico8_asset.palettes,
                 &mut index_images,
                 &mut gpu_materials,
+                &mut lut_cache,
                 &mut image_events,
             ) {
                 Ok((image, material)) => {

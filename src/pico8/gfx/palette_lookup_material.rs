@@ -1,6 +1,6 @@
-//! Sprite material that samples an index texture and palette texture with PalMap remap/transparency.
+//! Sprite material that looks up palette colors from an index texture and a PalMap LUT.
 
-use bevy::asset::{Asset, uuid_handle};
+use bevy::asset::{uuid_handle, Asset};
 use bevy::reflect::Reflect;
 use bevy::render::render_resource::*;
 use bevy::shader::Shader;
@@ -18,21 +18,16 @@ const GFX_PALETTE_LOOKUP_SHADER: Handle<Shader> =
 #[reflect(Debug)]
 pub struct GfxPaletteLookupMaterial {
     #[texture(20)]
-    #[sampler(23)]
     pub palette_texture: Handle<Image>,
-    #[texture(21)]
-    pub remap_texture: Handle<Image>,
-    #[texture(22)]
-    pub transparency_texture: Handle<Image>,
-    #[uniform(24)]
-    pub palette_size: f32,
-    #[uniform(24)]
-    pub palette_width: f32,
-    #[uniform(24)]
-    pub palette_height: f32,
-    #[uniform(24)]
+    #[texture(21, sample_type = "u_int")]
+    pub lut_texture: Handle<Image>,
+    #[uniform(22)]
+    pub palette_width: u32,
+    #[uniform(22)]
+    pub palette_height: u32,
+    #[uniform(22)]
     pub access_kind: u32,
-    #[uniform(24)]
+    #[uniform(22)]
     pub access_param: u32,
 }
 
@@ -46,26 +41,23 @@ impl MaterialExtension2d for GfxPaletteLookupMaterial {
     }
 }
 
-/// Build a palette-lookup sprite extension from palette, remap, and transparency images.
+/// Build a palette-lookup sprite extension from a palette image and a packed PalMap LUT.
 pub fn build_palette_lookup_material(
     palette_image: Handle<Image>,
-    remap_image: Handle<Image>,
-    transparency_image: Handle<Image>,
+    lut_image: Handle<Image>,
     palette: &Palette,
     palette_image_ref: Option<&Image>,
 ) -> GfxPaletteLookupMaterial {
-    let (width, height, len) = if let Some(image) = palette_image_ref {
+    let (width, height) = if let Some(image) = palette_image_ref {
         let size = image.size();
-        (size.x as f32, size.y as f32, palette.len_in(image) as f32)
+        (size.x, size.y)
     } else {
-        (16.0, 1.0, 16.0)
+        (16, 1)
     };
     let (access_kind, access_param) = pal::palette_access_to_gpu(&palette.access);
     GfxPaletteLookupMaterial {
         palette_texture: palette_image,
-        remap_texture: remap_image,
-        transparency_texture: transparency_image,
-        palette_size: len,
+        lut_texture: lut_image,
         palette_width: width,
         palette_height: height,
         access_kind,
