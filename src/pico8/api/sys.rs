@@ -3,6 +3,7 @@ use super::*;
 use crate::run::RunState;
 use crate::{CanvasRenderTarget, Headless};
 use bevy::camera::{ImageRenderTarget, RenderTarget};
+use bevy::diagnostic::FrameCount;
 use bevy::render::render_resource::TextureFormat;
 use bevy::render::view::screenshot::{Screenshot, ScreenshotCaptured};
 use bevy::sprite::Text2d;
@@ -125,7 +126,11 @@ fn pump_ready_queue(
     mut incoming: MessageReader<ExtcmdRequest>,
     mut queue: ResMut<ReadyQueue>,
     mut current: Local<Option<ExtcmdRequest>>,
+    // Frame when a screenshot became ready. Capture runs the frame after, so
+    // sprite index images and palette LUTs have been uploaded.
+    mut screenshot_ready_frame: Local<Option<u32>>,
     run_state: Res<State<RunState>>,
+    frame_count: Res<FrameCount>,
     mut windows: Query<&mut Window>,
     mut commands: Commands,
     canvas: Option<Res<N9Canvas>>,
@@ -169,6 +174,12 @@ fn pump_ready_queue(
             },
             ExtcmdRequest::StartScreenshot(path) => {
                 if !cart_ready || !text_layout_ready(&texts) {
+                    *screenshot_ready_frame = None;
+                    false
+                } else if screenshot_ready_frame.is_none_or(|frame| frame_count.0 <= frame) {
+                    if screenshot_ready_frame.is_none() {
+                        *screenshot_ready_frame = Some(frame_count.0);
+                    }
                     false
                 } else {
                     match canvas.as_ref() {
@@ -182,6 +193,7 @@ fn pump_ready_queue(
                                 if image_target.is_none() {
                                     false
                                 } else {
+                                    *screenshot_ready_frame = None;
                                     let written = Arc::new(Mutex::new(false));
                                     start_queued_screenshot(
                                         &mut commands,
@@ -196,6 +208,7 @@ fn pump_ready_queue(
                             } else if !windows.iter().any(|window| window.visible) {
                                 false
                             } else {
+                                *screenshot_ready_frame = None;
                                 let written = Arc::new(Mutex::new(false));
                                 start_queued_screenshot(
                                     &mut commands,
