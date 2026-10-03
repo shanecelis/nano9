@@ -5,6 +5,8 @@ use crate::{CanvasRenderTarget, Headless};
 use bevy::camera::{ImageRenderTarget, RenderTarget};
 use bevy::render::render_resource::TextureFormat;
 use bevy::render::view::screenshot::{Screenshot, ScreenshotCaptured};
+use bevy::sprite::Text2d;
+use bevy::text::TextLayoutInfo;
 use bevy::window::PrimaryWindow;
 use std::collections::VecDeque;
 use std::path::{Path, PathBuf};
@@ -92,6 +94,33 @@ fn handle_load_cart(
     next_state.set(RunState::Uninit);
 }
 
+fn cart_assets_loaded(
+    asset_server: &AssetServer,
+    pico8_handle: Option<&Pico8Handle>,
+    pico8_assets: &Assets<Pico8Asset>,
+) -> bool {
+    let Some(pico8_handle) = pico8_handle else {
+        return false;
+    };
+    asset_server.is_loaded_with_dependencies(&pico8_handle.handle)
+        && pico8_assets.get(&pico8_handle.handle).is_some()
+}
+
+/// `print` glyphs are built after the font asset is in `Assets<Font>` and after
+/// a layout pass. Screenshot on the same `_draw` as `print` is otherwise blank.
+fn text_layout_ready(texts: &Query<(&Text2d, Option<&TextLayoutInfo>)>) -> bool {
+    for (text, layout) in texts.iter() {
+        if text.0.is_empty() {
+            continue;
+        }
+        match layout {
+            Some(info) if !info.glyphs.is_empty() => {}
+            _ => return false,
+        }
+    }
+    true
+}
+
 fn pump_ready_queue(
     mut incoming: MessageReader<ExtcmdRequest>,
     mut queue: ResMut<ReadyQueue>,
@@ -102,6 +131,10 @@ fn pump_ready_queue(
     canvas: Option<Res<N9Canvas>>,
     headless: Option<Res<Headless>>,
     canvas_target: Option<Res<CanvasRenderTarget>>,
+    asset_server: Res<AssetServer>,
+    pico8_handle: Option<Res<Pico8Handle>>,
+    pico8_assets: Res<Assets<Pico8Asset>>,
+    texts: Query<(&Text2d, Option<&TextLayoutInfo>)>,
 ) {
     queue.0.extend(incoming.read().cloned());
     loop {
@@ -111,8 +144,15 @@ fn pump_ready_queue(
         let Some(item) = current.clone() else {
             return;
         };
+        let cart_ready = cart_assets_loaded(
+            &asset_server,
+            pico8_handle.as_deref(),
+            &pico8_assets,
+        );
         let done = match item {
-            ExtcmdRequest::WaitTilReady => matches!(**run_state, RunState::Run | RunState::Pause),
+            ExtcmdRequest::WaitTilReady => {
+                matches!(**run_state, RunState::Run | RunState::Pause) && cart_ready
+            }
             ExtcmdRequest::RevealWindow(entity) => match windows.get_mut(entity) {
                 Ok(mut window) => {
                     if window.visible {
@@ -127,44 +167,50 @@ fn pump_ready_queue(
                     true
                 }
             },
-            ExtcmdRequest::StartScreenshot(path) => match canvas.as_ref() {
-                None => false,
-                Some(canvas) => {
-                    let image_target = canvas_target.as_ref().map(|t| ImageRenderTarget {
-                        handle: t.handle.clone(),
-                        scale_factor: t.scale_factor,
-                    });
-                    if headless.is_some() {
-                        if image_target.is_none() {
-                            false
-                        } else {
-                            let written = Arc::new(Mutex::new(false));
-                            start_queued_screenshot(
-                                &mut commands,
-                                path,
-                                canvas.size,
-                                written.clone(),
-                                image_target,
-                            );
-                            *current = Some(ExtcmdRequest::WaitForScreenshot(written));
-                            false
+            ExtcmdRequest::StartScreenshot(path) => {
+                if !cart_ready || !text_layout_ready(&texts) {
+                    false
+                } else {
+                    match canvas.as_ref() {
+                        None => false,
+                        Some(canvas) => {
+                            let image_target = canvas_target.as_ref().map(|t| ImageRenderTarget {
+                                handle: t.handle.clone(),
+                                scale_factor: t.scale_factor,
+                            });
+                            if headless.is_some() {
+                                if image_target.is_none() {
+                                    false
+                                } else {
+                                    let written = Arc::new(Mutex::new(false));
+                                    start_queued_screenshot(
+                                        &mut commands,
+                                        path,
+                                        canvas.size,
+                                        written.clone(),
+                                        image_target,
+                                    );
+                                    *current = Some(ExtcmdRequest::WaitForScreenshot(written));
+                                    false
+                                }
+                            } else if !windows.iter().any(|window| window.visible) {
+                                false
+                            } else {
+                                let written = Arc::new(Mutex::new(false));
+                                start_queued_screenshot(
+                                    &mut commands,
+                                    path,
+                                    canvas.size,
+                                    written.clone(),
+                                    None,
+                                );
+                                *current = Some(ExtcmdRequest::WaitForScreenshot(written));
+                                false
+                            }
                         }
-                    } else if !windows.iter().any(|window| window.visible) {
-                        false
-                    } else {
-                        let written = Arc::new(Mutex::new(false));
-                        start_queued_screenshot(
-                            &mut commands,
-                            path,
-                            canvas.size,
-                            written.clone(),
-                            None,
-                        );
-                        *current = Some(ExtcmdRequest::WaitForScreenshot(written));
-                        false
                     }
                 }
-            },
+            }
             ExtcmdRequest::WaitForScreenshot(written) => {
                 written.lock().map(|g| *g).unwrap_or(false)
             }
