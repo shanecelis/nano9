@@ -197,9 +197,10 @@ fn write_gfx_pixel(
             bytes.fill(0);
             return Ok(());
         }
-        let pi = gfx_material.pal_map.map_or_mod(color_index as usize);
+        // `pset` already stored the draw-palette color. Applying `pal_map`
+        // again recolors pixels written after `pal()`.
         let color = palette_data
-            .get(pi)
+            .get(color_index as usize)
             .ok_or(Error::NoSuch("palette color".into()))?;
         bytes[0..=3].copy_from_slice(color);
         bytes[3] = 0xff;
