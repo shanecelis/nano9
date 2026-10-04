@@ -83,7 +83,10 @@ impl PluginGroup for Nano9Plugins {
                 // Wasm/WebGL: wgpu only enumerates a GPU if a canvas exists
                 // when RenderPlugin asks for an adapter.
                 primary_window: wasm_primary_window(),
-                exit_condition: ExitCondition::OnPrimaryClosed,
+                // OnPrimaryClosed exits while the query is empty. The cart
+                // spawns the window after load, so a slow cart (celeste.p8.png)
+                // dies on the first frame and never reports a load error.
+                exit_condition: ExitCondition::DontExit,
                 ..default()
             });
         #[cfg(target_arch = "wasm32")]

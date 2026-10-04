@@ -311,8 +311,31 @@ fn context_initializer(
     Ok(())
 }
 
+/// Exit after the user closes the primary window.
+///
+/// Unlike [`bevy::window::exit_on_primary_closed`], this waits until a primary
+/// window has been spawned. Native carts create that window only once the
+/// cart asset has loaded.
+fn exit_when_primary_window_closes(
+    mut app_exit: MessageWriter<AppExit>,
+    windows: Query<(), (With<Window>, With<bevy::window::PrimaryWindow>)>,
+    mut opened: Local<bool>,
+) {
+    if !windows.is_empty() {
+        *opened = true;
+    } else if *opened {
+        info!("Primary window was closed, exiting");
+        app_exit.write(AppExit::Success);
+    }
+}
+
 impl Plugin for Nano9Plugin {
     fn build(&self, app: &mut App) {
+        // Windowed runs spawn the primary window after the cart loads.
+        // Exit once that window has existed and then gone away.
+        if !app.world().contains_resource::<crate::Headless>() {
+            app.add_systems(Last, exit_when_primary_window_closes);
+        }
         // app.register_type::<DrawState>();
         // How do you enable shared context since it eats the plugin?
         // let canvas_size: UVec2 = self
