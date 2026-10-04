@@ -4,6 +4,7 @@ pub mod palette_lookup_material;
 mod var_bitdepth;
 use crate::{one_or_map::OneOrMap, pico8::*};
 use bevy::asset::{AssetEventSystems, AssetId};
+use bevy::image::ImageSampler;
 use bevy::platform::collections::{HashMap, HashSet};
 use bevy::sprite_render::SpriteMaterial;
 use palette_lookup_material::{GfxPaletteLookupMaterial, build_palette_lookup_material};
@@ -25,6 +26,7 @@ pub(crate) fn plugin(app: &mut App) {
         .init_resource::<IndexImageMap>()
         .init_resource::<GfxGpuMaterialMap>()
         .init_resource::<PalMapLutCache>()
+        .init_resource::<TilesetArrayMap>()
         .init_asset::<Gfx>()
         .init_asset::<GfxMaterial>()
         .add_systems(
@@ -64,6 +66,29 @@ struct GfxGpuMaterialMap(HashMap<AssetId<GfxMaterial>, (u64, Handle<GfxPaletteLo
 #[derive(Resource, Default)]
 struct PalMapLutCache(HashMap<u64, Handle<Image>>);
 
+/// Baked 2D-array tileset for one Gfx sheet and draw state.
+#[derive(Clone)]
+struct TilesetEntry {
+    array: Handle<Image>,
+    gfx: Handle<Gfx>,
+    material: GfxMaterial,
+    sprite_size: UVec2,
+}
+
+/// Array tilesets keyed by source asset. Gfx entries also key on the baked palette hash so two
+/// `pal()` states of the same sheet can exist in one frame.
+#[derive(Resource, Default)]
+pub(crate) struct TilesetArrayMap {
+    gfx: HashMap<(AssetId<Gfx>, u64), TilesetEntry>,
+    images: HashMap<AssetId<Image>, Handle<Image>>,
+}
+
+impl TilesetArrayMap {
+    pub(crate) fn remove_gfx(&mut self, id: AssetId<Gfx>) {
+        self.gfx.retain(|(gfx_id, _), _| *gfx_id != id);
+    }
+}
+
 fn pal_map_hash(pal_map: &PalMap) -> u64 {
     let mut hasher = DefaultHasher::new();
     pal_map.hash(&mut hasher);
@@ -76,6 +101,148 @@ fn material_hash(gfx_material: &GfxMaterial) -> u64 {
     hasher.write_u64(pal_map_hash(&gfx_material.pal_map));
     gfx_material.palette.hash(&mut hasher);
     hasher.finish()
+}
+
+fn baked_image_hash(gfx_material: &GfxMaterial) -> u64 {
+    let mut hasher = DefaultHasher::new();
+    gfx_material.pal_map.hash(&mut hasher);
+    gfx_material.palette.hash(&mut hasher);
+    hasher.finish()
+}
+
+fn stacked_tileset(sheet: &Image, sprite_size: UVec2) -> Result<Image, Error> {
+    if sprite_size.x == 0 || sprite_size.y == 0 {
+        return Err(Error::InvalidArgument("sprite size".into()));
+    }
+    if sheet.data.is_none() {
+        return Err(Error::NoAsset("tileset sheet pixels".into()));
+    }
+    let cols = sheet.width() / sprite_size.x;
+    let rows = sheet.height() / sprite_size.y;
+    let mut array = sheet
+        .create_stacked_array_from_2d_grid(rows, cols)
+        .map_err(|err| Error::Message(format!("tileset array: {err}").into()))?;
+    array.sampler = ImageSampler::nearest();
+    Ok(array)
+}
+
+/// RGBA sheet from [`compute_image`], stacked into one array layer per sprite.
+pub(crate) fn tileset_array_image(
+    gfx_handle: &Handle<Gfx>,
+    gfx_changed: bool,
+    gfx_material: &GfxMaterial,
+    sprite_size: UVec2,
+    gfxs: &Assets<Gfx>,
+    images: &mut Assets<Image>,
+    palettes: &Palettes,
+    pairs: &mut GfxImageMap,
+    cache: &mut TilesetArrayMap,
+    image_events: &mut MessageWriter<AssetEvent<Image>>,
+) -> Result<Handle<Image>, Error> {
+    let hash = baked_image_hash(gfx_material);
+    let key = (gfx_handle.id(), hash);
+    if !gfx_changed && let Some(entry) = cache.gfx.get(&key) {
+        return Ok(entry.array.clone());
+    }
+    let rgba = compute_image(
+        gfx_handle,
+        gfx_changed,
+        gfx_material,
+        gfxs,
+        images,
+        palettes,
+        pairs,
+        image_events,
+    )?;
+    let array = stacked_tileset(
+        images
+            .get(&rgba)
+            .ok_or(Error::NoAsset("tileset sheet".into()))?,
+        sprite_size,
+    )?;
+    if let Some(entry) = cache.gfx.get(&key) {
+        let handle = entry.array.clone();
+        if let Some(image) = images.get_mut_untracked(&handle) {
+            *image = array;
+            image_events.write(AssetEvent::Modified { id: handle.id() });
+        }
+        return Ok(handle);
+    }
+    let handle = images.add(array);
+    image_events.write(AssetEvent::Added { id: handle.id() });
+    cache.gfx.insert(
+        key,
+        TilesetEntry {
+            array: handle.clone(),
+            gfx: gfx_handle.clone(),
+            material: gfx_material.clone(),
+            sprite_size,
+        },
+    );
+    Ok(handle)
+}
+
+/// Rebuild cached Gfx tilesets after the sheet asset changes (`sset`).
+pub(crate) fn refresh_tileset_arrays(
+    changed: &HashSet<AssetId<Gfx>>,
+    gfxs: &Assets<Gfx>,
+    images: &mut Assets<Image>,
+    palettes: &Palettes,
+    pairs: &mut GfxImageMap,
+    cache: &mut TilesetArrayMap,
+    image_events: &mut MessageWriter<AssetEvent<Image>>,
+) {
+    if changed.is_empty() {
+        return;
+    }
+    let pending: Vec<TilesetEntry> = cache
+        .gfx
+        .iter()
+        .filter(|((id, _), _)| changed.contains(id))
+        .map(|(_, entry)| entry.clone())
+        .collect();
+    for entry in pending {
+        if tileset_array_image(
+            &entry.gfx,
+            true,
+            &entry.material,
+            entry.sprite_size,
+            gfxs,
+            images,
+            palettes,
+            pairs,
+            cache,
+            image_events,
+        )
+        .is_err()
+        {
+            trace!("tileset array refresh failed for {}", entry.gfx.id());
+        }
+    }
+}
+
+/// Stack an already-RGBA sprite sheet. Cached by the source image id.
+pub(crate) fn image_tileset_array(
+    image_handle: &Handle<Image>,
+    sprite_size: UVec2,
+    images: &mut Assets<Image>,
+    cache: &mut TilesetArrayMap,
+    image_events: &mut MessageWriter<AssetEvent<Image>>,
+) -> Result<Handle<Image>, Error> {
+    let id = image_handle.id();
+    if let Some(handle) = cache.images.get(&id) {
+        return Ok(handle.clone());
+    }
+    let array = stacked_tileset(
+        images
+            .get(id)
+            .ok_or(Error::NoAsset("sprite sheet image".into()))?,
+        sprite_size,
+    )?;
+    let handle = images.add(array);
+    image_events.write(AssetEvent::Added { id: handle.id() });
+    cache.images.insert(id, handle.clone());
+    Ok(handle)
 }
 
 fn lut_image(pal_map: &PalMap, images: &mut Assets<Image>, cache: &mut PalMapLutCache) -> Handle<Image> {
@@ -229,14 +396,7 @@ pub(crate) fn compute_image(
     if gfx_material.palette >= palettes.len() {
         return Err(Error::NoSuch("palette".into()));
     }
-    let mut hasher = DefaultHasher::new();
-    gfx_material.pal_map.hash(&mut hasher);
-    gfx_material.palette.hash(&mut hasher);
-    // let drawing = &state.draw_state;
-    // drawing.fill_pat.inspect(|fill_pat| {
-    //     fill_pat.hash(&mut hasher);
-    // });
-    let hash = hasher.finish();
+    let hash = baked_image_hash(gfx_material);
     let gfx_id = gfx_handle.id();
     let palette = palettes.get_pal(gfx_material.palette)?;
     let palette_data: Vec<[u8; 4]> = if let Some(palette_image) = images.get(&palette.image) {

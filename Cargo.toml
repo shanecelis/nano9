@@ -34,12 +34,12 @@ bevy_mod_scripting = { version = "0.21", features = ["core_functions"], default-
 bevy_mod_scripting_luars = { version = "0.1", optional = true }
 bytemuck = "1.16.3"
 thiserror = "1.0.63"
-bevy_minibuffer = { version = "0.7", optional = true }
-bevy_minibuffer_inspector = { version = "0.5", optional = true }
-bevy_egui = { version = "0.40", optional = true }
-keyseq = { version = "0.9.0", features = ["bevy"], optional = true }
+bevy_minibuffer = { version = "0.8", optional = true }
+bevy_minibuffer_inspector = { version = "0.6", optional = true }
+bevy_egui = { version = "0.42", optional = true }
+keyseq = { version = "0.10.0", features = ["bevy"], optional = true }
 serde = { version = "1.0.228", features = ["derive"] }
-bevy_ecs_tilemap = "0.19"
+bevy_ecs_tilemap = { version = "0.19", optional = true }
 dasp = { version = "0.11.0", features = ["all"] }
 nano9_raster = { version = "0.1.0", features = ["circle", "ellipse", "fill", "inclusive", "round-rect"] }
 rand = { version = "0.10", optional = true }
@@ -80,7 +80,7 @@ lua-lib = [ "rust-lib", "pico8-to-lua", "scripting", "rand", "framepace", "vox" 
 lua-lib-wasm = [ "fixed-point", "rand", "pico8-to-lua", "scripting" ]
 rust-lib = [ "fixed-point", "rand", "framepace", "vox" ]
 inspector = [ "minibuffer", "dep:bevy_minibuffer_inspector", "dep:bevy_egui" ]
-minibuffer = [ "dep:bevy_minibuffer", "dep:keyseq" ]
+minibuffer = [ "dep:bevy_minibuffer", "dep:keyseq", "bevy/render_dev_tools" ]
 debugdump = [ "dep:bevy_mod_debugdump" ]
 pico8-to-lua = [ "dep:pico8-to-lua" ]
 fixed-point = [ "dep:fixed" ]
@@ -99,7 +99,7 @@ vox = [ "dep:bevy_vox_scene" ]
 # level = [ "dep:bevy_ecs_tiled", "dep:serde_json", "bevy_ecs_tiled/user_properties" ]
 user_properties = [ "bevy_ecs_tiled/user_properties" ]
 # level = [ "dep:bevy_ecs_tiled", "dep:serde_json" ]
-level = [ "dep:bevy_ecs_tiled", "dep:serde_json", "dep:futures-lite", "tiled", "scripting" ]
+level = [ "dep:bevy_ecs_tiled", "dep:bevy_ecs_tilemap", "dep:serde_json", "dep:futures-lite", "tiled", "scripting" ]
 web = [ "lua-lib-wasm" ]
 dev-tools = []
 
@@ -158,6 +158,8 @@ bevy_ecs_tiled = { path = "../bevy_ecs_tiled" }
 bevy_mod_debugdump = { path = "../bevy_mod_debugdump" }
 # bobtail = { path = "../bobtail" }
 bevy_minibuffer = { path = "../bevy_minibuffer" }
+bevy_egui = { path = "../bevy_egui" }
+bevy-inspector-egui = { path = "../bevy-inspector-egui/crates/bevy-inspector-egui" }
 bevy = { path = "../bevy" }
 # Patching the `bevy` facade does not replace `bevy_ecs` and the other crates.
 bevy-settings = { path = "../bevy/crates/bevy_settings" }

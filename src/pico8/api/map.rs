@@ -70,9 +70,9 @@ impl super::Pico8<'_, '_> {
         trace!("map");
         let map_index = map_index.unwrap_or(0);
         screen_start = self.state.draw_state.apply_camera_delta(screen_start);
-        if self.defaults.negate_y {
-            screen_start.y = -screen_start.y;
-        }
+        // if self.defaults.negate_y {
+        //     screen_start.y = -screen_start.y;
+        // }
         let hash = {
             let mut hasher = FixedHasher.build_hasher();
             "map".hash(&mut hasher);

@@ -1,32 +1,17 @@
-use crate::pico8::{
-    self, Error, Gfx, GfxMaterial, Pico8Asset, Pico8Handle, SprHandle, SpriteSheet,
-};
+use crate::pico8::{self, Error, Gfx, GfxMaterial, Pico8Asset, Pico8Handle, SprHandle, SpriteSheet};
 use bevy::asset::AssetEventSystems;
-use bevy::platform::collections::{HashMap, HashSet};
+use bevy::platform::collections::HashSet;
 use bevy::prelude::*;
+use bevy::sprite_render::{AlphaMode2d, TileData, TilemapChunk, TilemapChunkTileData};
 
 #[cfg(feature = "level")]
 use crate::level;
-use bevy_ecs_tilemap::prelude::*;
 
 #[derive(Clone, Debug, Reflect)]
 pub enum SpriteMap {
     P8(Handle<P8Map>),
     #[cfg(feature = "level")]
     Level(level::Tiled),
-}
-#[derive(Component, Reflect)]
-pub struct GfxTilemapTexture {
-    image: Handle<Gfx>,
-    material: Handle<GfxMaterial>,
-}
-
-impl SpriteMap {
-    // pub fn entries(&self) -> &[u8] {
-    //     match self {
-    //         SpriteMap::P8(p8map) => &p8map.entries,
-    //     }
-    // }
 }
 
 #[derive(Clone, Debug, Deref, DerefMut, Reflect, Asset)]
@@ -35,22 +20,15 @@ pub struct P8Map {
     pub entries: Vec<u8>,
 }
 
+/// Set once the chunk child exists, so a sheet that is still loading can retry next frame.
+#[derive(Component)]
+struct MapChunkSpawned;
+
 pub(crate) fn plugin(app: &mut App) {
-    app
-        //.register_type::<GfxTilemapTexture>()
-        //.register_type::<P8SpriteMap>()
-        .init_asset::<P8Map>()
-        .add_systems(
-            PostUpdate,
-            (
-                add_tilemaps,
-                compute_gfx_tilemap_texture_on_asset_event
-                    .after(add_tilemaps)
-                    .after(AssetEventSystems),
-                compute_image_on_gfx_tilemap_texture_change
-                    .after(compute_gfx_tilemap_texture_on_asset_event),
-            ),
-        );
+    app.init_asset::<P8Map>().add_systems(
+        PostUpdate,
+        add_tilemap_chunks.after(AssetEventSystems),
+    );
 }
 
 impl From<Handle<P8Map>> for SpriteMap {
@@ -62,7 +40,6 @@ impl From<Handle<P8Map>> for SpriteMap {
 /// This will add the tilemap when it is added to the scene.
 #[derive(Component, Reflect)]
 pub struct P8SpriteMap {
-    // TODO: This should really be a Handle<P8Map>.
     pub map_index: usize,
     pub sprite_sheet: Handle<pico8::SpriteSheet>,
     pub gfx_material: Handle<pico8::GfxMaterial>,
@@ -70,340 +47,199 @@ pub struct P8SpriteMap {
     pub mask: Option<u8>,
 }
 
-// Informed from Bevy's Sprite::compute_slices_on_asset_event.
-#[allow(clippy::too_many_arguments)]
-fn compute_gfx_tilemap_texture_on_asset_event(
+fn add_tilemap_chunks(
     mut commands: Commands,
-    mut events: MessageReader<AssetEvent<Gfx>>,
-    mut images: ResMut<Assets<Image>>,
-    gfxs: Res<Assets<Gfx>>,
-    gfx_materials: Res<Assets<GfxMaterial>>,
-    mut textures: Query<(Entity, &GfxTilemapTexture, Option<&mut TilemapTexture>)>,
-    mut pairs: ResMut<pico8::GfxImageMap>,
-    mut update_images: Local<HashMap<Entity, Handle<Image>>>,
-    mut update_ids: Local<Vec<Entity>>,
-    pico8_handle: Option<Res<Pico8Handle>>,
-    pico8_assets: Res<Assets<Pico8Asset>>,
-    mut image_events: MessageWriter<AssetEvent<Image>>,
-) {
-    let Some(pico8_handle) = pico8_handle else {
-        return;
-    };
-    // We store the asset ids of added/modified image assets.
-    let added_handles: HashSet<_> = events
-        .read()
-        .filter_map(|e| match e {
-            AssetEvent::Added { id } | AssetEvent::Modified { id } => Some(*id),
-            AssetEvent::Removed { id } => {
-                pairs.remove(id);
-                None
-            }
-            _ => None,
-        })
-        .collect();
-    if added_handles.is_empty() {
-        return;
-    }
-    for (id, gfx_sprite, sprite) in &textures {
-        if !added_handles.contains(&gfx_sprite.image.id()) {
-            continue;
-        }
-        let Some(gfx_material) = gfx_materials.get(&gfx_sprite.material) else {
-            continue;
-        };
-        let Some(pico8_asset) = pico8_assets.get(&pico8_handle.handle) else {
-            warn!("No pico8 asset setup for gfx.");
-            return;
-        };
-        let image_handle = crate::pico8::gfx::compute_image(
-            &gfx_sprite.image,
-            true,
-            gfx_material,
-            &gfxs,
-            &mut images,
-            &pico8_asset.palettes,
-            &mut pairs,
-            &mut image_events,
-        );
-        match image_handle {
-            Ok(image) => {
-                match sprite {
-                    Some(tilemap_texture) => {
-                        match tilemap_texture {
-                            TilemapTexture::Single(handle) if *handle != image => {
-                                // trace!("updating existant sprite on {}", id);
-                                update_ids.push(id);
-                                update_images.insert(id, image);
-                            }
-                            _ => {}
-                        }
-                    }
-                    None => {
-                        // trace!("inserting new sprite into {}", id);
-                        commands.entity(id).insert(TilemapTexture::Single(image));
-                    }
-                }
-            }
-            Err(e) => {
-                warn!("Unable to update gfx {}: {e}", gfx_sprite.image.id());
-            }
-        }
-    }
-    // Try not to trigger a sprite change if we don't have to.
-    let mut iter = textures.iter_many_mut(update_ids.iter()).matched();
-    while let Some((id, _, tilemap_texture)) = iter.fetch_next() {
-        match tilemap_texture {
-            Some(mut tilemap_texture) => {
-                let Some(image) = update_images.remove(&id) else {
-                    continue;
-                };
-                *tilemap_texture = TilemapTexture::Single(image);
-            }
-            _ => unreachable!(),
-        }
-    }
-    if !update_images.is_empty() {
-        warn!("Had {} leftover gfx update images.", update_images.len());
-    }
-    update_ids.clear();
-    update_images.clear();
-}
-
-#[allow(clippy::too_many_arguments)]
-fn compute_image_on_gfx_tilemap_texture_change(
-    mut commands: Commands,
-    mut images: ResMut<Assets<Image>>,
-    gfxs: Res<Assets<Gfx>>,
-    gfx_materials: Res<Assets<GfxMaterial>>,
-    mut sprites: Query<
-        (Entity, &GfxTilemapTexture, Option<&mut TilemapTexture>),
-        Changed<GfxTilemapTexture>,
-    >,
-    mut pairs: ResMut<pico8::GfxImageMap>,
-    pico8_handle: Option<Res<Pico8Handle>>,
-    pico8_assets: Res<Assets<Pico8Asset>>,
-    mut image_events: MessageWriter<AssetEvent<Image>>,
-) {
-    let Some(pico8_handle) = pico8_handle else {
-        return;
-    };
-    for (id, gfx_sprite, sprite) in &mut sprites {
-        let Some(gfx_material) = gfx_materials.get(&gfx_sprite.material) else {
-            continue;
-        };
-        let Some(pico8_asset) = pico8_assets.get(&pico8_handle.handle) else {
-            warn!("No pico8 asset on gfx change.");
-            return;
-        };
-        let image_handle = crate::pico8::gfx::compute_image(
-            &gfx_sprite.image,
-            false,
-            gfx_material,
-            &gfxs,
-            &mut images,
-            &pico8_asset.palettes,
-            &mut pairs,
-            &mut image_events,
-        );
-        match image_handle {
-            Ok(image) => match sprite {
-                Some(mut tilemap_texture) => {
-                    trace!("updating existant tilemap texture on {}", id);
-                    *tilemap_texture = TilemapTexture::Single(image);
-                }
-                None => {
-                    trace!("inserting new tilemap texture into {}", id);
-                    commands.entity(id).insert(TilemapTexture::Single(image));
-                }
-            },
-            Err(e) => {
-                warn!("Unable to update gfx {}: {e}", gfx_sprite.image.id());
-            }
-        }
-    }
-}
-
-fn add_tilemaps(
-    query: Query<(Entity, &P8SpriteMap), Added<P8SpriteMap>>,
+    query: Query<(Entity, &P8SpriteMap), Without<MapChunkSpawned>>,
+    mut gfx_events: MessageReader<AssetEvent<Gfx>>,
     sprite_sheets: Res<Assets<SpriteSheet>>,
-    pico8_asset: Res<Assets<pico8::Pico8Asset>>,
-    pico8_handle: Option<Res<pico8::Pico8Handle>>,
-    p8_maps: Res<Assets<pico8::P8Map>>,
-    mut commands: Commands,
+    pico8_assets: Res<Assets<Pico8Asset>>,
+    pico8_handle: Option<Res<Pico8Handle>>,
+    p8_maps: Res<Assets<P8Map>>,
+    gfxs: Res<Assets<Gfx>>,
+    gfx_materials: Res<Assets<GfxMaterial>>,
+    mut images: ResMut<Assets<Image>>,
+    mut pairs: ResMut<pico8::GfxImageMap>,
+    mut tilesets: ResMut<pico8::gfx::TilesetArrayMap>,
+    mut image_events: MessageWriter<AssetEvent<Image>>,
 ) {
     let Some(pico8_handle) = pico8_handle else {
         return;
     };
-    let mut p8map_maybe: Option<&SpriteMap> = None;
-    for (id, p8sprite_map) in &query {
-        let size = p8sprite_map.rect.size();
-        let map_size = TilemapSize::from(size);
-        let mut tile_storage = TileStorage::empty(map_size);
-        let tilemap_entity = commands.spawn_empty().id();
-        if p8map_maybe.is_none() {
-            match pico8_asset
-                .get(&pico8_handle.handle)
-                .ok_or(Error::NoSuch("pico8_asset".into()))
-                .and_then(|asset| asset.sprite_map(Some(p8sprite_map.map_index)))
-            {
-                Ok(x) => p8map_maybe = Some(x),
-                Err(e) => {
-                    warn!("Could not get map: {e}");
-                    continue;
-                }
+    let Some(pico8_asset) = pico8_assets.get(&pico8_handle.handle) else {
+        return;
+    };
+    let mut changed_gfx = HashSet::new();
+    for event in gfx_events.read() {
+        match event {
+            AssetEvent::Added { id } | AssetEvent::Modified { id } => {
+                changed_gfx.insert(*id);
             }
+            AssetEvent::Removed { id } => {
+                tilesets.remove_gfx(*id);
+            }
+            _ => {}
         }
-        let p8map: &SpriteMap = p8map_maybe.unwrap();
+    }
+    pico8::gfx::refresh_tileset_arrays(
+        &changed_gfx,
+        &gfxs,
+        &mut images,
+        &pico8_asset.palettes,
+        &mut pairs,
+        &mut tilesets,
+        &mut image_events,
+    );
+
+    for (id, p8sprite_map) in &query {
         let Some(sprite_sheet) = sprite_sheets.get(&p8sprite_map.sprite_sheet) else {
-            warn!("Could not get sprite_sheet for map");
+            trace!("sprite sheet for map is not loaded");
+            continue;
+        };
+        let map_pos = p8sprite_map.rect.min;
+        let chunk_size = p8sprite_map.rect.size();
+        if chunk_size.x == 0 || chunk_size.y == 0 {
+            commands.entity(id).insert(MapChunkSpawned);
+            continue;
+        }
+        let Some(sprite_map) = pico8_asset.maps.get(p8sprite_map.map_index) else {
+            trace!("no sprite map at index {}", p8sprite_map.map_index);
+            continue;
+        };
+        let map_handle = match sprite_map {
+            SpriteMap::P8(handle) => handle,
+            #[cfg(feature = "level")]
+            SpriteMap::Level(_) => {
+                commands.entity(id).insert(MapChunkSpawned);
+                continue;
+            }
+        };
+        let Some(map_asset) = p8_maps.get(map_handle) else {
+            trace!("p8 map asset is not loaded");
             continue;
         };
 
-        let map_pos = p8sprite_map.rect.min;
-        // let map_entity = commands
-        //     .spawn((
-        //         Name::new("map"),
-        //         Transform::from_translation(screen_start.extend(clearable.suggest_z())),
-        //         Visibility::Inherited,
-        //         clearable,
-        //     ))
-        //     .id();
-        let mask = p8sprite_map.mask;
-        commands
-            .entity(tilemap_entity)
-            .with_children(|builder| {
-                for x in 0..map_size.x {
-                    for y in 0..map_size.y {
-                        let entries = match p8map {
-                            #[cfg(feature = "level")]
-                            SpriteMap::Level(_) => {
-                                todo!();
-                                // TODO: Handle TiledMap
-                                return;
-                            }
-                            SpriteMap::P8(handle) => {
-                                let Some(p8map_asset) = p8_maps.get(handle) else {
-                                    warn!("Unable to get p8 map");
-                                    continue;
-                                };
-                                &p8map_asset.entries
-                            }
-                        };
-                        let texture_index = entries
-                            .get((map_pos.x + x + (map_pos.y + y) * pico8::MAP_COLUMNS) as usize)
-                            .and_then(|index| {
-                                if let Some(mask) = mask {
-                                    sprite_sheet
-                                        .flags
-                                        .get(*index as usize)
-                                        .map(|flags| flags & mask == mask)
-                                        .unwrap_or(true)
-                                        .then_some(index)
-                                } else {
-                                    Some(index)
-                                }
-                            })
-                            .copied()
-                            .unwrap_or(0);
-                        if texture_index != 0 {
-                            let tile_pos = TilePos {
-                                x,
-                                y: map_size.y - y - 1,
-                            };
-                            let tile_entity = builder
-                                .spawn((TileBundle {
-                                    position: tile_pos,
-                                    tilemap_id: TilemapId(tilemap_entity),
-                                    texture_index: TileTextureIndex(texture_index as u32),
-                                    ..Default::default()
-                                },))
-                                .id();
-                            tile_storage.set(&tile_pos, tile_entity);
-                        }
-                    }
-                }
-            })
-            .insert(ChildOf(id));
+        let gfx_changed = match &sprite_sheet.handle {
+            SprHandle::Gfx(handle) => changed_gfx.contains(&handle.id()),
+            SprHandle::Image(_) => false,
+        };
+        let tileset = match tileset_handle(
+            sprite_sheet,
+            &p8sprite_map.gfx_material,
+            gfx_changed,
+            &gfxs,
+            &gfx_materials,
+            &mut images,
+            &pico8_asset.palettes,
+            &mut pairs,
+            &mut tilesets,
+            &mut image_events,
+        ) {
+            Ok(tileset) => tileset,
+            Err(err) => {
+                trace!("map tileset not ready: {err}");
+                continue;
+            }
+        };
 
-        let tile_size: TilemapTileSize = sprite_sheet.sprite_size.as_vec2().into();
-        let grid_size = tile_size.into();
-        let map_type = TilemapType::default();
-        let transform = get_tilemap_top_left_transform(&map_size, &grid_size, &map_type, 0.0);
-        let mut gfx_handle = None;
-
-        commands.entity(tilemap_entity).insert(TilemapBundle {
-            grid_size,
-            map_type,
-            size: map_size,
-            storage: tile_storage,
-            texture: TilemapTexture::Single(match &sprite_sheet.handle {
-                SprHandle::Image(handle) => handle.clone(),
-                SprHandle::Gfx(handle) => {
-                    gfx_handle = Some(handle.clone());
-                    Handle::default()
-                    // gfx_to_image(handle)?,
-                }
-            }),
-            tile_size,
-            transform,
-            ..Default::default()
+        let tile_data = tile_data_from_entries(
+            chunk_size,
+            map_pos,
+            &map_asset.entries,
+            p8sprite_map.mask,
+            &sprite_sheet.flags,
+        );
+        let tile_size = sprite_sheet.sprite_size;
+        let pixel_size = chunk_size * tile_size;
+        commands.entity(id).with_children(|parent| {
+            parent.spawn((
+                Name::new("map-chunk"),
+                Transform::from_xyz(
+                    pixel_size.x as f32 / 2.0,
+                    -(pixel_size.y as f32) / 2.0,
+                    0.0,
+                ),
+                Visibility::Inherited,
+                TilemapChunk {
+                    chunk_size,
+                    tile_display_size: tile_size,
+                    tileset,
+                    alpha_mode: AlphaMode2d::Blend,
+                },
+                TilemapChunkTileData::from_y_down_tiles(chunk_size, tile_data),
+            ));
         });
-        if let Some(gfx_handle) = gfx_handle {
-            let material = p8sprite_map.gfx_material.clone();
-            commands.entity(tilemap_entity).insert(GfxTilemapTexture {
-                image: gfx_handle,
-                material,
-            });
-        }
-        //     if let Some(gfx_handle) = gfx_handle {
-        //         commands.queue(move |world: &mut World| {
-        //             // let gfx_material = world.resource::<pico8::Pico8State>().gfx_material();
-        //             // match world.run_system_cached_with(pico8::gfx::compute_image_sys, gfx_handle) {
-        //             match world.run_system_cached_with(
-        //                 pico8::gfx::compute_image_sys,
-        //                 pico8::GfxSprite {
-        //                     image: gfx_handle,
-        //                     material: p8sprite_map.gfx_material.clone(),
-        //                 },
-        //             ) {
-        //                 Ok(result) => match result {
-        //                     Ok(image_handle) => {
-        //                         world
-        //                             .entity_mut(tilemap_entity)
-        //                             .insert(TilemapTexture::Single(image_handle));
-        //                     }
-        //                     Err(e) => {
-        //                         error!(
-        //                             "Unable to create sprite from gfx for tilemap {}",
-        //                             tilemap_entity
-        //                         );
-        //                     }
-        //                 },
-        //                 Err(e) => {
-        //                     error!(
-        //                         "Unable to run system to create sprite from gfx for tilemap {}",
-        //                         tilemap_entity
-        //                     );
-        //                 }
-        //             }
-        //         })
-        //     }
+        commands.entity(id).insert(MapChunkSpawned);
     }
 }
 
-// TODO: Add a P8Map, then have a system construct the tilemap, not this junk.
+fn tile_data_from_entries(
+    chunk_size: UVec2,
+    map_pos: UVec2,
+    entries: &[u8],
+    mask: Option<u8>,
+    flags: &[u8],
+) -> Vec<Option<TileData>> {
+    let mut data = Vec::with_capacity((chunk_size.x * chunk_size.y) as usize);
+    for y in 0..chunk_size.y {
+        for x in 0..chunk_size.x {
+            let index = entries
+                .get((map_pos.x + x + (map_pos.y + y) * pico8::MAP_COLUMNS) as usize)
+                .copied()
+                .unwrap_or(0);
+            let passes_mask = mask.is_none_or(|mask| {
+                flags
+                    .get(index as usize)
+                    .is_none_or(|sprite_flags| sprite_flags & mask == mask)
+            });
+            if index != 0 && passes_mask {
+                data.push(Some(TileData::from_tileset_index(index as u16)));
+            } else {
+                data.push(None);
+            }
+        }
+    }
+    data
+}
 
-/// Calculates a [`Transform`] for a tilemap that places it so that its center is at
-/// `(0.0, 0.0, 0.0)` in world space.
-pub(crate) fn get_tilemap_top_left_transform(
-    size: &TilemapSize,
-    grid_size: &TilemapGridSize,
-    map_type: &TilemapType,
-    z: f32,
-) -> Transform {
-    assert_eq!(map_type, &TilemapType::Square);
-    let y = size.y as f32 * grid_size.y;
-    Transform::from_xyz(grid_size.x / 2.0, -y + grid_size.y / 2.0, z)
+#[allow(clippy::too_many_arguments)]
+fn tileset_handle(
+    sprite_sheet: &SpriteSheet,
+    gfx_material_handle: &Handle<GfxMaterial>,
+    gfx_changed: bool,
+    gfxs: &Assets<Gfx>,
+    gfx_materials: &Assets<GfxMaterial>,
+    images: &mut Assets<Image>,
+    palettes: &pico8::Palettes,
+    pairs: &mut pico8::GfxImageMap,
+    tilesets: &mut pico8::gfx::TilesetArrayMap,
+    image_events: &mut MessageWriter<AssetEvent<Image>>,
+) -> Result<Handle<Image>, Error> {
+    match &sprite_sheet.handle {
+        SprHandle::Gfx(handle) => {
+            let gfx_material = gfx_materials
+                .get(gfx_material_handle)
+                .ok_or(Error::NoSuch("gfx material".into()))?;
+            pico8::gfx::tileset_array_image(
+                handle,
+                gfx_changed,
+                gfx_material,
+                sprite_sheet.sprite_size,
+                gfxs,
+                images,
+                palettes,
+                pairs,
+                tilesets,
+                image_events,
+            )
+        }
+        SprHandle::Image(handle) => pico8::gfx::image_tileset_array(
+            handle,
+            sprite_sheet.sprite_size,
+            images,
+            tilesets,
+            image_events,
+        ),
+    }
 }
 
 #[cfg(feature = "level")]

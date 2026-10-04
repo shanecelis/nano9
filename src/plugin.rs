@@ -447,10 +447,6 @@ impl Plugin for Nano9Plugin {
                     .run_if(in_state(RunState::Run)),
             );
         }
-        // bevy_ecs_ldtk will add this plugin, so let's not add that if it's
-        // present.
-        #[cfg(not(feature = "level"))]
-        app.add_plugins(bevy_ecs_tilemap::TilemapPlugin);
     }
 }
 

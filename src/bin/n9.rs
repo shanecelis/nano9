@@ -630,7 +630,7 @@ fn run(cli: Cli) -> io::Result<ExitCode> {
     app.add_systems(Startup, |reg: Res<AppTypeRegistry>| {
         bevy_ecs_tiled::map::export_types(&reg, "all-export-types.json", |name| true);
         bevy_ecs_tiled::map::export_types(&reg, "export-types.json", |name| {
-            name.contains("bevy_ecs_tilemap::tiles") || name.contains("nano9")
+            name.contains("nano9")
         });
     });
     let app_exit = if !check {
