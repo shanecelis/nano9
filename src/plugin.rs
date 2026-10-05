@@ -42,8 +42,6 @@ pub struct DrawState {
     pub print_cursor: Vec2,
     pub fill_pat: Option<FillPat>,
     pub is_clear: bool,
-    /// Palette index from the last `cls`. `pget` returns this for pixels `pset` never wrote.
-    pub cls_color: usize,
 }
 
 impl DrawState {
@@ -84,7 +82,6 @@ impl Default for DrawState {
             camera_position_delta: None,
             fill_pat: None,
             is_clear: true,
-            cls_color: 0,
         }
     }
 }
