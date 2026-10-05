@@ -39,9 +39,12 @@ bobtail::define! {
     #[doc(hidden)]
     pub __cls => fn cls(&mut self, #[tail] color: Option<PColor>) -> Result<(), Error>;
     #[doc(hidden)]
+    pub __pget => fn pget(&self, x: f32, y: f32) -> usize;
+    #[doc(hidden)]
     pub __pset => fn pset(&mut self, pos: UVec2, #[tail] color: Option<PColor>) -> Result<(), Error>;
 }
 pub use __cls as cls;
+pub use __pget as pget;
 pub use __pset as pset;
 
 pub(crate) fn plugin(app: &mut App) {
@@ -260,6 +263,27 @@ pub fn sync_window_size(
     *pending = false;
 }
 
+/// Floor a Pico-8 coordinate. Non-finite or out-of-`i32` values are out of range.
+fn floor_pixel(x: f32, y: f32) -> Option<(u32, u32)> {
+    let x = floor_coord(x)?;
+    let y = floor_coord(y)?;
+    if x < 0 || y < 0 {
+        return None;
+    }
+    Some((x as u32, y as u32))
+}
+
+fn floor_coord(value: f32) -> Option<i32> {
+    if !value.is_finite() {
+        return None;
+    }
+    let floored = value.floor();
+    if floored < i32::MIN as f32 || floored > i32::MAX as f32 {
+        return None;
+    }
+    Some(floored as i32)
+}
+
 impl super::Pico8<'_, '_> {
     // cls([n])
     pub fn cls(&mut self, color: Option<PColor>) -> Result<(), Error> {
@@ -398,8 +422,47 @@ impl super::Pico8<'_, '_> {
             .map_err(|_| Error::NoAsset("pixel canvas gfx".into()))
     }
 
-    // XXX: pget needed
-    // pub fn pget()
+    /// Color index at a screen pixel.
+    ///
+    /// Reads the pixel canvas `pset` writes. Pixels never written return the
+    /// last `cls` color. Out of range returns 0. Sprites, rects, maps, and
+    /// print are not in that buffer.
+    pub fn pget(&self, x: f32, y: f32) -> usize {
+        let Some((x, y)) = floor_pixel(x, y) else {
+            return 0;
+        };
+        if x >= self.canvas.size.x || y >= self.canvas.size.y {
+            return 0;
+        }
+        let cls = self.state.draw_state.cls_color;
+        let Some(entity) = self.latest_visible_pixel_canvas() else {
+            return cls;
+        };
+        let Ok(sprite) = self.gfx_sprites.get(entity) else {
+            return cls;
+        };
+        let Some(gfx) = self.gfxs.get(&sprite.image) else {
+            return cls;
+        };
+        let x = x as usize;
+        let y = y as usize;
+        if !gfx.occupied(x, y) {
+            return cls;
+        }
+        gfx.get(x, y).map(|color| color as usize).unwrap_or(0)
+    }
+
+    fn latest_visible_pixel_canvas(&self) -> Option<Entity> {
+        let mut latest: Option<(Entity, usize)> = None;
+        for (entity, clearable, _) in self.pixel_canvases.iter() {
+            if matches!(clearable.state, ClearState::Visible)
+                && latest.is_none_or(|(_, draw_count)| clearable.draw_count >= draw_count)
+            {
+                latest = Some((entity, clearable.draw_count));
+            }
+        }
+        latest.map(|(entity, _)| entity)
+    }
 
     /// Return the size of the canvas
     ///
@@ -426,6 +489,9 @@ mod lua {
         NamespaceBuilder::<GlobalNamespace>::new_unregistered(world)
             .register("cls", |ctx: FunctionCallContext, c: Option<PColor>| {
                 with_pico8(&ctx, |pico8| pico8.cls(c))
+            })
+            .register("pget", |ctx: FunctionCallContext, x: f32, y: f32| {
+                with_pico8(&ctx, |pico8| Ok(pico8.pget(x, y)))
             })
             .register(
                 "pset",

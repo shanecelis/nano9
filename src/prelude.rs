@@ -7,7 +7,8 @@ pub use super::{
 
 // Bobtail macros (Pico-8 style)
 pub use crate::pico8::{
-    btn, btnp, camera, canvas::cls, canvas::pset, circ, circfill, color, fget, fillp, fset, line,
+    btn, btnp, camera, canvas::cls, canvas::pget, canvas::pset, circ, circfill, color, fget, fillp,
+    fset, line,
     map, mget, mset, music, oval, ovalfill, pal, palm, paln, palt, print::cursor, print::print,
     rect, rectfill, rrect, rrectfill, sfx, sget, spr, sset, sspr,
 };

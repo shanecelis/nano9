@@ -25,7 +25,7 @@ Parameters shown in italics are extensions to the Pico-8 API.
 - [x] line(x0, y0, x1, y1, [col])
 - [x] pal([c0,] [c1,] [p])
 - [x] palt([c,] [t])
-- [ ] pget(x, y)
+- [x] pget(x, y)
 - [x] print(str, [x,] [y,] [col,] *[font_size]*)
 - [x] pset(x, y, [c])
 - [x] rect(x0, y0, x1, y1, [col])

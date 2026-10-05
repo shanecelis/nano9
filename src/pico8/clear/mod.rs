@@ -212,6 +212,9 @@ pub(crate) fn clear_screen(
         return;
     };
     state.draw_state.clear_screen();
+    if let PColor::Palette(index) = color {
+        state.draw_state.cls_color = index;
+    }
     // Clear the 1x1 background.
     let mut sprite = one_color.into_inner();
 

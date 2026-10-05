@@ -143,6 +143,15 @@ impl<T: TypePath + Send + Sync + Default + BitView<Store = T> + BitStore + Copy>
         }
     }
 
+    /// Whether a screen-canvas pixel was written. Sprite sheets have no occupancy.
+    pub fn occupied(&self, x: usize, y: usize) -> bool {
+        let Some(occupancy) = &self.occupancy else {
+            return false;
+        };
+        let i = x + y * self.width;
+        occupancy.get(i).is_some_and(|bit| *bit)
+    }
+
     /// Get a color index.
     pub fn get(&self, x: usize, y: usize) -> Option<T> {
         let n = self.bitdepth;
