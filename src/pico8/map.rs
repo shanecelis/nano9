@@ -186,10 +186,13 @@ fn tile_data_from_entries(
                 .get((map_pos.x + x + (map_pos.y + y) * pico8::MAP_COLUMNS) as usize)
                 .copied()
                 .unwrap_or(0);
+            // Pico-8: omitted or 0 draws every sprite. A non-zero mask draws a
+            // sprite when any of those flag bits is set.
             let passes_mask = mask.is_none_or(|mask| {
-                flags
-                    .get(index as usize)
-                    .is_none_or(|sprite_flags| sprite_flags & mask == mask)
+                mask == 0
+                    || flags
+                        .get(index as usize)
+                        .is_some_and(|sprite_flags| sprite_flags & mask != 0)
             });
             if index != 0 && passes_mask {
                 data.push(Some(TileData::from_tileset_index(index as u16)));
