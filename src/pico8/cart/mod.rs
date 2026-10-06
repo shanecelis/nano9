@@ -785,4 +785,30 @@ end"#
             .unwrap_or_default();
         assert_eq!(extension, "png");
     }
+
+    /// `btn(❎)` / `btnp(❎)` from the api and automata demos. luars rejects the
+    /// glyph unless translation rewrites it to button 5 before compile.
+    #[cfg(all(feature = "pico8-to-lua", feature = "scripting"))]
+    #[test]
+    fn x_button_glyph() {
+        use bevy_mod_scripting_luars::luars::{Lua, LuaApi, SafeOption};
+
+        const CART: &str = "\
+pico-8 cartridge // http://www.pico-8.com
+version 42
+__lua__
+if (btn(\u{274e})) then
+end
+if (l%16==0 or btnp(\u{274e})) then
+end
+";
+        let cart = Cart::from_str(CART, &CartLoaderSettings::default()).unwrap();
+        let patched = pico8_to_lua::patch_lua(cart.lua.as_str());
+        let mut lua = Lua::new(SafeOption::default());
+        let compiled = lua.load(&patched).into_function();
+        if let Err(err) = compiled {
+            let full = lua.get_error_message(err);
+            panic!("x button glyph did not compile: {full}");
+        }
+    }
 }
