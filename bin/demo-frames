@@ -1,0 +1,293 @@
+#!/usr/bin/env bash
+# Capture demo frames from Pico-8 and Nano-9 and print a pixel diff.
+#
+#   bin/demo-frames hello
+#   bin/demo-frames
+#
+# Writes carts/demos/frames/{pico8,nano9}/<name>/f01.png .. f60.png.
+# Pico-8 is skipped when that demo's f01.png .. f60.png are already present.
+# The hook is tests/demos/common.p8. It is copied twice into the temp cart
+# (common.p8 and common-draw.p8) because Pico-8 includes a path only once.
+# Missing frames fail the run. Pixel differences are reported and do not
+# fail the run: rnd, t(), and _update60 already diverge.
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "$0")/.." && pwd -P)"
+DEMOS="$ROOT/carts/demos"
+HOOK="$ROOT/tests/demos/common.p8"
+FRAMES="$DEMOS/frames"
+
+usage() {
+  echo "usage: $0 [demo ...]" >&2
+  echo "demos: api automata bounce cast collide dots3d drippy hello jelpi sort wander waves" >&2
+  exit 2
+}
+
+resolve_exe() {
+  local cmd="$1" path
+  if [[ "$cmd" == */* ]]; then
+    path="$cmd"
+  else
+    path="$(command -v "$cmd")" || return 1
+  fi
+  [[ -e "$path" ]] || return 1
+  while [[ -L "$path" ]]; do
+    local link dir
+    link="$(readlink "$path")"
+    dir="$(cd "$(dirname "$path")" && pwd -P)"
+    if [[ "$link" == /* ]]; then
+      path="$link"
+    else
+      path="$dir/$link"
+    fi
+  done
+  echo "$(cd "$(dirname "$path")" && pwd -P)/$(basename "$path")"
+}
+
+[[ -f "$HOOK" ]] || {
+  echo "error: missing $HOOK" >&2
+  exit 1
+}
+[[ -d "$DEMOS" ]] || {
+  echo "error: missing $DEMOS" >&2
+  exit 1
+}
+
+PICO8_BIN=""
+ensure_pico8() {
+  [[ -n "$PICO8_BIN" ]] && return 0
+  local cmd="${PICO8:-p8}"
+  if ! PICO8_BIN="$(resolve_exe "$cmd")"; then
+    echo "error: Pico-8 binary not found ($cmd). Set PICO8 or put p8 on PATH." >&2
+    exit 1
+  fi
+  if [[ "$PICO8_BIN" == *"/p8" ]] && [[ -x /Applications/PICO-8.app/Contents/MacOS/pico8 ]]; then
+    PICO8_BIN="/Applications/PICO-8.app/Contents/MacOS/pico8"
+  fi
+}
+
+have_frames() {
+  local out="$1" n shot
+  [[ -d "$out" ]] || return 1
+  for ((n = 1; n <= 60; n++)); do
+    printf -v shot 'f%02d.png' "$n"
+    [[ -f "$out/$shot" ]] || return 1
+  done
+}
+
+ALL=(api automata bounce cast collide dots3d drippy hello jelpi sort wander waves)
+if [[ $# -eq 0 ]]; then
+  names=("${ALL[@]}")
+else
+  names=()
+  for name in "$@"; do
+    case "$name" in
+      -h | --help) usage ;;
+      -*)
+        echo "error: unknown option $name" >&2
+        usage
+        ;;
+    esac
+    [[ -f "$DEMOS/$name.p8" ]] || {
+      echo "error: cart not found: $DEMOS/$name.p8" >&2
+      exit 1
+    }
+    names+=("$name")
+  done
+fi
+
+splice_cart() {
+  local src="$1" dest="$2"
+  python3 - "$src" "$dest" <<'PY'
+import pathlib, sys
+src, dest = sys.argv[1:]
+text = pathlib.Path(src).read_text()
+newline = "\r\n" if "\r\n" in text else "\n"
+lines = text.splitlines()
+lua = next((i for i, line in enumerate(lines) if line.strip() == "__lua__"), None)
+if lua is None:
+    raise SystemExit(f"no __lua__ in {src}")
+nxt = next((i for i in range(lua + 1, len(lines)) if lines[i].startswith("__")), None)
+lines.insert(lua + 1, "#include common.p8")
+if nxt is None:
+    lines.append("#include common-draw.p8")
+else:
+    lines.insert(nxt + 1, "#include common-draw.p8")
+pathlib.Path(dest).write_text(newline.join(lines) + newline)
+PY
+}
+
+kill_tree() {
+  local pid="$1" child
+  local children
+  children="$(pgrep -P "$pid" 2>/dev/null || true)"
+  for child in $children; do
+    kill_tree "$child"
+  done
+  kill "$pid" 2>/dev/null || true
+}
+
+# Wait until the command exits. If no f*.png has appeared after 20s, the cart
+# never drew (often a Lua parse error) and the wait stops. Otherwise allow the
+# full capture, which is about 30s at 30fps.
+run_for() {
+  local secs="$1" out="$2"
+  shift 2
+  "$@" &
+  local pid=$!
+  local i=0
+  local saw=0
+  while kill -0 "$pid" 2>/dev/null; do
+    if find "$out" -name 'f*.png' -print -quit 2>/dev/null | grep -q .; then
+      saw=1
+    fi
+    if (( saw == 0 && i >= 20 )); then
+      echo "error: no frames after ${i}s" >&2
+      kill_tree "$pid"
+      wait "$pid" 2>/dev/null || true
+      return 1
+    fi
+    if (( i >= secs )); then
+      echo "error: timed out after ${secs}s" >&2
+      kill_tree "$pid"
+      wait "$pid" 2>/dev/null || true
+      return 1
+    fi
+    sleep 1
+    i=$((i + 1))
+  done
+  wait "$pid" || true
+}
+
+run_pico8() {
+  local cart="$1" out="$2"
+  ensure_pico8
+  mkdir -p "$out"
+  find "$out" -name '*.png' -delete
+  local home
+  home="$(mktemp -d)"
+  echo "pico8 $cart"
+  run_for 480 "$out" "$PICO8_BIN" -x "$cart" -p headless -screenshot_scale 1 -windowed 1 \
+    -home "$home" -desktop "$out" -root_path "$out" || true
+  rm -rf "$home"
+  # Screenshots sometimes land next to the cart instead of -desktop.
+  local dir
+  dir="$(dirname "$cart")"
+  if [[ "$dir" != "$out" ]]; then
+    find "$dir" -maxdepth 1 -name 'f*.png' -exec mv {} "$out/" \;
+  fi
+}
+
+run_nano9() {
+  local cart="$1" out="$2"
+  mkdir -p "$out"
+  find "$out" -name '*.png' -delete
+  echo "nano9 $cart"
+  run_for 480 "$out" bash -c \
+    'cd "$1" && unset CARGO_TARGET_DIR && NANO9_SCREENSHOT_DIR="$2" cargo n9 run --headless -p headless "$3"' \
+    bash "$ROOT" "$out" "$cart" || true
+}
+
+compare_demo() {
+  local name="$1"
+  python3 - "$name" "$FRAMES/pico8/$name" "$FRAMES/nano9/$name" <<'PY'
+import subprocess, sys
+from pathlib import Path
+
+name, pico_dir, nano_dir = sys.argv[1:]
+pico_dir = Path(pico_dir)
+nano_dir = Path(nano_dir)
+
+def rgb(path: Path):
+    ident = subprocess.check_output(
+        ["magick", "identify", "-format", "%w %h", str(path)], text=True
+    ).split()
+    w, h = int(ident[0]), int(ident[1])
+    raw = subprocess.check_output(["magick", str(path), "rgb:-"])
+    return w, h, raw
+
+missing = 0
+compared = 0
+changed_sum = 0
+pixel_sum = 0
+worst = None
+for n in range(1, 61):
+    shot = f"f{n:02d}.png"
+    pico = pico_dir / shot
+    nano = nano_dir / shot
+    if not pico.exists() or not nano.exists():
+        which = []
+        if not pico.exists():
+            which.append("pico8")
+        if not nano.exists():
+            which.append("nano9")
+        print(f"{name} {shot[:-4]}  missing {', '.join(which)}")
+        missing += 1
+        continue
+    pw, ph, praw = rgb(pico)
+    nw, nh, nraw = rgb(nano)
+    if (pw, ph) != (nw, nh) or len(praw) != len(nraw):
+        print(f"{name} {shot[:-4]}  size {pw}x{ph} vs {nw}x{nh}")
+        missing += 1
+        continue
+    changed = 0
+    for i in range(0, len(praw), 3):
+        if praw[i : i + 3] != nraw[i : i + 3]:
+            changed += 1
+    total = pw * ph
+    pct = 100.0 * changed / total if total else 0.0
+    print(f"{name} {shot[:-4]}  {changed}/{total} ({pct:.2f}%)")
+    compared += 1
+    changed_sum += changed
+    pixel_sum += total
+    if worst is None or changed > worst[0]:
+        worst = (changed, shot[:-4], pct)
+
+if compared and pixel_sum:
+    mean = 100.0 * changed_sum / pixel_sum
+    print(
+        f"{name}  {compared}/60  mean {mean:.2f}%  max {worst[1]} {worst[2]:.2f}%"
+    )
+else:
+    print(f"{name}  0/60")
+sys.exit(1 if missing else 0)
+PY
+}
+
+notes() {
+  cat <<'EOF'
+
+known reasons a demo can differ, besides drawing:
+  bounce: _update60 is never called
+  hello waves dots3d api cast: t() is wall-clock, and Pico-8 _update carts draw at 30fps
+  automata sort drippy jelpi bounce: rnd is not Pico-8's generator
+  all: Nano-9's extcmd("screen") captures the next _draw
+  wander collide cast drippy jelpi api: no buttons, idle path only
+  api automata bounce cast wander: a Pico-8 glyph is left in the source, so Nano-9 does not load the cart
+  drippy: pget is not defined
+  jelpi: loading the cart panics in the audio loader
+EOF
+}
+
+failed=0
+for name in "${names[@]}"; do
+  tmp="$(mktemp -d)"
+  cart="$tmp/$name.p8"
+  splice_cart "$DEMOS/$name.p8" "$cart"
+  cp "$HOOK" "$tmp/common.p8"
+  cp "$HOOK" "$tmp/common-draw.p8"
+  if have_frames "$FRAMES/pico8/$name"; then
+    echo "pico8 $name  frames present"
+  else
+    run_pico8 "$cart" "$FRAMES/pico8/$name"
+  fi
+  run_nano9 "$cart" "$FRAMES/nano9/$name"
+  rm -rf "$tmp"
+  if ! compare_demo "$name"; then
+    failed=1
+  fi
+  echo
+done
+
+notes
+exit "$failed"

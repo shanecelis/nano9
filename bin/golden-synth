@@ -1,0 +1,181 @@
+#!/usr/bin/env bash
+# Collect Pico-8 SFX editor exports as synth goldens.
+#
+# Headless `pico8 -export '*.wav'` writes silence. The interactive EXPORT
+# command renders the tracker. This script loads tests/golden/synth/synth.p8
+# at the Pico-8 prompt (does not run it) and waits for you to type:
+#
+#   EXPORT SYNTH%D.WAV
+#   SHUTDOWN
+#
+# Non-silent synth0.wav .. synth63.wav (and oscN.wav if present) are encoded
+# to tests/golden/synth/synth-NN-expected.ogg (Vorbis q4). Pico-8 still
+# writes WAV; only the .ogg files are kept.
+#
+# Playback-timing goldens (channels, loop, sequential sfx()) still use
+# bin/golden-pico8 with audio_rec.
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "$0")/.." && pwd -P)"
+CART="$ROOT/tests/golden/synth/synth.p8"
+OUT_DIR="$ROOT/tests/golden/synth"
+
+[[ -f "$CART" ]] || {
+  echo "error: cart not found: $CART" >&2
+  exit 1
+}
+
+# Follow symlinks so pico8.dat is found next to the real binary
+# ($HOME/bin/p8 -> PICO-8.app/Contents/MacOS/pico8).
+resolve_exe() {
+  local cmd="$1" path
+  if [[ "$cmd" == */* ]]; then
+    path="$cmd"
+  else
+    path="$(command -v "$cmd")" || return 1
+  fi
+  [[ -e "$path" ]] || return 1
+  while [[ -L "$path" ]]; do
+    local link dir
+    link="$(readlink "$path")"
+    dir="$(cd "$(dirname "$path")" && pwd -P)"
+    if [[ "$link" == /* ]]; then
+      path="$link"
+    else
+      path="$dir/$link"
+    fi
+  done
+  echo "$(cd "$(dirname "$path")" && pwd -P)/$(basename "$path")"
+}
+
+PICO8_CMD="${PICO8:-p8}"
+if ! PICO8_BIN="$(resolve_exe "$PICO8_CMD")"; then
+  echo "error: Pico-8 binary not found ($PICO8_CMD). Set PICO8 or put p8 on PATH." >&2
+  exit 1
+fi
+if [[ "$PICO8_BIN" == *"/p8" ]] && [[ -x /Applications/PICO-8.app/Contents/MacOS/pico8 ]]; then
+  PICO8_BIN="/Applications/PICO-8.app/Contents/MacOS/pico8"
+fi
+
+tmp="$(mktemp -d)"
+trap 'rm -rf "$tmp"' EXIT
+cp "$CART" "$tmp/synth.p8"
+
+echo "using $PICO8_BIN"
+echo
+echo "In the Pico-8 window, type:"
+echo
+echo "  EXPORT SYNTH%D.WAV"
+echo "  SHUTDOWN"
+echo
+echo "Waiting for synth63.wav under $tmp (up to 5 minutes)..."
+
+# cwd + -desktop/-root_path/-home all point at $tmp so EXPORT lands here
+# regardless of whether Pico-8 uses the host cwd or its virtual folder.
+# Also search next to the binary, but only files newer than this run, so a
+# leftover synth63.wav in PICO-8.app is ignored.
+cd "$tmp"
+touch "$tmp/.started"
+"$PICO8_BIN" -windowed 1 -volume 256 \
+  -home "$tmp" -root_path "$tmp" -desktop "$tmp" \
+  "$tmp/synth.p8" &
+pid=$!
+
+search_roots=("$tmp" "$(dirname "$PICO8_BIN")")
+found=""
+for _ in $(seq 1 300); do
+  for root in "${search_roots[@]}"; do
+    hit="$(find "$root" -iname 'synth63.wav' -newer "$tmp/.started" -print -quit 2>/dev/null || true)"
+    if [[ -n "$hit" ]]; then
+      found="$root"
+      break
+    fi
+  done
+  if [[ -n "$found" ]]; then
+    sleep 0.5
+    break
+  fi
+  if ! kill -0 "$pid" 2>/dev/null; then
+    break
+  fi
+  sleep 1
+done
+
+if [[ -z "$found" ]]; then
+  echo "error: timed out waiting for synth63.wav" >&2
+  for root in "${search_roots[@]}"; do
+    echo "looked under $root:" >&2
+    find "$root" -iname 'synth*.wav' -print >&2 || true
+  done
+  if kill -0 "$pid" 2>/dev/null; then
+    echo "Pico-8 is still running (pid $pid); close it when you are done." >&2
+  fi
+  exit 1
+fi
+
+wav_is_silent() {
+  python3 - "$1" <<'PY'
+import struct, sys
+path = sys.argv[1]
+b = open(path, "rb").read()
+i = b.find(b"data")
+if i < 0:
+    sys.exit(0)
+n = struct.unpack_from("<I", b, i + 4)[0]
+pcm = memoryview(b)[i + 8:i + 8 + n]
+if len(pcm) < 2:
+    sys.exit(0)
+# any 16-bit sample with abs > 64 counts as sound
+for j in range(0, len(pcm) - 1, 2):
+    s = int.from_bytes(pcm[j:j + 2], "little", signed=True)
+    if abs(s) > 64:
+        sys.exit(1)
+sys.exit(0)
+PY
+}
+
+ingest_wavs() {
+  local pattern="$1" prefix="$2"
+  local srcs=()
+  while IFS= read -r -d '' src; do
+    srcs+=("$src")
+  done < <(find "${search_roots[@]}" -iname "$pattern" -newer "$tmp/.started" -print0)
+
+  local copied=0
+  if (( ${#srcs[@]} == 0 )); then
+    echo 0
+    return
+  fi
+  rm -f "$OUT_DIR"/${prefix}-*-expected.wav "$OUT_DIR"/${prefix}-*-expected.ogg
+  local src base num dest
+  for src in "${srcs[@]}"; do
+    base="$(basename "$src")"
+    # synth0.wav / SYNTH12.WAV / osc00.wav
+    num="$(echo "$base" | python3 -c 'import re,sys; m=re.search(r"(\d+)", sys.stdin.read(), re.I); print(m.group(1) if m else "")')"
+    [[ -n "$num" ]] || continue
+    if wav_is_silent "$src"; then
+      continue
+    fi
+    dest=$(printf "%s/%s-%02d-expected.ogg" "$OUT_DIR" "$prefix" "$((10#$num))")
+    "$ROOT/bin/wav-to-ogg" "$src" "$dest"
+    echo "wrote $dest" >&2
+    copied=$((copied + 1))
+  done
+  echo "$copied"
+}
+
+copied="$(ingest_wavs 'synth*.wav' synth)"
+osc_copied="$(ingest_wavs 'osc*.wav' osc)"
+
+if kill -0 "$pid" 2>/dev/null; then
+  echo "Pico-8 is still running (pid $pid); type SHUTDOWN or close the window."
+fi
+
+if (( copied == 0 )); then
+  echo "error: no non-silent synthN.wav files found" >&2
+  exit 1
+fi
+echo "encoded $copied synth golden ogg(s) to $OUT_DIR"
+if (( osc_copied > 0 )); then
+  echo "encoded $osc_copied osc golden ogg(s) to $OUT_DIR"
+fi
