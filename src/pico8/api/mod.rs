@@ -82,6 +82,7 @@ pub(crate) fn plugin(app: &mut App) {
         // .register_type::<Palette>()
         // .register_type::<SpriteSheet>()
         .init_asset::<Pico8Asset>()
+        .init_asset::<PalMapLut>()
         .init_resource::<Pico8State>()
         .init_resource::<PlayerInputs>()
         .add_plugins((

@@ -23,7 +23,17 @@ Parameters shown in italics are extensions to the Pico-8 API.
 - [x] fillp([pat])
 - [x] fset(n, [f,] [v])
 - [x] line(x0, y0, x1, y1, [col])
-- [x] pal([c0,] [c1,] [p])
+- [/] pal([c0,] [c1,] [p])
+
+`pal()` resets the draw map and the display map. `pal(0)` resets only the draw
+map used by later indexed sprites. `pal(1)` resets the display map.
+`pal(c0, c1)` and `pal(c0, c1, 0)` remap later `spr` and `sspr` draws.
+`pal(c0, c1, 1)` recomposes each live indexed-sprite LUT as `display[draw[i]]`,
+leaving draw transparency on that LUT, so earlier sprites keep their own draw
+map. That is sprite lookup only: `cls`, primitives, text, `map`, baked `tline`,
+and canvas pixels are left alone. `pal(2)` and `pal(..., 2)` are not supported.
+`palm` selects an asset palette.
+
 - [x] palt([c,] [t])
 - [/] pget(x, y)
 

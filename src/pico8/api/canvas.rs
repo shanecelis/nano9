@@ -306,7 +306,7 @@ impl super::Pico8<'_, '_> {
     pub fn pset(&mut self, pos: UVec2, color: Option<PColor>) -> Result<(), Error> {
         match color.unwrap_or(self.state.draw_state.pen) {
             PColor::Palette(p) => {
-                let p = self.state.pal_map.map_or_mod(p) as u8;
+                let p = self.draw_pal_map().map_or_mod(p) as u8;
                 let gfx_handle = self.ensure_pixel_canvas_gfx()?;
                 let mut gfx = self
                     .gfxs
@@ -405,6 +405,7 @@ impl super::Pico8<'_, '_> {
             GfxSprite {
                 image: gfx_handle.clone(),
                 material,
+                pal_map_lut: self.state.pal_map_lut.clone(),
             },
             GfxDirty::default(),
             Position::default(),

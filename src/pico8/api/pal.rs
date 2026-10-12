@@ -1,4 +1,5 @@
 use super::*;
+use crate::pico8::pal_map_lut::ImageWrite;
 
 pub(crate) fn plugin(app: &mut App) {
     #[cfg(feature = "scripting")]
@@ -62,11 +63,9 @@ impl super::Pico8<'_, '_> {
 
     pub(crate) fn get_color(&self, c: Option<PColor>) -> Result<Color, PalError> {
         let pcolor = self.get_pcolor(c);
-        self.palettes()?.get_color(
-            pcolor.map_pal(|i| self.state.pal_map.map_or_mod(i)),
-            self.state.palette,
-            &self.images,
-        )
+        let mapped = pcolor.map_pal(|i| self.draw_pal_map().map_or_mod(i));
+        self.palettes()?
+            .get_color(mapped, self.state.palette, &self.images)
     }
 
     pub fn color(&mut self, color: Option<PColor>) -> Result<PColor, Error> {
@@ -89,15 +88,129 @@ impl super::Pico8<'_, '_> {
     }
 
     pub fn pal_map(&mut self, original_to_new: Option<(usize, usize)>, mode: Option<PalModify>) {
-        let mode = mode.unwrap_or_default();
-        assert!(matches!(mode, PalModify::Following));
-        if let Some((old, new)) = original_to_new {
-            self.state.pal_map.remap(old, new);
-            self.state.mark_palette_dirty();
-        } else {
-            // Reset the pal_map.
-            self.state.pal_map.reset();
-            self.state.mark_palette_dirty();
+        match (original_to_new, mode) {
+            (_, Some(PalModify::Secondary)) => {
+                panic!("palette mode 2 is not supported");
+            }
+            (None, None) => {
+                self.mutate_draw_map(PalMap::reset);
+                self.state.display_pal_map.reset();
+                self.reify_display_luts();
+            }
+            (None, Some(PalModify::Following)) => {
+                self.mutate_draw_map(PalMap::reset);
+            }
+            (None, Some(PalModify::Present)) => {
+                self.state.display_pal_map.reset();
+                self.reify_display_luts();
+            }
+            (Some((old, new)), None | Some(PalModify::Following)) => {
+                self.mutate_draw_map(|pal_map| pal_map.remap(old, new));
+            }
+            (Some((old, new)), Some(PalModify::Present)) => {
+                self.state.display_pal_map.remap(old, new);
+                self.reify_display_luts();
+            }
+        }
+    }
+
+    /// Current draw [`PalMapLut`]. Marks it shared so the next mode-0 edit copies the asset.
+    pub(crate) fn attach_indexed_lut(&mut self) -> Handle<PalMapLut> {
+        let handle = self.state.pal_map_lut.clone();
+        if self.state.pal_map_lut_attached
+            && self
+                .pal_map_luts
+                .get(&handle)
+                .and_then(PalMapLut::prepared_image)
+                .is_some()
+        {
+            return handle;
+        }
+        let display = self.state.display_pal_map.clone();
+        let write = self
+            .pal_map_luts
+            .get_mut(&handle)
+            .expect("current PalMapLut")
+            .ensure_image(&display, &mut self.images);
+        self.emit_image_write(&write);
+        self.state.pal_map_lut_attached = true;
+        handle
+    }
+
+    /// Point a pooled sprite at the current [`PalMapLut`] so it cannot keep a stale asset.
+    pub(crate) fn rebind_indexed_lut(&mut self, id: Entity) {
+        let lut = self.attach_indexed_lut();
+        self.commands.queue(move |world: &mut World| {
+            if world.get::<FixedPaletteLut>(id).is_some() {
+                return;
+            }
+            if let Some(mut sprite) = world.get_mut::<GfxSprite>(id) {
+                sprite.pal_map_lut = lut;
+            }
+        });
+    }
+
+    fn mutate_draw_map(&mut self, edit: impl FnOnce(&mut PalMap)) {
+        self.state.mark_palette_dirty();
+        if self.state.pal_map_lut_attached {
+            let mut pal_map = self.draw_pal_map().clone();
+            edit(&mut pal_map);
+            self.state.pal_map_lut = self.pal_map_luts.add(PalMapLut::new(pal_map));
+            self.state.pal_map_lut_attached = false;
+            return;
+        }
+        let handle = self.state.pal_map_lut.clone();
+        let display = self.state.display_pal_map.clone();
+        let write = {
+            let mut lut = self
+                .pal_map_luts
+                .get_mut(&handle)
+                .expect("current PalMapLut");
+            edit(lut.pal_map_mut());
+            lut.image
+                .clone()
+                .map(|image| (lut.pal_map.clone(), image))
+        };
+        if let Some((pal_map, image)) = write
+            && crate::pico8::pal_map_lut::write_composed_lut(
+                &mut self.images,
+                &image,
+                &pal_map,
+                &display,
+            )
+        {
+            if let Some(lut) = self.pal_map_luts.get_mut_untracked(&handle) {
+                lut.mark_clean();
+            }
+            self.emit_modified_images(&[image.id()]);
+        }
+    }
+
+    fn reify_display_luts(&mut self) {
+        let display = self.state.display_pal_map.clone();
+        let ids: Vec<_> = self
+            .pal_map_luts
+            .iter()
+            .filter_map(|(id, lut)| (!lut.frozen && lut.image.is_some()).then_some(id))
+            .collect();
+        let mut modified = Vec::new();
+        for id in ids {
+            if let Some(lut) = self.pal_map_luts.get_mut_untracked(id)
+                && let Some(image_id) = lut.reify_existing(&display, &mut self.images)
+            {
+                modified.push(image_id);
+            }
+        }
+        self.emit_modified_images(&modified);
+    }
+
+    fn emit_image_write(&mut self, write: &ImageWrite) {
+        if write.added {
+            self.image_events.write(AssetEvent::Added {
+                id: write.handle.id(),
+            });
+        } else if write.modified {
+            self.emit_modified_images(&[write.handle.id()]);
         }
     }
 
@@ -138,15 +251,10 @@ impl super::Pico8<'_, '_> {
 
     pub fn palt(&mut self, color_index: Option<usize>, transparent: Option<bool>) {
         if let Some(color_index) = color_index {
-            self.state
-                .pal_map
-                .transparency
-                .set(color_index, transparent.unwrap_or(false));
-            self.state.mark_palette_dirty();
+            let transparent = transparent.unwrap_or(false);
+            self.mutate_draw_map(|pal_map| pal_map.transparency.set(color_index, transparent));
         } else {
-            // Reset the pal_map's transparency.
-            self.state.pal_map.reset_transparency();
-            self.state.mark_palette_dirty();
+            self.mutate_draw_map(PalMap::reset_transparency);
         }
     }
 }
@@ -171,14 +279,16 @@ mod lua {
                  new: Option<usize>,
                  mode: Option<u8>| {
                     with_pico8(&ctx, move |pico8| {
-                        if let Some(old) = old
-                            && new.is_none()
-                            && mode.is_none()
-                        {
-                            // Set the palette.
-                            pico8.state.palette = old;
-                        } else {
-                            pico8.pal_map(
+                        match (old, new, mode) {
+                            (None, None, None) => pico8.pal_map(None, None),
+                            (Some(0), None, None) => {
+                                pico8.pal_map(None, Some(PalModify::Following))
+                            }
+                            (Some(1), None, None) => pico8.pal_map(None, Some(PalModify::Present)),
+                            (Some(p), None, None) => {
+                                panic!("No such palette modify mode {p}")
+                            }
+                            _ => pico8.pal_map(
                                 old.zip(new),
                                 mode.map(|i| match i {
                                     0 => PalModify::Following,
@@ -186,7 +296,7 @@ mod lua {
                                     2 => PalModify::Secondary,
                                     x => panic!("No such palette modify mode {x}"),
                                 }),
-                            );
+                            ),
                         }
                         Ok(())
                     })

@@ -357,7 +357,10 @@ fn apply_config_to_world_and_window(
     config.was_plugin_build(commands);
     if headless {
         if let Some(defaults) = defaults {
-            commands.insert_resource(crate::pico8::Pico8State::from(defaults));
+            let defaults = defaults.clone();
+            commands.queue(move |world: &mut World| {
+                crate::pico8::Pico8State::replace_from_defaults(world, &defaults);
+            });
         }
         return;
     }
@@ -382,7 +385,10 @@ fn apply_config_to_world_and_window(
         debug!("spawn with window resolution {:?}", &window_spec.resolution);
         commands.spawn((window_spec, PrimaryWindow));
         if let Some(defaults) = defaults {
-            commands.insert_resource(crate::pico8::Pico8State::from(defaults));
+            let defaults = defaults.clone();
+            commands.queue(move |world: &mut World| {
+                crate::pico8::Pico8State::replace_from_defaults(world, &defaults);
+            });
         }
     }
 }

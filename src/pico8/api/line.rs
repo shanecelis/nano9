@@ -137,6 +137,7 @@ impl super::Pico8<'_, '_> {
                 let gfx_handle = self.gfxs.add(line_gfx);
                 let clearable = Clearable::default();
                 let material = self.gfx_material();
+                let lut = self.attach_indexed_lut();
                 let id = self
                     .commands
                     .spawn((
@@ -144,6 +145,7 @@ impl super::Pico8<'_, '_> {
                         pico8::GfxSprite {
                             image: gfx_handle,
                             material,
+                            pal_map_lut: lut,
                         },
                         Anchor::TOP_LEFT,
                         Position::from(min.as_vec2()),

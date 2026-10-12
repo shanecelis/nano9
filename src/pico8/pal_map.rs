@@ -47,6 +47,16 @@ impl PalMap {
         })
     }
 
+    /// Remap `index` when it is in range. Indices past the map stay themselves,
+    /// so an identity display map does not wrap extended palette slots.
+    pub fn map_or_identity(&self, index: usize) -> usize {
+        self.remap
+            .get(index)
+            .copied()
+            .map(|mapped| mapped as usize)
+            .unwrap_or(index)
+    }
+
     /// Ensure remap and transparency have at least `min_len` entries, so that
     /// palette indices in `0..min_len` are not wrapped. New slots get identity
     /// mapping and non-transparent. Use when the palette has more colors than

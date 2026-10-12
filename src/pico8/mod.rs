@@ -13,6 +13,8 @@ pub use map::*;
 pub(crate) mod lua;
 mod pal_map;
 pub(crate) use pal_map::*;
+mod pal_map_lut;
+pub use pal_map_lut::PalMapLut;
 mod pal;
 pub(crate) use pal::*;
 mod gfx;

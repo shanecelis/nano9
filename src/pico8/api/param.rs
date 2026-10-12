@@ -1,5 +1,6 @@
 use super::*;
 use crate::pico8::api::camera3d::Camera3dCommand;
+use bevy::asset::{AssetEvent, AssetId};
 use bevy::ecs::system::SystemParam;
 
 use crate::{
@@ -20,6 +21,8 @@ pub struct Pico8<'w, 's> {
     // parameter will not preclude users from accessing images in their rust
     // systems.
     pub(crate) images: ResMut<'w, Assets<Image>>,
+    pub(crate) image_events: MessageWriter<'w, AssetEvent<Image>>,
+    pub(crate) pal_map_luts: ResMut<'w, Assets<PalMapLut>>,
     pub(crate) state: ResMut<'w, Pico8State>,
     pub(crate) commands: Commands<'w, 's>,
     pub(crate) camera3d_messages: MessageWriter<'w, Camera3dCommand>,
@@ -54,7 +57,16 @@ pub struct Pico8<'w, 's> {
 impl Pico8<'_, '_> {
     /// Returns the current GfxMaterial. It is cached.
     pub(crate) fn gfx_material(&mut self) -> Handle<GfxMaterial> {
-        self.state.gfx_material(&mut self.gfx_materials)
+        let pal_map = self.draw_pal_map().clone();
+        self.state.gfx_material(&pal_map, &mut self.gfx_materials)
+    }
+
+    pub(crate) fn draw_pal_map(&self) -> &PalMap {
+        &self
+            .pal_map_luts
+            .get(&self.state.pal_map_lut)
+            .expect("current PalMapLut")
+            .pal_map
     }
 
     /// Resurrects a hidden entity with the same essential attributes.
@@ -78,6 +90,12 @@ impl Pico8<'_, '_> {
             Some(id)
         } else {
             None
+        }
+    }
+
+    pub(crate) fn emit_modified_images(&mut self, ids: &[AssetId<Image>]) {
+        for id in ids {
+            self.image_events.write(AssetEvent::Modified { id: *id });
         }
     }
 

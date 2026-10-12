@@ -84,6 +84,7 @@ impl super::Pico8<'_, '_> {
             .spawn((
                 Name::new("rectfill"),
                 if let Some(fill_pat) = &self.state.draw_state.fill_pat {
+                    let pal_map = self.draw_pal_map().clone();
                     let image =
                             // {
                             //     let a = Gfx::<1>::from_vec(8,8,
@@ -119,7 +120,7 @@ impl super::Pico8<'_, '_> {
                                             );
                                             let _ = c.write_color(
                                                 &palette_data,
-                                                &self.state.pal_map,
+                                                &pal_map,
                                                 pixel_bytes,
                                             );
                                         }

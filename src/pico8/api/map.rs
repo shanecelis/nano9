@@ -78,7 +78,7 @@ impl super::Pico8<'_, '_> {
             "map".hash(&mut hasher);
             map_pos.hash(&mut hasher);
             self.state.palette.hash(&mut hasher);
-            self.state.pal_map.hash(&mut hasher);
+            self.draw_pal_map().hash(&mut hasher);
             size.hash(&mut hasher);
             mask.inspect(|m| m.hash(&mut hasher));
             map_index.hash(&mut hasher);

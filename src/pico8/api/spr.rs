@@ -216,7 +216,7 @@ impl super::Pico8<'_, '_> {
             sprite_rect.as_irect().hash(&mut hasher);
             // Need to hash the palette choice and
             self.state.palette.hash(&mut hasher);
-            self.state.pal_map.hash(&mut hasher);
+            self.draw_pal_map().hash(&mut hasher);
             screen_size.inspect(|s| s.as_uvec2().hash(&mut hasher));
             flip.inspect(|f| f.hash(&mut hasher));
             sheet_index.hash(&mut hasher);
@@ -224,8 +224,14 @@ impl super::Pico8<'_, '_> {
         };
         let flip = flip.unwrap_or_default();
         self.state.draw_state.mark_drawn();
+        let indexed = self
+            .sprite_sheet(sheet_index)
+            .is_ok_and(|sheet| matches!(sheet.handle, SprHandle::Gfx(_)));
         // See if there's already an entity available.
         if let Some(id) = self.resurrect(hash, screen_pos) {
+            if indexed {
+                self.rebind_indexed_lut(id);
+            }
             return Ok(id);
         }
         let sheet = self.sprite_sheet(sheet_index)?;
@@ -246,6 +252,7 @@ impl super::Pico8<'_, '_> {
         };
         let clearable = Clearable::new(self.defaults.time_to_live).with_hash(hash);
         let material = self.gfx_material();
+        let lut = gfx_handle.as_ref().map(|_| self.attach_indexed_lut());
         let mut ecommands = self.commands.spawn((
             Name::new("sspr"),
             sprite,
@@ -253,10 +260,11 @@ impl super::Pico8<'_, '_> {
             Position::from(screen_pos),
             clearable,
         ));
-        if let Some(gfx_handle) = gfx_handle {
+        if let Some((gfx_handle, lut)) = gfx_handle.zip(lut) {
             ecommands.insert(GfxSprite {
                 image: gfx_handle,
                 material,
+                pal_map_lut: lut,
             });
         }
         Ok(ecommands.id())
@@ -306,13 +314,21 @@ impl super::Pico8<'_, '_> {
             sheet.hash(&mut hasher);
             // Need to hash the palette choice and
             self.state.palette.hash(&mut hasher);
-            self.state.pal_map.hash(&mut hasher);
+            self.draw_pal_map().hash(&mut hasher);
             size.inspect(|s| s.as_uvec2().hash(&mut hasher));
             turns.inspect(|t| hash_f32(*t, 2, &mut hasher));
             hasher.finish()
         };
         self.state.draw_state.mark_drawn();
         let flip = flip.unwrap_or_default();
+        let indexed = match spr {
+            Spr::Cur { .. } => self
+                .sprite_sheet(None)
+                .is_ok_and(|sheet| matches!(sheet.handle, SprHandle::Gfx(_))),
+            Spr::From { sheet, .. } => self
+                .sprite_sheet(Some(sheet))
+                .is_ok_and(|sheet| matches!(sheet.handle, SprHandle::Gfx(_))),
+        };
         // See if there's already an entity available.
         if let Some(id) = self.resurrect(hash, pos) {
             // TODO: Set the sprite number and flip before handing off. It may have changed.
@@ -325,6 +341,9 @@ impl super::Pico8<'_, '_> {
                     sprite.flip_y = flip.y;
                 }
             });
+            if indexed {
+                self.rebind_indexed_lut(id);
+            }
             return Ok(id);
         }
 
@@ -370,6 +389,7 @@ impl super::Pico8<'_, '_> {
         };
         let clearable = Clearable::new(self.defaults.time_to_live).with_hash(hash);
         let material = self.gfx_material();
+        let lut = gfx_handle.as_ref().map(|_| self.attach_indexed_lut());
         let position = Position::from(pos);
         let mut ecommands = self.commands.spawn((
             Name::new("spr"),
@@ -388,10 +408,11 @@ impl super::Pico8<'_, '_> {
             // sprite.anchor = Anchor::Center;
             // transform.rotation = Quat::from_rotation_z(turns * 2.0 * PI);
         }
-        if let Some(handle) = gfx_handle {
+        if let Some((handle, lut)) = gfx_handle.zip(lut) {
             ecommands.insert(GfxSprite {
                 image: handle,
                 material,
+                pal_map_lut: lut,
             });
         }
         Ok(ecommands.id())

@@ -1,5 +1,4 @@
 pub mod const_bitdepth;
-pub mod pal_map_textures;
 pub mod palette_lookup_material;
 mod var_bitdepth;
 use crate::{one_or_map::OneOrMap, pico8::*};
@@ -24,18 +23,19 @@ pub(crate) fn plugin(app: &mut App) {
         .register_asset_reflect::<GfxMaterial>()
         .init_resource::<GfxImageMap>()
         .init_resource::<IndexImageMap>()
-        .init_resource::<GfxGpuMaterialMap>()
-        .init_resource::<PalMapLutCache>()
         .init_resource::<TilesetArrayMap>()
         .init_asset::<Gfx>()
         .init_asset::<GfxMaterial>()
         .add_systems(
             PostUpdate,
             (
-                compute_image_on_asset_event.after(AssetEventSystems),
-                compute_image_on_gfx_sprite_change.after(compute_image_on_asset_event),
-                check_dirty.after(AssetEventSystems),
-            ),
+                freeze_fixed_palette_luts,
+                compute_image_on_asset_event,
+                compute_image_on_gfx_sprite_change,
+                check_dirty,
+            )
+                .chain()
+                .after(AssetEventSystems),
         );
 }
 
@@ -45,7 +45,16 @@ type GfxImage = OneOrMap<u64, Handle<Image>>;
 pub struct GfxSprite {
     pub image: Handle<Gfx>,
     pub material: Handle<GfxMaterial>,
+    /// Draw palette for this sprite. The asset owns the `Rg8Uint` lookup image.
+    pub pal_map_lut: Handle<PalMapLut>,
 }
+
+/// Clones this sprite's [`PalMapLut`] into a private asset that mode 1 will not rewrite.
+#[derive(Component, Reflect, Debug, Default)]
+pub struct FixedPaletteLut;
+
+#[derive(Component)]
+struct PaletteLutFrozen;
 
 #[derive(Asset, Debug, Reflect, Clone, Hash, PartialEq, Eq)]
 pub struct GfxMaterial {
@@ -58,13 +67,6 @@ pub struct GfxImageMap(HashMap<AssetId<Gfx>, GfxImage>);
 
 #[derive(Resource, Default, Deref, DerefMut)]
 struct IndexImageMap(HashMap<AssetId<Gfx>, Handle<Image>>);
-
-#[derive(Resource, Default)]
-struct GfxGpuMaterialMap(HashMap<AssetId<GfxMaterial>, (u64, Handle<GfxPaletteLookupMaterial>)>);
-
-/// One LUT image per distinct [`PalMap`], shared by every [`GfxMaterial`] that uses it.
-#[derive(Resource, Default)]
-struct PalMapLutCache(HashMap<u64, Handle<Image>>);
 
 /// Baked 2D-array tileset for one Gfx sheet and draw state.
 #[derive(Clone)]
@@ -87,20 +89,6 @@ impl TilesetArrayMap {
     pub(crate) fn remove_gfx(&mut self, id: AssetId<Gfx>) {
         self.gfx.retain(|(gfx_id, _), _| *gfx_id != id);
     }
-}
-
-fn pal_map_hash(pal_map: &PalMap) -> u64 {
-    let mut hasher = DefaultHasher::new();
-    pal_map.hash(&mut hasher);
-    hasher.finish()
-}
-
-fn material_hash(gfx_material: &GfxMaterial) -> u64 {
-    let mut hasher = DefaultHasher::new();
-    // Split from [`pal_map_hash`] so a palette-index change does not rebuild the LUT.
-    hasher.write_u64(pal_map_hash(&gfx_material.pal_map));
-    gfx_material.palette.hash(&mut hasher);
-    hasher.finish()
 }
 
 fn baked_image_hash(gfx_material: &GfxMaterial) -> u64 {
@@ -245,76 +233,148 @@ pub(crate) fn image_tileset_array(
     Ok(handle)
 }
 
-fn lut_image(
-    pal_map: &PalMap,
-    images: &mut Assets<Image>,
-    cache: &mut PalMapLutCache,
-) -> Handle<Image> {
-    let key = pal_map_hash(pal_map);
-    if let Some(handle) = cache.0.get(&key) {
-        return handle.clone();
-    }
-    let handle = images.add(pal_map_textures::pal_map_to_lut_image(pal_map));
-    cache.0.insert(key, handle.clone());
-    handle
-}
-
-/// Index-image sprite plus a [`SpriteMaterial`] that does palette lookup on the GPU.
-/// Canvases with per-pixel occupancy stay on the CPU path.
-fn gpu_sprite_assets(
+/// Index image for an indexed sheet. The LUT handle lives on [`GfxSprite`].
+fn index_sprite_image(
     gfx_handle: &Handle<Gfx>,
     gfx_changed: bool,
-    gfx_material_handle: &Handle<GfxMaterial>,
-    gfx_material: &GfxMaterial,
     gfxs: &Assets<Gfx>,
     images: &mut Assets<Image>,
-    palette_materials: &mut Assets<GfxPaletteLookupMaterial>,
-    palettes: &Palettes,
     index_images: &mut IndexImageMap,
-    gpu_materials: &mut GfxGpuMaterialMap,
-    lut_cache: &mut PalMapLutCache,
     image_events: &mut MessageWriter<AssetEvent<Image>>,
-) -> Result<(Handle<Image>, Handle<GfxPaletteLookupMaterial>), Error> {
+) -> Result<Handle<Image>, Error> {
     let gfx_id = gfx_handle.id();
     let gfx = gfxs.get(gfx_id).ok_or(Error::NoSuch("gfx image".into()))?;
-    let index = if let Some(handle) = index_images.get(&gfx_id).cloned() {
+    if let Some(handle) = index_images.get(&gfx_id).cloned() {
         if gfx_changed && let Some(image) = images.get_mut_untracked(&handle) {
             *image = gfx.to_index_image();
             image_events.write(AssetEvent::Modified { id: handle.id() });
         }
-        handle
-    } else {
-        let handle = images.add(gfx.to_index_image());
-        image_events.write(AssetEvent::Added { id: handle.id() });
-        index_images.insert(gfx_id, handle.clone());
-        handle
-    };
-
-    let hash = material_hash(gfx_material);
-    let material_id = gfx_material_handle.id();
-    if let Some((cached_hash, handle)) = gpu_materials.0.get(&material_id).cloned()
-        && cached_hash == hash
-    {
-        return Ok((index, handle));
+        return Ok(handle);
     }
+    let handle = images.add(gfx.to_index_image());
+    image_events.write(AssetEvent::Added { id: handle.id() });
+    index_images.insert(gfx_id, handle.clone());
+    Ok(handle)
+}
 
+fn lookup_material(
+    gfx_material: &GfxMaterial,
+    lut: &Handle<Image>,
+    images: &Assets<Image>,
+    palettes: &Palettes,
+) -> Result<GfxPaletteLookupMaterial, Error> {
     let palette = palettes.get_pal(gfx_material.palette)?;
-    let lut = lut_image(&gfx_material.pal_map, images, lut_cache);
     let palette_image_ref = images.get(&palette.image);
-    let material =
-        build_palette_lookup_material(palette.image().clone(), lut, palette, palette_image_ref);
-    let handle = if let Some((_, handle)) = gpu_materials.0.get(&material_id).cloned() {
+    Ok(build_palette_lookup_material(
+        palette.image().clone(),
+        lut.clone(),
+        palette,
+        palette_image_ref,
+    ))
+}
+
+fn materials_match(existing: &GfxPaletteLookupMaterial, next: &GfxPaletteLookupMaterial) -> bool {
+    existing.lut_texture.id() == next.lut_texture.id()
+        && existing.palette_texture.id() == next.palette_texture.id()
+        && existing.palette_width == next.palette_width
+        && existing.palette_height == next.palette_height
+        && existing.access_kind == next.access_kind
+        && existing.access_param == next.access_param
+}
+
+fn assign_lookup_material(
+    commands: &mut Commands,
+    palette_materials: &mut Assets<GfxPaletteLookupMaterial>,
+    entity: Entity,
+    current: Option<&SpriteMaterial<GfxPaletteLookupMaterial>>,
+    material: GfxPaletteLookupMaterial,
+) {
+    if let Some(handle) = current.map(|sprite_material| sprite_material.0.clone()) {
+        if palette_materials
+            .get(&handle)
+            .is_some_and(|existing| materials_match(existing, &material))
+        {
+            return;
+        }
         if let Some(mut existing) = palette_materials.get_mut(&handle) {
             *existing = material;
         }
-        gpu_materials.0.insert(material_id, (hash, handle.clone()));
-        handle
-    } else {
-        let handle = palette_materials.add(material);
-        gpu_materials.0.insert(material_id, (hash, handle.clone()));
-        handle
+        return;
+    }
+    // The sprite may have been given a material earlier this frame, before commands apply.
+    commands.queue(move |world: &mut World| {
+        let existing = world
+            .get::<SpriteMaterial<GfxPaletteLookupMaterial>>(entity)
+            .map(|sprite_material| sprite_material.0.clone());
+        if let Some(handle) = existing {
+            let mut materials = world.resource_mut::<Assets<GfxPaletteLookupMaterial>>();
+            if materials
+                .get(&handle)
+                .is_some_and(|current| materials_match(current, &material))
+            {
+                return;
+            }
+            if let Some(mut current) = materials.get_mut(&handle) {
+                *current = material;
+            }
+            return;
+        }
+        let handle = world
+            .resource_mut::<Assets<GfxPaletteLookupMaterial>>()
+            .add(material);
+        if let Ok(mut entity) = world.get_entity_mut(entity) {
+            entity.insert(SpriteMaterial(handle));
+        }
+    });
+}
+
+fn freeze_fixed_palette_luts(
+    mut commands: Commands,
+    state: Res<Pico8State>,
+    mut images: ResMut<Assets<Image>>,
+    mut pal_map_luts: ResMut<Assets<PalMapLut>>,
+    mut sprites: Query<
+        (Entity, &mut GfxSprite),
+        (With<FixedPaletteLut>, Without<PaletteLutFrozen>),
+    >,
+) {
+    for (entity, mut gfx_sprite) in &mut sprites {
+        let Some(source) = pal_map_luts.get(&gfx_sprite.pal_map_lut).cloned() else {
+            continue;
+        };
+        let frozen = source.freeze_clone(&state.display_pal_map, &mut images);
+        gfx_sprite.pal_map_lut = pal_map_luts.add(frozen);
+        commands.entity(entity).insert(PaletteLutFrozen);
+    }
+}
+
+fn sprite_lut_image(
+    pal_map_lut: &Handle<PalMapLut>,
+    display: &PalMap,
+    pal_map_luts: &mut Assets<PalMapLut>,
+    images: &mut Assets<Image>,
+    image_events: &mut MessageWriter<AssetEvent<Image>>,
+) -> Result<Handle<Image>, Error> {
+    if let Some(image) = pal_map_luts
+        .get(pal_map_lut)
+        .and_then(PalMapLut::prepared_image)
+    {
+        return Ok(image);
+    }
+    let Some(lut) = pal_map_luts.get_mut_untracked(pal_map_lut) else {
+        return Err(Error::NoAsset("pal map lut".into()));
     };
-    Ok((index, handle))
+    let write = lut.ensure_image(display, images);
+    if write.added {
+        image_events.write(AssetEvent::Added {
+            id: write.handle.id(),
+        });
+    } else if write.modified {
+        image_events.write(AssetEvent::Modified {
+            id: write.handle.id(),
+        });
+    }
+    Ok(write.handle)
 }
 
 #[derive(Component, Debug, Default)]
@@ -466,14 +526,19 @@ pub(crate) fn compute_image(
 fn compute_image_on_asset_event(
     mut commands: Commands,
     mut events: MessageReader<AssetEvent<Gfx>>,
+    state: Res<Pico8State>,
     mut images: ResMut<Assets<Image>>,
+    mut pal_map_luts: ResMut<Assets<PalMapLut>>,
     mut palette_materials: ResMut<Assets<GfxPaletteLookupMaterial>>,
     mut index_images: ResMut<IndexImageMap>,
-    mut gpu_materials: ResMut<GfxGpuMaterialMap>,
-    mut lut_cache: ResMut<PalMapLutCache>,
     gfxs: Res<Assets<Gfx>>,
     gfx_materials: Res<Assets<GfxMaterial>>,
-    mut sprites: Query<(Entity, &GfxSprite, Option<&mut Sprite>)>,
+    mut sprites: Query<(
+        Entity,
+        &GfxSprite,
+        Option<&SpriteMaterial<GfxPaletteLookupMaterial>>,
+        Option<&mut Sprite>,
+    )>,
     mut pairs: ResMut<GfxImageMap>,
     mut update_ids: Local<Vec<Entity>>,
     mut update_images: Local<VecDeque<Handle<Image>>>,
@@ -501,7 +566,7 @@ fn compute_image_on_asset_event(
     if added_handles.is_empty() {
         return;
     }
-    for (id, gfx_sprite, sprite) in &sprites {
+    for (id, gfx_sprite, sprite_material, sprite) in &sprites {
         if !added_handles.contains(&gfx_sprite.image.id()) {
             continue;
         }
@@ -517,22 +582,33 @@ fn compute_image_on_asset_event(
             .get(&gfx_sprite.image)
             .is_some_and(|gfx| gfx.occupancy.is_none())
         {
-            match gpu_sprite_assets(
+            match index_sprite_image(
                 &gfx_sprite.image,
                 true,
-                &gfx_sprite.material,
-                gfx_material,
                 &gfxs,
                 &mut images,
-                &mut palette_materials,
-                &pico8_asset.palettes,
                 &mut index_images,
-                &mut gpu_materials,
-                &mut lut_cache,
                 &mut image_events,
-            ) {
+            )
+            .and_then(|image| {
+                let lut = sprite_lut_image(
+                    &gfx_sprite.pal_map_lut,
+                    &state.display_pal_map,
+                    &mut pal_map_luts,
+                    &mut images,
+                    &mut image_events,
+                )?;
+                lookup_material(gfx_material, &lut, &images, &pico8_asset.palettes)
+                    .map(|material| (image, material))
+            }) {
                 Ok((image, material)) => {
-                    commands.entity(id).insert(SpriteMaterial(material));
+                    assign_lookup_material(
+                        &mut commands,
+                        &mut palette_materials,
+                        id,
+                        sprite_material,
+                        material,
+                    );
                     match sprite {
                         Some(sprite) => {
                             if sprite.image != image {
@@ -585,7 +661,7 @@ fn compute_image_on_asset_event(
     }
     // Try not to trigger a sprite change if we don't have to.
     let mut iter = sprites.iter_many_mut(update_ids.iter()).matched();
-    while let Some((_, _, sprite)) = iter.fetch_next() {
+    while let Some((_, _, _, sprite)) = iter.fetch_next() {
         match sprite {
             Some(mut sprite) => {
                 sprite.image = update_images.pop_front().unwrap();
@@ -598,14 +674,22 @@ fn compute_image_on_asset_event(
 #[allow(clippy::too_many_arguments)]
 fn compute_image_on_gfx_sprite_change(
     mut commands: Commands,
+    state: Res<Pico8State>,
     mut images: ResMut<Assets<Image>>,
+    mut pal_map_luts: ResMut<Assets<PalMapLut>>,
     mut palette_materials: ResMut<Assets<GfxPaletteLookupMaterial>>,
     mut index_images: ResMut<IndexImageMap>,
-    mut gpu_materials: ResMut<GfxGpuMaterialMap>,
-    mut lut_cache: ResMut<PalMapLutCache>,
     gfxs: Res<Assets<Gfx>>,
     gfx_materials: Res<Assets<GfxMaterial>>,
-    mut sprites: Query<(Entity, &GfxSprite, Option<&mut Sprite>), Changed<GfxSprite>>,
+    mut sprites: Query<
+        (
+            Entity,
+            &GfxSprite,
+            Option<&SpriteMaterial<GfxPaletteLookupMaterial>>,
+            Option<&mut Sprite>,
+        ),
+        Changed<GfxSprite>,
+    >,
     mut pairs: ResMut<GfxImageMap>,
     pico8_handle: Option<Res<Pico8Handle>>,
     pico8_assets: Res<Assets<Pico8Asset>>,
@@ -615,7 +699,7 @@ fn compute_image_on_gfx_sprite_change(
         return;
     };
     let mut pico8_asset_maybe = None;
-    for (id, gfx_sprite, sprite) in &mut sprites {
+    for (id, gfx_sprite, sprite_material, mut sprite) in &mut sprites {
         let Some(gfx_material) = gfx_materials.get(&gfx_sprite.material) else {
             trace!("No gfx material for gfx sprite {}", id);
             continue;
@@ -632,24 +716,35 @@ fn compute_image_on_gfx_sprite_change(
             .get(&gfx_sprite.image)
             .is_some_and(|gfx| gfx.occupancy.is_none())
         {
-            match gpu_sprite_assets(
+            match index_sprite_image(
                 &gfx_sprite.image,
                 false,
-                &gfx_sprite.material,
-                gfx_material,
                 &gfxs,
                 &mut images,
-                &mut palette_materials,
-                &pico8_asset.palettes,
                 &mut index_images,
-                &mut gpu_materials,
-                &mut lut_cache,
                 &mut image_events,
-            ) {
+            )
+            .and_then(|image| {
+                let lut = sprite_lut_image(
+                    &gfx_sprite.pal_map_lut,
+                    &state.display_pal_map,
+                    &mut pal_map_luts,
+                    &mut images,
+                    &mut image_events,
+                )?;
+                lookup_material(gfx_material, &lut, &images, &pico8_asset.palettes)
+                    .map(|material| (image, material))
+            }) {
                 Ok((image, material)) => {
-                    commands.entity(id).insert(SpriteMaterial(material));
-                    match sprite {
-                        Some(mut sprite) => {
+                    assign_lookup_material(
+                        &mut commands,
+                        &mut palette_materials,
+                        id,
+                        sprite_material,
+                        material,
+                    );
+                    match &mut sprite {
+                        Some(sprite) => {
                             sprite.image = image;
                         }
                         None => {
@@ -688,6 +783,61 @@ fn compute_image_on_gfx_sprite_change(
                 warn!("Unable to update gfx {}: {e}", gfx_sprite.image.id());
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod fixed_lut_tests {
+    use super::*;
+    use crate::pico8::PalMap;
+
+    #[test]
+    fn fixed_palette_lut_clones_a_private_asset() {
+        let mut app = App::new();
+        app.init_resource::<crate::pico8::Defaults>();
+        app.init_resource::<Assets<Image>>();
+        app.init_resource::<Assets<PalMapLut>>();
+        app.init_resource::<Pico8State>();
+        app.add_systems(Update, freeze_fixed_palette_luts);
+
+        let mut lut = PalMapLut::new(PalMap::default());
+        {
+            let mut images = app.world_mut().resource_mut::<Assets<Image>>();
+            let _ = lut.ensure_image(&PalMap::default(), &mut images);
+        }
+        let shared = app.world_mut().resource_mut::<Assets<PalMapLut>>().add(lut);
+        let shared_id = shared.id();
+        let entity = app
+            .world_mut()
+            .spawn((
+                GfxSprite {
+                    image: Handle::default(),
+                    material: Handle::default(),
+                    pal_map_lut: shared,
+                },
+                FixedPaletteLut,
+            ))
+            .id();
+
+        app.update();
+
+        let sprite = app.world().get::<GfxSprite>(entity).unwrap();
+        assert_ne!(sprite.pal_map_lut.id(), shared_id);
+        assert!(app.world().get::<PaletteLutFrozen>(entity).is_some());
+        let pal_map_luts = app.world().resource::<Assets<PalMapLut>>();
+        let frozen = pal_map_luts.get(&sprite.pal_map_lut).unwrap();
+        assert!(frozen.frozen);
+        assert!(frozen.image.is_some());
+        assert_ne!(
+            frozen.image.as_ref().unwrap().id(),
+            pal_map_luts
+                .get(shared_id)
+                .unwrap()
+                .image
+                .as_ref()
+                .unwrap()
+                .id()
+        );
     }
 }
 

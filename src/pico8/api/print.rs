@@ -68,7 +68,7 @@ impl super::Pico8<'_, '_> {
             // TODO: Color could be amended.
             // Need to hash the palette choice and
             self.state.palette.hash(&mut hasher);
-            self.state.pal_map.hash(&mut hasher);
+            self.draw_pal_map().hash(&mut hasher);
             color.inspect(|c| c.hash(&mut hasher));
             font_size.inspect(|s| hash_f32(*s, 2, &mut hasher));
             font_index.inspect(|f| f.hash(&mut hasher));
@@ -288,7 +288,7 @@ mod lua {
                             // TODO: Color could be amended.
                             // Need to hash the palette choice and
                             pico8.state.palette.hash(&mut hasher);
-                            pico8.state.pal_map.hash(&mut hasher);
+                            pico8.draw_pal_map().hash(&mut hasher);
                             c.inspect(|c| c.hash(&mut hasher));
                             font_size.inspect(|s| hash_f32(*s, 2, &mut hasher));
                             font_index.inspect(|f| f.hash(&mut hasher));
