@@ -1,0 +1,23 @@
+name = "spr-pal-debug"
+template = "pico8"
+
+[screen]
+canvas-size = [128, 128]
+screen-size = [1280, 960]
+
+[defaults]
+initial-palette = 0
+time-to-live = 0
+
+[[sprite-sheet]]
+path = "bird-sprite-indexed.png"
+index-color = true
+sprite-size = [16, 16]
+
+[[palette]]
+path = "bird-sprite-indexed.png"
+extract-index = true
+
+[[palette]]
+path = "red-palette.png"
+extract-index = false
