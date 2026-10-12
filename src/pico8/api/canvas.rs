@@ -7,7 +7,11 @@ use crate::{
 #[cfg(target_arch = "wasm32")]
 use bevy::render::view::Msaa;
 use bevy::{
-    camera::{CompositingSpace, ImageRenderTarget, RenderTarget, Viewport},
+    camera::{
+        visibility::RenderLayers, CameraOutputMode, ClearColorConfig, CompositingSpace,
+        ImageRenderTarget, RenderTarget, Viewport,
+    },
+    render::render_resource::BlendState,
     window::{PrimaryWindow, WindowResized},
 };
 
@@ -171,7 +175,6 @@ fn spawn_camera(
                     #[cfg(target_arch = "wasm32")]
                     Msaa::Off,
                     Projection::Orthographic(OrthographicProjection::default_2d()),
-                    IsDefaultUiCamera,
                     InheritedVisibility::default(),
                     Nano9Camera,
                     Position::default(),
@@ -183,9 +186,34 @@ fn spawn_camera(
                             ..default()
                         },
                         RenderTarget::Image(target),
+                        // Headless carts have no separate window camera for UI.
+                        IsDefaultUiCamera,
                     ));
+                } else if cfg!(target_arch = "wasm32") {
+                    // Wasm already composites in linear space, so UI can stay on this camera.
+                    camera.insert(IsDefaultUiCamera);
                 }
             });
+        // The game camera composites in sRGB so palette pixels stay bit-exact.
+        // Feathers colors are linear and turn nearly black on that camera, so UI
+        // gets a later camera that encodes them on the way to the window.
+        if headless.is_none() && cfg!(not(target_arch = "wasm32")) {
+            commands.spawn((
+                Name::new("ui camera"),
+                Camera2d,
+                Camera {
+                    order: 1,
+                    clear_color: ClearColorConfig::Custom(Color::NONE),
+                    output_mode: CameraOutputMode::Write {
+                        blend_state: Some(BlendState::ALPHA_BLENDING),
+                        clear_color: ClearColorConfig::None,
+                    },
+                    ..default()
+                },
+                RenderLayers::none(),
+                IsDefaultUiCamera,
+            ));
+        }
     } else if canvas.is_changed()
         && let Ok(mut transform) = dolly.single_mut()
     {
