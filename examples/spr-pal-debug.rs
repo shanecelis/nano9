@@ -1,9 +1,10 @@
-//! Edit the palette-lookup texture that draws a sprite.
+//! Edit the draw and display palette maps for an indexed sprite.
 //!
 //! The bird sheet is an R8 index texture. Colors come from an RGBA palette texture.
-//! Swap and transparency live in a 256×1 `Rg8Uint` LUT: `r` is the remapped index, `g` is 1
-//! when that source index is hidden. The feathers panel writes those bytes. The sprite samples
-//! the same texture, so the draw follows the edits.
+//! A draw map remaps each source index and stores transparency. A display map remaps
+//! that result. Draw stamps a sprite that keeps its draw map. Display edits recolor
+//! every stamped sprite. Each sprite samples `r = display[draw[i]]`, `g = 1` when
+//! that sprite's draw map hides index `i`.
 //!
 //! ```sh
 //! cargo run --example spr-pal-debug
@@ -41,7 +42,7 @@ fn main() {
             DefaultPlugins.set(WindowPlugin {
                 primary_window: Some(Window {
                     title: "spr-pal-debug".into(),
-                    resolution: (1280, 760).into(),
+                    resolution: (1280, 960).into(),
                     ..default()
                 }),
                 ..default()
@@ -66,9 +67,33 @@ impl Plugin for PaletteLookupPlugin {
 
 #[derive(Resource)]
 struct PalDebug {
-    lut: Handle<Image>,
     colors: Vec<Color>,
     selected: u8,
+    /// Mode 0: source index -> palette index.
+    draw: Vec<u8>,
+    /// Mode 1: palette index -> palette index. Applied after `draw`.
+    display: Vec<u8>,
+    transparent: Vec<bool>,
+    editing_display: bool,
+    index: Handle<Image>,
+    palette: Handle<Image>,
+    checker: Handle<Image>,
+    palette_width: u32,
+    /// Unscaled sprite size in pixels.
+    sheet: Vec2,
+    drawn: usize,
+}
+
+/// A sprite stamped by the Draw button, removed by Reset.
+#[derive(Component)]
+struct StampedSprite;
+
+/// Draw map captured when this sprite was drawn. Display edits recompose `lut` from it.
+#[derive(Component)]
+struct RetainedDraw {
+    lut: Handle<Image>,
+    draw: Vec<u8>,
+    transparent: Vec<bool>,
 }
 
 #[derive(Component, Clone, Default)]
@@ -82,9 +107,25 @@ struct DestSwatch {
 }
 
 #[derive(Component, Clone, Default)]
+struct DrawSwatch {
+    index: u8,
+}
+
+#[derive(Component, Clone, Default)]
+struct DisplaySwatch {
+    index: u8,
+}
+
+#[derive(Component, Clone, Default)]
 struct DrawnSwatch {
     index: u8,
 }
+
+#[derive(Component, Clone, Copy, Default)]
+struct EditDraw;
+
+#[derive(Component, Clone, Copy, Default)]
+struct EditDisplay;
 
 #[derive(Component, Clone, Default)]
 struct BitReadout {
@@ -113,49 +154,51 @@ fn setup(
     let palette_image = palette_texture(&palette);
     let palette_width = palette_image.width();
     let index_image = gfx.to_index_image();
-    let lut_image = identity_lut();
 
     let index = images.add(index_image);
     let palette_handle = images.add(palette_image);
-    let lut = images.add(lut_image);
-    let material = materials.add(GfxPaletteLookupMaterial {
-        palette_texture: palette_handle,
-        lut_texture: lut.clone(),
-        palette_width,
-        palette_height: 1,
-        // LinearByRow: palette index i is texel (i, 0).
-        access_kind: 0,
-        access_param: 0,
-    });
-
-    let sheet = Vec2::new(gfx.width as f32, gfx.height as f32) * 4.0;
+    let checker = images.add(checker_texture());
+    let sheet_px = Vec2::new(gfx.width as f32, gfx.height as f32);
+    let sheet = sheet_px * 4.0;
     // Keep the sheet in the open area left of the panel.
     let sprite_pos = Vec3::new(-180.0, 24.0, 1.0);
 
     commands.spawn(Camera2d);
     commands.spawn((
         Sprite {
-            image: images.add(checker_texture()),
+            image: checker.clone(),
             custom_size: Some(sheet + Vec2::splat(32.0)),
             ..default()
         },
         Transform::from_translation(sprite_pos.with_z(0.0)),
     ));
-    commands.spawn((
-        Sprite {
-            image: index,
-            custom_size: Some(sheet),
-            ..default()
-        },
-        SpriteMaterial(material),
-        Transform::from_translation(sprite_pos),
-    ));
 
-    commands.insert_resource(PalDebug {
-        lut,
+    let debug = PalDebug {
         colors: colors.clone(),
         selected: 0,
-    });
+        draw: identity_map(),
+        display: identity_map(),
+        transparent: initial_transparent(),
+        editing_display: false,
+        index,
+        palette: palette_handle,
+        checker,
+        palette_width,
+        sheet: sheet_px,
+        drawn: 0,
+    };
+    spawn_bird(
+        &mut commands,
+        &mut images,
+        &mut materials,
+        &debug,
+        sprite_pos,
+        sheet,
+        debug.draw.clone(),
+        debug.transparent.clone(),
+        false,
+    );
+    commands.insert_resource(debug);
     commands.spawn_scene(debug_panel(&colors));
 }
 
@@ -174,6 +217,16 @@ fn palette_texture(colors: &[[u8; 4]]) -> Image {
     );
     image.sampler = ImageSampler::nearest();
     image
+}
+
+fn identity_map() -> Vec<u8> {
+    (0..LUT_LEN).map(|i| i as u8).collect()
+}
+
+fn initial_transparent() -> Vec<bool> {
+    let mut transparent = vec![false; LUT_LEN];
+    transparent[0] = true;
+    transparent
 }
 
 /// Identity remap. Source index 0 starts transparent, same as Pico-8 `palt`.
@@ -236,21 +289,35 @@ fn debug_panel(colors: &[Color]) -> impl Scene {
         Children [
             @pane() Children [
                 @pane_header() Children [
-                    @label("Sprite palette")
+                    @label("Draw and display palettes")
                 ]
                 --
                 @pane_body() Children [
-                    @label_dim("The sprite samples an R8 index, an RGBA palette, and this 256x1 Rg8Uint LUT.")
+                    @label_dim("Click a source color, then a dest color. The sprite LUT is display[draw[i]].")
                     --
-                    @label_dim("Click a source color, then a dest color, to store a -> b in lut.r.")
+                    @label_dim("Draw stamps a sprite with the current draw map. Display edits recolor every sprite. Draw edits wait for the next Draw.")
                     --
                     Node {
                         display: Display::Flex,
                         flex_direction: FlexDirection::Row,
                         align_items: AlignItems::Center,
                         column_gap: px(12),
+                        flex_wrap: FlexWrap::Wrap,
+                        row_gap: px(8),
                     }
                     Children [
+                        @FeathersButton {
+                            @caption: bsn! { @caption("Edit draw") },
+                        }
+                        EditDraw
+                        on(on_edit_draw)
+                        --
+                        @FeathersButton {
+                            @caption: bsn! { @caption("Edit display") },
+                        }
+                        EditDisplay
+                        on(on_edit_display)
+                        --
                         @FeathersCheckbox {
                             @caption: bsn! { @caption("Transparent") },
                         }
@@ -258,12 +325,22 @@ fn debug_panel(colors: &[Color]) -> impl Scene {
                         on(on_transparency)
                         --
                         @FeathersButton {
-                            @caption: bsn! { @caption("Reset swap") },
+                            @caption: bsn! { @caption("Reset map") },
                         }
                         on(on_reset)
+                        --
+                        @FeathersButton {
+                            @caption: bsn! { @caption("Draw") },
+                        }
+                        on(on_draw)
+                        --
+                        @FeathersButton {
+                            @caption: bsn! { @caption("Reset") },
+                        }
+                        on(on_reset_all)
                     ]
                     --
-                    @label("0 -> 0    lut[0] = (0, 1)")
+                    @label("draw  0 -> 0    draw[0] = 0    display[0] = 0    lut[0] = (0, 1)")
                     StatusText
                     --
                     @index_row(colors)
@@ -271,6 +348,10 @@ fn debug_panel(colors: &[Color]) -> impl Scene {
                     @source_row(colors)
                     --
                     @dest_row(colors)
+                    --
+                    @draw_row(colors)
+                    --
+                    @display_row(colors)
                     --
                     @drawn_row(colors)
                     --
@@ -291,7 +372,7 @@ fn swatch_row<C: Scene>(title: &'static str, cells: Vec<C>) -> impl Scene {
         }
         Children [
             Node {
-                width: px(64),
+                width: px(76),
             }
             Children [
                 @label(title)
@@ -395,6 +476,60 @@ fn dest_row(colors: &[Color]) -> impl Scene {
     swatch_row("dest", cells)
 }
 
+fn draw_row(colors: &[Color]) -> impl Scene {
+    let cells: Vec<_> = colors
+        .iter()
+        .copied()
+        .enumerate()
+        .map(|(index, color)| {
+            let index = index as u8;
+            bsn! {
+                Node {
+                    width: px(CELL),
+                    height: px(CELL),
+                    flex_shrink: 0.0,
+                    border_radius: BorderRadius::all(px(4)),
+                }
+                BackgroundColor({color})
+                Outline {
+                    width: px(2),
+                    offset: px(1),
+                    color: {Color::NONE},
+                }
+                DrawSwatch { index: {index} }
+            }
+        })
+        .collect();
+    swatch_row("draw", cells)
+}
+
+fn display_row(colors: &[Color]) -> impl Scene {
+    let cells: Vec<_> = colors
+        .iter()
+        .copied()
+        .enumerate()
+        .map(|(index, color)| {
+            let index = index as u8;
+            bsn! {
+                Node {
+                    width: px(CELL),
+                    height: px(CELL),
+                    flex_shrink: 0.0,
+                    border_radius: BorderRadius::all(px(4)),
+                }
+                BackgroundColor({color})
+                Outline {
+                    width: px(2),
+                    offset: px(1),
+                    color: {Color::NONE},
+                }
+                DisplaySwatch { index: {index} }
+            }
+        })
+        .collect();
+    swatch_row("display", cells)
+}
+
 fn drawn_row(colors: &[Color]) -> impl Scene {
     let cells: Vec<_> = colors
         .iter()
@@ -414,7 +549,7 @@ fn drawn_row(colors: &[Color]) -> impl Scene {
             }
         })
         .collect();
-    swatch_row("drawn", cells)
+    swatch_row("sprite", cells)
 }
 
 fn bit_row(colors: &[Color]) -> impl Scene {
@@ -440,10 +575,62 @@ fn bit_row(colors: &[Color]) -> impl Scene {
     swatch_row("bit", cells)
 }
 
+fn spawn_bird(
+    commands: &mut Commands,
+    images: &mut Assets<Image>,
+    materials: &mut Assets<GfxPaletteLookupMaterial>,
+    debug: &PalDebug,
+    pos: Vec3,
+    size: Vec2,
+    draw: Vec<u8>,
+    transparent: Vec<bool>,
+    stamped: bool,
+) {
+    let lut = images.add(identity_lut());
+    write_lut(images, &lut, &draw, &transparent, &debug.display);
+    let material = materials.add(GfxPaletteLookupMaterial {
+        palette_texture: debug.palette.clone(),
+        lut_texture: lut.clone(),
+        palette_width: debug.palette_width,
+        palette_height: 1,
+        access_kind: 0,
+        access_param: 0,
+    });
+    if stamped {
+        commands.spawn((
+            Sprite {
+                image: debug.checker.clone(),
+                custom_size: Some(size + Vec2::splat(16.0)),
+                ..default()
+            },
+            Transform::from_translation(pos.with_z(0.0)),
+            StampedSprite,
+        ));
+    }
+    let mut sprite = commands.spawn((
+        Sprite {
+            image: debug.index.clone(),
+            custom_size: Some(size),
+            ..default()
+        },
+        SpriteMaterial(material),
+        Transform::from_translation(pos),
+        RetainedDraw {
+            lut,
+            draw,
+            transparent,
+        },
+    ));
+    if stamped {
+        sprite.insert(StampedSprite);
+    }
+}
+
 fn on_swatch(
     activate: On<Activate>,
     sources: Query<&SourceSwatch>,
     dests: Query<&DestSwatch>,
+    sprites: Query<&RetainedDraw>,
     mut debug: ResMut<PalDebug>,
     mut images: ResMut<Assets<Image>>,
 ) {
@@ -454,63 +641,188 @@ fn on_swatch(
     let Ok(dest) = dests.get(activate.entity) else {
         return;
     };
-    let src = debug.selected;
-    write_remap(&mut images, &debug.lut, src, dest.index);
-}
-
-fn on_reset(_activate: On<Activate>, debug: Res<PalDebug>, mut images: ResMut<Assets<Image>>) {
-    let Some(mut image) = images.get_mut(&debug.lut) else {
-        return;
-    };
-    let data = image.data.as_mut().expect("lut pixels");
-    for i in 0..LUT_LEN {
-        data[i * 2] = i as u8;
+    let src = debug.selected as usize;
+    if debug.editing_display {
+        debug.display[src] = dest.index;
+        recompose_all(&mut images, &debug.display, &sprites);
+    } else {
+        debug.draw[src] = dest.index;
     }
 }
 
-fn on_transparency(
-    change: On<ValueChange<bool>>,
-    debug: Res<PalDebug>,
+fn on_draw(
+    _activate: On<Activate>,
+    mut commands: Commands,
+    mut debug: ResMut<PalDebug>,
     mut images: ResMut<Assets<Image>>,
+    mut materials: ResMut<Assets<GfxPaletteLookupMaterial>>,
 ) {
-    let Some(mut image) = images.get_mut(&debug.lut) else {
-        return;
-    };
-    let data = image.data.as_mut().expect("lut pixels");
-    data[debug.selected as usize * 2 + 1] = u8::from(change.value);
+    let stamp = debug.sheet * 2.0;
+    let slot = debug.drawn;
+    debug.drawn += 1;
+    let gap = 16.0;
+    let col = slot % 2;
+    let row = slot / 2;
+    // Sit above the live sheet, left of the panel.
+    let left = -180.0 - debug.sheet.x * 2.0;
+    let above = 24.0 + debug.sheet.y * 2.0;
+    let x = left + stamp.x * 0.5 + col as f32 * (stamp.x + gap);
+    let y = above + gap + stamp.y * 0.5 + row as f32 * (stamp.y + gap);
+    spawn_bird(
+        &mut commands,
+        &mut images,
+        &mut materials,
+        &debug,
+        Vec3::new(x, y, 1.0),
+        stamp,
+        debug.draw.clone(),
+        debug.transparent.clone(),
+        true,
+    );
 }
 
-fn write_remap(images: &mut Assets<Image>, lut: &Handle<Image>, src: u8, dst: u8) {
+fn on_reset_all(
+    _activate: On<Activate>,
+    mut commands: Commands,
+    mut debug: ResMut<PalDebug>,
+    mut images: ResMut<Assets<Image>>,
+    mut retained: Query<&mut RetainedDraw, Without<StampedSprite>>,
+    stamps: Query<Entity, With<StampedSprite>>,
+) {
+    debug.draw = identity_map();
+    debug.display = identity_map();
+    debug.transparent = initial_transparent();
+    debug.drawn = 0;
+    for mut sprite in &mut retained {
+        let lut = sprite.lut.clone();
+        sprite.draw.clone_from(&debug.draw);
+        sprite.transparent.clone_from(&debug.transparent);
+        write_lut(
+            &mut images,
+            &lut,
+            &sprite.draw,
+            &sprite.transparent,
+            &debug.display,
+        );
+    }
+    for entity in &stamps {
+        commands.entity(entity).despawn();
+    }
+}
+
+fn on_edit_draw(_activate: On<Activate>, mut debug: ResMut<PalDebug>) {
+    debug.editing_display = false;
+}
+
+fn on_edit_display(_activate: On<Activate>, mut debug: ResMut<PalDebug>) {
+    debug.editing_display = true;
+}
+
+fn on_reset(
+    _activate: On<Activate>,
+    sprites: Query<&RetainedDraw>,
+    mut debug: ResMut<PalDebug>,
+    mut images: ResMut<Assets<Image>>,
+) {
+    if debug.editing_display {
+        debug.display = identity_map();
+        recompose_all(&mut images, &debug.display, &sprites);
+    } else {
+        debug.draw = identity_map();
+    }
+}
+
+fn on_transparency(change: On<ValueChange<bool>>, mut debug: ResMut<PalDebug>) {
+    let selected = debug.selected as usize;
+    debug.transparent[selected] = change.value;
+}
+
+fn palette_color(colors: &[Color], index: u8) -> Color {
+    colors
+        .get(index as usize)
+        .copied()
+        .unwrap_or(Color::srgb(1.0, 0.0, 1.0))
+}
+
+fn recompose_all(images: &mut Assets<Image>, display: &[u8], sprites: &Query<&RetainedDraw>) {
+    for sprite in sprites {
+        write_lut(
+            images,
+            &sprite.lut,
+            &sprite.draw,
+            &sprite.transparent,
+            display,
+        );
+    }
+}
+
+fn write_lut(
+    images: &mut Assets<Image>,
+    lut: &Handle<Image>,
+    draw: &[u8],
+    transparent: &[bool],
+    display: &[u8],
+) {
     let Some(mut image) = images.get_mut(lut) else {
         return;
     };
     let data = image.data.as_mut().expect("lut pixels");
-    data[src as usize * 2] = dst;
+    for i in 0..LUT_LEN {
+        let mapped = draw[i] as usize;
+        data[i * 2] = display[mapped];
+        data[i * 2 + 1] = u8::from(transparent[i]);
+    }
 }
 
 fn sync_from_lut(
     debug: Res<PalDebug>,
-    images: Res<Assets<Image>>,
-    mut sources: Query<(&SourceSwatch, &mut Outline), Without<DestSwatch>>,
-    mut dests: Query<(&DestSwatch, &mut Outline), Without<SourceSwatch>>,
+    mut sources: Query<
+        (&SourceSwatch, &mut Outline),
+        (
+            Without<DestSwatch>,
+            Without<DrawSwatch>,
+            Without<DisplaySwatch>,
+        ),
+    >,
+    mut dests: Query<
+        (&DestSwatch, &mut Outline),
+        (
+            Without<SourceSwatch>,
+            Without<DrawSwatch>,
+            Without<DisplaySwatch>,
+        ),
+    >,
+    mut draws: Query<
+        (&DrawSwatch, &mut BackgroundColor, &mut Outline),
+        (
+            Without<DisplaySwatch>,
+            Without<SourceSwatch>,
+            Without<DestSwatch>,
+        ),
+    >,
+    mut displays: Query<
+        (&DisplaySwatch, &mut BackgroundColor, &mut Outline),
+        (
+            Without<DrawSwatch>,
+            Without<SourceSwatch>,
+            Without<DestSwatch>,
+        ),
+    >,
     mut drawn: Query<(&DrawnSwatch, &mut ColorSwatchValue)>,
     mut bits: Query<(&BitReadout, &mut Text), Without<StatusText>>,
     mut status: Query<&mut Text, (With<StatusText>, Without<BitReadout>)>,
     toggles: Query<(Entity, Has<Checked>), With<TransparencyToggle>>,
     mut commands: Commands,
 ) {
-    let Some(image) = images.get(&debug.lut) else {
-        return;
-    };
-    let Some(data) = image.data.as_deref() else {
-        return;
-    };
     let sel = debug.selected as usize;
-    if sel * 2 + 1 >= data.len() {
-        return;
-    }
-    let remap = data[sel * 2];
-    let transparent = data[sel * 2 + 1] != 0;
+    let draw_to = debug.draw[sel];
+    let shown = debug.display[draw_to as usize];
+    let target = if debug.editing_display {
+        debug.display[sel]
+    } else {
+        draw_to
+    };
+    let transparent = debug.transparent[sel];
 
     for (swatch, mut outline) in &mut sources {
         let color = if swatch.index == debug.selected {
@@ -523,7 +835,7 @@ fn sync_from_lut(
         }
     }
     for (swatch, mut outline) in &mut dests {
-        let color = if swatch.index == remap {
+        let color = if swatch.index == target {
             Color::srgb(1.0, 0.82, 0.25)
         } else {
             Color::NONE
@@ -532,15 +844,45 @@ fn sync_from_lut(
             outline.color = color;
         }
     }
+    for (swatch, mut background, mut outline) in &mut draws {
+        let index = swatch.index as usize;
+        let mapped = debug.draw[index];
+        let mut color = palette_color(&debug.colors, mapped);
+        if debug.transparent[index] {
+            color = color.with_alpha(0.0);
+        }
+        if background.0 != color {
+            background.0 = color;
+        }
+        let outline_color = if !debug.editing_display && swatch.index == debug.selected {
+            Color::WHITE
+        } else {
+            Color::NONE
+        };
+        if outline.color != outline_color {
+            outline.color = outline_color;
+        }
+    }
+    for (swatch, mut background, mut outline) in &mut displays {
+        let mapped = debug.display[swatch.index as usize];
+        let color = palette_color(&debug.colors, mapped);
+        if background.0 != color {
+            background.0 = color;
+        }
+        let outline_color = if debug.editing_display && swatch.index == debug.selected {
+            Color::WHITE
+        } else {
+            Color::NONE
+        };
+        if outline.color != outline_color {
+            outline.color = outline_color;
+        }
+    }
     for (swatch, mut value) in &mut drawn {
-        let i = swatch.index as usize * 2;
-        let (mapped, hidden) = (data[i], data[i + 1] != 0);
-        let mut color = debug
-            .colors
-            .get(mapped as usize)
-            .copied()
-            .unwrap_or(Color::srgb(1.0, 0.0, 1.0));
-        if hidden {
+        let index = swatch.index as usize;
+        let mapped = debug.display[debug.draw[index] as usize];
+        let mut color = palette_color(&debug.colors, mapped);
+        if debug.transparent[index] {
             color = color.with_alpha(0.0);
         }
         if value.0 != color {
@@ -548,14 +890,19 @@ fn sync_from_lut(
         }
     }
     for (bit, mut text) in &mut bits {
-        let hidden = data[bit.index as usize * 2 + 1] != 0;
+        let hidden = debug.transparent[bit.index as usize];
         let next = if hidden { "1" } else { "0" };
         if text.0 != next {
             text.0 = next.to_string();
         }
     }
+    let mode = if debug.editing_display {
+        "display"
+    } else {
+        "draw"
+    };
     let status_line = format!(
-        "{sel} -> {remap}    lut[{sel}] = ({remap}, {})",
+        "{mode}  {sel} -> {target}    draw[{sel}] = {draw_to}    display[{draw_to}] = {shown}    lut[{sel}] = ({shown}, {})",
         u8::from(transparent)
     );
     for mut text in &mut status {
