@@ -1,4 +1,6 @@
-use crate::pico8::{self, Error, Gfx, GfxMaterial, Pico8Asset, Pico8Handle, SprHandle, SpriteSheet};
+use crate::pico8::{
+    self, Error, Gfx, GfxMaterial, Pico8Asset, Pico8Handle, SprHandle, SpriteSheet,
+};
 use bevy::asset::AssetEventSystems;
 use bevy::platform::collections::HashSet;
 use bevy::prelude::*;
@@ -25,10 +27,8 @@ pub struct P8Map {
 struct MapChunkSpawned;
 
 pub(crate) fn plugin(app: &mut App) {
-    app.init_asset::<P8Map>().add_systems(
-        PostUpdate,
-        add_tilemap_chunks.after(AssetEventSystems),
-    );
+    app.init_asset::<P8Map>()
+        .add_systems(PostUpdate, add_tilemap_chunks.after(AssetEventSystems));
 }
 
 impl From<Handle<P8Map>> for SpriteMap {
@@ -153,11 +153,7 @@ fn add_tilemap_chunks(
         commands.entity(id).with_children(|parent| {
             parent.spawn((
                 Name::new("map-chunk"),
-                Transform::from_xyz(
-                    pixel_size.x as f32 / 2.0,
-                    -(pixel_size.y as f32) / 2.0,
-                    0.0,
-                ),
+                Transform::from_xyz(pixel_size.x as f32 / 2.0, -(pixel_size.y as f32) / 2.0, 0.0),
                 Visibility::Inherited,
                 TilemapChunk {
                     chunk_size,

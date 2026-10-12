@@ -31,14 +31,14 @@ git clone https://github.com/shanecelis/nano9.git
 Recommended if you are writing your game in Rust and not Lua.
 
 ``` sh
-cargo add nano9@0.1.0-alpha.7
+cargo add nano9@0.1.0-alpha.8
 ```
 
 ### As a command line tool n9
 
 Recommended if you are writing your game in Lua and not Rust.
 ``` sh
-cargo install nano9@0.1.0-alpha.7
+cargo install nano9@0.1.0-alpha.8
 ```
 ## Run a Pico-8 Cart
 <img align="right" height="300%" alt="hello-world" src="https://github.com/user-attachments/assets/1e09631e-9ece-48cb-ba9f-174a6bca4f87" />
@@ -47,14 +47,14 @@ Run a cart directly from a URL. For instance one may run the Pico-8 version of
 Celeste like so:
 
 ``` sh
-cargo install nano9@0.1.0-alpha.7
+cargo install nano9@0.1.0-alpha.8
 curl -o celeste.p8.png https://www.lexaloffle.com/bbs/cposts/1/15133.p8.png
 n9 run --shared-data=map celeste.p8.png
 ```
 
 ### Use the "web-asset" feature
 ``` sh
-cargo install --features web-asset nano9@0.1.0-alpha.7
+cargo install --features web-asset nano9@0.1.0-alpha.8
 n9 run --shared-data=map https://www.lexaloffle.com/bbs/cposts/1/15133.p8.png
 ```
 
@@ -323,7 +323,7 @@ This enables
 
 Carts can set these in `Nano9.toml` or in p8lua front matter:
 
-``` toml
+``` toml,no_sync
 # Audio commands are no-ops when true. Omitted: true on wasm, false on native.
 mute = false
 

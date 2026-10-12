@@ -213,18 +213,17 @@ impl Command for AudioCommand {
 
                     SfxDest::ChannelMask(mask) => {
                         let mask_bits = mask.view_bits::<Lsb0>();
-                        if let Some((index, available_channel)) = world
-                            .resource::<SfxChannels>()
-                            .iter()
-                            .enumerate()
-                            .find_map(|(i, id)| {
-                                (*mask_bits.get(i).as_deref().unwrap_or(&false)
-                                    && world
-                                        .get::<AudioSink>(*id)
-                                        .map(|s| s.is_paused() || s.empty())
-                                        .unwrap_or(true))
-                                .then_some((i as u8, *id))
-                            })
+                        if let Some((index, available_channel)) =
+                            world.resource::<SfxChannels>().iter().enumerate().find_map(
+                                |(i, id)| {
+                                    (*mask_bits.get(i).as_deref().unwrap_or(&false)
+                                        && world
+                                            .get::<AudioSink>(*id)
+                                            .map(|s| s.is_paused() || s.empty())
+                                            .unwrap_or(true))
+                                    .then_some((i as u8, *id))
+                                },
+                            )
                         {
                             record_play(world, index, &audio);
                             if muted {
@@ -315,10 +314,7 @@ fn skip_device(world: &World) -> bool {
 }
 
 fn record_frame(world: &World) -> u32 {
-    world
-        .get_resource::<FrameCount>()
-        .map(|f| f.0)
-        .unwrap_or(0)
+    world.get_resource::<FrameCount>().map(|f| f.0).unwrap_or(0)
 }
 
 fn record_play(world: &mut World, channel: u8, audio: &Audio) {

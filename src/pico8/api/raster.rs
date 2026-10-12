@@ -101,17 +101,16 @@ impl Raster {
     pub fn circfill(&mut self, ox: i32, oy: i32, r: i32) {
         let pen = self.pen;
         let (data, size) = self.buf();
-        CircleFill::new((ox as isize, oy as isize), r as isize)
-            .for_each(|span| {
-                fill_hline(
-                    data,
-                    size,
-                    span.x0 as i32,
-                    span.x1 as i32,
-                    span.y as i32,
-                    pen,
-                );
-            });
+        CircleFill::new((ox as isize, oy as isize), r as isize).for_each(|span| {
+            fill_hline(
+                data,
+                size,
+                span.x0 as i32,
+                span.x1 as i32,
+                span.y as i32,
+                pen,
+            );
+        });
     }
 
     pub fn oval(&mut self, x0: i32, y0: i32, x1: i32, y1: i32) {
@@ -127,8 +126,8 @@ impl Raster {
     pub fn ovalfill(&mut self, x0: i32, y0: i32, x1: i32, y1: i32) {
         let pen = self.pen;
         let (data, size) = self.buf();
-        EllipseFill::from_rect((x0 as isize, y0 as isize), (x1 as isize, y1 as isize))
-            .for_each(|span| {
+        EllipseFill::from_rect((x0 as isize, y0 as isize), (x1 as isize, y1 as isize)).for_each(
+            |span| {
                 fill_hline_clip(
                     data,
                     size,
@@ -137,7 +136,8 @@ impl Raster {
                     span.y as i32,
                     pen,
                 );
-            });
+            },
+        );
     }
 
     pub fn rrect(&mut self, x0: i32, y0: i32, x1: i32, y1: i32, r: i32) {

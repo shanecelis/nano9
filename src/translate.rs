@@ -1,5 +1,5 @@
-use crate::pico8::Defaults;
 use crate::pico8::Clearable;
+use crate::pico8::Defaults;
 use bevy::prelude::*;
 
 /// The position the Nano9 element was drawn. Note: it may be altered by

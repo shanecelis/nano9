@@ -249,17 +249,19 @@ fn new(cli: Cli) -> io::Result<ExitCode> {
                                     .args(["add", "bevy@0.15"]),
                             )?;
                             run_cargo(
-                                std::process::Command::new("cargo").current_dir(&path).args([
-                                    "add",
-                                    "nano9",
-                                    "--git",
-                                    "https://github.com/shanecelis/nano9.git",
-                                    "--branch",
-                                    "dev",
-                                    "--no-default-features",
-                                    "--features",
-                                    feature,
-                                ]),
+                                std::process::Command::new("cargo")
+                                    .current_dir(&path)
+                                    .args([
+                                        "add",
+                                        "nano9",
+                                        "--git",
+                                        "https://github.com/shanecelis/nano9.git",
+                                        "--branch",
+                                        "dev",
+                                        "--no-default-features",
+                                        "--features",
+                                        feature,
+                                    ]),
                             )?;
                             Ok::<(), io::Error>(())
                         })() {
@@ -629,9 +631,7 @@ fn run(cli: Cli) -> io::Result<ExitCode> {
     #[cfg(all(feature = "level", feature = "user_properties"))]
     app.add_systems(Startup, |reg: Res<AppTypeRegistry>| {
         bevy_ecs_tiled::map::export_types(&reg, "all-export-types.json", |name| true);
-        bevy_ecs_tiled::map::export_types(&reg, "export-types.json", |name| {
-            name.contains("nano9")
-        });
+        bevy_ecs_tiled::map::export_types(&reg, "export-types.json", |name| name.contains("nano9"));
     });
     let app_exit = if !check {
         app.run()

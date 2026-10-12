@@ -54,10 +54,18 @@ fn tonal_wave(wave: WaveForm, t: f32, t_phaser: f32) -> f32 {
             0.653 * ret
         }
         WaveForm::Square => {
-            if t < 0.5 { 0.25 } else { -0.25 }
+            if t < 0.5 {
+                0.25
+            } else {
+                -0.25
+            }
         }
         WaveForm::Pulse => {
-            if t < 0.316 { 0.25 } else { -0.25 }
+            if t < 0.316 {
+                0.25
+            } else {
+                -0.25
+            }
         }
         WaveForm::Organ => {
             let ret = if t < 0.5 {
@@ -617,7 +625,10 @@ impl Iterator for SfxDecoder {
         self.phase_b = (self.phase_b + freq * (109.0 / 110.0) * DT).fract();
 
         let raw = if matches!(note.wave(), WaveForm::Noise) {
-            self.noise = self.noise.wrapping_mul(1_664_525).wrapping_add(1_013_904_223);
+            self.noise = self
+                .noise
+                .wrapping_mul(1_664_525)
+                .wrapping_add(1_013_904_223);
             let white = (self.noise >> 16) as f32 / 32768.0 - 1.0;
             let scale = freq * DT * NOISE_CUTOFF_SCALE;
             self.noise_level = (self.noise_level + scale * white) / (1.0 + scale);
@@ -833,7 +844,9 @@ mod test {
         // Play 0..7, wrap to 1, then 1..7, wrap to 1.
         assert_eq!(
             pitches,
-            vec![48, 50, 52, 53, 55, 57, 59, 60, 50, 52, 53, 55, 57, 59, 60, 50]
+            vec![
+                48, 50, 52, 53, 55, 57, 59, 60, 50, 52, 53, 55, 57, 59, 60, 50
+            ]
         );
 
         release.store(true, Ordering::Relaxed);

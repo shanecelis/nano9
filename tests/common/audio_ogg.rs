@@ -9,7 +9,7 @@
 use lewton::inside_ogg::OggStreamReader;
 use std::fs::{self, File};
 use std::io::{BufReader, Cursor, Read};
-use std::num::{NonZeroU32, NonZeroU8};
+use std::num::{NonZeroU8, NonZeroU32};
 use std::path::Path;
 use vorbis_rs::{VorbisBitrateManagementStrategy, VorbisEncoderBuilder};
 

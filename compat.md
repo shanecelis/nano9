@@ -27,7 +27,11 @@ Parameters shown in italics are extensions to the Pico-8 API.
 - [x] palt([c,] [t])
 - [/] pget(x, y)
 
-Reads visible pixel canvases from the top down and returns the first pixel `pset` wrote. A hole in a newer canvas shows an older one. A coordinate no canvas has written, or one outside the canvas, returns nil. Color 0 from `pset` is a pixel, not a hole. `rect`, `spr`, `map`, and `print` are not in those buffers.
+Reads visible pixel canvases from the top down and returns the first pixel
+`pset` wrote. A hole in a newer canvas shows an older one. A coordinate no
+canvas has written, or one outside the canvas, returns nil. Color 0 from `pset`
+is a pixel, not a hole. `rect`, `spr`, `map`, and `print` are not in those
+buffers.
 
 - [x] print(str, [x,] [y,] [col,] *[font_size]*)
 - [x] pset(x, y, [c])

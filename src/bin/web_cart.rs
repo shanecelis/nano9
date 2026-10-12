@@ -36,10 +36,7 @@ fn main() {
     let mut app = App::new();
     app.add_plugins(Nano9Plugins::default());
     if let Some(param) = param {
-        app.insert_resource(CartArgs {
-            param,
-            ..default()
-        });
+        app.insert_resource(CartArgs { param, ..default() });
     }
     app.add_systems(Startup, {
         let cart = cart.clone();

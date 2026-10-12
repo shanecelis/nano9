@@ -1,6 +1,6 @@
 //! Sprite material that looks up palette colors from an index texture and a PalMap LUT.
 
-use bevy::asset::{uuid_handle, Asset};
+use bevy::asset::{Asset, uuid_handle};
 use bevy::reflect::Reflect;
 use bevy::render::render_resource::*;
 use bevy::shader::Shader;
@@ -65,7 +65,10 @@ pub fn build_palette_lookup_material(
     }
 }
 
-pub(crate) fn gfx_palette_lookup_material_plugin(app: &mut App) {
+/// Registers the palette-lookup sprite shader and material.
+///
+/// Call this after Bevy's `DefaultPlugins` when the app is not using [`crate::Nano9Plugins`].
+pub fn gfx_palette_lookup_material_plugin(app: &mut App) {
     let mut shaders = app.world_mut().resource_mut::<Assets<Shader>>();
     shaders
         .insert(

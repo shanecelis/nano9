@@ -172,19 +172,26 @@ pub fn write_wav(path: &Path, pcm: &[i16]) -> Result<(), String> {
     let mut file = BufWriter::new(File::create(path).map_err(|e| e.to_string())?);
     let data_bytes = (pcm.len() * 2) as u32;
     let sample_rate = SAMPLE_RATE;
+    /// TODO: There are a lot of to_string()s here. Maybe we should just use a
+    /// transparent error type.
     file.write_all(b"RIFF").map_err(|e| e.to_string())?;
     file.write_all(&(36 + data_bytes).to_le_bytes())
         .map_err(|e| e.to_string())?;
     file.write_all(b"WAVEfmt ").map_err(|e| e.to_string())?;
-    file.write_all(&16u32.to_le_bytes()).map_err(|e| e.to_string())?; // PCM header size
-    file.write_all(&1u16.to_le_bytes()).map_err(|e| e.to_string())?; // audio format
-    file.write_all(&1u16.to_le_bytes()).map_err(|e| e.to_string())?; // channels
+    file.write_all(&16u32.to_le_bytes())
+        .map_err(|e| e.to_string())?; // PCM header size
+    file.write_all(&1u16.to_le_bytes())
+        .map_err(|e| e.to_string())?; // audio format
+    file.write_all(&1u16.to_le_bytes())
+        .map_err(|e| e.to_string())?; // channels
     file.write_all(&sample_rate.to_le_bytes())
         .map_err(|e| e.to_string())?;
     file.write_all(&(sample_rate * 2).to_le_bytes())
         .map_err(|e| e.to_string())?; // byte rate
-    file.write_all(&2u16.to_le_bytes()).map_err(|e| e.to_string())?; // block align
-    file.write_all(&16u16.to_le_bytes()).map_err(|e| e.to_string())?; // bits
+    file.write_all(&2u16.to_le_bytes())
+        .map_err(|e| e.to_string())?; // block align
+    file.write_all(&16u16.to_le_bytes())
+        .map_err(|e| e.to_string())?; // bits
     file.write_all(b"data").map_err(|e| e.to_string())?;
     file.write_all(&data_bytes.to_le_bytes())
         .map_err(|e| e.to_string())?;

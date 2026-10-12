@@ -42,6 +42,9 @@ pub enum CartLoaderError {
     Decompression(String),
     #[error("Read bytes error: {0}")]
     ReadBytes(#[from] bevy::asset::ReadAssetBytesError),
+    #[cfg(feature = "pico8-to-lua")]
+    #[error(transparent)]
+    LuaParse(#[from] pico8_to_lua::ParseError),
 }
 
 #[allow(dead_code)]
@@ -354,7 +357,7 @@ pub(crate) async fn translate_pico8_to_lua(
     load_context: &mut LoadContext<'_>,
 ) -> Result<Option<String>, CartLoaderError> {
     // Patch the includes.
-    let include_paths: Vec<String> = pico8_to_lua::find_includes(lua).collect();
+    let include_paths: Vec<&str> = pico8_to_lua::find_includes(lua).collect();
     let has_includes = !include_paths.is_empty();
     let mut include_patch: Cow<'_, str> = Cow::Borrowed(lua);
     let mut path_contents = std::collections::HashMap::new();
@@ -404,9 +407,9 @@ pub(crate) async fn translate_pico8_to_lua(
             pico8_to_lua::patch_includes(lua, |path| path_contents.get(path).unwrap().into());
     }
     // Patch the code.
-    let result = pico8_to_lua::patch_lua(include_patch);
+    let result = pico8_to_lua::patch_lua(include_patch)?;
     Ok(if has_includes || pico8_to_lua::was_patched(&result) {
-        Some(result.to_string())
+        Some(result.into_owned())
     } else {
         None
     })
@@ -465,9 +468,9 @@ impl AssetLoader for PngCartLoader {
             // }
 
             // Patch the code.
-            let result = pico8_to_lua::patch_lua(include_patch);
+            let result = pico8_to_lua::patch_lua(include_patch)?;
             if pico8_to_lua::was_patched(&result) {
-                code = result.to_string();
+                code = result.into_owned();
                 log_lua_code(&code);
             }
         }
@@ -803,7 +806,8 @@ if (l%16==0 or btnp(\u{274e})) then
 end
 ";
         let cart = Cart::from_str(CART, &CartLoaderSettings::default()).unwrap();
-        let patched = pico8_to_lua::patch_lua(cart.lua.as_str());
+        let patched = pico8_to_lua::patch_lua(cart.lua.as_str())
+            .unwrap_or_else(|err| panic!("pico-8 lua did not parse: {err}"));
         let mut lua = Lua::new(SafeOption::default());
         let compiled = lua.load(&patched).into_function();
         if let Err(err) = compiled {

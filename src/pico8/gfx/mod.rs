@@ -245,7 +245,11 @@ pub(crate) fn image_tileset_array(
     Ok(handle)
 }
 
-fn lut_image(pal_map: &PalMap, images: &mut Assets<Image>, cache: &mut PalMapLutCache) -> Handle<Image> {
+fn lut_image(
+    pal_map: &PalMap,
+    images: &mut Assets<Image>,
+    cache: &mut PalMapLutCache,
+) -> Handle<Image> {
     let key = pal_map_hash(pal_map);
     if let Some(handle) = cache.0.get(&key) {
         return handle.clone();
@@ -297,12 +301,8 @@ fn gpu_sprite_assets(
     let palette = palettes.get_pal(gfx_material.palette)?;
     let lut = lut_image(&gfx_material.pal_map, images, lut_cache);
     let palette_image_ref = images.get(&palette.image);
-    let material = build_palette_lookup_material(
-        palette.image().clone(),
-        lut,
-        palette,
-        palette_image_ref,
-    );
+    let material =
+        build_palette_lookup_material(palette.image().clone(), lut, palette, palette_image_ref);
     let handle = if let Some((_, handle)) = gpu_materials.0.get(&material_id).cloned() {
         if let Some(mut existing) = palette_materials.get_mut(&handle) {
             *existing = material;
