@@ -1,15 +1,17 @@
 //! Shared Pico-8 golden harness for image and sfx carts.
 
 mod audio_ogg;
+mod wave_baseline;
 
 use audio_ogg::{load_ogg, load_wav, write_ogg};
-use nano9::pico8::audio::{key_to_freq, tonal_wave, Effect, Note, Pico8Note, Sfx, WaveForm};
+use nano9::pico8::audio::{Effect, Note, Pico8Note, Sfx, WaveForm, key_to_freq, tonal_wave};
 use nano9::pico8::{Cart, CartLoaderSettings};
 use std::fs::{self, File};
 use std::io::{BufWriter, Write};
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 use std::time::Duration;
+use wave_baseline::{NoteMatch, SlotWave, report_wave_baseline};
 
 /// Pico-8 tracker tick: 183 samples at 22050 Hz.
 const SAMPLES_PER_TICK: usize = 183;
@@ -56,9 +58,25 @@ pub fn run_sfx_suite() {
         &mut rows,
         &mut failed,
     );
-    collect_export_cart(&synth_dir(), "synth.p8", "synth", &mut rows, &mut failed);
-    collect_export_cart(&synth_dir(), "oscillator.p8", "osc", &mut rows, &mut failed);
+    let mut wave = Vec::new();
+    collect_export_cart(
+        &synth_dir(),
+        "synth.p8",
+        "synth",
+        &mut rows,
+        &mut failed,
+        &mut wave,
+    );
+    collect_export_cart(
+        &synth_dir(),
+        "oscillator.p8",
+        "osc",
+        &mut rows,
+        &mut failed,
+        &mut Vec::new(),
+    );
     check_pico8_export_phase_walk();
+    report_wave_baseline(&synth_dir(), &wave);
     finish_suite(rows, failed);
 }
 
@@ -255,7 +273,7 @@ fn check_audio_cart(dir: &Path, name: &str) -> Result<CartResult, String> {
     let expected_pcm = load_ogg(&expected);
     let actual_pcm = load_ogg(&actual);
     let note_len = SAMPLES_PER_TICK * 8; // playback carts use speed 8 unless noted
-    Ok(compare_wav(
+    let (result, _) = compare_wav(
         name,
         dir,
         &expected,
@@ -267,7 +285,8 @@ fn check_audio_cart(dir: &Path, name: &str) -> Result<CartResult, String> {
         true,
         None,
         None,
-    ))
+    );
+    Ok(result)
 }
 
 fn collect_export_cart(
@@ -276,6 +295,7 @@ fn collect_export_cart(
     prefix: &str,
     rows: &mut Vec<(String, String)>,
     failed: &mut Vec<String>,
+    wave: &mut Vec<SlotWave>,
 ) {
     let cart_path = dir.join(cart_name);
     if !cart_path.exists() {
@@ -313,7 +333,7 @@ fn collect_export_cart(
         if expected.exists() && wanted {
             any = true;
             let phase = phases.get(index).copied().unwrap_or(PICO8_EXPORT_OSC_PHASE);
-            let result = check_synth_slot(dir, prefix, index, &name, sfx, phase);
+            let result = check_synth_slot(dir, prefix, index, &name, sfx, phase, wave);
             push_result(rows, failed, &label, result);
         }
     }
@@ -350,6 +370,7 @@ fn check_synth_slot(
     name: &str,
     sfx: &Sfx,
     phase: f32,
+    wave: &mut Vec<SlotWave>,
 ) -> Result<CartResult, String> {
     let expected = dir.join(format!("{prefix}-{index:02}-expected.ogg"));
     let actual = dir.join(format!("{prefix}-{index:02}-actual.ogg"));
@@ -362,8 +383,9 @@ fn check_synth_slot(
     let expected_pcm = load_ogg(&expected);
     let actual_pcm = load_ogg(&actual);
     let note_len = sfx.speed.max(1) as usize * SAMPLES_PER_TICK;
-    Ok(compare_wav(
-        &format!("{prefix}-{index:02}-{name}"),
+    let label = format!("{prefix}-{index:02}-{name}");
+    let (result, notes) = compare_wav(
+        &label,
         dir,
         &expected,
         &actual,
@@ -374,7 +396,11 @@ fn check_synth_slot(
         false,
         Some(phase),
         Some(&sfx.notes),
-    ))
+    );
+    if prefix == "synth" {
+        wave.push(SlotWave { id: label, notes });
+    }
+    Ok(result)
 }
 
 fn render_sfx(sfx: &Sfx, phase: f32) -> Vec<i16> {
@@ -456,7 +482,7 @@ fn compare_wav(
     align_actual_onset: bool,
     osc_phase: Option<f32>,
     notes: Option<&[Pico8Note]>,
-) -> CartResult {
+) -> (CartResult, Vec<NoteMatch>) {
     let e_on = if align_expected_onset {
         onset_index(expected_pcm, EXPORT_PAD_THRESHOLD).unwrap_or(0)
     } else {
@@ -469,8 +495,28 @@ fn compare_wav(
     };
     let aligned_e = &expected_pcm[e_on..];
     let aligned_a = &actual_pcm[a_on..];
+    let step = note_len.max(1);
+    let fit_pad = if notes.is_some() && align_expected_onset {
+        let on = onset_index(expected_pcm, EXPORT_PAD_THRESHOLD).unwrap_or(0);
+        if on < step { on } else { 0 }
+    } else {
+        e_on
+    };
+    let (mut pitch_rows, measured) = if let Some(notes) = notes {
+        collect_note_fits(
+            notes,
+            expected_pcm,
+            actual_pcm,
+            fit_pad,
+            note_len,
+            aligned_e.len().min(aligned_a.len()),
+            osc_phase.unwrap_or(0.0),
+        )
+    } else {
+        (String::new(), Vec::new())
+    };
     if aligned_e == aligned_a {
-        return CartResult::Match;
+        return (CartResult::Match, measured);
     }
 
     let n = aligned_e.len().min(aligned_a.len());
@@ -487,35 +533,11 @@ fn compare_wav(
         }
     }
     let rms_diff = rms(&diffs);
-    let mut pitch_rows = String::new();
-    let mut i = 0;
-    let mut note_i = 0;
-    let step = note_len.max(1);
-    // A short leading silence is Pico-8's export pad. A full note of silence
-    // is a rest, and stripping it shifts every later note off its window.
-    let fit_pad = if notes.is_some() && align_expected_onset {
-        let on = onset_index(expected_pcm, EXPORT_PAD_THRESHOLD).unwrap_or(0);
-        if on < step { on } else { 0 }
-    } else {
-        e_on
-    };
-    while i < n {
-        let end = (i + step).min(n);
-        if let Some(notes) = notes {
-            if let Some(note) = notes.get(note_i) {
-                let pico_note = note_slice(expected_pcm, fit_pad + i, step);
-                let nano_note = note_slice(actual_pcm, i, step);
-                pitch_rows.push_str(&note_fit_line(
-                    note_i,
-                    note,
-                    notes,
-                    note_len,
-                    osc_phase.unwrap_or(0.0),
-                    pico_note,
-                    nano_note,
-                ));
-            }
-        } else {
+    if notes.is_none() {
+        let mut i = 0;
+        let mut note_i = 0;
+        while i < n {
+            let end = (i + step).min(n);
             let e_hz = zero_cross_hz(&e_cmp[i..end], 22_050.0);
             let a_hz = zero_cross_hz(&a_cmp[i..end], 22_050.0);
             pitch_rows.push_str(&format!(
@@ -523,11 +545,11 @@ fn compare_wav(
                 e_rms = rms(&e_cmp[i..end]),
                 a_rms = rms(&a_cmp[i..end]),
             ));
-        }
-        note_i += 1;
-        i = end;
-        if note_i >= 16 {
-            break;
+            note_i += 1;
+            i = end;
+            if note_i >= 16 {
+                break;
+            }
         }
     }
 
@@ -567,12 +589,49 @@ fn compare_wav(
     println!("compare: {}", compare_path.display());
     let _ = std::io::stdout().flush();
     show_image(&format!("{name}: Pico-8 | Nano-9 | diff"), &compare_path);
-    CartResult::Differ {
-        detail: format!(
-            "{changed}/{n} |d|>{SAMPLE_EPS} ({pct:.2}%), RMS {rms_diff:.1}, onset {onset_delta}"
-        ),
-        compare: compare_path,
+    (
+        CartResult::Differ {
+            detail: format!(
+                "{changed}/{n} |d|>{SAMPLE_EPS} ({pct:.2}%), RMS {rms_diff:.1}, onset {onset_delta}"
+            ),
+            compare: compare_path,
+        },
+        measured,
+    )
+}
+
+fn collect_note_fits(
+    notes: &[Pico8Note],
+    expected_pcm: &[i16],
+    actual_pcm: &[i16],
+    fit_pad: usize,
+    note_len: usize,
+    sample_count: usize,
+    osc_phase: f32,
+) -> (String, Vec<NoteMatch>) {
+    let mut pitch_rows = String::new();
+    let mut measured = Vec::new();
+    let step = note_len.max(1);
+    let mut i = 0;
+    let mut note_i = 0;
+    while i < sample_count {
+        if let Some(note) = notes.get(note_i) {
+            let pico_note = note_slice(expected_pcm, fit_pad + i, step);
+            let nano_note = note_slice(actual_pcm, i, step);
+            let (line, fit) = note_fit_line(
+                note_i, note, notes, note_len, osc_phase, pico_note, nano_note,
+            );
+            if note_i < 16 {
+                pitch_rows.push_str(&line);
+            }
+            if let Some(fit) = fit {
+                measured.push(fit);
+            }
+        }
+        note_i += 1;
+        i += step;
     }
+    (pitch_rows, measured)
 }
 
 /// Positional args after skipping libtest flags. First one is the substring filter.
@@ -581,31 +640,44 @@ fn compare_wav(
 /// crate's name, treat it as "run this suite" rather than a cart filter.
 fn filter_arg() -> Option<String> {
     let crate_name = env!("CARGO_CRATE_NAME");
-    let mut args = std::env::args().skip(1);
-    while let Some(arg) = args.next() {
+    let args: Vec<String> = std::env::args().skip(1).collect();
+    let mut i = 0;
+    while i < args.len() {
+        let arg = args[i].as_str();
         if arg == "--" {
+            i += 1;
             continue;
         }
         if arg.starts_with('-') {
-            if !arg.contains('=')
+            let takes_value = !arg.contains('=')
                 && matches!(
-                    arg.as_str(),
+                    arg,
                     "--test-threads"
                         | "--color"
                         | "--skip"
                         | "--format"
                         | "--ensure-time"
                         | "--report-time"
-                )
-            {
-                let _ = args.next();
+                        | "--save-baseline"
+                        | "--baseline"
+                );
+            if takes_value {
+                let name_is_optional = matches!(arg, "--save-baseline" | "--baseline");
+                if let Some(next) = args.get(i + 1) {
+                    if !name_is_optional || !next.starts_with('-') {
+                        i += 2;
+                        continue;
+                    }
+                }
             }
+            i += 1;
             continue;
         }
         if arg == crate_name {
+            i += 1;
             continue;
         }
-        return Some(arg);
+        return Some(args[i].clone());
     }
     None
 }
@@ -705,20 +777,20 @@ fn note_fit_line(
     phase0: f32,
     pico: &[i16],
     nano: &[i16],
-) -> String {
+) -> (String, Option<NoteMatch>) {
     let wave = note.wave();
     if note.volume() <= 0.0 {
-        return format!("  note {index} {wave:?}: rest\n");
+        return (format!("  note {index} {wave:?}: rest\n"), None);
     }
     if matches!(wave, WaveForm::Noise | WaveForm::Custom(_)) {
-        return format!("  note {index} {wave:?}: skipped\n");
+        return (format!("  note {index} {wave:?}: skipped\n"), None);
     }
     let nominal = key_to_freq(note.key() as f32) as f64;
     let Some(pico_fit) = fit_tone(pico, &wave, nominal) else {
-        return format!("  note {index} {wave:?}: no fit\n");
+        return (format!("  note {index} {wave:?}: no fit\n"), None);
     };
     let Some(nano_fit) = fit_tone(nano, &wave, nominal) else {
-        return format!("  note {index} {wave:?}: nano no fit\n");
+        return (format!("  note {index} {wave:?}: nano no fit\n"), None);
     };
     let cents = 1200.0 * (pico_fit.freq_hz / nano_fit.freq_hz).log2();
     let pico_cents = 1200.0 * (pico_fit.freq_hz / nominal).log2();
@@ -739,12 +811,25 @@ fn note_fit_line(
     } else {
         "effect"
     };
-    format!(
+    let line = format!(
         "  note {index} {wave:?} {kind}: {cents:+.1} cents (pico {pico_cents:+.1} / nano {nano_cents:+.1}), amp {amp:.3} ({:.0}/{:.0}), phase {phase_samples:+.1} samples, shape rms {:.0}/{:.0}, nano phase err {nano_err:+.3}\n",
-        pico_fit.amp,
-        nano_fit.amp,
-        pico_fit.residual_rms,
-        nano_fit.residual_rms,
+        pico_fit.amp, nano_fit.amp, pico_fit.residual_rms, nano_fit.residual_rms,
+    );
+    (
+        line,
+        Some(NoteMatch {
+            index,
+            wave: format!("{wave:?}"),
+            kind: kind.to_string(),
+            cents,
+            pico_cents,
+            nano_cents,
+            amp_ratio: amp,
+            phase_samples,
+            pico_shape_rms: pico_fit.residual_rms,
+            nano_shape_rms: nano_fit.residual_rms,
+            samples: pico.len(),
+        }),
     )
 }
 

@@ -14,7 +14,16 @@
 //! cargo test --test sfx -- triangle
 //! cargo test-sfx
 //! cargo test-sfx synth
+//! cargo test-sfx synth --save-baseline
+//! cargo test-sfx synth --save-baseline before
+//! cargo test-sfx synth --baseline before
 //! ```
+//!
+//! `cargo test-sfx synth` prints a wave-match summary for the synth slots:
+//! frequency (cents), amplitude (gain ratio), phase (samples), and Pico-8
+//! shape residual. `--save-baseline` writes `tests/golden/synth/wave-baseline.json`.
+//! `--save-baseline before` writes `wave-baseline-before.json`, and
+//! `--baseline before` compares against that file. A drop is a closer Pico-8 match.
 //!
 //! `cargo test sfx` also selects this target (and any other tests whose names
 //! contain `sfx`). Synth slots are rendered in-process from `Sfx::decode()`,
