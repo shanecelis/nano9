@@ -489,7 +489,7 @@ dependencies = [
 
 [[package]]
 name = "bevy-input-sequence"
-version = "0.11.0"
+version = "0.12.0"
 dependencies = [
  "bevy",
  "keyseq",
@@ -995,7 +995,9 @@ dependencies = [
 
 [[package]]
 name = "bevy_egui"
-version = "0.42.0"
+version = "0.43.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cee91f48e697b0fd853713f81e95299a3f337f4623b1445df5e3da91284f30a3"
 dependencies = [
  "arboard",
  "bevy_app",
@@ -1026,6 +1028,7 @@ dependencies = [
  "bytemuck",
  "crossbeam-channel",
  "egui",
+ "encase",
  "getrandom 0.4.3",
  "image",
  "itertools 0.15.0",

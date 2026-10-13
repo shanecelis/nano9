@@ -34,7 +34,7 @@ bytemuck = "1.16.3"
 thiserror = "1.0.63"
 bevy_minibuffer = { version = "0.8", optional = true }
 bevy_minibuffer_inspector = { version = "0.6", optional = true }
-bevy_egui = { version = "0.42", optional = true }
+bevy_egui = { version = "0.43", optional = true }
 keyseq = { version = "0.10.0", features = ["bevy"], optional = true }
 serde = { version = "1.0.228", features = ["derive"] }
 bevy_ecs_tilemap = { version = "0.19", optional = true }
@@ -157,7 +157,6 @@ bevy_ecs_tiled = { path = "../bevy_ecs_tiled" }
 bevy_mod_debugdump = { path = "../bevy_mod_debugdump" }
 # bobtail = { path = "../bobtail" }
 bevy_minibuffer = { path = "../bevy_minibuffer" }
-bevy_egui = { path = "../bevy_egui" }
 bevy-inspector-egui = { path = "../bevy-inspector-egui/crates/bevy-inspector-egui" }
 bevy_minibuffer_inspector = { path = "../bevy_minibuffer_inspector" }
 # bevy_vox_scene = { git = "https://github.com/oliver-dew/bevy_vox_scene.git", branch = "feature/bevy-0.19" }

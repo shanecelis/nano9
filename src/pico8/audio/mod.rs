@@ -31,13 +31,13 @@ const NOISE_CUTOFF_SCALE: f32 = 8.858923;
 const OUTPUT_GAIN: f32 = 16125.0 / 16383.5;
 
 /// Pitch 33 is A-4 = 440 Hz (Pico-8 key 0..=63).
-fn key_to_freq(key: f32) -> f32 {
+pub fn key_to_freq(key: f32) -> f32 {
     440.0 * f32::exp2((key - 33.0) / 12.0)
 }
 
 /// One sample of a built-in waveform. `t` / `t_phaser` are phases in `[0, 1)`.
 /// Amplitudes from zepto-8, measured against Pico-8 WAV exports.
-fn tonal_wave(wave: WaveForm, t: f32, t_phaser: f32) -> f32 {
+pub fn tonal_wave(wave: &WaveForm, t: f32, t_phaser: f32) -> f32 {
     match wave {
         WaveForm::Triangle => (1.0 - (4.0 * t - 2.0).abs()) * 0.5,
         WaveForm::TiltedSaw => {
@@ -620,6 +620,9 @@ impl Iterator for SfxDecoder {
             }
         }
 
+        // Short windows fit about 2 cents flat, but that bias is not a scale
+        // factor: a 32-note export's leftover phase matches Pico-8 only when
+        // this increment is unscaled (Δφ ≈ 0.125).
         let freq = key_to_freq(key.max(0.0));
         self.phase = (self.phase + freq * DT).fract();
         self.phase_b = (self.phase_b + freq * (109.0 / 110.0) * DT).fract();
@@ -635,7 +638,7 @@ impl Iterator for SfxDecoder {
             let factor = 1.0 - key / 63.0;
             self.noise_level * 1.5 * (1.0 + factor * factor)
         } else {
-            tonal_wave(note.wave(), self.phase, self.phase_b)
+            tonal_wave(&note.wave(), self.phase, self.phase_b)
         };
 
         let max_step = DT / ANTICLICK_RAMP;

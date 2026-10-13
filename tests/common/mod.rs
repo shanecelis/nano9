@@ -3,7 +3,7 @@
 mod audio_ogg;
 
 use audio_ogg::{load_ogg, load_wav, write_ogg};
-use nano9::pico8::audio::{Note, Pico8Note, Sfx};
+use nano9::pico8::audio::{key_to_freq, tonal_wave, Effect, Note, Pico8Note, Sfx, WaveForm};
 use nano9::pico8::{Cart, CartLoaderSettings};
 use std::fs::{self, File};
 use std::io::{BufWriter, Write};
@@ -266,6 +266,7 @@ fn check_audio_cart(dir: &Path, name: &str) -> Result<CartResult, String> {
         true,
         true,
         None,
+        None,
     ))
 }
 
@@ -372,6 +373,7 @@ fn check_synth_slot(
         true,
         false,
         Some(phase),
+        Some(&sfx.notes),
     ))
 }
 
@@ -453,6 +455,7 @@ fn compare_wav(
     align_expected_onset: bool,
     align_actual_onset: bool,
     osc_phase: Option<f32>,
+    notes: Option<&[Pico8Note]>,
 ) -> CartResult {
     let e_on = if align_expected_onset {
         onset_index(expected_pcm, EXPORT_PAD_THRESHOLD).unwrap_or(0)
@@ -488,15 +491,39 @@ fn compare_wav(
     let mut i = 0;
     let mut note_i = 0;
     let step = note_len.max(1);
+    // A short leading silence is Pico-8's export pad. A full note of silence
+    // is a rest, and stripping it shifts every later note off its window.
+    let fit_pad = if notes.is_some() && align_expected_onset {
+        let on = onset_index(expected_pcm, EXPORT_PAD_THRESHOLD).unwrap_or(0);
+        if on < step { on } else { 0 }
+    } else {
+        e_on
+    };
     while i < n {
         let end = (i + step).min(n);
-        let e_hz = zero_cross_hz(&e_cmp[i..end], 22_050.0);
-        let a_hz = zero_cross_hz(&a_cmp[i..end], 22_050.0);
-        pitch_rows.push_str(&format!(
-            "  note {note_i}: Pico-8 {e_hz:.1} Hz / {e_rms:.0} rms, Nano-9 {a_hz:.1} Hz / {a_rms:.0} rms\n",
-            e_rms = rms(&e_cmp[i..end]),
-            a_rms = rms(&a_cmp[i..end]),
-        ));
+        if let Some(notes) = notes {
+            if let Some(note) = notes.get(note_i) {
+                let pico_note = note_slice(expected_pcm, fit_pad + i, step);
+                let nano_note = note_slice(actual_pcm, i, step);
+                pitch_rows.push_str(&note_fit_line(
+                    note_i,
+                    note,
+                    notes,
+                    note_len,
+                    osc_phase.unwrap_or(0.0),
+                    pico_note,
+                    nano_note,
+                ));
+            }
+        } else {
+            let e_hz = zero_cross_hz(&e_cmp[i..end], 22_050.0);
+            let a_hz = zero_cross_hz(&a_cmp[i..end], 22_050.0);
+            pitch_rows.push_str(&format!(
+                "  note {note_i}: Pico-8 {e_hz:.1} Hz / {e_rms:.0} rms, Nano-9 {a_hz:.1} Hz / {a_rms:.0} rms\n",
+                e_rms = rms(&e_cmp[i..end]),
+                a_rms = rms(&a_cmp[i..end]),
+            ));
+        }
         note_i += 1;
         i = end;
         if note_i >= 16 {
@@ -651,6 +678,197 @@ fn zero_cross_hz(samples: &[i16], rate: f64) -> f64 {
         }
     }
     (crosses as f64) * rate / (2.0 * samples.len() as f64)
+}
+
+fn note_slice(pcm: &[i16], start: usize, len: usize) -> &[i16] {
+    if start >= pcm.len() {
+        &[]
+    } else {
+        &pcm[start..(start + len).min(pcm.len())]
+    }
+}
+
+/// Pico-8 PCM fitted to `A * tonal_wave` over phase and a frequency near `nominal_hz`.
+struct ToneFit {
+    freq_hz: f64,
+    amp: f64,
+    phase: f64,
+    residual_rms: f64,
+    cents: f64,
+}
+
+fn note_fit_line(
+    index: usize,
+    note: &Pico8Note,
+    notes: &[Pico8Note],
+    note_len: usize,
+    phase0: f32,
+    pico: &[i16],
+    nano: &[i16],
+) -> String {
+    let wave = note.wave();
+    if note.volume() <= 0.0 {
+        return format!("  note {index} {wave:?}: rest\n");
+    }
+    if matches!(wave, WaveForm::Noise | WaveForm::Custom(_)) {
+        return format!("  note {index} {wave:?}: skipped\n");
+    }
+    let nominal = key_to_freq(note.key() as f32) as f64;
+    let Some(pico_fit) = fit_tone(pico, &wave, nominal) else {
+        return format!("  note {index} {wave:?}: no fit\n");
+    };
+    let Some(nano_fit) = fit_tone(nano, &wave, nominal) else {
+        return format!("  note {index} {wave:?}: nano no fit\n");
+    };
+    let cents = 1200.0 * (pico_fit.freq_hz / nano_fit.freq_hz).log2();
+    let pico_cents = 1200.0 * (pico_fit.freq_hz / nominal).log2();
+    let nano_cents = 1200.0 * (nano_fit.freq_hz / nominal).log2();
+    let amp = if nano_fit.amp > 1e-3 {
+        pico_fit.amp / nano_fit.amp
+    } else {
+        0.0
+    };
+    let mut dphase = pico_fit.phase - nano_fit.phase;
+    dphase -= dphase.round();
+    let phase_samples = dphase * 22_050.0 / pico_fit.freq_hz;
+    let predicted = predicted_note_phase(notes, index, note_len, phase0, 48.min(pico.len() / 5));
+    let mut nano_err = nano_fit.phase - predicted as f64;
+    nano_err -= nano_err.round();
+    let kind = if note.effect() == Effect::None {
+        "steady"
+    } else {
+        "effect"
+    };
+    format!(
+        "  note {index} {wave:?} {kind}: {cents:+.1} cents (pico {pico_cents:+.1} / nano {nano_cents:+.1}), amp {amp:.3} ({:.0}/{:.0}), phase {phase_samples:+.1} samples, shape rms {:.0}/{:.0}, nano phase err {nano_err:+.3}\n",
+        pico_fit.amp,
+        nano_fit.amp,
+        pico_fit.residual_rms,
+        nano_fit.residual_rms,
+    )
+}
+
+fn predicted_note_phase(
+    notes: &[Pico8Note],
+    index: usize,
+    note_len: usize,
+    phase0: f32,
+    skip: usize,
+) -> f32 {
+    let mut phase = phase0.rem_euclid(1.0);
+    for note in notes.iter().take(index) {
+        let df = key_to_freq(note.key() as f32) / 22_050.0;
+        phase = (phase + df * note_len as f32).rem_euclid(1.0);
+    }
+    let df = key_to_freq(notes[index].key() as f32) / 22_050.0;
+    (phase + df * (skip as f32 + 1.0)).rem_euclid(1.0)
+}
+
+fn fit_tone(samples: &[i16], wave: &WaveForm, nominal_hz: f64) -> Option<ToneFit> {
+    if nominal_hz <= 0.0 || matches!(wave, WaveForm::Noise | WaveForm::Custom(_)) {
+        return None;
+    }
+    let skip = 48.min(samples.len() / 5);
+    if samples.len() <= skip + 32 {
+        return None;
+    }
+    let pcm: Vec<f32> = samples[skip..].iter().map(|s| *s as f32).collect();
+    let phaser = matches!(wave, WaveForm::Phaser);
+    let phase_n = if phaser { 12 } else { 48 };
+    let mut best = search_tone(&pcm, wave, nominal_hz, phaser, -200.0, 200.0, 10.0, phase_n)?;
+    best = search_tone(
+        &pcm,
+        wave,
+        nominal_hz,
+        phaser,
+        best.cents - 10.0,
+        best.cents + 10.0,
+        1.0,
+        phase_n * 2,
+    )
+    .unwrap_or(best);
+    Some(best)
+}
+
+fn search_tone(
+    pcm: &[f32],
+    wave: &WaveForm,
+    nominal_hz: f64,
+    phaser: bool,
+    cents_min: f64,
+    cents_max: f64,
+    cents_step: f64,
+    phase_n: usize,
+) -> Option<ToneFit> {
+    let ss_pcm: f32 = pcm.iter().map(|s| s * s).sum();
+    let mut best: Option<ToneFit> = None;
+    let mut cents = cents_min;
+    while cents <= cents_max + 1e-6 {
+        let freq = (nominal_hz * 2f64.powf(cents / 1200.0)) as f32;
+        for i in 0..phase_n {
+            let phase = i as f32 / phase_n as f32;
+            let phase_b_n = if phaser { phase_n } else { 1 };
+            for j in 0..phase_b_n {
+                let phase_b = if phaser {
+                    j as f32 / phase_n as f32
+                } else {
+                    phase * (109.0 / 110.0)
+                };
+                let Some((amp, ss)) = correlate(pcm, wave, freq, phase, phase_b, ss_pcm) else {
+                    continue;
+                };
+                let residual_rms = (ss as f64 / pcm.len() as f64).sqrt();
+                let replace = best
+                    .as_ref()
+                    .is_none_or(|cur| residual_rms < cur.residual_rms);
+                if replace {
+                    best = Some(ToneFit {
+                        freq_hz: freq as f64,
+                        amp: amp as f64,
+                        phase: phase as f64,
+                        residual_rms,
+                        cents,
+                    });
+                }
+            }
+        }
+        cents += cents_step;
+    }
+    best
+}
+
+fn correlate(
+    pcm: &[f32],
+    wave: &WaveForm,
+    freq: f32,
+    phase: f32,
+    phase_b: f32,
+    ss_pcm: f32,
+) -> Option<(f32, f32)> {
+    let df = freq / 22_050.0;
+    let df_b = df * (109.0 / 110.0);
+    let mut dot = 0.0f32;
+    let mut energy = 0.0f32;
+    let mut t = phase;
+    let mut tb = phase_b;
+    for &sample in pcm {
+        let y = tonal_wave(wave, t, tb);
+        dot += sample * y;
+        energy += y * y;
+        t += df;
+        if t >= 1.0 {
+            t -= 1.0;
+        }
+        tb += df_b;
+        if tb >= 1.0 {
+            tb -= 1.0;
+        }
+    }
+    if energy < 1e-6 || dot <= 0.0 {
+        return None;
+    }
+    let amp = dot / energy;
+    Some((amp, (ss_pcm - dot * amp).max(0.0)))
 }
 
 fn wave_focus(expected: &[i16], actual: &[i16]) -> (usize, usize) {
