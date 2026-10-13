@@ -49,6 +49,7 @@ pub fn run_image_suite() {
 
 #[allow(dead_code)]
 pub fn run_sfx_suite() {
+    wave_baseline::require_known_baseline(&synth_dir());
     let mut rows = Vec::new();
     let mut failed = Vec::new();
     collect_suite(

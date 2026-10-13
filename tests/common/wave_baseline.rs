@@ -5,12 +5,12 @@
 //! Pico-8 residual after that alignment. `--save-baseline` writes
 //! `tests/golden/synth/wave-baseline.json`. `--save-baseline NAME` writes
 //! `wave-baseline-NAME.json`, and `--baseline NAME` compares against it.
-//! A drop is a closer match.
+//! An unknown `--baseline` name fails the run. A drop is a closer match.
 
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 use std::fs;
-use std::io::{self, Write};
+use std::io::{self, IsTerminal, Write};
 use std::path::{Path, PathBuf};
 
 const VERSION: u32 = 1;
@@ -77,6 +77,56 @@ struct Summary {
     amp: f64,
     phase: f64,
     shape: f64,
+}
+
+/// `--baseline NAME` must name an existing `wave-baseline-NAME.json`.
+pub fn require_known_baseline(dir: &Path) {
+    match flag_state("--baseline") {
+        Flag::Absent => {}
+        Flag::Present => panic!("`--baseline` needs a name"),
+        Flag::Invalid(err) => panic!("{err}"),
+        Flag::Value(name) => {
+            let path = baseline_file(dir, Some(&name));
+            if !path.is_file() {
+                panic!("{}", unrecognized_baseline(dir, &name));
+            }
+        }
+    }
+}
+
+fn unrecognized_baseline(dir: &Path, name: &str) -> String {
+    let known = known_baseline_names(dir);
+    if known.is_empty() {
+        format!("unrecognized baseline `{name}`")
+    } else {
+        format!(
+            "unrecognized baseline `{name}`\nknown baselines: {}",
+            known.join(", ")
+        )
+    }
+}
+
+fn known_baseline_names(dir: &Path) -> Vec<String> {
+    let mut names = Vec::new();
+    let Ok(entries) = fs::read_dir(dir) else {
+        return names;
+    };
+    for entry in entries.flatten() {
+        let Some(file_name) = entry.file_name().to_str().map(str::to_string) else {
+            continue;
+        };
+        let Some(stem) = file_name
+            .strip_prefix("wave-baseline-")
+            .and_then(|rest| rest.strip_suffix(".json"))
+        else {
+            continue;
+        };
+        if baseline_name(stem).is_ok() {
+            names.push(stem.to_string());
+        }
+    }
+    names.sort();
+    names
 }
 
 pub fn report_wave_baseline(dir: &Path, slots: &[SlotWave]) {
@@ -335,7 +385,8 @@ fn print_slot_delta(slot: &SlotWave, previous: &[NoteMatch]) {
         return;
     };
     if same_summary(&base, &now) && base.n == now.n && !notes_moved(&slot.notes, previous) {
-        println!("  {:<28} same ({} {kind})", slot.id, now.n);
+        let status = paint(Change::Same, &format!("same ({} {kind})", now.n));
+        println!("  {:<28} {status}", slot.id);
         return;
     }
     println!("  {} ({} {kind})", slot.id, now.n);
@@ -374,7 +425,7 @@ fn print_moved(current: &[SlotWave], file: &BaselineFile) {
         }
     }
     if lines.is_empty() {
-        println!("no note moved");
+        println!("{}", paint(Change::Same, "no note moved"));
     } else {
         println!("notes that moved");
         for line in lines {
@@ -427,17 +478,43 @@ fn metric_line(label: &str, unit: &str, digits: usize, eps: f64, base: f64, now:
     let base_s = format_num(base, digits);
     let now_s = format_num(now, digits);
     if change == Change::Same {
-        return format!("{label:<12} {base_s} -> {now_s} {unit:<14} same");
+        return format!(
+            "{label:<12} {base_s} -> {now_s} {unit:<14} {}",
+            paint(change, "same")
+        );
     }
     let pct = if base.abs() > eps {
         format!("{:+.1}%", (now - base) / base * 100.0)
     } else {
         format!("{:+.3}", now - base)
     };
+    let verdict = format!("{pct:>8}  {}", change.label());
     format!(
-        "{label:<12} {base_s} -> {now_s} {unit:<14} {pct:>8}  {}",
-        change.label()
+        "{label:<12} {base_s} -> {now_s} {unit:<14} {}",
+        paint(change, &verdict)
     )
+}
+
+fn paint(change: Change, text: &str) -> String {
+    let code = match change {
+        Change::Improved => "32",
+        Change::Regressed => "31",
+        Change::Same => "33",
+    };
+    if !color_enabled() {
+        return text.to_string();
+    }
+    format!("\x1b[{code}m{text}\x1b[0m")
+}
+
+fn color_enabled() -> bool {
+    if std::env::var_os("NO_COLOR").is_some() {
+        return false;
+    }
+    if std::env::var_os("CLICOLOR_FORCE").is_some_and(|value| value != "0") {
+        return true;
+    }
+    io::stdout().is_terminal()
 }
 
 fn notes_moved(current: &[NoteMatch], previous: &[NoteMatch]) -> bool {
