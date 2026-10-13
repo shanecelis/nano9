@@ -591,6 +591,8 @@ impl Iterator for SfxDecoder {
         let base_key = note.key() as f32;
         let mut key = base_key;
         let mut vol = note.volume();
+        // Multiplies `key_to_freq` after the effect match.
+        let mut freq_scale = 1.0f32;
         match note.effect() {
             Effect::None => {}
             Effect::Slide => {
@@ -601,18 +603,28 @@ impl Iterator for SfxDecoder {
                 key += 0.25 * (self.t * 2.0 * std::f32::consts::PI * 8.0).sin();
             }
             Effect::Drop => {
-                key = base_key * (1.0 - frac);
+                // Pico-8 sweeps the phase increment to 0. Scaling the key
+                // instead stops at C-0, about 65 Hz.
+                freq_scale = 1.0 - frac;
             }
-            Effect::FadeIn => vol *= frac,
-            Effect::FadeOut => vol *= 1.0 - frac,
-            Effect::ArpFast | Effect::ArpSlow => {
-                // Pico-8: fast ~32 Hz, slow ~16 Hz over groups of four notes.
-                let rate = if matches!(note.effect(), Effect::ArpFast) {
-                    32.0
+            Effect::FadeIn | Effect::FadeOut => {
+                // Pico-8 holds each fade step for a tracker tick. A speed-8
+                // fade-in is 0, 1/8, …, 7/8 rather than a per-sample glide.
+                let ticks = (note_len / SAMPLES_PER_TICK).max(1);
+                let step = (self.pos / SAMPLES_PER_TICK) as f32 / ticks as f32;
+                vol *= if matches!(note.effect(), Effect::FadeIn) {
+                    step
                 } else {
-                    16.0
+                    1.0 - step
                 };
-                let idx = (self.t * rate) as usize % 4;
+            }
+            Effect::ArpFast | Effect::ArpSlow => {
+                // Zepto8's clock, fit to Pico-8: 7.5 Hz times 8 or 4 when
+                // the tracker speed is at most 8, and half of that above.
+                let speed = note_len as f32 / SAMPLES_PER_TICK as f32;
+                let fast = matches!(note.effect(), Effect::ArpFast);
+                let m = (if speed <= 8.0 { 32.0 } else { 16.0 }) / if fast { 4.0 } else { 8.0 };
+                let idx = (m * 7.5 * self.t) as usize % 4;
                 let group = (self.step / 4) * 4;
                 if let Some(n) = self.sfx.notes.get(group + idx) {
                     key = n.key() as f32;
@@ -623,7 +635,7 @@ impl Iterator for SfxDecoder {
         // Short windows fit about 2 cents flat, but that bias is not a scale
         // factor: a 32-note export's leftover phase matches Pico-8 only when
         // this increment is unscaled (Δφ ≈ 0.125).
-        let freq = key_to_freq(key.max(0.0));
+        let freq = key_to_freq(key.max(0.0)) * freq_scale.max(0.0);
         self.phase = (self.phase + freq * DT).fract();
         self.phase_b = (self.phase_b + freq * (109.0 / 110.0) * DT).fract();
 
