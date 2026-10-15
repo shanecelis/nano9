@@ -493,6 +493,23 @@ pub fn load_and_insert_pico8(
     }
 }
 
+/// Load a cart, applying `settings` to [`crate::pico8::CartLoaderSettings`].
+///
+/// Settings for a loader with a different settings type are ignored.
+pub fn load_and_insert_pico8_with_settings(
+    path: impl Into<AssetPath<'static>>,
+    settings: impl Fn(&mut crate::pico8::CartLoaderSettings) + Clone + Send + Sync + 'static,
+) -> impl Fn(Res<AssetServer>, Commands) {
+    let path = path.into();
+    move |asset_server: Res<AssetServer>, mut commands: Commands| {
+        let pico8_asset: Handle<Pico8Asset> = asset_server
+            .load_builder()
+            .with_settings(settings.clone())
+            .load(&path);
+        commands.insert_resource(Pico8Handle::from(pico8_asset));
+    }
+}
+
 pub fn run_pico8_when_loaded(
     state: Res<State<RunState>>,
     mut next_state: ResMut<NextState<RunState>>,

@@ -13,6 +13,7 @@
 //! http://localhost:8080/?cart=pset.lua
 //! http://localhost:8080/?cart=golden/spr.p8
 //! http://localhost:8080/?cart=my-game.p8&param=headless
+//! http://localhost:8080/?cart=celeste.p8.png&shared-data=map
 //! ```
 //!
 //! Drop or symlink a cart into `assets/` (or `tests/golden/`, which Trunk copies
@@ -23,7 +24,7 @@
 //! `Nano9Plugins`).
 
 use bevy::prelude::*;
-use nano9::pico8::CartArgs;
+use nano9::pico8::{CartArgs, CartLoaderSettings, SharedData};
 use nano9::prelude::*;
 
 const DEFAULT_CART: &str = "web-cart.lua";
@@ -31,6 +32,7 @@ const DEFAULT_CART: &str = "web-cart.lua";
 fn main() {
     let cart = cart_from_query().unwrap_or_else(|| DEFAULT_CART.to_string());
     let param = query_param("param");
+    let shared_data = shared_data_from_query();
     let cart_path = bevy::asset::AssetPath::from(std::path::PathBuf::from(&cart));
 
     let mut app = App::new();
@@ -42,9 +44,21 @@ fn main() {
         let cart = cart.clone();
         move || info!("web cart: {cart}")
     })
-    .add_systems(Startup, load_and_insert_pico8(cart_path))
+    .add_systems(
+        Startup,
+        load_and_insert_pico8_with_settings(cart_path, move |settings: &mut CartLoaderSettings| {
+            settings.shared_data = shared_data;
+        }),
+    )
     .add_systems(PreUpdate, run_pico8_when_loaded)
     .run();
+}
+
+fn shared_data_from_query() -> SharedData {
+    match query_param("shared-data").as_deref() {
+        Some("map") => SharedData::Map,
+        _ => SharedData::Sprite,
+    }
 }
 
 fn cart_from_query() -> Option<String> {

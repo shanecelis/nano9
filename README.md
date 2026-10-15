@@ -52,6 +52,10 @@ curl -o celeste.p8.png https://www.lexaloffle.com/bbs/cposts/1/15133.p8.png
 n9 run --shared-data=map celeste.p8.png
 ```
 
+[▶ Play Celeste in the browser.](https://shanecelis.github.io/nano9/?cart=celeste.p8.png&shared-data=map)
+
+Click the canvas, then use the arrow keys to move, Z or C to jump, and X or V to dash. The browser build stays silent.
+
 ### Use the "web-asset" feature
 ``` sh
 cargo install --features web-asset nano9@0.1.0-alpha.8

@@ -8,6 +8,8 @@
 [build]
 target = "index.html"
 dist = "dist"
+# Relative so GitHub Pages works under /nano9/.
+public_url = "./"
 
 [serve]
 port = 8080

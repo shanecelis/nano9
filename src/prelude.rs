@@ -1,6 +1,9 @@
 pub use super::{
     Nano9Plugin, Nano9Plugins, PColor,
-    config::{load_and_insert_pico8, pause_pico8_when_loaded, run_pico8_when_loaded},
+    config::{
+        load_and_insert_pico8, load_and_insert_pico8_with_settings, pause_pico8_when_loaded,
+        run_pico8_when_loaded,
+    },
     pico8::{Pico8, Pico8Asset, Pico8Handle},
     run::RunState,
 };
