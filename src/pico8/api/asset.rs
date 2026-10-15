@@ -14,6 +14,7 @@ pub struct Pico8Asset {
     pub(crate) maps: Vec<SpriteMap>,
     pub(crate) font: Vec<N9Font>,
     pub(crate) audio_banks: Vec<Handle<AudioBank>>,
+    #[cfg(feature = "3d")]
     pub(crate) meshes: Vec<MeshHandle>,
     pub(crate) config: Handle<Config>,
 }
@@ -98,6 +99,7 @@ impl FromWorld for Pico8Asset {
             audio_banks: Vec::new(),
             sprite_sheets: Vec::new(),
             maps: Vec::new(),
+            #[cfg(feature = "3d")]
             meshes: Vec::new(),
             config: config_handle,
         }

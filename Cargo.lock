@@ -1883,12 +1883,8 @@ version = "0.16.0"
 dependencies = [
  "bevy_ecs",
  "bevy_reflect",
- "chacha20",
  "getrandom 0.4.3",
  "rand_core",
- "rand_pcg",
- "rand_xoshiro",
- "serde",
  "wyrand",
 ]
 
@@ -6508,17 +6504,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "caa0f4137e1c0a72f4c651489402276c8e8e1cf081f3b0ba156d2cbeef09e86a"
 dependencies = [
  "rand_core",
- "serde",
-]
-
-[[package]]
-name = "rand_xoshiro"
-version = "0.8.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "662effc7698e08ea324d3acccf8d9d7f7bf79b9785e270a174ea36e56900c91d"
-dependencies = [
- "rand_core",
- "serde",
 ]
 
 [[package]]
@@ -8986,7 +8971,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b5484c3d24f0e2e117d30bce6f8792e193be33e2b6e0b3f8945ccf265c56c6da"
 dependencies = [
  "rand_core",
- "serde",
 ]
 
 [[package]]

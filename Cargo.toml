@@ -26,7 +26,40 @@ exclude = [
 default-run = "n9"
 
 [dependencies]
-bevy = { version = "0.20.0", features = [ "bevy_dev_tools", "asset_processor", "serialize", "audio" ] }
+# Default Bevy is 2d+3d+ui+audio. Nano-9's cart path is 2D sprites, text, and audio.
+# 3D (PBR, glTF) is the `3d` feature, enabled by `vox`.
+bevy = { version = "0.20.0", default-features = false, features = [
+    "std",
+    "async_executor",
+    "multi_threaded",
+    "reflect_auto_register",
+    "bevy_asset",
+    "bevy_log",
+    "bevy_state",
+    "bevy_window",
+    "bevy_winit",
+    "bevy_render",
+    "bevy_core_pipeline",
+    "bevy_sprite",
+    "bevy_sprite_render",
+    "bevy_text",
+    "bevy_ui",
+    "bevy_ui_render",
+    "serialize",
+    "bevy_image",
+    "bevy_camera",
+    "bevy_mesh",
+    "bevy_color",
+    "png",
+    "default_font",
+    "audio",
+    "webgl2",
+    "keyboard",
+    "mouse",
+    "gamepad",
+    "touch",
+    "bevy_gilrs",
+] }
 # BMS without lua54/mlua: Lua is provided by bevy_mod_scripting_luars (luars 0.26.2).
 bevy_mod_scripting = { version = "0.21", features = ["core_functions"], default-features = false, optional = true }
 bevy_mod_scripting_luars = { version = "0.1", optional = true }
@@ -50,7 +83,7 @@ tiled = { version = "0.16.0", optional = true }
 bitflags = "2.9"
 bitvec = "1.0.1"
 futures-lite = { version = "2.6.0", optional = true }
-bevy_rand = { version = "0.16", features = ["wyrand"], optional = true }
+bevy_rand = { version = "0.16", default-features = false, features = ["wyrand", "std", "bevy_reflect"], optional = true }
 bevy_prng = { version = "0.16", optional = true }
 pico8_decompress = { version = "0.1.0" }
 png = "0.17.16"
@@ -70,6 +103,11 @@ bobtail = { version = "0.3.0", features = [ "omit-token" ] }
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 getrandom = { version = "0.4", features = ["wasm_js"] }
 web-sys = { version = "0.3", features = ["Window", "Location", "Url", "UrlSearchParams"] }
+bevy_rand = { version = "0.16", default-features = false, features = ["wasm_js"], optional = true }
+
+# Linux window backends. Wasm's target_os is not linux, so this stays out of the cart.
+[target.'cfg(target_os = "linux")'.dependencies]
+bevy = { version = "0.20.0", default-features = false, features = ["x11", "wayland"] }
 
 [features]
 default = [ "cli", "watcher", "web-asset" ]
@@ -90,7 +128,9 @@ framepace = [ "dep:bevy_framepace" ]
 gameboy = []
 tiled = [ "dep:tiled" ]
 rand = [ "dep:rand", "dep:bevy_rand", "dep:bevy_prng" ]
-vox = [ "dep:bevy_vox_scene" ]
+# PBR, glTF, and Bevy's 3D plugin group. Not part of the wasm cart.
+3d = [ "bevy/3d" ]
+vox = [ "dep:bevy_vox_scene", "3d" ]
 # Features after this line are not supported yet.
 # -----------------------------------------------
 # level = [ "dep:bevy_ecs_ldtk", "dep:ldtk_rust", "dep:serde_json"]
@@ -103,7 +143,7 @@ dev-tools = []
 
 
 [dev-dependencies]
-bevy = "0.20.0"
+bevy = { version = "0.20.0", default-features = false }
 bevy_feathers = "0.20.0"
 version-sync = "0.9.5"
 png = "0.17.16"

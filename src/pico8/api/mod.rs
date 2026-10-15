@@ -48,7 +48,9 @@ pub(crate) mod sys;
 #[cfg(feature = "level")]
 pub use level::*;
 pub use sys::CartArgs;
+#[cfg(feature = "3d")]
 mod mesh;
+#[cfg(feature = "3d")]
 pub use mesh::*;
 
 use bevy::{
@@ -89,6 +91,7 @@ pub(crate) fn plugin(app: &mut App) {
             #[cfg(feature = "rand")]
             rand::plugin,
             asset::plugin,
+            #[cfg(feature = "3d")]
             mesh::plugin,
             camera3d::plugin,
             state::plugin,

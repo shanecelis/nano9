@@ -1,9 +1,11 @@
 #[cfg(feature = "level")]
 use crate::level::{self};
 use crate::{
-    config::{self, Mesh, *},
-    pico8::{self, MeshHandle, PaletteAccess, Pico8Asset, image::pixel_art_settings},
+    config::{self, *},
+    pico8::{self, PaletteAccess, Pico8Asset, image::pixel_art_settings},
 };
+#[cfg(feature = "3d")]
+use crate::pico8::MeshHandle;
 use bevy::{
     asset::{AssetLoader, AssetPath, LoadContext, io::Reader},
     prelude::*,
@@ -446,17 +448,30 @@ async fn into_asset(
         );
     }
 
-    let mut meshes = vec![];
-    for (i, mesh) in config.meshes.into_iter().enumerate() {
-        let handle = match mesh {
-            Mesh::Path { path } => MeshHandle::Gltf(load_context.load::<bevy::gltf::Gltf>(path)),
-            Mesh::Cuboid { cuboid: size } => {
-                let cuboid = Cuboid::new(size[0], size[1], size[2]);
-                let mesh = cuboid.mesh().build();
-                MeshHandle::Mesh(load_context.add_labeled_asset(format!("mesh{}", i), mesh))
-            }
-        };
-        meshes.push(handle);
+    #[cfg(feature = "3d")]
+    let meshes = {
+        let mut meshes = vec![];
+        for (i, mesh) in config.meshes.into_iter().enumerate() {
+            let handle = match mesh {
+                config::Mesh::Path { path } => {
+                    MeshHandle::Gltf(load_context.load::<bevy::gltf::Gltf>(path))
+                }
+                config::Mesh::Cuboid { cuboid: size } => {
+                    let cuboid = Cuboid::new(size[0], size[1], size[2]);
+                    let mesh = cuboid.mesh().build();
+                    MeshHandle::Mesh(load_context.add_labeled_asset(format!("mesh{}", i), mesh))
+                }
+            };
+            meshes.push(handle);
+        }
+        meshes
+    };
+    #[cfg(not(feature = "3d"))]
+    if !config.meshes.is_empty() {
+        warn!(
+            "3D meshes are disabled in this build; ignoring {} mesh(es)",
+            config.meshes.len()
+        );
     }
 
     let state = pico8::Pico8Asset {
@@ -470,6 +485,8 @@ async fn into_asset(
         maps,
         audio_banks,
         sprite_sheets,
+        #[cfg(feature = "3d")]
+        meshes,
         font: config
             .fonts
             .into_iter()
@@ -485,7 +502,6 @@ async fn into_asset(
                 }
             })
             .collect::<Vec<_>>(),
-        meshes,
         config: load_context.add_labeled_asset("config", whole_config),
     };
     Ok(state)

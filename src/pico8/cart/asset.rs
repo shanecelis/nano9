@@ -174,6 +174,7 @@ fn to_asset(cart: Cart, load_context: &mut LoadContext) -> Result<Pico8Asset, Ca
         font: vec![N9Font {
             source: load_context.load(crate::config::pico8::FONT).into(),
         }],
+        #[cfg(feature = "3d")]
         meshes: vec![],
         config: load_context.add_labeled_asset("config", Config::pico8()),
     };
