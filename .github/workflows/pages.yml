@@ -1,0 +1,60 @@
+name: Pages
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+      - uses: Swatinem/rust-cache@v2
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: trunk
+      - name: Fetch Celeste cart
+        run: curl -fsSL -o assets/celeste.p8.png https://www.lexaloffle.com/bbs/cposts/1/15133.p8.png
+      - name: Build WASM cart
+        env:
+          NO_COLOR: "true"
+        run: trunk build --config web/Trunk.toml --release
+      - name: Check Pages artifact
+        run: |
+          set -euo pipefail
+          test -f web/dist/index.html
+          test -s web/dist/assets/celeste.p8.png
+          ls web/dist/*.js web/dist/*_bg.wasm >/dev/null
+          if grep -E "href=/|from '/|module_or_path: '/" web/dist/index.html; then
+            echo "absolute / asset URLs would break under the GitHub Pages prefix" >&2
+            exit 1
+          fi
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: web/dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
