@@ -31,14 +31,13 @@ pub use __camera as camera;
 
 impl super::Pico8<'_, '_> {
     pub fn camera(&mut self, pos: Option<Vec2>) -> Result<Vec2, Error> {
-        if let Some(pos) = pos {
-            let last = std::mem::replace(&mut self.state.draw_state.camera_position, pos);
-            self.commands
-                .run_system_cached_with(change_camera_position, pos);
-            Ok(last)
-        } else {
-            Ok(self.state.draw_state.camera_position)
-        }
+        // Pico-8 `camera()` with no arguments resets to (0, 0). Either way
+        // the previous position is returned.
+        let pos = pos.unwrap_or(Vec2::ZERO);
+        let last = std::mem::replace(&mut self.state.draw_state.camera_position, pos);
+        self.commands
+            .run_system_cached_with(change_camera_position, pos);
+        Ok(last)
     }
 }
 

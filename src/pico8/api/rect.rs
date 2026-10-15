@@ -52,15 +52,24 @@ impl super::Pico8<'_, '_> {
         // screen. I really wonder why.
         //
         // [1]: https://mastodon.gamedev.place/@shanecelis/114725671117902238
-        let camera = -self.state.draw_state.camera_position;
-        // XXX: Not sure why negating the camera is needed.
+        let camera = self.state.draw_state.camera_position;
         let canvas = self.canvas.size.as_vec2();
-        // trace!("Checking camera {:?} against rect {:?} {:?}", camera, upper_left, lower_right);
-        if upper_left.x <= camera.x
+        // A rect covers the screen when it covers the camera window. Celeste
+        // instead clears with rectfill(0, 0, 128, 128) while screenshake has
+        // the camera a couple of pixels off the origin, so that rect misses
+        // the window by those pixels. Still treat a full-canvas rect as a
+        // clear in that case; the shake border rects paint the gap.
+        let covers_view = upper_left.x <= camera.x
             && upper_left.y <= camera.y
             && lower_right.x >= camera.x + canvas.x
-            && lower_right.y >= camera.y + canvas.y
-        {
+            && lower_right.y >= camera.y + canvas.y;
+        let shake = camera.abs().max_element() <= 8.0;
+        let covers_canvas = shake
+            && upper_left.x <= 0.0
+            && upper_left.y <= 0.0
+            && lower_right.x >= canvas.x
+            && lower_right.y >= canvas.y;
+        if covers_view || covers_canvas {
             // We clear the screen.
             trace!(
                 "Clearing the screen on rectfill {:?} {:?}",
