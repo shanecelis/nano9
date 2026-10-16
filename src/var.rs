@@ -1,6 +1,6 @@
 use crate::on_asset_change;
 use bevy::prelude::*;
-use bevy_mod_scripting::{asset::ScriptAsset, core::event::ScriptCallbackEvent};
+use bevy_mod_scripting::{asset::ScriptAsset, core::event::ScriptCallbackMessage};
 use std::borrow::Cow;
 
 #[derive(Component, Reflect)]
@@ -21,11 +21,11 @@ impl N9Var {
 }
 
 /// Sends initialization event
-fn set_vars(_writer: MessageWriter<ScriptCallbackEvent>, query: Query<(Entity, &N9Var)>) {
+fn set_vars(_writer: MessageWriter<ScriptCallbackMessage>, query: Query<(Entity, &N9Var)>) {
     for (_id, _var) in &query {
         warn!("Need to impl set_vars().");
         // todo!();
-        // writer.send(ScriptCallbackEvent::new_for_all(
+        // writer.send(ScriptCallbackMessage::new_for_all(
         //     call::SetGlobal,
         //     vec![ScriptValue::String(var.0.clone()),
         //          // ScriptValue::Reference(Arc::new(Mutex::new(N9Entity { entity: id,

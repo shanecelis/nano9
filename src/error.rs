@@ -1,7 +1,7 @@
 use crate::run::RunState;
 use bevy::{color::palettes::css, diagnostic::FrameCount, prelude::*, window::RequestRedraw};
 #[cfg(feature = "scripting")]
-use bevy_mod_scripting::{asset::ScriptAsset, core::event::ScriptErrorEvent};
+use bevy_mod_scripting::{asset::ScriptAsset, core::event::ScriptErrorMessage};
 
 pub(crate) fn plugin(app: &mut App) {
     app.add_systems(Startup, spawn_error_message_layout);
@@ -95,7 +95,7 @@ fn spawn_error_message_layout(mut commands: Commands) {
 
 #[cfg(feature = "scripting")]
 pub fn add_messages(
-    mut r: MessageReader<ScriptErrorEvent>,
+    mut r: MessageReader<ScriptErrorMessage>,
     query: Query<Entity, With<ErrorMessages>>,
     _frame_count: Res<FrameCount>,
     mut state: ResMut<NextState<RunState>>,

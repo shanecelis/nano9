@@ -61,8 +61,8 @@ bevy = { version = "0.20.0", default-features = false, features = [
     "bevy_gilrs",
 ] }
 # BMS without lua54/mlua: Lua is provided by bevy_mod_scripting_luars (luars 0.26.2).
-bevy_mod_scripting = { version = "0.21", features = ["core_functions"], default-features = false, optional = true }
-bevy_mod_scripting_luars = { version = "0.1", optional = true }
+bevy_mod_scripting = { version = "0.23", features = ["core_functions"], default-features = false, optional = true }
+bevy_mod_scripting_luars = { version = "0.2", optional = true }
 bytemuck = "1.16.3"
 thiserror = "1.0.63"
 bevy_minibuffer = { version = "0.8", optional = true }
@@ -193,7 +193,8 @@ bevy_vox_scene = { path = "../bevy_vox_scene" }
 bevy_rand = { path = "../bevy_rand" }
 bevy_prng = { path = "../bevy_rand/bevy_prng" }
 bevy_ecs_tilemap = { path = "../bevy_ecs_tilemap" }
-bevy_mod_scripting = { path = "../bevy_mod_scripting" }
+# Local checkout is still 0.21. 0.23 comes from crates.io.
+# bevy_mod_scripting = { path = "../bevy_mod_scripting" }
 bevy_mod_scripting_luars = { path = "../bevy_mod_scripting_luars" }
 bevy_ecs_tiled = { path = "../bevy_ecs_tiled" }
 bevy_mod_debugdump = { path = "../bevy_mod_debugdump" }
@@ -204,8 +205,8 @@ bevy_minibuffer_inspector = { path = "../bevy_minibuffer_inspector" }
 # bevy_vox_scene = { git = "https://github.com/oliver-dew/bevy_vox_scene.git", branch = "feature/bevy-0.19" }
 # bevy_mod_debugdump = { git = "https://github.com/jakobhellermann/bevy_mod_debugdump.git", branch = "bevy-main" }
 bevy_asky = { path = "../bevy_asky" }
-bevy-input-sequence = { path = "../bevy-input-sequence" }
-keyseq = { path = "../keyseq" }
+# bevy-input-sequence = { path = "../bevy-input-sequence" }
+# keyseq = { path = "../keyseq" }
 # bevy_mod_scripting = { git = "https://github.com/makspll/bevy_mod_scripting.git", branch = "feat/bevy-0.19" }
 # bevy_mod_scripting_asset = { git = "https://github.com/makspll/bevy_mod_scripting.git", branch = "feat/bevy-0.19" }
 # bevy_mod_scripting_bindings = { git = "https://github.com/makspll/bevy_mod_scripting.git", branch = "feat/bevy-0.19" }
@@ -241,5 +242,5 @@ keyseq = { path = "../keyseq" }
 # bevy-inspector-egui = { path = "../bevy-inspector-egui/crates/bevy-inspector-egui" }
 # bevy_pixel_buffer = { path = "../bevy_pixel_buffer" }
 # tiled = { git = "https://github.com/mapeditor/rs-tiled.git", rev = "c434e1be8904917bacc1286c5334b721f1f6deef", features = ["world"] }
-pico8-to-lua = { path = "../pico8-to-lua" }
+# pico8-to-lua = { path = "../pico8-to-lua" }
 

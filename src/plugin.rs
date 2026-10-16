@@ -14,7 +14,7 @@ use bevy_mod_scripting::{
     bindings::{CoreScriptGlobalsPlugin, InteropError, function::namespace::NamespaceBuilder},
     core::{
         callback_labels,
-        event::{CallbackLabel, IntoCallbackLabel, ScriptCallbackEvent},
+        event::{CallbackLabel, IntoCallbackLabel, ScriptCallbackMessage},
         handler::event_handler,
         script::{ContextPolicy, ScriptContexts},
     },
@@ -101,16 +101,16 @@ pub mod call {
 #[cfg(feature = "scripting")]
 pub fn send(
     label: impl Into<CallbackLabel>,
-) -> impl Fn(MessageWriter<ScriptCallbackEvent>, Option<Res<Pico8Handle>>) {
+) -> impl Fn(MessageWriter<ScriptCallbackMessage>, Option<Res<Pico8Handle>>) {
     let label = label.into();
-    move |mut writer: MessageWriter<ScriptCallbackEvent>,
+    move |mut writer: MessageWriter<ScriptCallbackMessage>,
           maybe_pico8_handle: Option<Res<Pico8Handle>>| {
         let maybe_recipients =
             maybe_pico8_handle.and_then(|pico8_handle| pico8_handle.main_script.clone());
 
         match maybe_recipients {
             Some(recipients) => {
-                writer.write(ScriptCallbackEvent::new(
+                writer.write(ScriptCallbackMessage::new(
                     label.clone(),
                     vec![],
                     recipients,
@@ -118,7 +118,7 @@ pub fn send(
                 ));
             }
             None => {
-                writer.write(ScriptCallbackEvent::new_for_all_contexts(
+                writer.write(ScriptCallbackMessage::new_for_all_contexts(
                     label.clone(),
                     vec![],
                 ));
@@ -588,7 +588,7 @@ fn clamp_wasm_window_to_gl_limits(
 #[cfg(feature = "scripting")]
 fn lua_event_handler<L: IntoCallbackLabel>(
     world: &mut World,
-    state: &mut SystemState<Local<MessageCursor<ScriptCallbackEvent>>>,
+    state: &mut SystemState<Local<MessageCursor<ScriptCallbackMessage>>>,
 ) -> Result<(), BevyError> {
     let _ = event_handler::<L, LuarsScriptingPlugin>(world, state)?;
     Ok(())

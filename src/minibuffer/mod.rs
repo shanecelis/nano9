@@ -14,7 +14,7 @@ use bevy_mod_scripting::{
         function::{namespace::NamespaceBuilder, script_function::FunctionCallContext},
         script_value::ScriptValue,
     },
-    core::event::ScriptCallbackEvent,
+    core::event::ScriptCallbackMessage,
 };
 // mod count;
 // pub use count::*;
@@ -186,10 +186,10 @@ fn with_minibuffer<T>(
 pub fn lua_eval(mut minibuffer: Minibuffer) {
     minibuffer.prompt::<TextField>("Lua Eval: ").observe(
         |mut trigger: On<Submit<String>>,
-         mut writer: MessageWriter<ScriptCallbackEvent>,
+         mut writer: MessageWriter<ScriptCallbackMessage>,
          mut commands: Commands| {
             if let Ok(input) = trigger.event_mut().take_result() {
-                writer.write(ScriptCallbackEvent::new_for_all_contexts(
+                writer.write(ScriptCallbackMessage::new_for_all_contexts(
                     call::Eval,
                     vec![ScriptValue::String(input.into()), ScriptValue::Bool(true)],
                 ));
