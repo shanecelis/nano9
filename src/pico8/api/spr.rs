@@ -22,7 +22,7 @@ pub(crate) fn plugin(app: &mut App) {
 }
 
 #[derive(Reflect, Clone, Debug, Copy, Hash)]
-pub enum Spr {
+pub enum SprArg {
     /// Sprite at current spritesheet.
     Cur { sprite: usize },
     /// Sprite from given spritesheet.
@@ -35,7 +35,7 @@ bobtail::define! {
     pub __spr => fn spr(
     // pub spr => fn spr(
         &mut self,
-        spr: impl Into<Spr>,
+        spr: impl Into<SprArg>,
         #[tail]
         pos: Vec2,
         size: Option<Vec2>,
@@ -92,15 +92,15 @@ pub use __sset as sset;
 pub use __sspr as sspr;
 
 #[cfg(feature = "scripting")]
-impl FromScript for Spr {
+impl FromScript for SprArg {
     type This<'w> = Self;
     fn from_script(
         value: ScriptValue,
         _world: WorldAccessGuard<'_>,
     ) -> Result<Self::This<'_>, InteropError> {
         match value {
-            ScriptValue::Float(f) => Ok(Spr::Cur { sprite: f as usize }),
-            ScriptValue::Integer(n) => Ok(Spr::Cur { sprite: n as usize }),
+            ScriptValue::Float(f) => Ok(SprArg::Cur { sprite: f as usize }),
+            ScriptValue::Integer(n) => Ok(SprArg::Cur { sprite: n as usize }),
             ScriptValue::List(list) => {
                 assert_eq!(list.len(), 2, "Expect two elements for spr.");
                 let mut iter = list.into_iter().map(|v| match v {
@@ -111,38 +111,38 @@ impl FromScript for Spr {
                 });
                 let sprite = iter.next().expect("sprite index")?;
                 let sheet = iter.next().expect("sheet index")?;
-                Ok(Spr::From { sprite, sheet })
+                Ok(SprArg::From { sprite, sheet })
             }
-            x => Err(InteropError::value_mismatch(TypeId::of::<Spr>(), x)),
+            x => Err(InteropError::value_mismatch(TypeId::of::<SprArg>(), x)),
         }
     }
 }
 
-impl From<i64> for Spr {
+impl From<i64> for SprArg {
     fn from(index: i64) -> Self {
-        Spr::Cur {
+        SprArg::Cur {
             sprite: index as usize,
         }
     }
 }
 
-impl From<usize> for Spr {
+impl From<usize> for SprArg {
     fn from(sprite: usize) -> Self {
-        Spr::Cur { sprite }
+        SprArg::Cur { sprite }
     }
 }
 
-impl From<i32> for Spr {
+impl From<i32> for SprArg {
     fn from(sprite: i32) -> Self {
-        Spr::Cur {
+        SprArg::Cur {
             sprite: sprite as usize,
         }
     }
 }
 
-impl From<(usize, usize)> for Spr {
+impl From<(usize, usize)> for SprArg {
     fn from((sprite, sheet): (usize, usize)) -> Self {
-        Spr::From { sprite, sheet }
+        SprArg::From { sprite, sheet }
     }
 }
 
@@ -287,7 +287,7 @@ impl super::Pico8<'_, '_> {
     /// spr(n, [x,] [y,] [w,] [h,] [flip_x,] [flip_y])
     pub fn spr(
         &mut self,
-        spr: impl Into<Spr>,
+        spr: impl Into<SprArg>,
         // #[tail]
         pos: Vec2,
         size: Option<Vec2>,
@@ -302,11 +302,11 @@ impl super::Pico8<'_, '_> {
             let mut hasher = FixedHasher.build_hasher();
             "spr".hash(&mut hasher);
             let sheet = match spr {
-                Spr::Cur { sprite } => {
+                SprArg::Cur { sprite } => {
                     index = sprite;
                     self.state.sprite_sheet_index
                 }
-                Spr::From { sheet, sprite } => {
+                SprArg::From { sheet, sprite } => {
                     index = sprite;
                     sheet
                 }
@@ -322,10 +322,10 @@ impl super::Pico8<'_, '_> {
         self.state.draw_state.mark_drawn();
         let flip = flip.unwrap_or_default();
         let indexed = match spr {
-            Spr::Cur { .. } => self
+            SprArg::Cur { .. } => self
                 .sprite_sheet(None)
                 .is_ok_and(|sheet| matches!(sheet.handle, SprHandle::Gfx(_))),
-            Spr::From { sheet, .. } => self
+            SprArg::From { sheet, .. } => self
                 .sprite_sheet(Some(sheet))
                 .is_ok_and(|sheet| matches!(sheet.handle, SprHandle::Gfx(_))),
         };
@@ -348,8 +348,8 @@ impl super::Pico8<'_, '_> {
         }
 
         let (sprites, index): (&SpriteSheet, usize) = match spr {
-            Spr::Cur { sprite } => (self.sprite_sheet(None)?, sprite),
-            Spr::From { sheet, sprite } => (self.sprite_sheet(Some(sheet))?, sprite),
+            SprArg::Cur { sprite } => (self.sprite_sheet(None)?, sprite),
+            SprArg::From { sheet, sprite } => (self.sprite_sheet(Some(sheet))?, sprite),
         };
         let atlas = TextureAtlas {
             layout: sprites.layout.clone(),
@@ -561,7 +561,7 @@ mod lua {
                         .is_some()
                         .then(|| Vec2::new(w.unwrap_or(1.0), h.unwrap_or(1.0)));
 
-                    let n = Spr::from_script(n, ctx.world()?)?;
+                    let n = SprArg::from_script(n, ctx.world()?)?;
                     let id = with_pico8(&ctx, move |pico8| pico8.spr(n, pos, size, flip, turns))?;
 
                     let entity = N9Entity {
