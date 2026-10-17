@@ -13,9 +13,10 @@ use bevy::picking::cursor::EntityCursor;
 use bevy::picking::hover::Hovered;
 use bevy::prelude::*;
 use bevy::ui::Checked;
-use bevy::ui_widgets::{Activate, Button, ValueChange};
 use bevy::window::SystemCursorIcon;
 use bevy_feathers::FeathersPlugins;
+use bevy_input_focus::InputFocusPlugin;
+use bevy_ui_widgets::{Activate, Button, ValueChange};
 use bevy_feathers::containers::{pane, pane_body, pane_header};
 use bevy_feathers::controls::{
     ButtonVariant, ColorSwatchValue, FeathersButton, FeathersCheckbox, FeathersColorSwatch,
@@ -37,7 +38,7 @@ const COLS: usize = 3;
 
 fn main() {
     App::new()
-        .add_plugins((Nano9Plugins, FeathersPlugins))
+        .add_plugins((Nano9Plugins, InputFocusPlugin, FeathersPlugins))
         .insert_resource(UiTheme(create_dark_theme()))
         .add_systems(Startup, (load_cart, setup))
         .add_systems(PreUpdate, run_pico8_when_loaded)

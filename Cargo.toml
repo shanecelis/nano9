@@ -111,6 +111,7 @@ bevy = { version = "0.20.0", default-features = false, features = ["x11", "wayla
 
 [features]
 default = [ "cli", "watcher", "web-asset" ]
+debug = [ "bevy/debug" ]
 cli = [ "lua-lib", "dep:clap", "gameboy", "dep:log", "dep:env_logger" ]
 lua-lib = [ "rust-lib", "pico8-to-lua", "scripting", "rand", "framepace", "vox" ]
 lua-lib-wasm = [ "fixed-point", "rand", "pico8-to-lua", "scripting" ]
@@ -145,6 +146,8 @@ dev-tools = []
 [dev-dependencies]
 bevy = { version = "0.20.0", default-features = false }
 bevy_feathers = "0.20.0"
+bevy_input_focus = "0.20.0"
+bevy_ui_widgets = "0.20.0"
 version-sync = "0.9.5"
 png = "0.17.16"
 lewton = "0.10"
