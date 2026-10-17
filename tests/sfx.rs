@@ -1,8 +1,9 @@
 //! Compare Nano-9 SFX against Pico-8 goldens.
 //!
-//! Two tiers:
+//! Three tiers:
 //! - `tests/golden/synth/`: tracker render vs `EXPORT SYNTH%D.WAV` (`make golden-synth`)
 //! - `tests/golden/sfx/`: playback mix vs `audio_rec` (`make golden`)
+//! - `tests/golden/music/`: `music()` pattern playback vs `audio_rec` (`make golden`)
 //!
 //! Goldens on disk are Ogg Vorbis (`*-expected.ogg`). Pico-8 still captures
 //! WAV; ingest converts with the same encoder the tests use. Runtime
@@ -13,6 +14,7 @@
 //! cargo test --test sfx
 //! cargo test --test sfx -- triangle
 //! cargo test-sfx
+//! cargo test-sfx music
 //! cargo test-sfx synth
 //! cargo test-sfx synth --save-baseline
 //! cargo test-sfx synth --save-baseline before

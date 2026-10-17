@@ -33,6 +33,10 @@ pub fn synth_dir() -> PathBuf {
     golden_dir().join("synth")
 }
 
+pub fn music_dir() -> PathBuf {
+    golden_dir().join("music")
+}
+
 #[allow(dead_code)]
 pub fn run_image_suite() {
     let mut rows = Vec::new();
@@ -56,6 +60,13 @@ pub fn run_sfx_suite() {
         &sfx_dir(),
         Kind::Audio,
         "tests/golden/sfx/*.p8",
+        &mut rows,
+        &mut failed,
+    );
+    collect_suite(
+        &music_dir(),
+        Kind::Audio,
+        "tests/golden/music/*.p8",
         &mut rows,
         &mut failed,
     );
