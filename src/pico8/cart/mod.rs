@@ -47,16 +47,36 @@ pub enum CartLoaderError {
     LuaParse(#[from] pico8_to_lua::ParseError),
 }
 
-/// One row of the `__music__` pattern table.
+/// One row of the music pattern table.
 ///
-/// A channel is `Some(sfx)` when that byte is an SFX index (`0..=63`). Pico-8
-/// stores a silent channel as `0x40 + channel` (`0x40`–`0x43`), which is `None`.
+/// A channel is `Some(sfx)` when that byte is an SFX index (`0..=63`). In the
+/// text cart a silent channel is `0x40 + channel`. In the ROM at `0x3100` bit
+/// 6 disables the channel, bits 0–5 are the SFX index, and bit 7 of bytes 0, 1,
+/// and 2 are the begin, end, and stop flags.
 #[derive(Debug, Clone, Reflect)]
 pub struct MusicPattern {
     pub begin: bool,
     pub end: bool,
     pub stop: bool,
     pub channels: [Option<u8>; 4],
+}
+
+impl MusicPattern {
+    /// Decode one pattern from the four cart-ROM bytes at `0x3100 + n * 4`.
+    pub fn from_rom(bytes: &[u8; 4]) -> Self {
+        let channel = |byte: u8| (byte & 0x40 == 0).then_some(byte & 0x3f);
+        Self {
+            begin: bytes[0] & 0x80 != 0,
+            end: bytes[1] & 0x80 != 0,
+            stop: bytes[2] & 0x80 != 0,
+            channels: [
+                channel(bytes[0]),
+                channel(bytes[1]),
+                channel(bytes[2]),
+                channel(bytes[3]),
+            ],
+        }
+    }
 }
 
 #[derive(Asset, Debug, Reflect)]
@@ -518,6 +538,13 @@ impl AssetLoader for PngCartLoader {
         };
 
         let sfx = v[0x3200..=0x42ff].chunks(68).map(Sfx::from_u8).collect();
+        let music = v[0x3100..0x3200]
+            .chunks_exact(4)
+            .map(|chunk| {
+                let bytes: [u8; 4] = chunk.try_into().unwrap();
+                MusicPattern::from_rom(&bytes)
+            })
+            .collect();
 
         let parts = Cart {
             lua: code,
@@ -525,7 +552,7 @@ impl AssetLoader for PngCartLoader {
             map,
             flags,
             sfx,
-            music: vec![],
+            music,
         };
         Ok(parts)
     }
@@ -781,6 +808,41 @@ end"#
         let s = "➡️ o";
         assert_eq!(s.len(), 8);
         assert_eq!(s.chars().count(), 4);
+    }
+
+    #[test]
+    fn rom_music_pattern_flags_and_silent_channels() {
+        // Channel 0 plays SFX 3 and starts a loop. Channel 1 plays SFX 7 and
+        // ends the loop. Channel 2 is silent and stops. Channel 3 is silent.
+        let pattern = MusicPattern::from_rom(&[0x03 | 0x80, 0x07 | 0x80, 0x40 | 0x80, 0x43]);
+        assert!(pattern.begin);
+        assert!(pattern.end);
+        assert!(pattern.stop);
+        assert_eq!(pattern.channels, [Some(3), Some(7), None, None]);
+    }
+
+    #[test]
+    fn celeste_png_loads_music() {
+        let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("assets/celeste.p8.png");
+        let Ok(bytes) = std::fs::read(&path) else {
+            return;
+        };
+        let v = pico8_decompress::extract_bits_from_png(std::io::Cursor::new(bytes))
+            .expect("png bits");
+        assert!(v.len() >= 0x3200, "cart rom is {} bytes", v.len());
+        let music: Vec<_> = v[0x3100..0x3200]
+            .chunks_exact(4)
+            .map(|chunk| {
+                let bytes: [u8; 4] = chunk.try_into().unwrap();
+                MusicPattern::from_rom(&bytes)
+            })
+            .collect();
+        assert_eq!(music.len(), 64);
+        let title = &music[40];
+        assert!(
+            title.channels.iter().any(Option::is_some),
+            "pattern 40 {title:?}"
+        );
     }
 
     #[test]
