@@ -118,6 +118,9 @@ impl super::Pico8<'_, '_> {
     }
 
     // music( n, [facems,] [channelmask,] )
+    //
+    // `fade_ms` is accepted and ignored. A set bit in `channel_mask` protects
+    // that channel from automatic `sfx()`. It does not drop a pattern channel.
     pub fn music(
         &mut self,
         n: impl Into<SfxCommand>,
@@ -126,44 +129,38 @@ impl super::Pico8<'_, '_> {
         bank: Option<u8>,
     ) -> Result<(), Error> {
         let n = n.into();
-        let bank = bank.unwrap_or(0);
+        let mask = channel_mask.unwrap_or(0);
         match n {
-            SfxCommand::Release => {
-                panic!("Music does not accept a release command.");
-            }
+            SfxCommand::Release => Err(Error::InvalidArgument(
+                "music does not accept a release command".into(),
+            )),
             SfxCommand::Stop => {
-                // if let Some(chan) = channel {
-                //     let chan = self.sfx_channels[chan as usize];
-                //     self.commands
-                //         .queue(AudioCommand::Stop(SfxDest::Channel(chan), Some(PlaybackMode::Loop)));
-                // } else {
                 self.commands
-                    .queue(AudioCommand::Stop(SfxDest::All, Some(PlaybackMode::Loop)));
-                // }
+                    .queue(|world: &mut World| crate::pico8::audio::stop_music(world));
+                Ok(())
             }
             SfxCommand::Play(n) => {
-                let sfx = self
-                    .bank(bank as usize)?
-                    .get(n as usize)
-                    .ok_or(Error::NoAsset(format!("music {n}").into()))?
-                    .clone();
-
-                if let Some(mask) = channel_mask {
-                    self.commands.queue(AudioCommand::Play(
-                        sfx,
-                        SfxDest::ChannelMask(mask),
-                        PlaybackSettings::LOOP,
-                    ));
-                } else {
-                    self.commands.queue(AudioCommand::Play(
-                        sfx,
-                        SfxDest::Any,
-                        PlaybackSettings::LOOP,
-                    ));
+                let asset = self.pico8_asset()?;
+                if asset.music.is_empty() {
+                    return Err(Error::NoAsset("music".into()));
                 }
+                if n as usize >= asset.music.len() {
+                    return Err(Error::NoAsset(format!("music {n}").into()));
+                }
+                let bank_index = bank.unwrap_or(0) as usize;
+                let bank_handle = asset
+                    .audio_banks
+                    .get(bank_index)
+                    .cloned()
+                    .ok_or(Error::NoAsset(format!("bank {bank_index}").into()))?;
+                let patterns = asset.music.clone();
+                let index = n as usize;
+                self.commands.queue(move |world: &mut World| {
+                    crate::pico8::audio::start_music(world, patterns, bank_handle, index, mask);
+                });
+                Ok(())
             }
         }
-        Ok(())
     }
 }
 
@@ -225,7 +222,7 @@ mod lua {
                                 -1 => Ok(SfxCommand::Stop),
                                 n if n >= 0 => Ok(SfxCommand::Play(n as u8)),
                                 x => Err(Error::InvalidArgument(
-                                    format!("sfx: expected n to be -2, -1 or >= 0 but was {x}")
+                                    format!("music: expected n to be -2, -1 or >= 0 but was {x}")
                                         .into(),
                                 )),
                             }?,

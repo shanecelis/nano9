@@ -734,7 +734,7 @@ fn write_rgb_png(path: &Path, width: u32, height: u32, rgb: &[u8]) {
 }
 
 fn onset_index(samples: &[i16], threshold: i16) -> Option<usize> {
-    samples.iter().position(|s| s.abs() > threshold)
+    samples.iter().position(|s| s.saturating_abs() > threshold)
 }
 
 fn rms(samples: &[i16]) -> f64 {
@@ -746,7 +746,11 @@ fn rms(samples: &[i16]) -> f64 {
 }
 
 fn peak(samples: &[i16]) -> i16 {
-    samples.iter().map(|s| s.abs()).max().unwrap_or(0)
+    samples
+        .iter()
+        .map(|s| s.saturating_abs())
+        .max()
+        .unwrap_or(0)
 }
 
 fn zero_cross_hz(samples: &[i16], rate: f64) -> f64 {
@@ -979,7 +983,7 @@ fn wave_focus(expected: &[i16], actual: &[i16]) -> (usize, usize) {
     for i in 0..n {
         let e = *expected.get(i).unwrap_or(&0);
         let a = *actual.get(i).unwrap_or(&0);
-        if e.abs() > 64 || a.abs() > 64 {
+        if e.saturating_abs() > 64 || a.saturating_abs() > 64 {
             onset = i;
             break;
         }

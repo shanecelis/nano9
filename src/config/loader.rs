@@ -484,6 +484,7 @@ async fn into_asset(
             .load(crate::config::pico8::BORDER),
         maps,
         audio_banks,
+        music: Vec::new(),
         sprite_sheets,
         #[cfg(feature = "3d")]
         meshes,

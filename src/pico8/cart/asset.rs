@@ -170,6 +170,7 @@ fn to_asset(cart: Cart, load_context: &mut LoadContext) -> Result<Pico8Asset, Ca
             );
             load_context.add_labeled_asset("audio_bank", bank)
         }],
+        music: cart.music,
         sprite_sheets,
         font: vec![N9Font {
             source: load_context.load(crate::config::pico8::FONT).into(),

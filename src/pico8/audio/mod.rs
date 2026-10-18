@@ -17,7 +17,9 @@ use std::{
 };
 
 mod command;
+mod music;
 mod record;
+pub(crate) use music::{start_music, stop_music};
 pub use command::*;
 pub use record::{AudioRecorder, write_wav};
 
@@ -249,6 +251,7 @@ impl TryFrom<&str> for Sfx {
         const HEADER_NYBBLES: usize = 8;
         const NOTE_NYBBLES: usize = 5;
         let note_nybbles = line.len() - HEADER_NYBBLES;
+        let span = u8::try_from(note_nybbles / NOTE_NYBBLES).unwrap_or(u8::MAX);
         let empty_notes = {
             let line_bytes = line.as_bytes();
             line_bytes
@@ -299,10 +302,13 @@ impl TryFrom<&str> for Sfx {
                 Effect::try_from(effect)?,
             ));
         }
-        Ok(Sfx::new(notes).with_speed(note_duration?).with_loop(
-            (loop_start != 0).then_some(loop_start),
-            (loop_end != 0).then_some(loop_end),
-        ))
+        Ok(Sfx::new(notes)
+            .with_speed(note_duration?)
+            .with_span(span)
+            .with_loop(
+                (loop_start != 0).then_some(loop_start),
+                (loop_end != 0).then_some(loop_end),
+            ))
     }
 }
 
@@ -351,6 +357,11 @@ impl Note for Pico8Note {
 pub struct Sfx {
     pub notes: Vec<Pico8Note>,
     pub speed: u8,
+    /// Notes in the Pico-8 slot, including trailing rests omitted from [`notes`].
+    ///
+    /// Music waits out this many notes before the next pattern. A full cart
+    /// slot is 32 even when the phrase itself is shorter.
+    pub span: u8,
     pub loop_maybe: Option<Loop>,
 }
 
@@ -369,11 +380,20 @@ pub enum Loop {
 
 impl Sfx {
     pub fn new(notes: impl IntoIterator<Item = Pico8Note>) -> Self {
+        let notes: Vec<_> = notes.into_iter().collect();
+        let span = u8::try_from(notes.len()).unwrap_or(u8::MAX);
         Sfx {
-            notes: notes.into_iter().collect(),
+            notes,
             speed: 16,
+            span,
             loop_maybe: None,
         }
+    }
+
+    /// Slot length used by the music clock. Trailing rests still count.
+    pub fn with_span(mut self, span: u8) -> Self {
+        self.span = span;
+        self
     }
 
     pub fn from_u8(data: &[u8]) -> Self {
@@ -408,9 +428,11 @@ impl Sfx {
             // start == end, no loop
             None
         };
+        let span = u8::try_from(notes.len()).unwrap_or(u8::MAX);
         Self {
             notes,
             speed,
+            span,
             loop_maybe,
         }
     }
@@ -702,6 +724,7 @@ pub(crate) fn plugin(app: &mut App) {
         .init_resource::<AudioRecorder>()
         .add_plugins(command::plugin)
         .add_systems(PreStartup, add_channels)
+        .add_systems(Update, music::tick)
         .add_audio_source::<Sfx>();
 }
 

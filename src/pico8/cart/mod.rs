@@ -47,13 +47,16 @@ pub enum CartLoaderError {
     LuaParse(#[from] pico8_to_lua::ParseError),
 }
 
-#[allow(dead_code)]
-#[derive(Debug, Reflect)]
-pub struct MusicParts {
-    begin: bool,
-    end: bool,
-    stop: bool,
-    patterns: Vec<u8>,
+/// One row of the `__music__` pattern table.
+///
+/// A channel is `Some(sfx)` when that byte is an SFX index (`0..=63`). Pico-8
+/// stores a silent channel as `0x40 + channel` (`0x40`–`0x43`), which is `None`.
+#[derive(Debug, Clone, Reflect)]
+pub struct MusicPattern {
+    pub begin: bool,
+    pub end: bool,
+    pub stop: bool,
+    pub channels: [Option<u8>; 4],
 }
 
 #[derive(Asset, Debug, Reflect)]
@@ -63,7 +66,7 @@ pub struct Cart {
     pub map: Vec<u8>,
     pub flags: Vec<u8>,
     pub sfx: Vec<Sfx>,
-    pub music: Vec<MusicParts>,
+    pub music: Vec<MusicPattern>,
 }
 
 pub(crate) const PALETTE: [[u8; 4]; 16] = [
@@ -280,24 +283,25 @@ impl Cart {
                     let lead_byte = (high << 4) | low;
                     j += 3;
 
+                    let mut channels = [None; 4];
                     let mut i = 0;
-                    let mut patterns = [0u8; 4];
-                    while j < line_bytes.len() {
+                    while j + 1 < line_bytes.len() && i < 4 {
                         let c = line_bytes[j] as char;
                         let high: u8 =
                             c.to_digit(16).ok_or(CartLoaderError::UnexpectedHex(c))? as u8;
                         let c = line_bytes[j + 1] as char;
                         let low: u8 =
                             c.to_digit(16).ok_or(CartLoaderError::UnexpectedHex(c))? as u8;
-                        patterns[i] = (high << 4) | low;
+                        let byte = (high << 4) | low;
+                        channels[i] = (byte < 64).then_some(byte);
                         i += 1;
                         j += 2;
                     }
-                    music.push(MusicParts {
+                    music.push(MusicPattern {
                         begin: lead_byte & 1 != 0,
                         end: lead_byte & 2 != 0,
                         stop: lead_byte & 4 != 0,
-                        patterns: patterns.into_iter().filter(|p| p & 64 != 0).collect(),
+                        channels,
                     })
                 }
             }
