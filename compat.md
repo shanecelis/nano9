@@ -62,6 +62,8 @@ the map. But it will be made to work with maps soon.
 - [x] add(t, v, [i])
 - [x] all(t)
 - [/] count(t, [v])
+
+`count(t)` returns `#t`. `count(t, v)` compares against an unset name, so the search never matches.
 - [x] del(t, v)
 - [x] deli(t, i)
 - [x] foreach(t, f)
@@ -76,8 +78,13 @@ the map. But it will be made to work with maps soon.
 - [x] btnp([i,] [p])
 
 ## Sound
-- [x] music([n,] [fade_len,] [channel_mask,] *[bank_index]*)
-- [x] sfx(n, [channel,] [offset,] *[bank_index]*)
+- [/] music([n,] [fade_len,] [channel_mask,] *[bank_index]*)
+
+Plays cart patterns, including loop and stop. `fade_len` is ignored. A set bit in `channel_mask` is stored and does not change which pattern channels play, and `sfx()` does not consult it.
+
+- [/] sfx(n, [channel,] [offset,] [length,] *[bank_index]*)
+
+`length` is accepted and then rejected.
 
 ## Map
 - [x] map(cel_x, cel_y, sx, sy, cel_w, cel_h, [layers], *[map_index]*)
@@ -85,30 +92,63 @@ the map. But it will be made to work with maps soon.
 - [x] mset(x, y, v)
 
 ## Memory
-- [ ] cstore(destaddr, sourceaddr, len, [filename])
-- [ ] memcpy(dest_addr, source_addr, len)
-- [ ] memset(dest_addr, val, len)
+
+There is no 64 KiB address space. Sprite, map, flag, music, and sfx bytes live as assets. `peek` and `poke` do not reach those regions, the screen, general-use RAM, cart data, GPIO, or the hardware block. `peek(addr, n)` has no length argument. `poke` takes one byte.
+
 - [/] peek(addr, [n])
 
-| address | description               |
-|---------|---------------------------|
-| 0xf527  | draw_state.print_cursor.y |
+| address | Pico-8 | Nano-9 |
+|---------|--------|--------|
+| 0x5f27  | print cursor y | returns `draw_state.print_cursor.y` |
 
-Very limited support. Only supports 0xf527 which returns the print cursor y
-position of draw state.
+Any other address is an error. The old note listed `0xf527`; the implemented address is `0x5f27`.
+
+- [/] poke(addr, [value,] [...])
+
+| address | Pico-8 | Nano-9 |
+|---------|--------|--------|
+| 0x5f2d  | devkit flags: bit 0 keyboard, bit 1 mouse buttons as `btn(4)`..`btn(6)`, bit 2 pointer lock | any non-zero value enables keyboard input. The other bits are ignored. |
 
 - [ ] peek2(addr, [n])
 - [ ] peek4(addr, [n])
-- [/] poke(addr, [value,] [...])
-
-| address | description           |
-|---------|-----------------------|
-| 0x5f2d  | keyboard input enable |
-
 - [ ] poke2(addr, [...])
 - [ ] poke4(addr, [...])
+- [ ] memcpy(dest_addr, source_addr, len)
+- [ ] memset(dest_addr, val, len)
+- [ ] cstore(destaddr, sourceaddr, len, [filename])
 - [ ] reload(destaddr, sourceaddr, len, [filename])
 - [ ] serial(channel, sourceaddr, size)
+
+Pico-8 regions with no `peek` or `poke` path:
+
+| range | purpose |
+|-------|---------|
+| 0x0000–0x0fff | sprite sheet, upper half |
+| 0x1000–0x1fff | sprite sheet lower half, or map rows 32–63 |
+| 0x2000–0x2fff | map rows 0–31 |
+| 0x3000–0x30ff | sprite flags |
+| 0x3100–0x31ff | music patterns |
+| 0x3200–0x42ff | sfx |
+| 0x4300–0x55ff | general use |
+| 0x5600–0x5dff | general use / custom font |
+| 0x5e00–0x5eff | persistent cart data |
+| 0x5f00–0x5f1f | draw palette and screen palette |
+| 0x5f20–0x5f3f | draw state, aside from the one peek above |
+| 0x5f40–0x5f7f | hardware state (audio effects, RNG, button bits, map and screen mapping) |
+| 0x5f80–0x5fff | GPIO |
+| 0x6000–0x7fff | screen |
+| 0x8000–0xffff | general use / extended map |
+
+These draw-state fields exist on `DrawState` and still have no `peek` or `poke`:
+
+| address | field |
+|---------|--------|
+| 0x5f25 | pen color |
+| 0x5f26 | print cursor x |
+| 0x5f28–0x5f2b | camera x and y, 16-bit little-endian |
+| 0x5f31–0x5f32 | fill pattern |
+
+Clip rect (`0x5f20`–`0x5f23`), screen transform (`0x5f2c`), fill-pattern flags (`0x5f33`), and the previous line endpoint (`0x5f3c`–`0x5f3f`) have no field.
 
 ## Math
 - [x] abs(x)
@@ -195,7 +235,9 @@ Supports keyboard and some mouse functions.
 | 33    | mouse position y                                 |
 | 34    | mouse buttons                                    |
 | 100   | breadcrumb string from `load()`                  |
-- [x] stop() (undocumented)
+- [ ] stop() (undocumented)
+
+The Lua function prints `STOP NOT IMPLEMENTED` and returns.
 - [ ] trace() (undocumented)
 
 # Performance Compatability
