@@ -471,7 +471,7 @@ fn check_pico8_export_phase_walk() {
         (delta - 0.125).abs() < 0.002,
         "Pico-8 EXPORT Δφ={delta} (expected ~0.125)"
     );
-    let phases = pico8_export_phases(std::iter::repeat(&sfx).take(16), PICO8_EXPORT_OSC_PHASE);
+    let phases = pico8_export_phases(std::iter::repeat_n(&sfx, 16), PICO8_EXPORT_OSC_PHASE);
     assert!((phases[0] - PICO8_EXPORT_OSC_PHASE).abs() < 0.001);
     assert!(((phases[1] - phases[0]).rem_euclid(1.0) - 0.125).abs() < 0.002);
     assert!(
@@ -482,6 +482,7 @@ fn check_pico8_export_phase_walk() {
     );
 }
 
+#[allow(clippy::too_many_arguments)]
 fn compare_wav(
     name: &str,
     dir: &Path,
@@ -675,11 +676,11 @@ fn filter_arg() -> Option<String> {
                 );
             if takes_value {
                 let name_is_optional = matches!(arg, "--save-baseline" | "--baseline");
-                if let Some(next) = args.get(i + 1) {
-                    if !name_is_optional || !next.starts_with('-') {
-                        i += 2;
-                        continue;
-                    }
+                if let Some(next) = args.get(i + 1)
+                    && (!name_is_optional || !next.starts_with('-'))
+                {
+                    i += 2;
+                    continue;
                 }
             }
             i += 1;
@@ -759,10 +760,8 @@ fn zero_cross_hz(samples: &[i16], rate: f64) -> f64 {
     }
     let mut crosses = 0usize;
     for pair in samples.windows(2) {
-        if pair[0] == 0 || pair[0].signum() != pair[1].signum() && pair[1] != 0 {
-            if pair[0] != 0 && pair[1] != 0 {
-                crosses += 1;
-            }
+        if pair[0] != 0 && pair[1] != 0 && pair[0].signum() != pair[1].signum() {
+            crosses += 1;
         }
     }
     (crosses as f64) * rate / (2.0 * samples.len() as f64)
@@ -891,6 +890,7 @@ fn fit_tone(samples: &[i16], wave: &WaveForm, nominal_hz: f64) -> Option<ToneFit
     Some(best)
 }
 
+#[allow(clippy::too_many_arguments)]
 fn search_tone(
     pcm: &[f32],
     wave: &WaveForm,
@@ -1084,10 +1084,10 @@ fn compose_wave_compare(expected: &[i16], actual: &[i16]) -> (u32, u32, Vec<u8>)
     const BARS: [[u8; 3]; 3] = [[0, 231, 86], [255, 163, 0], [255, 0, 255]];
     let n = expected.len().max(actual.len());
     let mut diff = vec![0i16; n];
-    for i in 0..n {
+    for (i, sample) in diff.iter_mut().enumerate() {
         let e = *expected.get(i).unwrap_or(&0) as i32;
         let a = *actual.get(i).unwrap_or(&0) as i32;
-        diff[i] = (e - a).clamp(-32767, 32767) as i16;
+        *sample = (e - a).clamp(-32767, 32767) as i16;
     }
     let panels = [
         waveform_strip(expected, W, H, [0, 231, 86]),
@@ -1240,9 +1240,9 @@ fn show_image(label: &str, path: &Path) {
     };
     if let Some(mut tty) = open_tty() {
         let b64 = base64_encode(&bytes);
-        let _ = write!(
+        let _ = writeln!(
             tty,
-            "\x1b]1337;File=inline=1;width=80%;height=auto;preserveAspectRatio=1:{b64}\x07\n"
+            "\x1b]1337;File=inline=1;width=80%;height=auto;preserveAspectRatio=1:{b64}\x07"
         );
         let _ = tty.flush();
     }

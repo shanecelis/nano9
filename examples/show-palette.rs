@@ -40,7 +40,7 @@ fn main() -> io::Result<ExitCode> {
         return Ok(ExitCode::from(1));
     };
 
-    app.add_plugins(Nano9Plugins::default())
+    app.add_plugins(Nano9Plugins)
         .add_systems(Startup, load_and_insert_pico8(path))
         .add_systems(PreUpdate, run_pico8_when_loaded)
         .run();

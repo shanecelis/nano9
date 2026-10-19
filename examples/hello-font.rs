@@ -24,7 +24,7 @@ fn main() {
     let mut app = App::new();
     app.add_systems(nano9::schedule::Draw, draw);
 
-    app.add_plugins(Nano9Plugins::default())
+    app.add_plugins(Nano9Plugins)
         .add_systems(Startup, load_and_insert_pico8("hello-font.toml"))
         .add_systems(PreUpdate, run_pico8_when_loaded)
         .add_systems(

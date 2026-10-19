@@ -470,7 +470,7 @@ impl super::Pico8<'_, '_> {
                 canvases.push((clearable.draw_count, entity));
             }
         }
-        canvases.sort_unstable_by(|a, b| b.0.cmp(&a.0));
+        canvases.sort_unstable_by_key(|canvas| std::cmp::Reverse(canvas.0));
         for (_, entity) in canvases {
             let Ok(sprite) = self.gfx_sprites.get(entity) else {
                 continue;

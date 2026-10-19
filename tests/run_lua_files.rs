@@ -25,7 +25,7 @@ fn test_run_lua_files() {
         // is available, but the test will at least verify the file can be loaded and parsed.
         let mut command = Command::new("cargo");
         command
-            .args(&[
+            .args([
                 // "n9",
                 "run",
                 "--",
@@ -61,15 +61,14 @@ fn find_lua_files(dir: &Path, files: &mut Vec<PathBuf>) {
         return;
     }
 
-    if let Ok(entries) = fs::read_dir(&dir) {
+    if let Ok(entries) = fs::read_dir(dir) {
         for entry in entries.flatten() {
             let path = entry.path();
             if !path.is_dir()
                 && let Some(ext) = path.extension()
+                && (ext == "lua" || ext == "p8lua" || ext == "p8")
             {
-                if ext == "lua" || ext == "p8lua" || ext == "p8" {
-                    files.push(path.strip_prefix(root).unwrap().to_path_buf());
-                }
+                files.push(path.strip_prefix(root).unwrap().to_path_buf());
             }
         }
     }

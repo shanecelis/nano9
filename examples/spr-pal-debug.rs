@@ -553,6 +553,7 @@ fn palette_color(colors: &[Color], index: u8) -> Color {
         .unwrap_or(Color::srgb(1.0, 0.0, 1.0))
 }
 
+#[allow(clippy::too_many_arguments, clippy::type_complexity)]
 fn sync_from_lut(
     debug: Res<PalDebug>,
     mut sources: Query<

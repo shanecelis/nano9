@@ -36,7 +36,7 @@ fn main() {
     let cart_path = bevy::asset::AssetPath::from(std::path::PathBuf::from(&cart));
 
     let mut app = App::new();
-    app.add_plugins(Nano9Plugins::default());
+    app.add_plugins(Nano9Plugins);
     if let Some(param) = param {
         app.insert_resource(CartArgs { param, ..default() });
     }

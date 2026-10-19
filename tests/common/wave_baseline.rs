@@ -765,10 +765,10 @@ fn flag_state(flag: &str) -> Flag {
         } else if arg == flag {
             saw = true;
             raw = None;
-            if let Some(next) = args.get(i + 1) {
-                if !next.starts_with('-') {
-                    raw = Some(next.clone());
-                }
+            if let Some(next) = args.get(i + 1)
+                && !next.starts_with('-')
+            {
+                raw = Some(next.clone());
             }
         }
         i += 1;

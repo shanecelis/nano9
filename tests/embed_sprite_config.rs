@@ -38,10 +38,10 @@ fn capture_sprite_load_result(
             .push(format!("{}: {}", e.path, e.error));
     }
 
-    if let Some(handle) = &pico8_handle {
-        if assets.get(&handle.handle).is_some() {
-            result.pico8_loaded = true;
-        }
+    if let Some(handle) = &pico8_handle
+        && assets.get(&handle.handle).is_some()
+    {
+        result.pico8_loaded = true;
     }
     result.updates += 1;
 }
@@ -76,10 +76,8 @@ fn test_load_sprite_config_like_example() {
     for _ in 0..100 {
         app.update();
         let result = app.world().get_resource::<SpriteLoadResult>().cloned();
-        if let Some(r) = result {
-            if r.pico8_loaded {
-                break;
-            }
+        if let Some(r) = result && r.pico8_loaded {
+            break;
         }
     }
 

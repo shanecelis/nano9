@@ -47,6 +47,7 @@ pub struct P8SpriteMap {
     pub mask: Option<u8>,
 }
 
+#[allow(clippy::too_many_arguments)]
 fn add_tilemap_chunks(
     mut commands: Commands,
     query: Query<(Entity, &P8SpriteMap), Without<MapChunkSpawned>>,

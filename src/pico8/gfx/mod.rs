@@ -115,6 +115,7 @@ fn stacked_tileset(sheet: &Image, sprite_size: UVec2) -> Result<Image, Error> {
 }
 
 /// RGBA sheet from [`compute_image`], stacked into one array layer per sprite.
+#[allow(clippy::too_many_arguments)]
 pub(crate) fn tileset_array_image(
     gfx_handle: &Handle<Gfx>,
     gfx_changed: bool,
@@ -441,6 +442,7 @@ fn write_gfx_pixel(
 /// Uses the CPU path when the gfx has per-pixel occupancy (screen canvases).
 /// Otherwise the sprite image is an R8 index texture and [`GfxPaletteLookupMaterial`]
 /// looks up the palette in the sprite shader.
+#[allow(clippy::too_many_arguments)]
 pub(crate) fn compute_image(
     gfx_handle: &Handle<Gfx>,
     gfx_changed: bool,

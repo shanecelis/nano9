@@ -93,6 +93,7 @@ fn handle_load_cart(
     next_state.set(RunState::Uninit);
 }
 
+#[allow(clippy::too_many_arguments)]
 fn pump_ready_queue(
     mut incoming: MessageReader<ExtcmdRequest>,
     mut queue: ResMut<ReadyQueue>,

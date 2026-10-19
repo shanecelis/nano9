@@ -141,7 +141,7 @@ pub fn write_composed_lut(
     draw: &PalMap,
     display: &PalMap,
 ) -> bool {
-    let Some(mut image) = images.get_mut_untracked(handle) else {
+    let Some(image) = images.get_mut_untracked(handle) else {
         return false;
     };
     write_lut_image(image, draw, display);

@@ -72,14 +72,16 @@ pub(crate) fn start_music(
 }
 
 pub(crate) fn stop_music(world: &mut World) {
-    let Some(mut playback) = world.get_resource_mut::<MusicPlayback>() else {
-        return;
+    let active = {
+        let Some(mut playback) = world.get_resource_mut::<MusicPlayback>() else {
+            return;
+        };
+        let active = playback.active;
+        playback.playing = false;
+        playback.active = 0;
+        playback.next_frame = u32::MAX;
+        active
     };
-    let active = playback.active;
-    playback.playing = false;
-    playback.active = 0;
-    playback.next_frame = u32::MAX;
-    drop(playback);
     stop_channels(world, active);
 }
 
