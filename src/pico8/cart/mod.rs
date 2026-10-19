@@ -827,8 +827,8 @@ end"#
         let Ok(bytes) = std::fs::read(&path) else {
             return;
         };
-        let v = pico8_decompress::extract_bits_from_png(std::io::Cursor::new(bytes))
-            .expect("png bits");
+        let v =
+            pico8_decompress::extract_bits_from_png(std::io::Cursor::new(bytes)).expect("png bits");
         assert!(v.len() >= 0x3200, "cart rom is {} bytes", v.len());
         let music: Vec<_> = v[0x3100..0x3200]
             .chunks_exact(4)

@@ -19,8 +19,8 @@ use std::{
 mod command;
 mod music;
 mod record;
-pub(crate) use music::{start_music, stop_music};
 pub use command::*;
+pub(crate) use music::{start_music, stop_music};
 pub use record::{AudioRecorder, write_wav};
 
 pub(crate) const SAMPLE_RATE: u32 = 22_050;

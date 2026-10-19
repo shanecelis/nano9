@@ -9,8 +9,8 @@ use bevy::audio::PlaybackSettings;
 use bevy::diagnostic::FrameCount;
 use bevy::prelude::*;
 
-use super::command::{Audio, AudioBank, AudioCommand, SfxDest};
 use super::Sfx;
+use super::command::{Audio, AudioBank, AudioCommand, SfxDest};
 use crate::pico8::MusicPattern;
 
 #[derive(Resource)]
@@ -149,8 +149,12 @@ fn play_current(world: &mut World, frame: u32) {
                 duration = duration.max(samples);
             }
         }
-        AudioCommand::Play(cue.audio, SfxDest::Channel(cue.channel), PlaybackSettings::REMOVE)
-            .apply(world);
+        AudioCommand::Play(
+            cue.audio,
+            SfxDest::Channel(cue.channel),
+            PlaybackSettings::REMOVE,
+        )
+        .apply(world);
         active |= 1 << cue.channel;
     }
     let (origin, elapsed) = world
@@ -233,10 +237,7 @@ fn frame_at_sample(origin: u32, sample: u64) -> u32 {
 }
 
 fn loop_target(patterns: &[MusicPattern], index: usize) -> usize {
-    (0..=index)
-        .rev()
-        .find(|i| patterns[*i].begin)
-        .unwrap_or(0)
+    (0..=index).rev().find(|i| patterns[*i].begin).unwrap_or(0)
 }
 
 fn stop_channels(world: &mut World, active: u8) {
@@ -244,7 +245,10 @@ fn stop_channels(world: &mut World, active: u8) {
         if active & (1 << channel) == 0 {
             continue;
         }
-        AudioCommand::Stop(SfxDest::Channel(channel), Some(bevy::audio::PlaybackMode::Remove))
-            .apply(world);
+        AudioCommand::Stop(
+            SfxDest::Channel(channel),
+            Some(bevy::audio::PlaybackMode::Remove),
+        )
+        .apply(world);
     }
 }

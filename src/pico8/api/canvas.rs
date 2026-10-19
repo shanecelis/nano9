@@ -8,8 +8,8 @@ use crate::{
 use bevy::render::view::Msaa;
 use bevy::{
     camera::{
-        visibility::RenderLayers, CameraOutputMode, ClearColorConfig, CompositingSpace,
-        ImageRenderTarget, RenderTarget, Viewport,
+        CameraOutputMode, ClearColorConfig, CompositingSpace, ImageRenderTarget, RenderTarget,
+        Viewport, visibility::RenderLayers,
     },
     render::render_resource::BlendState,
     window::{PrimaryWindow, WindowResized},

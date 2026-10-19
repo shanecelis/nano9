@@ -167,9 +167,7 @@ impl super::Pico8<'_, '_> {
                 .get_mut(&handle)
                 .expect("current PalMapLut");
             edit(lut.pal_map_mut());
-            lut.image
-                .clone()
-                .map(|image| (lut.pal_map.clone(), image))
+            lut.image.clone().map(|image| (lut.pal_map.clone(), image))
         };
         if let Some((pal_map, image)) = write
             && crate::pico8::pal_map_lut::write_composed_lut(

@@ -15,16 +15,16 @@ use bevy::prelude::*;
 use bevy::ui::Checked;
 use bevy::window::SystemCursorIcon;
 use bevy_feathers::FeathersPlugins;
-use bevy_input_focus::InputFocusPlugin;
-use bevy_ui_widgets::{Activate, Button, ValueChange};
 use bevy_feathers::containers::{pane, pane_body, pane_header};
 use bevy_feathers::controls::{
     ButtonVariant, ColorSwatchValue, FeathersButton, FeathersCheckbox, FeathersColorSwatch,
 };
-use bevy_feathers::rounded_corners::RoundedCorners;
 use bevy_feathers::dark_theme::create_dark_theme;
 use bevy_feathers::display::{caption, label, label_dim};
+use bevy_feathers::rounded_corners::RoundedCorners;
 use bevy_feathers::theme::UiTheme;
+use bevy_input_focus::InputFocusPlugin;
+use bevy_ui_widgets::{Activate, Button, ValueChange};
 use nano9::pico8::Gfx;
 use nano9::pico8::PalModify;
 use nano9::prelude::*;
@@ -498,16 +498,10 @@ fn on_swatch(
     let src = debug.selected as usize;
     if debug.editing_display {
         debug.display[src] = dest.index;
-        pico8.pal_map(
-            Some((src, dest.index as usize)),
-            Some(PalModify::Present),
-        );
+        pico8.pal_map(Some((src, dest.index as usize)), Some(PalModify::Present));
     } else {
         debug.draw[src] = dest.index;
-        pico8.pal_map(
-            Some((src, dest.index as usize)),
-            Some(PalModify::Following),
-        );
+        pico8.pal_map(Some((src, dest.index as usize)), Some(PalModify::Following));
     }
 }
 
@@ -546,11 +540,7 @@ fn on_reset(_activate: On<Activate>, mut debug: ResMut<PalDebug>, mut pico8: Pic
     }
 }
 
-fn on_transparency(
-    change: On<ValueChange<bool>>,
-    mut debug: ResMut<PalDebug>,
-    mut pico8: Pico8,
-) {
+fn on_transparency(change: On<ValueChange<bool>>, mut debug: ResMut<PalDebug>, mut pico8: Pico8) {
     let selected = debug.selected as usize;
     debug.transparent[selected] = change.value;
     pico8.palt(Some(selected), Some(change.value));

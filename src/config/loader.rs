@@ -1,11 +1,11 @@
 #[cfg(feature = "level")]
 use crate::level::{self};
+#[cfg(feature = "3d")]
+use crate::pico8::MeshHandle;
 use crate::{
     config::{self, *},
     pico8::{self, PaletteAccess, Pico8Asset, image::pixel_art_settings},
 };
-#[cfg(feature = "3d")]
-use crate::pico8::MeshHandle;
 use bevy::{
     asset::{AssetLoader, AssetPath, LoadContext, io::Reader},
     prelude::*,
