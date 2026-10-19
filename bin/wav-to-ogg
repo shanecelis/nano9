@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+# Encode a 22050 Hz mono 16-bit WAV as Ogg Vorbis q4.
+# Same encoder as the sfx golden harness.
+#
+#   bin/wav-to-ogg INPUT.wav OUTPUT.ogg
+set -euo pipefail
+ROOT="$(cd "$(dirname "$0")/.." && pwd -P)"
+exec cargo run --quiet --manifest-path "$ROOT/Cargo.toml" --example wav-to-ogg -- "$@"
