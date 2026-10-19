@@ -130,18 +130,19 @@ function foreach(a,f)
         f(v)
     end
 end
-function count(a,v)
-    if v == nil then
+function count(a, ...)
+    -- Omitted v is #a. An explicit nil counts holes in the sequence.
+    if select("#", ...) == 0 then
         return #a
-    else
-        local count = 0
-        for i,v in ipairs(a) do
-            if v==dv then
-                count = count + 1
-            end
-        end
-        return count
     end
+    local v = ...
+    local n = 0
+    for i = 1, #a do
+        if a[i] == v then
+            n = n + 1
+        end
+    end
+    return n
 end
 function all(a)
     local i = 0

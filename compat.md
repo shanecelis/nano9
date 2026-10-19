@@ -61,9 +61,7 @@ the map. But it will be made to work with maps soon.
 ## Tables
 - [x] add(t, v, [i])
 - [x] all(t)
-- [/] count(t, [v])
-
-`count(t)` returns `#t`. `count(t, v)` compares against an unset name, so the search never matches.
+- [x] count(t, [v])
 - [x] del(t, v)
 - [x] deli(t, i)
 - [x] foreach(t, f)
