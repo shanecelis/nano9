@@ -234,7 +234,7 @@ fn new(cli: Cli) -> io::Result<ExitCode> {
                 // It's a directory path.
                 let assets_path = match language {
                     lang @ Some(Language::Rust | Language::LuaRust) => {
-                        info!("Creating new cargo project at {:?}.", &path);
+                        info!("Creating new cargo project at {:?}.", path);
                         let lang = lang.unwrap();
                         let feature = match lang {
                             Language::Rust => "rust-lib",
@@ -274,27 +274,27 @@ fn new(cli: Cli) -> io::Result<ExitCode> {
                         p.push("assets");
                         fs::create_dir_all(&p)?;
                         p.push("Nano9.toml");
-                        info!("Creating Nano-9 config at {:?}.", &p);
+                        info!("Creating Nano-9 config at {:?}.", p);
                         fs::write(&p, content)?;
 
                         if lang == Language::LuaRust {
                             let _ = p.pop();
                             p.push("main.lua");
-                            info!("Creating main Lua code at {:?}.", &p);
+                            info!("Creating main Lua code at {:?}.", p);
                             fs::write(&p, HELLO_WORLD)?;
 
                             let content = include_str!("templates/main-lua-rust.rs.txt");
                             let _ = p.pop();
                             let _ = p.pop();
                             p.push("src/main.rs");
-                            info!("Creating main Rust code at {:?}.", &p);
+                            info!("Creating main Rust code at {:?}.", p);
                             fs::write(&p, content)?;
                         } else {
                             let content = include_str!("templates/main-rust.rs.txt");
                             let _ = p.pop();
                             let _ = p.pop();
                             p.push("src/main.rs");
-                            info!("Creating main Rust code at {:?}.", &p);
+                            info!("Creating main Rust code at {:?}.", p);
                             fs::write(&p, content)?;
                         }
                         let mut p = path.to_path_buf();
@@ -542,7 +542,7 @@ fn run(cli: Cli) -> io::Result<ExitCode> {
                 match AssetPath::try_parse(s) {
                     Ok(p) => p.clone_owned(),
                     Err(e) => {
-                        eprintln!("Cannot convert {:?} to input path: {e}", &s);
+                        eprintln!("Cannot convert {:?} to input path: {e}", s);
                         return Ok(ExitCode::from(9));
                     }
                 }

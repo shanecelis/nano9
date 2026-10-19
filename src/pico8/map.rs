@@ -105,14 +105,7 @@ fn add_tilemap_chunks(
             trace!("no sprite map at index {}", p8sprite_map.map_index);
             continue;
         };
-        let map_handle = match sprite_map {
-            SpriteMap::P8(handle) => handle,
-            #[cfg(feature = "level")]
-            SpriteMap::Level(_) => {
-                commands.entity(id).insert(MapChunkSpawned);
-                continue;
-            }
-        };
+        let SpriteMap::P8(map_handle) = sprite_map;
         let Some(map_asset) = p8_maps.get(map_handle) else {
             trace!("p8 map asset is not loaded");
             continue;

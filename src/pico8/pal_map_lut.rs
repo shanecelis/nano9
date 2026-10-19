@@ -60,8 +60,8 @@ impl PalMapLut {
                 modified: false,
             };
         }
-        if let Some(handle) = self.image.clone() {
-            if write_composed_lut(images, &handle, &self.pal_map, display) {
+        if let Some(handle) = self.image.clone()
+            && write_composed_lut(images, &handle, &self.pal_map, display) {
                 self.dirty = false;
                 return ImageWrite {
                     handle,
@@ -69,7 +69,6 @@ impl PalMapLut {
                     modified: true,
                 };
             }
-        }
         let handle = images.add(composed_lut_image(&self.pal_map, display));
         self.image = Some(handle.clone());
         self.dirty = false;
@@ -145,7 +144,7 @@ pub fn write_composed_lut(
     let Some(mut image) = images.get_mut_untracked(handle) else {
         return false;
     };
-    write_lut_image(&mut image, draw, display);
+    write_lut_image(image, draw, display);
     true
 }
 

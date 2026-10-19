@@ -119,7 +119,7 @@ pub fn add_messages(
             //     ScriptError::FailedToLoad { script: _, msg } => msg.clone(),
             //     x => format!("{}", &x.error),
             // };
-            let msg = format!("{}", &e.error);
+            let msg = format!("{}", e.error);
             parent.spawn((Text::new(msg), error_style));
         }
     });

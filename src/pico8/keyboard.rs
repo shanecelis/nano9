@@ -22,7 +22,7 @@ impl KeyInput {
                 Space => Ok(Some(" ".into())),
                 Tab => Ok(Some("\t".into())),
                 Escape => Ok(Some("\x1b".into())),
-                _ => Err(Error::Unsupported(format!("stat 31 key {:?}", &key).into())),
+                _ => Err(Error::Unsupported(format!("stat 31 key {:?}", key).into())),
             }
         } else {
             Ok(None)

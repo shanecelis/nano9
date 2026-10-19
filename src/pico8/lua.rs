@@ -25,9 +25,7 @@ pub(crate) fn with_system_param<
             };
             system_state.apply(world);
             r.map_err(|e| InteropError::external(Box::new(e)))
-        })
-        .map_err(Into::into)
-}
+        })}
 
 pub(crate) fn with_pico8<X>(
     ctx: &FunctionCallContext,

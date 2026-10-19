@@ -330,9 +330,7 @@ mod lua {
                                 Some(clearable),
                             )
                             .map_err(|e| InteropError::external(Box::new(e)))
-                        })
-                        .map_err(Into::into)
-                },
+                        })},
             )
             .register(
                 "cursor",

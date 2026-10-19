@@ -188,7 +188,7 @@ impl Cart {
                 let mut bytes = vec![0x00; columns * rows / 2];
                 let mut i = 0;
                 for line in content.lines() {
-                    assert_eq!(columns, line.len(), "line: {}", &line);
+                    assert_eq!(columns, line.len(), "line: {}", line);
 
                     let line_bytes = line.as_bytes();
                     let mut j = 0;
@@ -390,7 +390,7 @@ pub(crate) async fn translate_pico8_to_lua(
         for path in include_paths.into_iter() {
             let mut cart_path: PathBuf = load_context.path().path().to_path_buf();
             cart_path.pop();
-            cart_path.push(&path);
+            cart_path.push(path);
             // dbg!(&cart_path);
             let source: AssetSourceId<'static> = load_context.path().source().clone_owned();
             let extension = cart_path.extension().and_then(|s| s.to_str()).unwrap_or("");

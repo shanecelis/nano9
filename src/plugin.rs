@@ -590,6 +590,6 @@ fn lua_event_handler<L: IntoCallbackLabel>(
     world: &mut World,
     state: &mut SystemState<Local<MessageCursor<ScriptCallbackMessage>>>,
 ) -> Result<(), BevyError> {
-    let _ = event_handler::<L, LuarsScriptingPlugin>(world, state)?;
+    event_handler::<L, LuarsScriptingPlugin>(world, state)?;
     Ok(())
 }
